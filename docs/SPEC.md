@@ -33,7 +33,7 @@ The goal is to manage the full commercial and financial lifecycle of a business:
 | Events           | @nestjs/event-emitter (in-process) + **transactional outbox** pattern |
 | Validation       | class-validator + class-transformer                          |
 | Documentation    | Swagger/OpenAPI                                              |
-| Testing          | Jest (unit + e2e with supertest), data seeders               |
+| Testing          | **Vitest** (unit + e2e with supertest), data seeders        |
 | Quality          | ESLint + Prettier, husky, CI/CD in GitHub Actions            |
 | Deployment       | Docker, VPS/cloud (optional Kubernetes later)                |
 
