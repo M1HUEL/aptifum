@@ -39,6 +39,15 @@ export enum AuditAction {
   LOGIN = 'login',
 }
 
+export enum MovementType {
+  INBOUND = 'inbound',
+  OUTBOUND = 'outbound',
+  ADJUSTMENT = 'adjustment',
+  TRANSFER = 'transfer',
+  RETURN = 'return',
+  DISPOSAL = 'disposal',
+}
+
 export interface AuthUser {
   id: string;
   email: string;

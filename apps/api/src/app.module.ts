@@ -5,6 +5,7 @@ import { RequestIdMiddleware } from './request-id.middleware';
 import { HealthModule } from './health/health.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { UsersModule } from './modules/users/users.module';
@@ -31,6 +32,7 @@ import { UsersModule } from './modules/users/users.module';
     RbacModule,
     TenantsModule,
     AuditModule,
+    InventoryModule,
   ],
 })
 export class AppModule implements NestModule {

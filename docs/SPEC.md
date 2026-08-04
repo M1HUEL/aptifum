@@ -265,7 +265,7 @@ Entries are generated within the **same transaction** as the source document (ou
 | `product_variants` | `product_id`, `sku`, `barcode`, `attributes` (jsonb: size/color), `purchase_price`, `sale_price` | optional for F1 |
 | `warehouses` | `code`, `name`, `address`, `active` | index `(tenant_id, code)` |
 | `warehouse_locations` | `warehouse_id`, `code`, `name`, `active` | index `(tenant_id, warehouse_id)` |
-| `product_stock` | `product_id`, `warehouse_id`, `location_id`, `quantity` (default 0), `reserved_quantity` (default 0), `average_cost` (default 0), `version` | **unique** `(tenant_id, product_id, warehouse_id, location_id)`; optimistic lock |
+| `product_stock` | `product_id`, `warehouse_id`, `quantity` (default 0), `reserved_quantity` (default 0), `average_cost` (default 0), `version` | stock per warehouse in F1 (locations are informational); **unique** `(tenant_id, product_id, warehouse_id)`; optimistic lock |
 | `stock_movements` | `movement_type` (enum), `product_id`, `warehouse_id`, `location_id`, `quantity` (signed), `unit_cost`, `reference_type`, `reference_id`, `user_id`, `notes`, `occurred_at` | append-only; index `(tenant_id, product_id, occurred_at)` |
 
 **Rules**
@@ -293,7 +293,7 @@ Entries are generated within the **same transaction** as the source document (ou
 ```
 categories ─1:N─ products ─1:N─ product_variants
 products ─1:N─ product_stock ─N:1─ warehouses ─1:N─ warehouse_locations
-stock_movements → product / warehouse / location  (reference_type+id → invoices, orders)
+stock_movements → product / warehouse / (optional) location  (reference_type+id → invoices, orders)
 
 customers ─1:N─ sales_orders ─1:N─ sales_order_items → products
 customers ─1:N─ invoices ─1:N─ invoice_items → products
