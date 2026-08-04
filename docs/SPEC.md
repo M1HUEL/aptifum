@@ -239,9 +239,93 @@ Entries are generated within the **same transaction** as the source document (ou
 
 ---
 
-## 12. Next steps
+## 12. Progress
 
-1. Resolve the open decisions in §11.
-2. Create the **domain glossary** (terms: order vs. sales order, quote, entry, etc.).
-3. Define the **F0–F1 data model** (detailed entities and relationships).
-4. Scaffold the monorepo (F0) and the first modules.
+- [x] Monorepo scaffold (F0): Turborepo + pnpm, NestJS API, PostgreSQL, auth + RBAC + tenants + audit, seeders, Swagger, Vitest.
+- [x] F1 data model definition (§13).
+
+## 13. F1 data model (inventory + sales/billing)
+
+### 13.0 Common conventions
+
+- Every business entity extends `TenantBaseEntity` (`BaseEntity` + `tenant_id uuid not null`), so tenant isolation is structural.
+- UUID primary keys; `timestamptz` timestamps; soft delete (`deleted_at`) on all business entities.
+- **Optimistic lock:** `version` column on high-contention entities (`products`, `product_stock`, `sales_orders`, `invoices`).
+- **Money:** `numeric(14,2)` (no floats). **Quantities:** `numeric(18,4)`. **Tax rates:** `numeric(6,4)`.
+- **Source-document references** are polymorphic: `reference_type` (module/entity name) + `reference_id` (UUID).
+- Enums live in `packages/core`; every table with a `tenant_id` gets a composite index starting with `tenant_id`.
+- **Global multitenancy filter:** TypeORM custom repository/base repository injects `tenant_id` from the request context on every query (interceptor + guard, see §4).
+
+### 13.1 Inventory
+
+| Table | Columns (besides base + tenant) | Notes / indexes |
+|-------|--------------------------------|-----------------|
+| `categories` | `name`, `parent_id` (self-ref, nullable), `active` | tree; index `(tenant_id, parent_id)` |
+| `products` | `sku`, `name`, `description`, `category_id`, `brand`, `unit_of_measure`, `barcode`, `image_url`, `purchase_price`, `sale_price`, `default_tax_id`, `enabled`, `version` | `sku` unique per tenant; index `(tenant_id, sku)`, `(tenant_id, name)` |
+| `product_variants` | `product_id`, `sku`, `barcode`, `attributes` (jsonb: size/color), `purchase_price`, `sale_price` | optional for F1 |
+| `warehouses` | `code`, `name`, `address`, `active` | index `(tenant_id, code)` |
+| `warehouse_locations` | `warehouse_id`, `code`, `name`, `active` | index `(tenant_id, warehouse_id)` |
+| `product_stock` | `product_id`, `warehouse_id`, `location_id`, `quantity` (default 0), `reserved_quantity` (default 0), `average_cost` (default 0), `version` | **unique** `(tenant_id, product_id, warehouse_id, location_id)`; optimistic lock |
+| `stock_movements` | `movement_type` (enum), `product_id`, `warehouse_id`, `location_id`, `quantity` (signed), `unit_cost`, `reference_type`, `reference_id`, `user_id`, `notes`, `occurred_at` | append-only; index `(tenant_id, product_id, occurred_at)` |
+
+**Rules**
+- Stock is never negative (except authorized adjustments with `stock:adjust`).
+- Every movement runs inside a DB transaction; inbound updates `average_cost`:
+  `new_avg = (prev_qty * prev_cost + qty * cost) / (prev_qty + qty)`.
+- `stock_movements` is the single source of truth; `product_stock` is the current snapshot.
+
+### 13.2 Sales & billing
+
+| Table | Columns (besides base + tenant) | Notes / indexes |
+|-------|--------------------------------|-----------------|
+| `customers` | `code`, `trade_name`, `legal_name`, `tax_id`, `email`, `phone`, `address`, `currency`, `credit_limit`, `price_category`, `active`, `version` | index `(tenant_id, code)`, `(tenant_id, tax_id)` |
+| `taxes` | `name`, `rate` `numeric(6,4)`, `kind` (enum: sales/purchase), `active` | country-agnostic; tenant configures |
+| `document_series` | `kind` (enum: quote/order/invoice/credit_note), `prefix`, `next_number` (bigint), `active` | per-tenant automatic numbering; atomic increment (row lock/serializable) |
+| `sales_orders` | `number` (unique per tenant), `kind` (enum: quote/order), `status` (enum: draft/confirmed/invoiced/cancelled), `customer_id`, `warehouse_id`, `issue_date`, `due_date`, `currency`, `subtotal`, `discount`, `tax`, `total`, `notes`, `version` | quotes and orders share this table; index `(tenant_id, number)`, `(tenant_id, customer_id, issue_date)` |
+| `sales_order_items` | `order_id`, `product_id`, `description`, `quantity`, `unit_price`, `discount`, `tax_rate`, `tax_amount`, `line_total` | index `(tenant_id, order_id)` |
+| `invoices` | `number` (unique per tenant), `series_id`, `type` (enum: invoice/credit_note), `status` (enum: draft/issued/cancelled), `customer_id`, `order_id` (nullable), `issue_date`, `due_date`, `currency`, `subtotal`, `discount`, `tax`, `total`, `paid_amount`, `balance_due`, `notes`, `version` | index `(tenant_id, number)`, `(tenant_id, customer_id, issue_date)` |
+| `invoice_items` | `invoice_id`, `product_id`, `description`, `quantity`, `unit_price`, `discount`, `tax_rate`, `tax_amount`, `line_total` | index `(tenant_id, invoice_id)` |
+| `payments` | `invoice_id`, `method` (enum: cash/card/transfer/other), `amount`, `received_at`, `reference`, `notes` | partial payments; index `(tenant_id, invoice_id, received_at)` |
+| `idempotency_keys` | `key` (unique), `request_hash`, `response` (jsonb), `created_at` | dedupe on financial POSTs (`Idempotency-Key`) |
+
+### 13.3 Key relationships
+
+```
+categories ─1:N─ products ─1:N─ product_variants
+products ─1:N─ product_stock ─N:1─ warehouses ─1:N─ warehouse_locations
+stock_movements → product / warehouse / location  (reference_type+id → invoices, orders)
+
+customers ─1:N─ sales_orders ─1:N─ sales_order_items → products
+customers ─1:N─ invoices ─1:N─ invoice_items → products
+invoices ─1:N─ payments
+invoices → order (nullable); invoices → stock_movements (COGS outbound)
+document_series → invoices / sales_orders (numbering)
+```
+
+### 13.4 Key flows (F1)
+
+1. **Quote → Order → Invoice:** a confirmed order can be converted to an issued invoice; the invoice series number is assigned atomically from `document_series`.
+2. **Sale invoices stock out:** issuing an invoice creates one `stock_movement` (outbound) per line inside the **same transaction**, posting COGS at the current `average_cost`.
+3. **Collections:** `payments` are recorded per invoice (partials allowed); `paid_amount` / `balance_due` update on the invoice.
+4. **Inbound stock:** in F1 stock enters via `adjustment`/`inbound` movements (purchasing arrives in F2).
+5. **Idempotency:** invoice issue and payment POSTs accept `Idempotency-Key` to prevent duplicate entries.
+
+### 13.5 Enums to add in `packages/core`
+
+- `MovementType`: inbound, outbound, adjustment, transfer, return, disposal
+- `SalesOrderKind`: quote, order
+- `SalesOrderStatus`: draft, confirmed, invoiced, cancelled
+- `InvoiceType`: invoice, credit_note
+- `InvoiceStatus`: draft, issued, cancelled
+- `PaymentMethod`: cash, card, transfer, other
+- `TaxKind`: sales, purchase
+- `DocumentSeriesKind`: quote, order, invoice, credit_note
+
+---
+
+## 14. Next steps
+
+1. Implement F1 **Inventory** module (entities, migration, CRUD, movements, valuation).
+2. Implement F1 **Sales/billing** module (customers, orders, invoices, payments, series).
+3. Resolve open decisions in §11 as they become blocking (tax country, currency, POS).
+4. Create the **domain glossary**.
