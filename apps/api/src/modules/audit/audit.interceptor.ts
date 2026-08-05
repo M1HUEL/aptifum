@@ -56,7 +56,12 @@ function entityIdFromPath(path: string): string | null {
   const segments = segmentsOf(path);
   const base = segments.findIndex((segment) => segment === 'v1');
   const candidate = segments[base + 3];
-  return candidate && candidate !== 'me' ? candidate : null;
+  if (!candidate || candidate === 'me') {
+    return null;
+  }
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate)
+    ? candidate
+    : null;
 }
 
 function actionForMethod(method: string): AuditAction {

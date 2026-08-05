@@ -92,6 +92,7 @@ export enum DocumentSeriesKind {
   GOODS_RECEIPT = 'goods_receipt',
   JOURNAL_ENTRY = 'journal_entry',
   LEAD = 'lead',
+  PAYROLL = 'payroll',
 }
 
 export enum PurchaseOrderStatus {
@@ -147,6 +148,38 @@ export enum ActivityType {
   MEETING = 'meeting',
   TASK = 'task',
   NOTE = 'note',
+}
+
+export enum EmployeeStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+}
+
+export enum AttendanceStatus {
+  PRESENT = 'present',
+  LATE = 'late',
+  ABSENT = 'absent',
+  LEAVE = 'leave',
+}
+
+export enum LeaveType {
+  VACATION = 'vacation',
+  SICK = 'sick',
+  PERSONAL = 'personal',
+  OTHER = 'other',
+}
+
+export enum LeaveStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  CANCELLED = 'cancelled',
+}
+
+export enum PayrollStatus {
+  DRAFT = 'draft',
+  POSTED = 'posted',
+  CANCELLED = 'cancelled',
 }
 
 export const round2 = (n: number): number => Math.round(n * 100) / 100;

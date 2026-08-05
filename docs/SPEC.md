@@ -249,6 +249,7 @@ Entries are generated within the **same transaction** as the source document (ou
 - [x] F2.2 Accounting (chart of accounts, automatic entries, closing) — defined in §16.
 - [x] F3 CRM (contacts, leads, opportunities, activities) — defined in §17.
 - [x] F3 Accounting reports (trial balance, general ledger) — defined in §18.
+- [x] F3 HR (departments, employees, attendance, leaves, payroll) — defined in §19.
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -464,5 +465,50 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 - `GET /accounting/reports/trial-balance?periodId=&from=&to=` returns per-account `debit`, `credit` and `balance` computed from `normal_balance` (debit accounts: `debit - credit`, credit accounts: `credit - debit`), filtering out zero-balance accounts, plus `totals {debit, credit}` for balance verification.
 - `GET /accounting/reports/ledger/:accountId?from=&to=` returns posted lines ordered by `entry_date, created_at, line_index` with a running balance; unknown account → `404`.
 - Filters are parameter-positional (`$1..$N`) built from the tenant and optional period/date bounds.
+
+## 19. F3 HR data model
+
+### 19.1 Conventions
+
+- Same base conventions as §13.0 (tenant isolation, soft delete, `numeric(14,2)` money, enums in `packages/core`).
+- Payrolls are numbered through `document_series` with prefix `PR` (`DocumentSeriesKind.payroll`), unique per tenant and period.
+- Employees get an auto code `EMP-000001..` (tenant-scoped counter over existing rows).
+- Salary fields are sensitive: only users with `hr:approve` (or `*`) see them in responses; others get them stripped.
+
+### 19.2 Tables
+
+| Table | Columns (besides base + tenant) | Notes / indexes |
+|-------|--------------------------------|-----------------|
+| `hr_departments` | `code` (unique per tenant), `name`, `manager_employee_id` (FK → hr_employees, nullable), `active` | unique `(tenant_id, code)` |
+| `hr_employees` | `employee_no` (unique per tenant), `names`, `email`, `phone`, `department_id` (FK → hr_departments), `position`, `hire_date`, `termination_date`, `salary` (numeric(14,2)), `salary_frequency`, `bank_name`, `bank_account`, `tax_id`, `address`, `status` (enum), `version` | unique `(tenant_id, employee_no)`; index `(tenant_id, department_id)` |
+| `hr_attendance` | `employee_id` (FK), `work_date` (date), `clock_in_at`/`clock_out_at` (timestamptz), `worked_minutes` (int), `status` (enum), `notes` | **unique** `(tenant_id, employee_id, work_date)` |
+| `hr_leaves` | `employee_id` (FK), `leave_type` (enum), `start_date`, `end_date`, `days` (int), `status` (enum), `reason`, `approved_by` (FK → users), `approved_at` | index `(tenant_id, employee_id, start_date)` |
+| `hr_payrolls` | `number` (unique per tenant), `period` (`YYYY-MM`), `status` (enum), `currency`, `total_gross`, `total_deductions`, `total_net` (numeric(14,2)), `paid_at`, `posted_entry_id` (FK → journal_entries, nullable), `posted_at`, `version` | unique `(tenant_id, number)`, `(tenant_id, period)` |
+| `hr_payroll_lines` | `payroll_id` (FK → hr_payrolls), `employee_id` (FK), `gross`, `bonus`, `overtime`, `deductions`, `net` (numeric(14,2)) | unique `(tenant_id, payroll_id, employee_id)` |
+
+**Enums added in `packages/core`**
+
+- `EmployeeStatus`: active, inactive
+- `AttendanceStatus`: present, late, absent, leave
+- `LeaveType`: vacation, sick, personal, other
+- `LeaveStatus`: pending, approved, rejected, cancelled
+- `PayrollStatus`: draft, posted, cancelled
+- `DocumentSeriesKind` += `payroll`
+- `ACCOUNT_CODES` += `PAYROLL_PAYABLE: '2001'`, `PAYROLL_DEDUCTIONS_PAYABLE: '2002'`, `PAYROLL_EXPENSE: '6000'`
+
+### 19.3 Key flows
+
+- **Clock in/out:** `POST /hr/attendance/clock` (`action: in|out`) upserts the day's record; `worked_minutes` recomputed on clock-out; second clock-in / clock-out of the same day → `409`.
+- **Leaves:** `days` computed from range; only `pending` leaves can be edited, deleted, approved or rejected; approve/reject requires `hr:approve` and stamps `approved_by`/`approved_at`.
+- **Payroll generate:** transaction validating employees and `net >= 0`, computing `gross = salary + bonus + overtime`, `net = gross - deductions`, totals, and allocating the next `PR` number; duplicate period → `409`.
+- **Payroll post:** requires `hr:read` + `hr:approve`; in a transaction, `postJournalEntry` with entry date = last day of the period, debit `6000` `total_gross`, credit `2001` `total_net`, credit `2002` `total_deductions` (only if > 0), description `Nómina <number> (<period>)`, `reference_type = 'payroll'`; marks the payroll `posted` with `posted_entry_id`. Only `draft` payrolls can be posted or cancelled (`400`).
+
+### 19.4 API surface (`/hr/...`, module permission `HR` with `read`, `write`, `approve`)
+
+- `GET/POST /hr/departments`, `GET/PATCH/DELETE /hr/departments/:id`
+- `GET/POST /hr/employees`, `GET/PATCH/DELETE /hr/employees/:id` (`?includeSalary=true` gated on `hr:approve`)
+- `GET/POST /hr/attendance`, `GET/PATCH/DELETE /hr/attendance/:id`, `POST /hr/attendance/clock`
+- `GET/POST /hr/leaves`, `GET/PATCH/DELETE /hr/leaves/:id`, `POST /hr/leaves/:id/approve`, `POST /hr/leaves/:id/reject`
+- `GET/POST /hr/payrolls`, `GET /hr/payrolls/:id`, `POST /hr/payrolls/generate`, `POST /hr/payrolls/:id/post`, `POST /hr/payrolls/:id/cancel`
 
 ---

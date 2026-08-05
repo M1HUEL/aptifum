@@ -21,6 +21,9 @@ export const ACCOUNT_CODES = {
   SALES_REVENUE: '4000',
   SALES_RETURNS: '4100',
   COST_OF_GOODS_SOLD: '5000',
+  PAYROLL_PAYABLE: '2001',
+  PAYROLL_DEDUCTIONS_PAYABLE: '2002',
+  PAYROLL_EXPENSE: '6000',
 } as const;
 
 export class ChartAccountNotFoundError extends Error {

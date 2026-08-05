@@ -7,15 +7,21 @@ import { CrmContact } from './crm-contact.entity';
 import { CrmLead } from './crm-lead.entity';
 import { CrmOpportunity } from './crm-opportunity.entity';
 import { Customer } from './customer.entity';
+import { Department } from './hr-department.entity';
 import { DocumentSeries } from './document-series.entity';
+import { Employee } from './hr-employee.entity';
 import { GoodsReceipt } from './goods-receipt.entity';
 import { GoodsReceiptItem } from './goods-receipt-item.entity';
+import { AttendanceRecord } from './hr-attendance.entity';
 import { IdempotencyKey } from './idempotency-key.entity';
 import { Invoice } from './invoice.entity';
 import { InvoiceItem } from './invoice-item.entity';
 import { JournalEntry } from './journal-entry.entity';
 import { JournalEntryLine } from './journal-entry-line.entity';
+import { Leave } from './hr-leave.entity';
 import { Payment } from './payment.entity';
+import { Payroll } from './hr-payroll.entity';
+import { PayrollLine } from './hr-payroll-line.entity';
 import { Product } from './product.entity';
 import { ProductStock } from './product-stock.entity';
 import { PurchaseOrder } from './purchase-order.entity';
@@ -60,6 +66,12 @@ export const entities = [
   ChartAccount,
   JournalEntry,
   JournalEntryLine,
+  Department,
+  Employee,
+  AttendanceRecord,
+  Leave,
+  Payroll,
+  PayrollLine,
 ];
 
 export {
@@ -72,15 +84,21 @@ export {
   CrmLead,
   CrmOpportunity,
   Customer,
+  Department,
   DocumentSeries,
+  Employee,
   GoodsReceipt,
   GoodsReceiptItem,
+  AttendanceRecord,
   IdempotencyKey,
   Invoice,
   InvoiceItem,
   JournalEntry,
   JournalEntryLine,
+  Leave,
   Payment,
+  Payroll,
+  PayrollLine,
   Product,
   ProductStock,
   PurchaseOrder,

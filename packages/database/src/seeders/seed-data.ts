@@ -36,7 +36,11 @@ export const DEFAULT_ROLES: Record<RoleName, string[]> = {
     p(ModuleName.PURCHASING, 'read'),
     p(ModuleName.PURCHASING, 'write'),
   ],
-  [RoleName.HR]: [p(ModuleName.HR, 'read'), p(ModuleName.HR, 'write')],
+  [RoleName.HR]: [
+    p(ModuleName.HR, 'read'),
+    p(ModuleName.HR, 'write'),
+    p(ModuleName.HR, 'approve'),
+  ],
 };
 
 export const DEFAULT_SERIES: Record<DocumentSeriesKind, string> = {
@@ -48,6 +52,7 @@ export const DEFAULT_SERIES: Record<DocumentSeriesKind, string> = {
   [DocumentSeriesKind.GOODS_RECEIPT]: 'GR',
   [DocumentSeriesKind.JOURNAL_ENTRY]: 'JE',
   [DocumentSeriesKind.LEAD]: 'LD',
+  [DocumentSeriesKind.PAYROLL]: 'PR',
 };
 
 export const DEFAULT_ACCOUNTS: Array<{
@@ -60,11 +65,14 @@ export const DEFAULT_ACCOUNTS: Array<{
   { code: '1100', name: 'Cuentas por cobrar', type: AccountType.ASSET, normalBalance: AccountNormalBalance.DEBIT },
   { code: '1200', name: 'Inventario', type: AccountType.ASSET, normalBalance: AccountNormalBalance.DEBIT },
   { code: '2000', name: 'Cuentas por pagar', type: AccountType.LIABILITY, normalBalance: AccountNormalBalance.CREDIT },
+  { code: '2001', name: 'Nómina por pagar', type: AccountType.LIABILITY, normalBalance: AccountNormalBalance.CREDIT },
+  { code: '2002', name: 'Retenciones y deducciones por pagar', type: AccountType.LIABILITY, normalBalance: AccountNormalBalance.CREDIT },
   { code: '2100', name: 'IVA ventas por pagar', type: AccountType.LIABILITY, normalBalance: AccountNormalBalance.CREDIT },
   { code: '3000', name: 'Utilidades acumuladas', type: AccountType.EQUITY, normalBalance: AccountNormalBalance.CREDIT },
   { code: '4000', name: 'Ingresos por ventas', type: AccountType.REVENUE, normalBalance: AccountNormalBalance.CREDIT },
   { code: '4100', name: 'Devoluciones sobre ventas', type: AccountType.REVENUE, normalBalance: AccountNormalBalance.DEBIT },
   { code: '5000', name: 'Costo de ventas', type: AccountType.EXPENSE, normalBalance: AccountNormalBalance.DEBIT },
+  { code: '6000', name: 'Gastos de nómina', type: AccountType.EXPENSE, normalBalance: AccountNormalBalance.DEBIT },
 ];
 
 export const DEFAULT_TENANT_ID = '00000000-0000-4000-8000-000000000001';
