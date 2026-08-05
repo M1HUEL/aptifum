@@ -221,8 +221,7 @@ Entries are generated within the **same transaction** as the source document (ou
 |-------|---------|-------------|
 | **F0 · Foundation** | Monorepo scaffold (Turborepo + pnpm), NestJS API, PostgreSQL, auth + RBAC + tenants, audit, CI/CD, seeders, Swagger | Deployable base API with login and user management |
 | **F1 · Commercial core** | Inventory (products, warehouses, movements, valuation) + Sales/billing (customers, quotes, orders, invoices, collections) | Complete sales flow with stock integration |
-| **F2 · Finance** | Purchasing (suppliers, POs, receiving, AP) + Accounting (chart of accounts, automatic entries, reports) | Operational accounting close |
-| **F3 · Organization** | CRM + Human Resources + Production | Fully integrated modules |
+| **F2 · Finance** | Purchasing (suppliers, POs, receiving, AP) + Accounting (chart of accounts, automatic entries, reports) | Operational accounting close || **F3 · Organization** | CRM + Human Resources + Production | Fully integrated modules |
 | **F4 · Analytics and platform** | BI reports, dashboard, exports, integrations (banks, tax, e-commerce), web frontend | Complete ERP for 20–200 users |
 
 ---
@@ -246,6 +245,8 @@ Entries are generated within the **same transaction** as the source document (ou
 - [x] F1 Inventory module (entities, migration, CRUD, movements, valuation).
 - [x] F1 Sales/billing module (customers, orders, invoices, payments, series, idempotency).
 - [x] Domain glossary (`docs/GLOSSARY.md`).
+- [x] F2.1 Purchasing (suppliers, purchase orders, goods receipts) — defined in §15.
+- [ ] F2.2 Accounting (chart of accounts, automatic entries, closing).
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -333,3 +334,33 @@ document_series → invoices / sales_orders (numbering)
 3. [ ] Resolve open decisions in §11 as they become blocking (tax country, currency, POS).
 4. [x] Create the **domain glossary** (`docs/GLOSSARY.md`).
 5. [ ] Next phases (see §10): F2 Finance (purchasing, accounting) → F3 Organization (CRM, HR, production) → F4 Analytics and platform.
+
+---
+
+## 15. F2 purchasing data model (F2.1)
+
+### 15.1 Conventions
+
+Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `numeric(18,4)` quantities, `version` optimistic lock on `suppliers`/`purchase_orders`).
+
+### 15.2 Tables
+
+| Table | Columns (besides base + tenant) | Notes / indexes |
+|-------|--------------------------------|-----------------|
+| `suppliers` | `code`, `trade_name`, `legal_name`, `tax_id`, `email`, `phone`, `address`, `currency`, `payment_terms`, `credit_limit` `numeric(14,2)`, `active`, `version` | `code` unique per tenant; index `(tenant_id, code)`, `(tenant_id, tax_id)` |
+| `purchase_orders` | `number` (unique per tenant), `status` (enum: draft/approved/received/cancelled), `supplier_id`, `warehouse_id`, `issue_date`, `expected_at`, `currency`, `subtotal`, `discount`, `tax`, `total`, `notes`, `version` | index `(tenant_id, number)`, `(tenant_id, supplier_id, issue_date)` |
+| `purchase_order_items` | `order_id`, `product_id`, `description`, `quantity`, `unit_cost`, `discount`, `tax_rate`, `tax_amount`, `line_total`, `received_quantity` (default 0) | `received_quantity` tracks partial receiving; index `(tenant_id, order_id)` |
+| `goods_receipts` | `number` (unique per tenant), `order_id`, `supplier_id`, `warehouse_id`, `received_at`, `notes` | append-only; index `(tenant_id, number)`, `(tenant_id, order_id)` |
+| `goods_receipt_items` | `receipt_id`, `order_item_id`, `product_id`, `quantity`, `unit_cost` | index `(tenant_id, receipt_id)` |
+
+### 15.3 Key flows
+
+1. **PO lifecycle:** `draft → approved → received`, or `cancelled` (from draft/approved only). Receive requires an approved order.
+2. **Receiving (partial or full):** each goods receipt creates one `stock_movement` (`inbound`) per line **in the same transaction** (`reference_type='purchase_receipt'`, `reference_id=<receipt id>`), posting `unit_cost` from the PO line and updating `average_cost`. `purchase_order_items.received_quantity` increments per line; when every line is fully received the PO moves to `received`.
+3. **Numbering:** `document_series` kinds `purchase_order` (prefix `PO`) and `goods_receipt` (prefix `GR`), assigned atomically like sales.
+4. **Supplier invoice / AP:** deferred to F2.2 (reconciliation with PO/receipt, due dates, supplier payments).
+
+### 15.4 Enums to add in `packages/core`
+
+- `PurchaseOrderStatus`: draft, approved, received, cancelled
+- `DocumentSeriesKind` += `purchase_order`, `goods_receipt`

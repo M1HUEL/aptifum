@@ -3,3 +3,4 @@ export * from './entities';
 export * from './seeders/seed';
 export * from './seeders/seed-data';
 export * from './services/stock';
+export * from './services/document-numbering';

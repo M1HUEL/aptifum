@@ -32,6 +32,7 @@ export const DEFAULT_ROLES: Record<RoleName, string[]> = {
     p(ModuleName.INVENTORY, 'write'),
     p(ModuleName.INVENTORY, 'adjust'),
     p(ModuleName.PURCHASING, 'read'),
+    p(ModuleName.PURCHASING, 'write'),
   ],
   [RoleName.HR]: [p(ModuleName.HR, 'read'), p(ModuleName.HR, 'write')],
 };
@@ -41,6 +42,8 @@ export const DEFAULT_SERIES: Record<DocumentSeriesKind, string> = {
   [DocumentSeriesKind.ORDER]: 'ORD',
   [DocumentSeriesKind.INVOICE]: 'INV',
   [DocumentSeriesKind.CREDIT_NOTE]: 'NC',
+  [DocumentSeriesKind.PURCHASE_ORDER]: 'PO',
+  [DocumentSeriesKind.GOODS_RECEIPT]: 'GR',
 };
 
 export const DEFAULT_TENANT_ID = '00000000-0000-4000-8000-000000000001';

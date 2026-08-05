@@ -88,6 +88,41 @@ export enum DocumentSeriesKind {
   ORDER = 'order',
   INVOICE = 'invoice',
   CREDIT_NOTE = 'credit_note',
+  PURCHASE_ORDER = 'purchase_order',
+  GOODS_RECEIPT = 'goods_receipt',
+}
+
+export enum PurchaseOrderStatus {
+  DRAFT = 'draft',
+  APPROVED = 'approved',
+  RECEIVED = 'received',
+  CANCELLED = 'cancelled',
+}
+
+export const round2 = (n: number): number => Math.round(n * 100) / 100;
+
+export const today = (): string => new Date().toISOString().slice(0, 10);
+
+export interface TotalsItem {
+  quantity: number;
+  unitPrice: number;
+  discount?: number;
+  taxRate?: number;
+}
+
+export function computeTotals(items: TotalsItem[], globalDiscount = 0) {
+  const subtotal = round2(
+    items.reduce((sum, i) => sum + (i.quantity * i.unitPrice - (i.discount ?? 0)), 0),
+  );
+  const tax = round2(
+    items.reduce((sum, i) => sum + i.quantity * i.unitPrice * (i.taxRate ?? 0), 0),
+  );
+  return {
+    subtotal,
+    discount: round2(globalDiscount),
+    tax,
+    total: round2(subtotal + tax - globalDiscount),
+  };
 }
 
 export interface AuthUser {
