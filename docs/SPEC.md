@@ -243,6 +243,9 @@ Entries are generated within the **same transaction** as the source document (ou
 
 - [x] Monorepo scaffold (F0): Turborepo + pnpm, NestJS API, PostgreSQL, auth + RBAC + tenants + audit, seeders, Swagger, Vitest.
 - [x] F1 data model definition (§13).
+- [x] F1 Inventory module (entities, migration, CRUD, movements, valuation).
+- [x] F1 Sales/billing module (customers, orders, invoices, payments, series, idempotency).
+- [x] Domain glossary (`docs/GLOSSARY.md`).
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -325,7 +328,8 @@ document_series → invoices / sales_orders (numbering)
 
 ## 14. Next steps
 
-1. Implement F1 **Inventory** module (entities, migration, CRUD, movements, valuation).
-2. Implement F1 **Sales/billing** module (customers, orders, invoices, payments, series).
-3. Resolve open decisions in §11 as they become blocking (tax country, currency, POS).
-4. Create the **domain glossary**.
+1. [x] Implement F1 **Inventory** module (entities, migration, CRUD, movements, valuation).
+2. [x] Implement F1 **Sales/billing** module (customers, orders, invoices, payments, series).
+3. [ ] Resolve open decisions in §11 as they become blocking (tax country, currency, POS).
+4. [x] Create the **domain glossary** (`docs/GLOSSARY.md`).
+5. [ ] Next phases (see §10): F2 Finance (purchasing, accounting) → F3 Organization (CRM, HR, production) → F4 Analytics and platform.
