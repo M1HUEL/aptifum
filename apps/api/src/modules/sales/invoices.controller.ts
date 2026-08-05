@@ -45,12 +45,12 @@ export class InvoicesController {
   @RequirePermissions(permission(ModuleName.INVOICING, 'write'))
   @ApiOperation({ summary: 'Record a payment against an invoice' })
   recordPayment(
-    @CurrentUser() user: { tenantId: string | null },
+    @CurrentUser() user: { tenantId: string | null; id: string },
     @Param('id') id: string,
     @Body() dto: CreatePaymentDto,
     @Headers('idempotency-key') idempotencyKey?: string,
   ) {
-    return this.invoicesService.recordPayment(user.tenantId, id, dto, idempotencyKey);
+    return this.invoicesService.recordPayment(user.tenantId, user.id, id, dto, idempotencyKey);
   }
 
   @Post(':id/credit-note')

@@ -15,17 +15,24 @@ import {
   SalesOrderStatus,
 } from '@aptifum/core';
 import {
+  ACCOUNT_CODES,
   applyStockMovement,
+  ChartAccountNotFoundError,
   Customer,
   IdempotencyKey,
   InsufficientStockError,
   Invoice,
   InvoiceItem,
+  JournalEntryPeriodClosedError,
+  JournalEntryUnbalancedError,
   Payment,
+  postJournalEntry,
   Product,
+  ProductStock,
   SalesOrder,
   Warehouse,
 } from '@aptifum/database';
+import type { JournalLineInput } from '@aptifum/database';
 import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -89,6 +96,7 @@ export class InvoicesService {
 
   async recordPayment(
     tenantId: string | null,
+    userId: string | null,
     invoiceId: string,
     dto: CreatePaymentDto,
     idempotencyKey?: string,
@@ -131,6 +139,7 @@ export class InvoicesService {
               notes: dto.notes ?? null,
             }),
           );
+          await this.postPaymentEntry(manager, tenantId, userId, invoice, payment);
           return {
             id: payment.id,
             invoiceId: invoice.id,
@@ -207,8 +216,9 @@ export class InvoicesService {
             items,
           });
           const saved = await invoicesRepo.save(creditNote);
+          let cogs = 0;
           for (const item of original.items) {
-            await this.applyReturn(
+            const avgCost = await this.applyReturn(
               manager,
               tenantId,
               userId,
@@ -217,7 +227,9 @@ export class InvoicesService {
               item.quantity,
               saved.id,
             );
+            cogs = round2(cogs + item.quantity * avgCost);
           }
+          await this.postSaleEntry(manager, tenantId, userId, saved, cogs);
           return this.invoiceView(saved, items);
         });
       },
@@ -294,8 +306,9 @@ export class InvoicesService {
         items,
       });
       const saved = await invoicesRepo.save(invoice);
+      let cogs = 0;
       for (const item of order.items) {
-        await this.applyOutbound(
+        const avgCost = await this.applyOutbound(
           manager,
           tenantId,
           userId,
@@ -304,7 +317,9 @@ export class InvoicesService {
           item.quantity,
           saved.id,
         );
+        cogs = round2(cogs + item.quantity * avgCost);
       }
+      await this.postSaleEntry(manager, tenantId, userId, saved, cogs);
       order.status = SalesOrderStatus.INVOICED;
       await ordersRepo.save(order);
       return this.invoiceView(saved, items);
@@ -387,8 +402,9 @@ export class InvoicesService {
         items: invoiceItems,
       });
       const saved = await invoicesRepo.save(invoice);
+      let cogs = 0;
       for (const item of items) {
-        await this.applyOutbound(
+        const avgCost = await this.applyOutbound(
           manager,
           tenantId,
           userId,
@@ -397,7 +413,9 @@ export class InvoicesService {
           item.quantity,
           saved.id,
         );
+        cogs = round2(cogs + item.quantity * avgCost);
       }
+      await this.postSaleEntry(manager, tenantId, userId, saved, cogs);
       return this.invoiceView(saved, invoiceItems);
     });
   }
@@ -410,7 +428,7 @@ export class InvoicesService {
     warehouseId: string,
     quantity: number,
     invoiceId: string,
-  ) {
+  ): Promise<number> {
     try {
       await applyStockMovement(manager, {
         tenantId,
@@ -429,6 +447,10 @@ export class InvoicesService {
       }
       throw error;
     }
+    const stock = await manager
+      .getRepository(ProductStock)
+      .findOneBy({ tenantId, productId, warehouseId });
+    return stock?.averageCost ?? 0;
   }
 
   private async applyReturn(
@@ -439,9 +461,9 @@ export class InvoicesService {
     warehouseId: string | null,
     quantity: number,
     creditNoteId: string,
-  ) {
+  ): Promise<number> {
     if (!warehouseId) {
-      return;
+      return 0;
     }
     await applyStockMovement(manager, {
       tenantId,
@@ -454,6 +476,111 @@ export class InvoicesService {
       referenceId: creditNoteId,
       userId,
     });
+    const stock = await manager
+      .getRepository(ProductStock)
+      .findOneBy({ tenantId, productId, warehouseId });
+    return stock?.averageCost ?? 0;
+  }
+
+  private async postSaleEntry(
+    manager: EntityManager,
+    tenantId: string,
+    userId: string | null,
+    invoice: Invoice,
+    cogs: number,
+  ): Promise<void> {
+    try {
+      let lines: JournalLineInput[];
+      if (invoice.type === InvoiceType.CREDIT_NOTE) {
+        lines = [
+          {
+            accountCode: ACCOUNT_CODES.SALES_RETURNS,
+            debit: round2(invoice.subtotal - invoice.discount),
+          },
+          { accountCode: ACCOUNT_CODES.OUTPUT_VAT, debit: invoice.tax },
+          { accountCode: ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, credit: invoice.total },
+        ];
+        if (cogs > 0) {
+          lines.push(
+            { accountCode: ACCOUNT_CODES.INVENTORY, debit: cogs },
+            { accountCode: ACCOUNT_CODES.COST_OF_GOODS_SOLD, credit: cogs },
+          );
+        }
+      } else {
+        lines = [
+          { accountCode: ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, debit: invoice.total },
+          {
+            accountCode: ACCOUNT_CODES.SALES_REVENUE,
+            credit: round2(invoice.subtotal - invoice.discount),
+          },
+          { accountCode: ACCOUNT_CODES.OUTPUT_VAT, credit: invoice.tax },
+        ];
+        if (cogs > 0) {
+          lines.push(
+            { accountCode: ACCOUNT_CODES.COST_OF_GOODS_SOLD, debit: cogs },
+            { accountCode: ACCOUNT_CODES.INVENTORY, credit: cogs },
+          );
+        }
+      }
+      const cleanLines = lines.filter(
+        (line) => (line.debit ?? 0) > 0 || (line.credit ?? 0) > 0,
+      );
+      if (cleanLines.length === 0) {
+        return;
+      }
+      await postJournalEntry(manager, tenantId, {
+        entryDate: invoice.issueDate,
+        description:
+          invoice.type === InvoiceType.CREDIT_NOTE
+            ? `Nota de crédito ${invoice.number}`
+            : `Factura ${invoice.number}`,
+        referenceType: invoice.type === InvoiceType.CREDIT_NOTE ? 'credit_note' : 'invoice',
+        referenceId: invoice.id,
+        currency: invoice.currency,
+        userId,
+        lines: cleanLines,
+      });
+    } catch (error) {
+      this.mapPostError(error);
+    }
+  }
+
+  private async postPaymentEntry(
+    manager: EntityManager,
+    tenantId: string,
+    userId: string | null,
+    invoice: Invoice,
+    payment: Payment,
+  ): Promise<void> {
+    try {
+      await postJournalEntry(manager, tenantId, {
+        entryDate: payment.receivedAt.toISOString().slice(0, 10),
+        description: `Pago ${invoice.number}`,
+        referenceType: 'payment',
+        referenceId: payment.id,
+        currency: invoice.currency,
+        userId,
+        lines: [
+          { accountCode: ACCOUNT_CODES.CASH, debit: payment.amount },
+          { accountCode: ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, credit: payment.amount },
+        ],
+      });
+    } catch (error) {
+      this.mapPostError(error);
+    }
+  }
+
+  private mapPostError(error: unknown): never {
+    if (error instanceof ChartAccountNotFoundError) {
+      throw new BadRequestException(error.message);
+    }
+    if (error instanceof JournalEntryPeriodClosedError) {
+      throw new ConflictException(error.message);
+    }
+    if (error instanceof JournalEntryUnbalancedError) {
+      throw new ConflictException(error.message);
+    }
+    throw error;
   }
 
   private async loadProducts(tenantId: string, ids: string[]): Promise<Map<string, Product>> {

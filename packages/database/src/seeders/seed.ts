@@ -1,6 +1,7 @@
 import { DocumentSeriesKind, RoleName } from '@aptifum/core';
 import * as bcrypt from 'bcryptjs';
 import { createDataSource, DataSourceOverrides } from '../data-source';
+import { ChartAccount } from '../entities/chart-account.entity';
 import { DocumentSeries } from '../entities/document-series.entity';
 import { Role } from '../entities/role.entity';
 import { Tenant } from '../entities/tenant.entity';
@@ -8,6 +9,7 @@ import { User } from '../entities/user.entity';
 import {
   ADMIN_EMAIL,
   ADMIN_PASSWORD,
+  DEFAULT_ACCOUNTS,
   DEFAULT_ROLES,
   DEFAULT_SERIES,
   DEFAULT_TENANT_ID,
@@ -63,6 +65,22 @@ export async function seed(overrides: DataSourceOverrides = {}): Promise<void> {
             prefix,
             nextNumber: 1,
             active: true,
+          }),
+        );
+      }
+    }
+
+    const accountsRepo = ds.getRepository(ChartAccount);
+    for (const account of DEFAULT_ACCOUNTS) {
+      const existing = await accountsRepo.findOneBy({
+        tenantId: tenant.id,
+        code: account.code,
+      });
+      if (!existing) {
+        await accountsRepo.save(
+          accountsRepo.create({
+            tenantId: tenant.id,
+            ...account,
           }),
         );
       }

@@ -1,18 +1,24 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, FindOptionsWhere, In, Repository } from 'typeorm';
 import {
+  ACCOUNT_CODES,
   applyStockMovement,
+  ChartAccountNotFoundError,
   DocumentSeriesNotFoundError,
   GoodsReceipt,
   GoodsReceiptItem,
+  JournalEntryPeriodClosedError,
+  JournalEntryUnbalancedError,
   nextDocumentNumber as dbNextDocumentNumber,
+  postJournalEntry,
   Product,
   PurchaseOrder,
   PurchaseOrderItem,
   Supplier,
   Warehouse,
 } from '@aptifum/database';
+import type { JournalLineInput } from '@aptifum/database';
 import { DocumentSeriesKind, MovementType, PurchaseOrderStatus, round2 } from '@aptifum/core';
 import { CreateGoodsReceiptDto } from './dto/create-goods-receipt.dto';
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
@@ -191,6 +197,7 @@ export class PurchaseOrdersService {
       });
       const saved = await receiptsRepo.save(receipt);
 
+      let receivedAmount = 0;
       for (const line of dto.items) {
         const orderItem = itemsById.get(line.orderItemId)!;
         orderItem.receivedQuantity = round2(orderItem.receivedQuantity + line.quantity);
@@ -206,6 +213,7 @@ export class PurchaseOrdersService {
           referenceId: saved.id,
           userId,
         });
+        receivedAmount = round2(receivedAmount + orderItem.unitCost * line.quantity);
       }
 
       const allReceived = order.items.every(
@@ -215,6 +223,14 @@ export class PurchaseOrdersService {
         order.status = PurchaseOrderStatus.RECEIVED;
         await manager.getRepository(PurchaseOrder).save(order);
       }
+      await this.postReceiptEntry(
+        manager,
+        tenantId,
+        userId,
+        order.currency,
+        saved,
+        receivedAmount,
+      );
       return saved;
     });
   }
@@ -252,6 +268,52 @@ export class PurchaseOrdersService {
     const subtotal = round2(items.reduce((sum, i) => sum + i.lineTotal, 0));
     const tax = round2(items.reduce((sum, i) => sum + i.taxAmount, 0));
     return { subtotal, discount: 0, tax, total: round2(subtotal + tax) };
+  }
+
+  private async postReceiptEntry(
+    manager: EntityManager,
+    tenantId: string,
+    userId: string | null,
+    currency: string,
+    receipt: GoodsReceipt,
+    amount: number,
+  ): Promise<void> {
+    try {
+      const lines: JournalLineInput[] = [
+        { accountCode: ACCOUNT_CODES.INVENTORY, debit: amount },
+        { accountCode: ACCOUNT_CODES.ACCOUNTS_PAYABLE, credit: amount },
+      ];
+      const cleanLines = lines.filter(
+        (line) => (line.debit ?? 0) > 0 || (line.credit ?? 0) > 0,
+      );
+      if (cleanLines.length === 0) {
+        return;
+      }
+      await postJournalEntry(manager, tenantId, {
+        entryDate: receipt.receivedAt.toISOString().slice(0, 10),
+        description: `Recepción ${receipt.number}`,
+        referenceType: 'purchase_receipt',
+        referenceId: receipt.id,
+        currency,
+        userId,
+        lines: cleanLines,
+      });
+    } catch (error) {
+      this.mapPostError(error);
+    }
+  }
+
+  private mapPostError(error: unknown): never {
+    if (error instanceof ChartAccountNotFoundError) {
+      throw new BadRequestException(error.message);
+    }
+    if (error instanceof JournalEntryPeriodClosedError) {
+      throw new ConflictException(error.message);
+    }
+    if (error instanceof JournalEntryUnbalancedError) {
+      throw new ConflictException(error.message);
+    }
+    throw error;
   }
 
   private async nextNumber(

@@ -1,5 +1,7 @@
+import { AccountingPeriod } from './accounting-period.entity';
 import { AuditLog } from './audit-log.entity';
 import { Category } from './category.entity';
+import { ChartAccount } from './chart-account.entity';
 import { Customer } from './customer.entity';
 import { DocumentSeries } from './document-series.entity';
 import { GoodsReceipt } from './goods-receipt.entity';
@@ -7,6 +9,8 @@ import { GoodsReceiptItem } from './goods-receipt-item.entity';
 import { IdempotencyKey } from './idempotency-key.entity';
 import { Invoice } from './invoice.entity';
 import { InvoiceItem } from './invoice-item.entity';
+import { JournalEntry } from './journal-entry.entity';
+import { JournalEntryLine } from './journal-entry-line.entity';
 import { Payment } from './payment.entity';
 import { Product } from './product.entity';
 import { ProductStock } from './product-stock.entity';
@@ -48,11 +52,17 @@ export const entities = [
   PurchaseOrderItem,
   GoodsReceipt,
   GoodsReceiptItem,
+  AccountingPeriod,
+  ChartAccount,
+  JournalEntry,
+  JournalEntryLine,
 ];
 
 export {
+  AccountingPeriod,
   AuditLog,
   Category,
+  ChartAccount,
   Customer,
   DocumentSeries,
   GoodsReceipt,
@@ -60,6 +70,8 @@ export {
   IdempotencyKey,
   Invoice,
   InvoiceItem,
+  JournalEntry,
+  JournalEntryLine,
   Payment,
   Product,
   ProductStock,

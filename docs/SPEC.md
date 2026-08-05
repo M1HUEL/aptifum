@@ -246,7 +246,7 @@ Entries are generated within the **same transaction** as the source document (ou
 - [x] F1 Sales/billing module (customers, orders, invoices, payments, series, idempotency).
 - [x] Domain glossary (`docs/GLOSSARY.md`).
 - [x] F2.1 Purchasing (suppliers, purchase orders, goods receipts) — defined in §15.
-- [ ] F2.2 Accounting (chart of accounts, automatic entries, closing).
+- [x] F2.2 Accounting (chart of accounts, automatic entries, closing) — defined in §16.
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -364,3 +364,57 @@ Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `numeric(18,4)
 
 - `PurchaseOrderStatus`: draft, approved, received, cancelled
 - `DocumentSeriesKind` += `purchase_order`, `goods_receipt`
+
+## 16. F2.2 Accounting data model
+
+### 16.1 Conventions
+
+Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `version` optimistic lock on `chart_accounts`/`journal_entries`). No `numeric` for quantities here.
+
+### 16.2 Tables
+
+| Table | Columns (besides base + tenant) | Notes / indexes |
+|-------|--------------------------------|-----------------|
+| `chart_accounts` | `code` (varchar 20), `name` (varchar 255), `type` (enum: asset/liability/equity/revenue/expense), `normal_balance` (enum: debit/credit), `parent_id` (nullable), `active`, `description`, `version` | `code` unique per tenant; index `(tenant_id, code)`, `(tenant_id, parent_id)`; self-FK `parent_id → chart_accounts(id)` |
+| `accounting_periods` | `period` `char(7)` `YYYY-MM` (unique per tenant), `label`, `start_date`, `end_date`, `status` (enum: open/closed), `closed_at`, `closed_by` | auto-created on first posting; index `(tenant_id, period)` |
+| `journal_entries` | `number` (varchar 30, unique per tenant), `period_id`, `entry_date`, `status` (enum: draft/posted/reversed), `reference_type`, `reference_id`, `currency` (default USD), `description`, `debit_total`, `credit_total`, `posted_at`, `posted_by`, `reversed_by_entry_id`, `version` | balance enforced (|debit − credit| ≤ 0.005); index `(tenant_id, number)`, `(tenant_id, entry_date)`, `(tenant_id, reference_type, reference_id)` |
+| `journal_entry_lines` | `entry_id`, `account_id`, `line_index`, `description`, `debit`, `credit` | exactly one of debit/credit > 0; index `(tenant_id, entry_id)`, `(tenant_id, account_id)`; FKs to `journal_entries` and `chart_accounts` |
+
+### 16.3 Chart of accounts (seeded per tenant)
+
+| Code | Name | Type | Normal balance |
+|------|------|------|----------------|
+| 1000 | Caja y bancos | asset | debit |
+| 1100 | Cuentas por cobrar | asset | debit |
+| 1200 | Inventario | asset | debit |
+| 2000 | Cuentas por pagar | liability | credit |
+| 2100 | IVA ventas por pagar | liability | credit |
+| 3000 | Utilidades acumuladas | equity | credit |
+| 4000 | Ingresos por ventas | revenue | credit |
+| 4100 | Devoluciones sobre ventas | revenue | debit |
+| 5000 | Costo de ventas | expense | debit |
+
+### 16.4 Auto-posting rules (§8)
+
+| Trigger | Debits | Credits |
+|---------|--------|---------|
+| Invoice issued (direct or from order) | 1100 (total); 5000 (cogs) | 4000 (subtotal − discount); 2100 (tax); 1200 (cogs) |
+| Credit note | 4100 (subtotal − discount); 2100 (tax); 1200 (cogs) | 1100 (total); 5000 (cogs) |
+| Payment received | 1000 (amount) | 1100 (amount) |
+| Goods receipt | 1200 (received amount) | 2000 (received amount) |
+
+COGS is taken from `product_stock.average_cost` before the outbound movement. Auto-posted entries use `reference_type` `invoice` / `credit_note` / `payment` / `purchase_receipt` and `reference_id` of the source document. A closed period rejects any new posting (409).
+
+### 16.5 Key flows
+
+1. **Periods:** created lazily as `YYYY-MM` of the entry date; only `open` periods accept postings. Closing is idempotent per period.
+2. **Manual entries:** created via the API, validated balanced, numbered `JE-######` from `document_series` kind `journal_entry`. Reversal of a posted entry creates an inverse entry with `status=reversed` on the original and `reference_type='journal_reversal'`.
+3. **Numbering:** `document_series` kind `journal_entry` (prefix `JE`), atomic like sales.
+
+### 16.6 Enums to add in `packages/core`
+
+- `AccountType`: asset, liability, equity, revenue, expense
+- `AccountNormalBalance`: debit, credit
+- `AccountingPeriodStatus`: open, closed
+- `JournalEntryStatus`: draft, posted, reversed
+- `DocumentSeriesKind` += `journal_entry`

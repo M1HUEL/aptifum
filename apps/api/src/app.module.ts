@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from './config/config.module';
 import { RequestIdMiddleware } from './request-id.middleware';
 import { HealthModule } from './health/health.module';
+import { AccountingModule } from './modules/accounting/accounting.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
@@ -37,6 +38,7 @@ import { UsersModule } from './modules/users/users.module';
     InventoryModule,
     SalesModule,
     PurchasingModule,
+    AccountingModule,
   ],
 })
 export class AppModule implements NestModule {

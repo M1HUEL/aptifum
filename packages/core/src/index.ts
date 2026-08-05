@@ -90,6 +90,7 @@ export enum DocumentSeriesKind {
   CREDIT_NOTE = 'credit_note',
   PURCHASE_ORDER = 'purchase_order',
   GOODS_RECEIPT = 'goods_receipt',
+  JOURNAL_ENTRY = 'journal_entry',
 }
 
 export enum PurchaseOrderStatus {
@@ -97,6 +98,30 @@ export enum PurchaseOrderStatus {
   APPROVED = 'approved',
   RECEIVED = 'received',
   CANCELLED = 'cancelled',
+}
+
+export enum AccountType {
+  ASSET = 'asset',
+  LIABILITY = 'liability',
+  EQUITY = 'equity',
+  REVENUE = 'revenue',
+  EXPENSE = 'expense',
+}
+
+export enum AccountNormalBalance {
+  DEBIT = 'debit',
+  CREDIT = 'credit',
+}
+
+export enum AccountingPeriodStatus {
+  OPEN = 'open',
+  CLOSED = 'closed',
+}
+
+export enum JournalEntryStatus {
+  DRAFT = 'draft',
+  POSTED = 'posted',
+  REVERSED = 'reversed',
 }
 
 export const round2 = (n: number): number => Math.round(n * 100) / 100;
