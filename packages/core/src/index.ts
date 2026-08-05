@@ -48,6 +48,48 @@ export enum MovementType {
   DISPOSAL = 'disposal',
 }
 
+export enum SalesOrderKind {
+  QUOTE = 'quote',
+  ORDER = 'order',
+}
+
+export enum SalesOrderStatus {
+  DRAFT = 'draft',
+  CONFIRMED = 'confirmed',
+  INVOICED = 'invoiced',
+  CANCELLED = 'cancelled',
+}
+
+export enum InvoiceType {
+  INVOICE = 'invoice',
+  CREDIT_NOTE = 'credit_note',
+}
+
+export enum InvoiceStatus {
+  DRAFT = 'draft',
+  ISSUED = 'issued',
+  CANCELLED = 'cancelled',
+}
+
+export enum PaymentMethod {
+  CASH = 'cash',
+  CARD = 'card',
+  TRANSFER = 'transfer',
+  OTHER = 'other',
+}
+
+export enum TaxKind {
+  SALES = 'sales',
+  PURCHASE = 'purchase',
+}
+
+export enum DocumentSeriesKind {
+  QUOTE = 'quote',
+  ORDER = 'order',
+  INVOICE = 'invoice',
+  CREDIT_NOTE = 'credit_note',
+}
+
 export interface AuthUser {
   id: string;
   email: string;

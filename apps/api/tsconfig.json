@@ -3,5 +3,8 @@
   "compilerOptions": {
     "outDir": "dist"
   },
+  "ts-node": {
+    "files": true
+  },
   "include": ["src", "test", "vitest.config.ts"]
 }

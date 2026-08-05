@@ -7,6 +7,7 @@ import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { RbacModule } from './modules/rbac/rbac.module';
+import { SalesModule } from './modules/sales/sales.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -33,6 +34,7 @@ import { UsersModule } from './modules/users/users.module';
     TenantsModule,
     AuditModule,
     InventoryModule,
+    SalesModule,
   ],
 })
 export class AppModule implements NestModule {

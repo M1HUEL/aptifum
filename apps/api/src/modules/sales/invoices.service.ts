@@ -1,0 +1,518 @@
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, EntityManager, FindOptionsWhere, In, Not, Repository } from 'typeorm';
+import {
+  DocumentSeriesKind,
+  InvoiceStatus,
+  InvoiceType,
+  MovementType,
+  SalesOrderKind,
+  SalesOrderStatus,
+} from '@aptifum/core';
+import {
+  applyStockMovement,
+  Customer,
+  IdempotencyKey,
+  InsufficientStockError,
+  Invoice,
+  InvoiceItem,
+  Payment,
+  Product,
+  SalesOrder,
+  Warehouse,
+} from '@aptifum/database';
+import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
+import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import { CreatePaymentDto } from './dto/create-payment.dto';
+
+@Injectable()
+export class InvoicesService {
+  constructor(
+    @InjectRepository(Invoice) private readonly invoicesRepo: Repository<Invoice>,
+    @InjectRepository(Customer) private readonly customersRepo: Repository<Customer>,
+    @InjectRepository(Warehouse) private readonly warehousesRepo: Repository<Warehouse>,
+    @InjectRepository(Product) private readonly productsRepo: Repository<Product>,
+    @InjectRepository(IdempotencyKey)
+    private readonly idempotencyRepo: Repository<IdempotencyKey>,
+    @InjectDataSource() private readonly dataSource: DataSource,
+  ) {}
+
+  private scoped(tenantId: string | null): FindOptionsWhere<Invoice> {
+    return tenantId ? { tenantId } : {};
+  }
+
+  async findAll(tenantId: string | null, page: number, limit: number) {
+    const [rows, total] = await this.invoicesRepo.findAndCount({
+      where: this.scoped(tenantId),
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+      relations: { customer: true },
+    });
+    return { data: rows, meta: { page, limit, total } };
+  }
+
+  async findOne(tenantId: string | null, id: string) {
+    const invoice = await this.invoicesRepo.findOne({
+      where: { id, ...this.scoped(tenantId) },
+      relations: { customer: true, items: { product: true }, payments: true },
+    });
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found');
+    }
+    return invoice;
+  }
+
+  async create(
+    tenantId: string | null,
+    userId: string | null,
+    dto: CreateInvoiceDto,
+    idempotencyKey?: string,
+  ) {
+    return this.withIdempotency(
+      idempotencyKey,
+      `invoice:${JSON.stringify(dto)}`,
+      async () => {
+        this.assertTenant(tenantId);
+        if (dto.orderId) {
+          return this.createFromOrder(tenantId, userId, dto);
+        }
+        return this.createDirect(tenantId, userId, dto);
+      },
+    );
+  }
+
+  async recordPayment(
+    tenantId: string | null,
+    invoiceId: string,
+    dto: CreatePaymentDto,
+    idempotencyKey?: string,
+  ) {
+    return this.withIdempotency(
+      idempotencyKey,
+      `payment:${JSON.stringify(dto)}`,
+      async () => {
+        this.assertTenant(tenantId);
+        return this.dataSource.transaction(async (manager) => {
+          const invoicesRepo = manager.getRepository(Invoice);
+          const invoice = await invoicesRepo
+            .createQueryBuilder('invoice')
+            .setLock('pessimistic_write')
+            .where('invoice.tenant_id = :tenantId', { tenantId })
+            .andWhere('invoice.id = :id', { id: invoiceId })
+            .andWhere('invoice.type = :type', { type: InvoiceType.INVOICE })
+            .getOne();
+          if (!invoice) {
+            throw new NotFoundException('Invoice not found');
+          }
+          if (invoice.status === InvoiceStatus.CANCELLED) {
+            throw new BadRequestException('Cannot pay a cancelled invoice');
+          }
+          const newPaid = round2(invoice.paidAmount + dto.amount);
+          if (newPaid - invoice.total > 0.005) {
+            throw new BadRequestException('Payment exceeds invoice balance');
+          }
+          invoice.paidAmount = newPaid;
+          invoice.balanceDue = round2(invoice.total - newPaid);
+          await invoicesRepo.save(invoice);
+          const payment = await manager.getRepository(Payment).save(
+            manager.getRepository(Payment).create({
+              tenantId,
+              invoiceId: invoice.id,
+              method: dto.method,
+              amount: dto.amount,
+              receivedAt: dto.receivedAt ? new Date(dto.receivedAt) : new Date(),
+              reference: dto.reference ?? null,
+              notes: dto.notes ?? null,
+            }),
+          );
+          return {
+            id: payment.id,
+            invoiceId: invoice.id,
+            method: payment.method,
+            amount: payment.amount,
+            paidAmount: invoice.paidAmount,
+            balanceDue: invoice.balanceDue,
+          };
+        });
+      },
+    );
+  }
+
+  async createCreditNote(
+    tenantId: string | null,
+    userId: string | null,
+    invoiceId: string,
+    idempotencyKey?: string,
+  ) {
+    return this.withIdempotency(
+      idempotencyKey,
+      `credit-note:${invoiceId}`,
+      async () => {
+        this.assertTenant(tenantId);
+        return this.dataSource.transaction(async (manager) => {
+          const invoicesRepo = manager.getRepository(Invoice);
+          const original = await invoicesRepo.findOne({
+            where: {
+              id: invoiceId,
+              tenantId,
+              type: InvoiceType.INVOICE,
+              status: InvoiceStatus.ISSUED,
+            },
+            relations: { items: true },
+          });
+          if (!original) {
+            throw new NotFoundException('Issued invoice not found');
+          }
+          const { number, seriesId } = await nextDocumentNumber(
+            manager,
+            tenantId,
+            DocumentSeriesKind.CREDIT_NOTE,
+          );
+          const items = original.items.map((item) =>
+            manager.getRepository(InvoiceItem).create({
+              tenantId,
+              productId: item.productId,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              discount: item.discount,
+              taxRate: item.taxRate,
+              taxAmount: item.taxAmount,
+              lineTotal: item.lineTotal,
+            }),
+          );
+          const totals = computeTotals(items, 0);
+          const creditNote = invoicesRepo.create({
+            tenantId,
+            number,
+            seriesId,
+            type: InvoiceType.CREDIT_NOTE,
+            status: InvoiceStatus.ISSUED,
+            customerId: original.customerId,
+            orderId: null,
+            warehouseId: original.warehouseId,
+            issueDate: today(),
+            dueDate: null,
+            currency: original.currency,
+            ...totals,
+            paidAmount: 0,
+            balanceDue: 0,
+            notes: `Credit note for invoice ${original.number}`,
+            items,
+          });
+          const saved = await invoicesRepo.save(creditNote);
+          for (const item of original.items) {
+            await this.applyReturn(
+              manager,
+              tenantId,
+              userId,
+              item.productId,
+              original.warehouseId,
+              item.quantity,
+              saved.id,
+            );
+          }
+          return this.invoiceView(saved, items);
+        });
+      },
+    );
+  }
+
+  private async createFromOrder(
+    tenantId: string,
+    userId: string | null,
+    dto: CreateInvoiceDto,
+  ) {
+    return this.dataSource.transaction(async (manager) => {
+      const ordersRepo = manager.getRepository(SalesOrder);
+      const invoicesRepo = manager.getRepository(Invoice);
+      const order = await ordersRepo.findOne({
+        where: { id: dto.orderId, tenantId },
+        relations: { items: true },
+      });
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+      if (order.kind !== SalesOrderKind.ORDER) {
+        throw new BadRequestException('Quotes must be converted to orders before invoicing');
+      }
+      if (order.status !== SalesOrderStatus.CONFIRMED) {
+        throw new BadRequestException('Order must be confirmed before invoicing');
+      }
+      const alreadyInvoiced = await invoicesRepo.findOne({
+        where: {
+          tenantId,
+          orderId: order.id,
+          type: InvoiceType.INVOICE,
+          status: Not(InvoiceStatus.CANCELLED),
+        },
+      });
+      if (alreadyInvoiced) {
+        throw new ConflictException('Order has already been invoiced');
+      }
+      const { number, seriesId } = await nextDocumentNumber(
+        manager,
+        tenantId,
+        DocumentSeriesKind.INVOICE,
+      );
+      const items = order.items.map((item) =>
+        manager.getRepository(InvoiceItem).create({
+          tenantId,
+          productId: item.productId,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discount: item.discount,
+          taxRate: item.taxRate,
+          taxAmount: item.taxAmount,
+          lineTotal: item.lineTotal,
+        }),
+      );
+      const totals = computeTotals(items, 0);
+      const invoice = invoicesRepo.create({
+        tenantId,
+        number,
+        seriesId,
+        type: InvoiceType.INVOICE,
+        status: InvoiceStatus.ISSUED,
+        customerId: order.customerId,
+        orderId: order.id,
+        warehouseId: order.warehouseId,
+        issueDate: today(),
+        dueDate: order.dueDate,
+        currency: order.currency,
+        ...totals,
+        paidAmount: 0,
+        balanceDue: totals.total,
+        notes: dto.notes ?? null,
+        items,
+      });
+      const saved = await invoicesRepo.save(invoice);
+      for (const item of order.items) {
+        await this.applyOutbound(
+          manager,
+          tenantId,
+          userId,
+          item.productId,
+          order.warehouseId,
+          item.quantity,
+          saved.id,
+        );
+      }
+      order.status = SalesOrderStatus.INVOICED;
+      await ordersRepo.save(order);
+      return this.invoiceView(saved, items);
+    });
+  }
+
+  private async createDirect(
+    tenantId: string,
+    userId: string | null,
+    dto: CreateInvoiceDto,
+  ) {
+    if (!dto.customerId || !dto.warehouseId || !dto.items) {
+      throw new BadRequestException(
+        'Direct invoices require customerId, warehouseId and items',
+      );
+    }
+    const { customerId, warehouseId, items, notes, discount, dueDate } = dto;
+    const customer = await this.customersRepo.findOneBy({
+      id: customerId,
+      tenantId,
+    });
+    if (!customer) {
+      throw new NotFoundException('Customer not found');
+    }
+    const warehouse = await this.warehousesRepo.findOneBy({
+      id: warehouseId,
+      tenantId,
+    });
+    if (!warehouse) {
+      throw new NotFoundException('Warehouse not found');
+    }
+    const products = await this.loadProducts(
+      tenantId,
+      items.map((item) => item.productId),
+    );
+
+    return this.dataSource.transaction(async (manager) => {
+      const invoicesRepo = manager.getRepository(Invoice);
+      const { number, seriesId } = await nextDocumentNumber(
+        manager,
+        tenantId,
+        DocumentSeriesKind.INVOICE,
+      );
+      const invoiceItems = items.map((item) => {
+        const product = products.get(item.productId);
+        if (!product) {
+          throw new NotFoundException(`Product ${item.productId} not found`);
+        }
+        const unitPrice = item.unitPrice ?? product.salePrice;
+        const quantity = item.quantity;
+        return manager.getRepository(InvoiceItem).create({
+          tenantId,
+          productId: item.productId,
+          description: item.description ?? product.name,
+          quantity,
+          unitPrice,
+          discount: 0,
+          taxRate: item.taxRate ?? 0,
+          taxAmount: round2(quantity * unitPrice * (item.taxRate ?? 0)),
+          lineTotal: round2(quantity * unitPrice),
+        });
+      });
+      const totals = computeTotals(invoiceItems, discount ?? 0);
+      const invoice = invoicesRepo.create({
+        tenantId,
+        number,
+        seriesId,
+        type: InvoiceType.INVOICE,
+        status: InvoiceStatus.ISSUED,
+        customerId,
+        orderId: null,
+        warehouseId,
+        issueDate: today(),
+        dueDate: dueDate ?? null,
+        currency: customer.currency,
+        ...totals,
+        paidAmount: 0,
+        balanceDue: totals.total,
+        notes: notes ?? null,
+        items: invoiceItems,
+      });
+      const saved = await invoicesRepo.save(invoice);
+      for (const item of items) {
+        await this.applyOutbound(
+          manager,
+          tenantId,
+          userId,
+          item.productId,
+          warehouseId,
+          item.quantity,
+          saved.id,
+        );
+      }
+      return this.invoiceView(saved, invoiceItems);
+    });
+  }
+
+  private async applyOutbound(
+    manager: EntityManager,
+    tenantId: string,
+    userId: string | null,
+    productId: string,
+    warehouseId: string,
+    quantity: number,
+    invoiceId: string,
+  ) {
+    try {
+      await applyStockMovement(manager, {
+        tenantId,
+        movementType: MovementType.OUTBOUND,
+        productId,
+        warehouseId,
+        quantity,
+        unitCost: 0,
+        referenceType: 'invoice',
+        referenceId: invoiceId,
+        userId,
+      });
+    } catch (error) {
+      if (error instanceof InsufficientStockError) {
+        throw new BadRequestException(`Insufficient stock for product ${productId}`);
+      }
+      throw error;
+    }
+  }
+
+  private async applyReturn(
+    manager: EntityManager,
+    tenantId: string,
+    userId: string | null,
+    productId: string,
+    warehouseId: string | null,
+    quantity: number,
+    creditNoteId: string,
+  ) {
+    if (!warehouseId) {
+      return;
+    }
+    await applyStockMovement(manager, {
+      tenantId,
+      movementType: MovementType.RETURN,
+      productId,
+      warehouseId,
+      quantity,
+      unitCost: 0,
+      referenceType: 'credit_note',
+      referenceId: creditNoteId,
+      userId,
+    });
+  }
+
+  private async loadProducts(tenantId: string, ids: string[]): Promise<Map<string, Product>> {
+    const products = await this.productsRepo.findBy({ tenantId, id: In(ids) });
+    return new Map(products.map((product) => [product.id, product]));
+  }
+
+  private async withIdempotency<T>(
+    key: string | undefined,
+    requestHash: string,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    if (!key) {
+      return operation();
+    }
+    const existing = await this.idempotencyRepo.findOneBy({ key });
+    if (existing) {
+      return existing.response as T;
+    }
+    const result = await operation();
+    await this.idempotencyRepo.save(
+      this.idempotencyRepo.create({ key, requestHash, response: result }),
+    );
+    return result;
+  }
+
+  private invoiceView(invoice: Invoice, items: InvoiceItem[]) {
+    return {
+      id: invoice.id,
+      number: invoice.number,
+      type: invoice.type,
+      status: invoice.status,
+      customerId: invoice.customerId,
+      orderId: invoice.orderId,
+      warehouseId: invoice.warehouseId,
+      issueDate: invoice.issueDate,
+      dueDate: invoice.dueDate,
+      currency: invoice.currency,
+      subtotal: invoice.subtotal,
+      discount: invoice.discount,
+      tax: invoice.tax,
+      total: invoice.total,
+      paidAmount: invoice.paidAmount,
+      balanceDue: invoice.balanceDue,
+      items: items.map((item) => ({
+        productId: item.productId,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        taxRate: item.taxRate,
+        taxAmount: item.taxAmount,
+        lineTotal: item.lineTotal,
+      })),
+    };
+  }
+
+  private assertTenant(tenantId: string | null): asserts tenantId is string {
+    if (!tenantId) {
+      throw new BadRequestException('Tenant context required');
+    }
+  }
+}
