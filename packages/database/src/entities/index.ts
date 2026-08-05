@@ -2,6 +2,10 @@ import { AccountingPeriod } from './accounting-period.entity';
 import { AuditLog } from './audit-log.entity';
 import { Category } from './category.entity';
 import { ChartAccount } from './chart-account.entity';
+import { CrmActivity } from './crm-activity.entity';
+import { CrmContact } from './crm-contact.entity';
+import { CrmLead } from './crm-lead.entity';
+import { CrmOpportunity } from './crm-opportunity.entity';
 import { Customer } from './customer.entity';
 import { DocumentSeries } from './document-series.entity';
 import { GoodsReceipt } from './goods-receipt.entity';
@@ -63,6 +67,10 @@ export {
   AuditLog,
   Category,
   ChartAccount,
+  CrmActivity,
+  CrmContact,
+  CrmLead,
+  CrmOpportunity,
   Customer,
   DocumentSeries,
   GoodsReceipt,

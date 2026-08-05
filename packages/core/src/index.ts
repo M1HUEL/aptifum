@@ -91,6 +91,7 @@ export enum DocumentSeriesKind {
   PURCHASE_ORDER = 'purchase_order',
   GOODS_RECEIPT = 'goods_receipt',
   JOURNAL_ENTRY = 'journal_entry',
+  LEAD = 'lead',
 }
 
 export enum PurchaseOrderStatus {
@@ -122,6 +123,30 @@ export enum JournalEntryStatus {
   DRAFT = 'draft',
   POSTED = 'posted',
   REVERSED = 'reversed',
+}
+
+export enum LeadStatus {
+  NEW = 'new',
+  CONTACTED = 'contacted',
+  QUALIFIED = 'qualified',
+  DISQUALIFIED = 'disqualified',
+  CONVERTED = 'converted',
+}
+
+export enum OpportunityStage {
+  PROSPECTING = 'prospecting',
+  QUALIFICATION = 'qualification',
+  PROPOSAL = 'proposal',
+  NEGOTIATION = 'negotiation',
+  WON = 'won',
+  LOST = 'lost',
+}
+
+export enum ActivityType {
+  CALL = 'call',
+  MEETING = 'meeting',
+  TASK = 'task',
+  NOTE = 'note',
 }
 
 export const round2 = (n: number): number => Math.round(n * 100) / 100;

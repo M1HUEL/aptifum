@@ -7,10 +7,12 @@ import { JournalEntriesController } from './journal-entries.controller';
 import { JournalEntriesService } from './journal-entries.service';
 import { PeriodsController } from './periods.controller';
 import { PeriodsService } from './periods.service';
+import { ReportsController } from './reports.controller';
+import { ReportsService } from './reports.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ChartAccount, AccountingPeriod, JournalEntry, JournalEntryLine])],
-  controllers: [AccountsController, JournalEntriesController, PeriodsController],
-  providers: [AccountsService, JournalEntriesService, PeriodsService],
+  controllers: [AccountsController, JournalEntriesController, PeriodsController, ReportsController],
+  providers: [AccountsService, JournalEntriesService, PeriodsService, ReportsService],
 })
 export class AccountingModule {}

@@ -47,6 +47,7 @@ export const DEFAULT_SERIES: Record<DocumentSeriesKind, string> = {
   [DocumentSeriesKind.PURCHASE_ORDER]: 'PO',
   [DocumentSeriesKind.GOODS_RECEIPT]: 'GR',
   [DocumentSeriesKind.JOURNAL_ENTRY]: 'JE',
+  [DocumentSeriesKind.LEAD]: 'LD',
 };
 
 export const DEFAULT_ACCOUNTS: Array<{

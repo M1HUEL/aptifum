@@ -247,6 +247,8 @@ Entries are generated within the **same transaction** as the source document (ou
 - [x] Domain glossary (`docs/GLOSSARY.md`).
 - [x] F2.1 Purchasing (suppliers, purchase orders, goods receipts) — defined in §15.
 - [x] F2.2 Accounting (chart of accounts, automatic entries, closing) — defined in §16.
+- [x] F3 CRM (contacts, leads, opportunities, activities) — defined in §17.
+- [x] F3 Accounting reports (trial balance, general ledger) — defined in §18.
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -418,3 +420,49 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 - `AccountingPeriodStatus`: open, closed
 - `JournalEntryStatus`: draft, posted, reversed
 - `DocumentSeriesKind` += `journal_entry`
+
+## 17. F3 CRM data model
+
+### 17.1 Conventions
+
+- Same base conventions as §13.0 (tenant isolation, soft delete, `numeric(14,2)` money, enums in `packages/core`).
+- Leads are numbered through the existing `document_series` machinery with prefix `LD` (`DocumentSeriesKind.lead`), unique per tenant.
+- `Customer` remains the central entity; CRM entities reference it instead of duplicating company data.
+
+### 17.2 Tables
+
+| Table | Columns (besides base + tenant) | Notes / indexes |
+|-------|--------------------------------|-----------------|
+| `crm_contacts` | `full_name`, `customer_id` (FK → customers, nullable), `title`, `email`, `phone`, `mobile`, `address`, `notes`, `active` | index `(tenant_id, full_name)`; `customer_id` FK ON DELETE NO ACTION |
+| `crm_leads` | `number` (unique per tenant), `source`, `company_name`, `contact_name`, `email`, `phone`, `status` (enum), `estimated_amount` (numeric(14,2)), `currency`, `assigned_user_id`, `notes`, `converted_customer_id` (FK → customers, nullable), `version` | **unique** `(tenant_id, number)`; index `(tenant_id, status)` |
+| `crm_opportunities` | `name`, `customer_id` (FK, nullable), `lead_id` (FK → crm_leads, nullable), `stage` (enum), `amount`, `currency`, `probability` (int %), `expected_close_date`, `assigned_user_id`, `won_at`, `lost_at`, `notes`, `version` | index `(tenant_id, stage)`; FKs ON DELETE NO ACTION |
+| `crm_activities` | `activity_type` (enum), `subject`, `description`, `due_at`, `completed_at`, `assignee_id`, `reference_type`, `reference_id` | polymorphic reference; index `(tenant_id, reference_type)`, `(tenant_id, reference_id)` |
+
+**Enums added in `packages/core`**
+
+- `LeadStatus`: new, contacted, qualified, disqualified, converted
+- `OpportunityStage`: prospecting, qualification, proposal, negotiation, won, lost
+- `ActivityType`: call, meeting, task, note
+- `DocumentSeriesKind` += `lead`
+
+### 17.3 Key flows
+
+- **Lead conversion:** `POST /crm/leads/:id/convert` runs in a transaction: creates a `Customer` (code `CUST-<last6 of lead number>`, trade name = company/contact), marks the lead `converted`, links `converted_customer_id`. Re-conversion and edits/deletes of converted leads are rejected (`400`).
+- **Pipeline:** `mark-won`/`mark-lost` set `stage`, `probability = 100` and stamp `won_at`/`lost_at`; once won/lost the opportunity cannot be edited or deleted (`400`).
+- **Activities:** freely linked via `reference_type`/`reference_id` to a lead, opportunity or customer; list supports filtering by reference and `q` full-text-ish search.
+
+### 17.4 API surface (`/crm/...`, module permission `CRM`)
+
+- `GET/POST /crm/contacts`, `GET/PATCH/DELETE /crm/contacts/:id`
+- `GET/POST /crm/leads`, `GET/PATCH/DELETE /crm/leads/:id`, `POST /crm/leads/:id/convert`
+- `GET/POST /crm/opportunities`, `GET/PATCH/DELETE /crm/opportunities/:id`, `POST /crm/opportunities/:id/mark-won`, `POST /crm/opportunities/:id/mark-lost`
+- `GET/POST /crm/activities`, `GET/PATCH/DELETE /crm/activities/:id` (filters `referenceType`, `referenceId`, `q`)
+
+## 18. F3 Accounting reports (trial balance + general ledger)
+
+- Raw SQL over `journal_entry_lines` × `journal_entries` × `chart_accounts`, always filtered by `tenant_id`, soft-deletes, and `je.status <> 'draft'`.
+- `GET /accounting/reports/trial-balance?periodId=&from=&to=` returns per-account `debit`, `credit` and `balance` computed from `normal_balance` (debit accounts: `debit - credit`, credit accounts: `credit - debit`), filtering out zero-balance accounts, plus `totals {debit, credit}` for balance verification.
+- `GET /accounting/reports/ledger/:accountId?from=&to=` returns posted lines ordered by `entry_date, created_at, line_index` with a running balance; unknown account → `404`.
+- Filters are parameter-positional (`$1..$N`) built from the tenant and optional period/date bounds.
+
+---
