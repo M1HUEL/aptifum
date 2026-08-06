@@ -4,7 +4,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getEnv, resetEnv, setEnv } from '@aptifum/config';
 import { createDataSource, seed } from '@aptifum/database';
-import { AppModule } from '../dist/app.module';
+import { AppModule } from '../src/app.module';
 
 const ADMIN_EMAIL = 'admin@aptifum.dev';
 const ADMIN_PASSWORD = 'Admin123!';
