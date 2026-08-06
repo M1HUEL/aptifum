@@ -29,6 +29,7 @@ async function bootstrap(): Promise<void> {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
+  document.security = [{ bearer: [] }];
   SwaggerModule.setup('docs', app, document);
 
   await app.listen(env.PORT);

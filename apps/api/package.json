@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "nest build",
     "dev": "node --watch -r ts-node/register src/main.ts",
     "start": "node dist/main.js",
     "lint": "eslint src test --max-warnings 0",
@@ -33,6 +33,7 @@
     "typeorm": "^0.3.25"
   },
   "devDependencies": {
+    "@nestjs/cli": "^11.0.24",
     "@nestjs/testing": "^11.1.28",
     "@types/express": "^5.0.0",
     "@types/ms": "^2.1.0",
