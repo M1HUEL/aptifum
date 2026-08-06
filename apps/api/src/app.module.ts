@@ -12,6 +12,7 @@ import { InventoryModule } from './modules/inventory/inventory.module';
 import { PurchasingModule } from './modules/purchasing/purchasing.module';
 import { ProductionModule } from './modules/production/production.module';
 import { RbacModule } from './modules/rbac/rbac.module';
+import { ReportsModule } from './modules/reports/reports.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { UsersModule } from './modules/users/users.module';
@@ -45,6 +46,7 @@ import { UsersModule } from './modules/users/users.module';
     CrmModule,
     HrModule,
     ProductionModule,
+    ReportsModule,
   ],
 })
 export class AppModule implements NestModule {

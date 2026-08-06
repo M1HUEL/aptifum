@@ -429,6 +429,10 @@ export class InvoicesService {
     quantity: number,
     invoiceId: string,
   ): Promise<number> {
+    const stock = await manager
+      .getRepository(ProductStock)
+      .findOneBy({ tenantId, productId, warehouseId });
+    const unitCost = stock?.averageCost ?? 0;
     try {
       await applyStockMovement(manager, {
         tenantId,
@@ -436,7 +440,7 @@ export class InvoicesService {
         productId,
         warehouseId,
         quantity,
-        unitCost: 0,
+        unitCost,
         referenceType: 'invoice',
         referenceId: invoiceId,
         userId,
@@ -447,10 +451,7 @@ export class InvoicesService {
       }
       throw error;
     }
-    const stock = await manager
-      .getRepository(ProductStock)
-      .findOneBy({ tenantId, productId, warehouseId });
-    return stock?.averageCost ?? 0;
+    return unitCost;
   }
 
   private async applyReturn(

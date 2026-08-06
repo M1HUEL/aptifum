@@ -166,6 +166,7 @@ aptifum/
 - Financial: balance sheet, income statement, cash flow.
 - Export: CSV, Excel, PDF.
 - Executive dashboard (key metrics).
+- **Implemented (F4):** read-only endpoints under `/reports/...` deriving everything from existing tables (no new entities). Module permission `reporting:read`. CSV export via `?format=csv`. See §21.
 
 ---
 
@@ -255,6 +256,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] F3 Accounting reports (trial balance, general ledger) — defined in §18.
 - [x] F3 HR (departments, employees, attendance, leaves, payroll) — defined in §19.
 - [x] F3 Production (BOMs, production orders, costing + auto journal entry) — defined in §20.
+- [x] F4 Reporting (BI reports, dashboard, CSV exports) — defined in §21.
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -341,7 +343,7 @@ document_series → invoices / sales_orders (numbering)
 2. [x] Implement F1 **Sales/billing** module (customers, orders, invoices, payments, series).
 3. [x] Resolve open decisions in §11 (tax country US/MX, currency, POS, language, team, pilot) — see §11.
 4. [x] Create the **domain glossary** (`docs/GLOSSARY.md`).
-5. [ ] Next phases (see §10): F2 Finance (purchasing, accounting) → F3 Organization (CRM, HR, production) → F4 Analytics and platform.
+5. [ ] Next phases (see §10): F4 platform extensions (web frontend, integrations, exports Excel/PDF).
 
 ---
 
@@ -561,3 +563,37 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 - `POST /production/orders/:id/start`, `POST /production/orders/:id/complete`, `POST /production/orders/:id/cancel`
 
 ---
+
+## 21. F4 Reporting data model (BI reports)
+
+### 21.1 Conventions
+
+- **No new tables or entities.** All reports derive from existing tables: `invoices`, `invoice_items`, `stock_movements`, `product_stock`, `goods_receipts`, `purchase_orders`, `production_orders`, `journal_entries`, `journal_entry_lines`, `payments`.
+- Read-only, tenant-scoped SQL (parametrized, `$1 = tenant_id`), respecting soft deletes and `journal_entries.status <> 'draft'`.
+- Module permission: `reporting:read` (role `accountant` has it seeded). All routes under `/reports/...`; every endpoint supports `?format=csv` (returns `text/csv` with `Content-Disposition` attachment).
+
+### 21.2 Endpoints
+
+| Endpoint | Output |
+|----------|--------|
+| `GET /reports/dashboard` | salesToday, salesMonth, monthInvoices, receivables, payables, inventoryValue, lowStockProducts, openPurchaseOrders, productionInProgress, netIncomeMonth |
+| `GET /reports/inventory/valuation?warehouseId=` | rows per product/warehouse (quantity × average cost) + totals |
+| `GET /reports/inventory/movements?productId=&warehouseId=&movementType=&from=&to=&page=&limit=` | paginated stock movements (+ count) |
+| `GET /reports/inventory/low-stock?threshold=` | products at or below threshold (default 10) |
+| `GET /reports/sales/summary?groupBy=day\|month\|quarter\|year&from=&to=` | period buckets (revenue net of discounts, tax, total; credit notes negative) + totals |
+| `GET /reports/sales/by-product?from=&to=` | per product: quantity, revenue, COGS, grossProfit, margin + totals |
+| `GET /reports/sales/by-customer?from=&to=` | per customer: invoices, totalSold (net), totalPaid, balance (AR) + totals |
+| `GET /reports/aging/ar` | AR per customer bucketed by `CURRENT_DATE - COALESCE(due_date, issue_date)` (current / 1–30 / 31–60 / 61–90 / 90+) |
+| `GET /reports/aging/ap` | AP per supplier bucketed by `goods_receipts.received_at` age |
+| `GET /reports/financial/income-statement?periodId=&from=&to=` | revenue / cost of sales / operating expenses sections + net income |
+| `GET /reports/financial/balance-sheet?asOf=` | assets / liabilities / equity sections (equity includes current-period net income) |
+
+### 21.3 Formulas (source of truth)
+
+- **COGS (sales) per product:** `SUM(-sm.quantity × sm.unit_cost)` over `stock_movements` with `reference_type IN ('invoice','credit_note')`. Invoice outbound movements carry the real average cost (`invoices.service.ts` `applyOutbound`).
+- **Income statement:** revenue from `invoices` (issued, credit notes as negative); `costOfSales`/`operatingExpenses` from `journal_entry_lines` joined to expense accounts (`account_code` LIKE `5%` / `6%`); `netIncome = revenue - cogs - opex`.
+- **Balance sheet:** journal entries with `entry_date <= asOf`; equity includes **Net income (current period)** computed from the 1st of the month to `asOf`.
+- **Dashboard:** sales today/month, monthly invoice count, AR balance (sum `balance_due`), AP (goods receipts not yet in JEs), inventory value (physical stock × avg cost), low stock (≤ threshold), open POs (`approved`), production in progress, net income month.
+
+---
+
