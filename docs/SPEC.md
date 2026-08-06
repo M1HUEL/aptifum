@@ -109,7 +109,7 @@ aptifum/
 - **Auth:** login, logout, refresh, password recovery, password change.
 - **Users:** user CRUD, active/inactive status, role assignment.
 - **RBAC:** predefined roles + custom roles, permissions per module/action.
-- **Tenants:** company configuration (name, tax ID, default currency, taxes, document series).
+- **Tenants:** company configuration (name, tax ID, default currency, country with US/MX tax presets, taxes, document series).
 
 ### 6.1 Inventory
 - **Products:** SKU, name, description, category, brand, unit of measure, variants (size/color), barcodes, image, purchase/sale prices, VAT/tax.
@@ -226,15 +226,19 @@ Entries are generated within the **same transaction** as the source document (ou
 
 ---
 
-## 11. Open decisions (to resolve)
+## 11. Resolved decisions
 
-1. **Country-specific tax rules** (VAT, e-invoicing, tax IDs). Single country initially?
-2. **Physical POS / offline sales** — required in F1 or web-only?
-3. **Multi-currency** — needed or single currency per company?
-4. **Notifications** — email/SMS for due dates, orders, approvals?
-5. **Languages** — Spanish only or multi-language from the start?
-6. **Team** — does more than one person work on the repo? (affects conventions and CI rules)
-7. **User stories / concrete examples** — is there a real pilot business to validate business rules?
+The following decisions were settled and now constrain the product (see §6 and §8 for impact):
+
+| # | Decision | Resolution |
+|---|----------|------------|
+| 1 | Country-specific tax rules | **US + Mexico.** Tenants carry a `country` (`US`/`MX`) with seeded tax presets: US → `Sales Tax` 8% (sales), MX → `IVA` 16% (sales). Tax IDs follow the local format (US EIN 9 digits, MX RFC 12–13 chars). Full compliance (CFDI e-invoicing/timbrado, US *sales tax* per state/nexus) is deferred to **F4**. |
+| 2 | Physical POS / offline sales | **Web-only** for now. A web POS/cashier flow is a possible F4 addition; no offline/desktop client. |
+| 3 | Multi-currency | **Single functional currency per tenant** (`default_currency`). Multi-currency (exchange rates, revaluation) is an F4 extension. |
+| 4 | Notifications | **Deferred to F4** (email/SMS for due dates, orders, approvals). No notification infra now. |
+| 5 | Languages | **English only** (single language). UI and API strings are English; no i18n layer for now. |
+| 6 | Team | **Single developer.** Conventions stay simple; lightweight CI. |
+| 7 | Pilot business | **No real pilot yet.** Business rules are validated with synthetic examples; SPEC remains the reference. |
 
 ---
 
@@ -387,15 +391,18 @@ Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `version` opti
 
 | Code | Name | Type | Normal balance |
 |------|------|------|----------------|
-| 1000 | Caja y bancos | asset | debit |
-| 1100 | Cuentas por cobrar | asset | debit |
-| 1200 | Inventario | asset | debit |
-| 2000 | Cuentas por pagar | liability | credit |
-| 2100 | IVA ventas por pagar | liability | credit |
-| 3000 | Utilidades acumuladas | equity | credit |
-| 4000 | Ingresos por ventas | revenue | credit |
-| 4100 | Devoluciones sobre ventas | revenue | debit |
-| 5000 | Costo de ventas | expense | debit |
+| 1000 | Cash and banks | asset | debit |
+| 1100 | Accounts receivable | asset | debit |
+| 1200 | Inventory | asset | debit |
+| 2000 | Accounts payable | liability | credit |
+| 2001 | Payroll payable | liability | credit |
+| 2002 | Withholdings and deductions payable | liability | credit |
+| 2100 | Sales tax payable | liability | credit |
+| 3000 | Retained earnings | equity | credit |
+| 4000 | Sales revenue | revenue | credit |
+| 4100 | Sales returns | revenue | debit |
+| 5000 | Cost of goods sold | expense | debit |
+| 6000 | Payroll expense | expense | debit |
 
 ### 16.4 Auto-posting rules (§8)
 
@@ -501,7 +508,7 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 - **Clock in/out:** `POST /hr/attendance/clock` (`action: in|out`) upserts the day's record; `worked_minutes` recomputed on clock-out; second clock-in / clock-out of the same day → `409`.
 - **Leaves:** `days` computed from range; only `pending` leaves can be edited, deleted, approved or rejected; approve/reject requires `hr:approve` and stamps `approved_by`/`approved_at`.
 - **Payroll generate:** transaction validating employees and `net >= 0`, computing `gross = salary + bonus + overtime`, `net = gross - deductions`, totals, and allocating the next `PR` number; duplicate period → `409`.
-- **Payroll post:** requires `hr:read` + `hr:approve`; in a transaction, `postJournalEntry` with entry date = last day of the period, debit `6000` `total_gross`, credit `2001` `total_net`, credit `2002` `total_deductions` (only if > 0), description `Nómina <number> (<period>)`, `reference_type = 'payroll'`; marks the payroll `posted` with `posted_entry_id`. Only `draft` payrolls can be posted or cancelled (`400`).
+- **Payroll post:** requires `hr:read` + `hr:approve`; in a transaction, `postJournalEntry` with entry date = last day of the period, debit `6000` `total_gross`, credit `2001` `total_net`, credit `2002` `total_deductions` (only if > 0), description `Payroll <number> (<period>)`, `reference_type = 'payroll'`; marks the payroll `posted` with `posted_entry_id`. Only `draft` payrolls can be posted or cancelled (`400`).
 
 ### 19.4 API surface (`/hr/...`, module permission `HR` with `read`, `write`, `approve`)
 

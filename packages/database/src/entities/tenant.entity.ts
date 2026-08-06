@@ -13,6 +13,9 @@ export class Tenant extends BaseEntity {
   @Column({ name: 'default_currency', length: 3, default: 'USD' })
   defaultCurrency: string;
 
+  @Column({ length: 2, default: 'US' })
+  country: string;
+
   @Column({ type: 'jsonb', default: () => "'{}'" })
   config: Record<string, unknown>;
 

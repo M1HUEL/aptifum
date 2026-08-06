@@ -4,6 +4,7 @@ import { createDataSource, DataSourceOverrides } from '../data-source';
 import { ChartAccount } from '../entities/chart-account.entity';
 import { DocumentSeries } from '../entities/document-series.entity';
 import { Role } from '../entities/role.entity';
+import { Tax } from '../entities/tax.entity';
 import { Tenant } from '../entities/tenant.entity';
 import { User } from '../entities/user.entity';
 import {
@@ -12,6 +13,7 @@ import {
   DEFAULT_ACCOUNTS,
   DEFAULT_ROLES,
   DEFAULT_SERIES,
+  DEFAULT_TAX_PRESETS,
   DEFAULT_TENANT_ID,
 } from './seed-data';
 
@@ -29,6 +31,10 @@ export async function seed(overrides: DataSourceOverrides = {}): Promise<void> {
       tenant = await tenantRepo.save(
         tenantRepo.create({ id: DEFAULT_TENANT_ID, name: 'Aptifum Demo', defaultCurrency: 'USD' }),
       );
+    }
+    if (!tenant.country) {
+      tenant.country = 'US';
+      await tenantRepo.save(tenant);
     }
 
     const roles: Role[] = [];
@@ -83,6 +89,17 @@ export async function seed(overrides: DataSourceOverrides = {}): Promise<void> {
             ...account,
           }),
         );
+      }
+    }
+
+    const taxRepo = ds.getRepository(Tax);
+    const presets = DEFAULT_TAX_PRESETS[tenant.country];
+    if (presets) {
+      const existingTaxes = await taxRepo.countBy({ tenantId: tenant.id });
+      if (existingTaxes === 0) {
+        for (const tax of presets) {
+          await taxRepo.save(taxRepo.create({ tenantId: tenant.id, ...tax }));
+        }
       }
     }
 

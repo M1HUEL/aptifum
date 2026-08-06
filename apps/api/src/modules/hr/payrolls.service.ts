@@ -157,7 +157,7 @@ export class PayrollsService {
         }
         const entry = await postJournalEntry(manager, tenantId as string, {
           entryDate,
-          description: `Nómina ${payroll.number} (${payroll.period})`,
+          description: `Payroll ${payroll.number} (${payroll.period})`,
           referenceType: 'payroll',
           referenceId: payroll.id,
           currency: payroll.currency,
