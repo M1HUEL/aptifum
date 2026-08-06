@@ -61,8 +61,15 @@ export class AuthService {
       const payload = await this.jwtService.verifyAsync<TokenPayload>(dto.refreshToken, {
         secret: this.config.env.JWT_REFRESH_SECRET,
       });
+      const user = await this.usersService.getProfile(payload.sub);
+      if (!user.active) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
       return this.issueTokens(payload.sub, payload.email, payload.tenantId ?? null);
-    } catch {
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
