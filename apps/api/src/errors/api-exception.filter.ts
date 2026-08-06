@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { Request, Response } from 'express';
 import { REQUEST_ID_HEADER } from '../request-id.middleware';
 
@@ -41,7 +42,13 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const requestId = request.requestId;
+    const requestId = request.requestId ?? randomUUID();
+    if (!(exception instanceof HttpException)) {
+      this.logger.error(
+        `Unhandled exception on ${requestId}`,
+        exception instanceof Error ? exception.stack : String(exception),
+      );
+    }
     response.setHeader(REQUEST_ID_HEADER, requestId);
 
     const body = this.toBody(exception, requestId);
