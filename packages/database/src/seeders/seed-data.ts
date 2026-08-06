@@ -36,6 +36,8 @@ export const DEFAULT_ROLES: Record<RoleName, string[]> = {
     p(ModuleName.INVENTORY, 'adjust'),
     p(ModuleName.PURCHASING, 'read'),
     p(ModuleName.PURCHASING, 'write'),
+    p(ModuleName.PRODUCTION, 'read'),
+    p(ModuleName.PRODUCTION, 'write'),
   ],
   [RoleName.HR]: [
     p(ModuleName.HR, 'read'),
@@ -54,6 +56,7 @@ export const DEFAULT_SERIES: Record<DocumentSeriesKind, string> = {
   [DocumentSeriesKind.JOURNAL_ENTRY]: 'JE',
   [DocumentSeriesKind.LEAD]: 'LD',
   [DocumentSeriesKind.PAYROLL]: 'PR',
+  [DocumentSeriesKind.PRODUCTION_ORDER]: 'MO',
 };
 
 export const DEFAULT_ACCOUNTS: Array<{

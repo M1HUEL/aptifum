@@ -291,7 +291,7 @@ export class PurchaseOrdersService {
       }
       await postJournalEntry(manager, tenantId, {
         entryDate: receipt.receivedAt.toISOString().slice(0, 10),
-        description: `Recepción ${receipt.number}`,
+        description: `Goods receipt ${receipt.number}`,
         referenceType: 'purchase_receipt',
         referenceId: receipt.id,
         currency,

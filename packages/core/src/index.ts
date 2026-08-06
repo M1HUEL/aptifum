@@ -93,6 +93,7 @@ export enum DocumentSeriesKind {
   JOURNAL_ENTRY = 'journal_entry',
   LEAD = 'lead',
   PAYROLL = 'payroll',
+  PRODUCTION_ORDER = 'production_order',
 }
 
 export enum PurchaseOrderStatus {
@@ -179,6 +180,13 @@ export enum LeaveStatus {
 export enum PayrollStatus {
   DRAFT = 'draft',
   POSTED = 'posted',
+  CANCELLED = 'cancelled',
+}
+
+export enum ProductionOrderStatus {
+  PLANNED = 'planned',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
   CANCELLED = 'cancelled',
 }
 

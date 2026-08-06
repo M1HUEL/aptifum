@@ -154,9 +154,9 @@ aptifum/
 - **Integration:** won opportunity converts into customer + quote/order.
 
 ### 6.7 Production (light / assembly)
-- **BOM / Recipes:** component list with quantities and waste.
-- **Production orders:** status (planned → in progress → completed), material consumption (inventory outbound) and finished-good inbound.
-- **Costing:** order cost = consumed materials + labor + overhead.
+- **BOM / Recipes:** component list with quantities and waste (%).
+- **Production orders:** status (planned → in progress → completed / cancelled), material consumption (inventory outbound) and finished-good inbound.
+- **Costing:** order cost = consumed materials + labor + overhead; automatic journal entry on completion (see §8).
 - **Retail scenarios:** kits, repacking, prepared food.
 
 ### 6.8 Reporting
@@ -209,7 +209,7 @@ Entries are generated within the **same transaction** as the source document (ou
 - **Scalability:** stateless API; horizontal API replicas on the same DB; optional workers for heavy processes (reports, payroll).
 - **Availability:** daily backups + PITR, healthchecks (`/health`).
 - **Maintainability:** lint + typecheck + tests in CI; ≥ 80% coverage on financial flows.
-- **i18n:** UI in Spanish (es) with room for more languages; localized dates/numbers.
+- **i18n:** English only (single language); UI and API strings are English, no i18n layer for now (see §11).
 - **Observability:** structured JSON logs; optional metrics (OpenTelemetry) for request duration and errors.
 - **Accountability:** full audit of all mutations (see §4).
 
@@ -254,6 +254,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] F3 CRM (contacts, leads, opportunities, activities) — defined in §17.
 - [x] F3 Accounting reports (trial balance, general ledger) — defined in §18.
 - [x] F3 HR (departments, employees, attendance, leaves, payroll) — defined in §19.
+- [x] F3 Production (BOMs, production orders, costing + auto journal entry) — defined in §20.
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -338,7 +339,7 @@ document_series → invoices / sales_orders (numbering)
 
 1. [x] Implement F1 **Inventory** module (entities, migration, CRUD, movements, valuation).
 2. [x] Implement F1 **Sales/billing** module (customers, orders, invoices, payments, series).
-3. [ ] Resolve open decisions in §11 as they become blocking (tax country, currency, POS).
+3. [x] Resolve open decisions in §11 (tax country US/MX, currency, POS, language, team, pilot) — see §11.
 4. [x] Create the **domain glossary** (`docs/GLOSSARY.md`).
 5. [ ] Next phases (see §10): F2 Finance (purchasing, accounting) → F3 Organization (CRM, HR, production) → F4 Analytics and platform.
 
@@ -517,5 +518,46 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 - `GET/POST /hr/attendance`, `GET/PATCH/DELETE /hr/attendance/:id`, `POST /hr/attendance/clock`
 - `GET/POST /hr/leaves`, `GET/PATCH/DELETE /hr/leaves/:id`, `POST /hr/leaves/:id/approve`, `POST /hr/leaves/:id/reject`
 - `GET/POST /hr/payrolls`, `GET /hr/payrolls/:id`, `POST /hr/payrolls/generate`, `POST /hr/payrolls/:id/post`, `POST /hr/payrolls/:id/cancel`
+
+---
+
+## 20. F3 Production data model
+
+### 20.1 Conventions
+
+- Same as §13.0; business entities extend `TenantBaseEntity` (soft delete, `tenant_id` isolation).
+- Quantities `numeric(18,4)`; waste rate `numeric(6,2)` (percent); money `numeric(14,2)`; currency from the tenant (`tenants.default_currency`).
+- Cost is computed at completion using the stock's current `average_cost` for each consumed component.
+
+### 20.2 Tables
+
+| Table | Columns (besides base + tenant) | Notes / indexes |
+|-------|--------------------------------|-----------------|
+| `production_boms` | `name`, `product_id`, `output_quantity` (default 1), `active`, `version` | BOM for a finished product; index `(tenant_id, product_id)`, `(tenant_id, name)` |
+| `production_bom_lines` | `bom_id`, `product_id`, `quantity`, `waste_rate` (default 0) | per-unit quantity of the component (relative to order quantity); a component cannot be the finished product itself; index `(tenant_id, bom_id)` |
+| `production_orders` | `number`, `product_id`, `bom_id` (nullable), `quantity`, `status` (enum), `warehouse_id`, `currency`, `labor_cost`, `overhead`, `material_cost`, `total_cost`, `completed_at`, `notes`, `version` | `number` per tenant via series `MO`; **unique** `(tenant_id, number)`; index `(tenant_id, status)`, `(tenant_id, product_id)`, `(tenant_id, warehouse_id)` |
+| `production_order_lines` | `order_id`, `product_id`, `planned_quantity`, `consumed_quantity`, `unit_cost`, `line_cost` | material consumption snapshot at completion; **unique** `(tenant_id, order_id, product_id)` |
+
+**Enums added in `packages/core`**
+
+- `ProductionOrderStatus`: planned, in_progress, completed, cancelled
+- `DocumentSeriesKind` += `production_order`
+- Role `warehouse` gains `production:read` / `production:write`.
+
+### 20.3 Key flows
+
+- **BOM create/update:** validates every component product exists and that no component equals the finished product (`400`); update soft-deletes existing lines and recreates them inside the transaction.
+- **Order create:** validates product, warehouse and BOM (BOM must produce the order's product, else `400`); allocates the next `MO` number; default status `planned`.
+- **Update/delete:** only allowed while `planned` (`400` otherwise).
+- **Start:** `planned → in_progress`; does **not** validate stock.
+- **Complete:** `in_progress → completed`; re-reads the order inside the transaction (state guard). For each BOM line consumes `round4(quantity × order.quantity × (1 + waste_rate/100))` as an outbound movement (`unit_cost` = current `average_cost`); insufficient stock → `400`. Then receives `order.quantity` of the finished product inbound with `unit_cost = round2(total_cost / quantity)`. Writes `production_order_lines`, computes `material_cost` (sum of line costs), `total_cost = material_cost + labor_cost + overhead`, stamps `completed_at`. Posts a balanced journal entry (same transaction): **Dr `1200` Inventory `total_cost`, Cr `1200` Inventory `material_cost`, Cr `6000` Payroll expense `total_cost - material_cost`** (only if positive), description `Production <number>`, `reference_type = 'production_order'`. `ChartAccountNotFoundError → 400`, `PeriodClosed/Unbalanced → 409`.
+- **Cancel:** `planned` or `in_progress → cancelled`; no stock/accounting side effects.
+- **Series:** `MO` (document series kind `production_order`), default prefix `MO` in seeds.
+
+### 20.4 API surface (`/production/...`, module permission `PRODUCTION` with `read`, `write`)
+
+- `GET/POST /production/boms`, `GET/PATCH/DELETE /production/boms/:id`
+- `GET/POST /production/orders`, `GET/PATCH/DELETE /production/orders/:id`
+- `POST /production/orders/:id/start`, `POST /production/orders/:id/complete`, `POST /production/orders/:id/cancel`
 
 ---

@@ -62,7 +62,7 @@ export class JournalEntriesService {
       const entry = await this.dataSource.transaction((manager) =>
         postJournalEntry(manager, tenantId, {
           entryDate: dto.entryDate,
-          description: dto.description ?? 'Asiento manual',
+          description: dto.description ?? 'Manual entry',
           currency: dto.currency ?? 'USD',
           userId,
           lines: dto.lines.map((line) => ({
@@ -102,7 +102,7 @@ export class JournalEntriesService {
         }
         const posted = await postJournalEntry(manager, tenantId as string, {
           entryDate: today(),
-          description: `Reverso de ${entry.number}`,
+          description: `Reversal of ${entry.number}`,
           referenceType: 'journal_reversal',
           referenceId: entry.id,
           currency: entry.currency,

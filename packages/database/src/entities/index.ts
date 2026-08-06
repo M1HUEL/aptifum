@@ -24,6 +24,10 @@ import { Payroll } from './hr-payroll.entity';
 import { PayrollLine } from './hr-payroll-line.entity';
 import { Product } from './product.entity';
 import { ProductStock } from './product-stock.entity';
+import { ProductionBom } from './production-bom.entity';
+import { ProductionBomLine } from './production-bom-line.entity';
+import { ProductionOrder } from './production-order.entity';
+import { ProductionOrderLine } from './production-order-line.entity';
 import { PurchaseOrder } from './purchase-order.entity';
 import { PurchaseOrderItem } from './purchase-order-item.entity';
 import { Role } from './role.entity';
@@ -62,6 +66,10 @@ export const entities = [
   PurchaseOrderItem,
   GoodsReceipt,
   GoodsReceiptItem,
+  ProductionBom,
+  ProductionBomLine,
+  ProductionOrder,
+  ProductionOrderLine,
   AccountingPeriod,
   ChartAccount,
   JournalEntry,
@@ -101,6 +109,10 @@ export {
   PayrollLine,
   Product,
   ProductStock,
+  ProductionBom,
+  ProductionBomLine,
+  ProductionOrder,
+  ProductionOrderLine,
   PurchaseOrder,
   PurchaseOrderItem,
   Role,

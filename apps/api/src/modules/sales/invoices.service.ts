@@ -532,8 +532,8 @@ export class InvoicesService {
         entryDate: invoice.issueDate,
         description:
           invoice.type === InvoiceType.CREDIT_NOTE
-            ? `Nota de crédito ${invoice.number}`
-            : `Factura ${invoice.number}`,
+            ? `Credit note ${invoice.number}`
+            : `Invoice ${invoice.number}`,
         referenceType: invoice.type === InvoiceType.CREDIT_NOTE ? 'credit_note' : 'invoice',
         referenceId: invoice.id,
         currency: invoice.currency,
@@ -555,7 +555,7 @@ export class InvoicesService {
     try {
       await postJournalEntry(manager, tenantId, {
         entryDate: payment.receivedAt.toISOString().slice(0, 10),
-        description: `Pago ${invoice.number}`,
+        description: `Payment ${invoice.number}`,
         referenceType: 'payment',
         referenceId: payment.id,
         currency: invoice.currency,
