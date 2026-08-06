@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { getEnv } from '@aptifum/config';
 import { createLogger, LoggerAdapter } from '@aptifum/logger';
 import { AppModule } from './app.module';
+import { ApiExceptionFilter } from './errors/api-exception.filter';
 
 async function bootstrap(): Promise<void> {
   const env = getEnv();
@@ -19,6 +20,7 @@ async function bootstrap(): Promise<void> {
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
   );
+  app.useGlobalFilters(new ApiExceptionFilter());
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Aptifum ERP API')
