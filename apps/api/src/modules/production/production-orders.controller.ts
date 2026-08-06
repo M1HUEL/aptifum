@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CreateProductionOrderDto } from './dto/create-production-order.dto';
@@ -26,7 +27,7 @@ export class ProductionOrdersController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.PRODUCTION, 'read'))
   @ApiOperation({ summary: 'Get production order by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.ordersService.findOne(user.tenantId, id);
   }
 
@@ -42,7 +43,7 @@ export class ProductionOrdersController {
   @ApiOperation({ summary: 'Update a production order' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateProductionOrderDto,
   ) {
     return this.ordersService.update(user.tenantId, id, dto);
@@ -51,14 +52,14 @@ export class ProductionOrdersController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.PRODUCTION, 'write'))
   @ApiOperation({ summary: 'Delete a production order' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.ordersService.remove(user.tenantId, id);
   }
 
   @Post(':id/start')
   @RequirePermissions(permission(ModuleName.PRODUCTION, 'write'))
   @ApiOperation({ summary: 'Start a production order' })
-  start(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  start(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.ordersService.start(user.tenantId, id);
   }
 
@@ -67,7 +68,7 @@ export class ProductionOrdersController {
   @ApiOperation({ summary: 'Complete a production order (consume materials, receive finished goods)' })
   complete(
     @CurrentUser() user: { tenantId: string | null; id: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
   ) {
     return this.ordersService.complete(user.tenantId, user.id, id);
   }
@@ -75,7 +76,7 @@ export class ProductionOrdersController {
   @Post(':id/cancel')
   @RequirePermissions(permission(ModuleName.PRODUCTION, 'write'))
   @ApiOperation({ summary: 'Cancel a production order' })
-  cancel(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  cancel(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.ordersService.cancel(user.tenantId, id);
   }
 }

@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CreateMovementDto } from './dto/create-movement.dto';
@@ -27,7 +28,7 @@ export class StockController {
   @ApiOperation({ summary: 'Get stock for a product' })
   stockByProduct(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('productId') productId: string,
+    @Param('productId', new ParseUUIDPipe()) productId: string,
   ) {
     return this.stockService.stockByProduct(user.tenantId, productId);
   }

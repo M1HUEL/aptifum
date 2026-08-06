@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ALL_PERMISSIONS, ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { PermissionsService } from '../rbac/rbac.service';
@@ -42,7 +43,7 @@ export class EmployeesController {
   @ApiOperation({ summary: 'Get employee by id' })
   async get(
     @CurrentUser() user: { tenantId: string | null; id?: string },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
   ) {
     const includeSalary = await this.canViewSalary(user.id);
     return this.employeesService.findOne(user.tenantId, id, includeSalary);
@@ -60,7 +61,7 @@ export class EmployeesController {
   @ApiOperation({ summary: 'Update an employee' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateEmployeeDto,
   ) {
     return this.employeesService.update(user.tenantId, id, dto);
@@ -69,7 +70,7 @@ export class EmployeesController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.HR, 'write'))
   @ApiOperation({ summary: 'Delete an employee' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.employeesService.remove(user.tenantId, id);
   }
 }

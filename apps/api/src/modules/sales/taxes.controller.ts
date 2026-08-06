@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CreateTaxDto } from './dto/create-tax.dto';
@@ -28,7 +29,7 @@ export class TaxesController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.SALES, 'write'))
   @ApiOperation({ summary: 'Deactivate a tax' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.taxesService.remove(user.tenantId, id);
   }
 }

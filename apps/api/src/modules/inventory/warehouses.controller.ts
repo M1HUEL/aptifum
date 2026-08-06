@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CreateLocationDto } from './dto/create-location.dto';
@@ -27,7 +28,7 @@ export class WarehousesController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.INVENTORY, 'read'))
   @ApiOperation({ summary: 'Get warehouse by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.warehousesService.findOne(user.tenantId, id);
   }
 
@@ -43,7 +44,7 @@ export class WarehousesController {
   @ApiOperation({ summary: 'Update a warehouse' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateWarehouseDto,
   ) {
     return this.warehousesService.update(user.tenantId, id, dto);
@@ -52,7 +53,7 @@ export class WarehousesController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.INVENTORY, 'write'))
   @ApiOperation({ summary: 'Deactivate a warehouse' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.warehousesService.remove(user.tenantId, id);
   }
 
@@ -61,7 +62,7 @@ export class WarehousesController {
   @ApiOperation({ summary: 'List warehouse locations' })
   listLocations(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
   ) {
     return this.warehousesService.listLocations(user.tenantId, id);
   }
@@ -71,7 +72,7 @@ export class WarehousesController {
   @ApiOperation({ summary: 'Add a warehouse location' })
   addLocation(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: CreateLocationDto,
   ) {
     return this.warehousesService.addLocation(user.tenantId, id, dto);

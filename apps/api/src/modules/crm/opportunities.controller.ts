@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CreateOpportunityDto } from './dto/create-opportunity.dto';
@@ -32,7 +33,7 @@ export class OpportunitiesController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.CRM, 'read'))
   @ApiOperation({ summary: 'Get opportunity by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.opportunitiesService.findOne(user.tenantId, id);
   }
 
@@ -46,14 +47,14 @@ export class OpportunitiesController {
   @Post(':id/mark-won')
   @RequirePermissions(permission(ModuleName.CRM, 'write'))
   @ApiOperation({ summary: 'Mark an opportunity as won' })
-  markWon(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  markWon(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.opportunitiesService.markWon(user.tenantId, id);
   }
 
   @Post(':id/mark-lost')
   @RequirePermissions(permission(ModuleName.CRM, 'write'))
   @ApiOperation({ summary: 'Mark an opportunity as lost' })
-  markLost(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  markLost(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.opportunitiesService.markLost(user.tenantId, id);
   }
 
@@ -62,7 +63,7 @@ export class OpportunitiesController {
   @ApiOperation({ summary: 'Update an opportunity' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateOpportunityDto,
   ) {
     return this.opportunitiesService.update(user.tenantId, id, dto);
@@ -71,7 +72,7 @@ export class OpportunitiesController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.CRM, 'write'))
   @ApiOperation({ summary: 'Delete an opportunity' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.opportunitiesService.remove(user.tenantId, id);
   }
 }

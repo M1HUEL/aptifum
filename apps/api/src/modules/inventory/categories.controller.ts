@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CategoriesService } from './categories.service';
@@ -26,7 +27,7 @@ export class CategoriesController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.INVENTORY, 'read'))
   @ApiOperation({ summary: 'Get category by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.categoriesService.findOne(user.tenantId, id);
   }
 
@@ -42,7 +43,7 @@ export class CategoriesController {
   @ApiOperation({ summary: 'Update a category' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateCategoryDto,
   ) {
     return this.categoriesService.update(user.tenantId, id, dto);
@@ -51,7 +52,7 @@ export class CategoriesController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.INVENTORY, 'write'))
   @ApiOperation({ summary: 'Deactivate a category' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.categoriesService.remove(user.tenantId, id);
   }
 }

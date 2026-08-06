@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AccountType, ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { AccountsService } from './accounts.service';
@@ -34,7 +35,7 @@ export class AccountsController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.ACCOUNTING, 'read'))
   @ApiOperation({ summary: 'Get chart account by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.accountsService.findOne(user.tenantId, id);
   }
 
@@ -50,7 +51,7 @@ export class AccountsController {
   @ApiOperation({ summary: 'Update a chart account' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateAccountDto,
   ) {
     return this.accountsService.update(user.tenantId, id, dto);
@@ -59,7 +60,7 @@ export class AccountsController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.ACCOUNTING, 'write'))
   @ApiOperation({ summary: 'Deactivate a chart account' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.accountsService.remove(user.tenantId, id);
   }
 }

@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CreateGoodsReceiptDto } from './dto/create-goods-receipt.dto';
@@ -26,7 +27,7 @@ export class PurchaseOrdersController {
   @Get('receipts/:id')
   @RequirePermissions(permission(ModuleName.PURCHASING, 'read'))
   @ApiOperation({ summary: 'Get goods receipt by id' })
-  getReceipt(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  getReceipt(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.purchaseOrdersService.findReceipt(user.tenantId, id);
   }
 
@@ -44,7 +45,7 @@ export class PurchaseOrdersController {
   @Get('purchase-orders/:id')
   @RequirePermissions(permission(ModuleName.PURCHASING, 'read'))
   @ApiOperation({ summary: 'Get purchase order by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.purchaseOrdersService.findOne(user.tenantId, id);
   }
 
@@ -58,14 +59,14 @@ export class PurchaseOrdersController {
   @Post('purchase-orders/:id/approve')
   @RequirePermissions(permission(ModuleName.PURCHASING, 'write'))
   @ApiOperation({ summary: 'Approve a purchase order' })
-  approve(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  approve(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.purchaseOrdersService.approve(user.tenantId, id);
   }
 
   @Post('purchase-orders/:id/cancel')
   @RequirePermissions(permission(ModuleName.PURCHASING, 'write'))
   @ApiOperation({ summary: 'Cancel a purchase order' })
-  cancel(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  cancel(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.purchaseOrdersService.cancel(user.tenantId, id);
   }
 
@@ -74,7 +75,7 @@ export class PurchaseOrdersController {
   @ApiOperation({ summary: 'Receive goods against a purchase order' })
   receive(
     @CurrentUser() user: { tenantId: string | null; id: string },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: CreateGoodsReceiptDto,
   ) {
     return this.purchaseOrdersService.receive(user.tenantId, user.id, id, dto);

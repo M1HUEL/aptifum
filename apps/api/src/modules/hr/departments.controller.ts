@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { DepartmentsService } from './departments.service';
@@ -26,7 +27,7 @@ export class DepartmentsController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.HR, 'read'))
   @ApiOperation({ summary: 'Get department by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.departmentsService.findOne(user.tenantId, id);
   }
 
@@ -42,7 +43,7 @@ export class DepartmentsController {
   @ApiOperation({ summary: 'Update a department' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateDepartmentDto,
   ) {
     return this.departmentsService.update(user.tenantId, id, dto);
@@ -51,7 +52,7 @@ export class DepartmentsController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.HR, 'write'))
   @ApiOperation({ summary: 'Delete a department' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.departmentsService.remove(user.tenantId, id);
   }
 }

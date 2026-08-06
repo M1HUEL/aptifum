@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { json, urlencoded } from 'express';
 import helmet from 'helmet';
 import { getEnv } from '@aptifum/config';
 import { createLogger, LoggerAdapter } from '@aptifum/logger';
@@ -12,11 +13,18 @@ async function bootstrap(): Promise<void> {
   const env = getEnv();
   const pino = createLogger();
 
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+    bodyParser: false,
+  });
+  app.use(json({ limit: '1mb' }));
+  app.use(urlencoded({ extended: true, limit: '1mb' }));
   app.useLogger(new LoggerAdapter(pino));
   app.setGlobalPrefix('api/v1');
   app.use(helmet());
-  app.enableCors({ origin: true, credentials: true });
+  app.enableShutdownHooks();
+  const corsOrigin = env.NODE_ENV === 'production' ? env.CORS_ORIGIN || false : true;
+  app.enableCors({ origin: corsOrigin, credentials: true });
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
   );

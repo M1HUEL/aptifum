@@ -6,6 +6,7 @@ import { resolveWorkspaceRoot } from './workspace';
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(3000),
+  CORS_ORIGIN: z.string().default(''),
   DB_HOST: z.string().default('localhost'),
   DB_PORT: z.coerce.number().default(5432),
   DB_USER: z.string().default('aptifum'),

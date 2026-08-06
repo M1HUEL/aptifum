@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CustomersService } from './customers.service';
@@ -27,7 +28,7 @@ export class CustomersController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.SALES, 'read'))
   @ApiOperation({ summary: 'Get customer by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.customersService.findOne(user.tenantId, id);
   }
 
@@ -43,7 +44,7 @@ export class CustomersController {
   @ApiOperation({ summary: 'Update a customer' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateCustomerDto,
   ) {
     return this.customersService.update(user.tenantId, id, dto);
@@ -52,7 +53,7 @@ export class CustomersController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.SALES, 'write'))
   @ApiOperation({ summary: 'Deactivate a customer' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.customersService.remove(user.tenantId, id);
   }
 }

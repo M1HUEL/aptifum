@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { AttendanceService } from './attendance.service';
@@ -36,7 +37,7 @@ export class AttendanceController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.HR, 'read'))
   @ApiOperation({ summary: 'Get attendance record by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.attendanceService.findOne(user.tenantId, id);
   }
 
@@ -62,7 +63,7 @@ export class AttendanceController {
   @ApiOperation({ summary: 'Update an attendance record' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateAttendanceDto,
   ) {
     return this.attendanceService.update(user.tenantId, id, dto);
@@ -71,7 +72,7 @@ export class AttendanceController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.HR, 'write'))
   @ApiOperation({ summary: 'Delete an attendance record' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.attendanceService.remove(user.tenantId, id);
   }
 }

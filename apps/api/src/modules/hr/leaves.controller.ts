@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { LeavesService } from './leaves.service';
@@ -33,7 +34,7 @@ export class LeavesController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.HR, 'read'))
   @ApiOperation({ summary: 'Get leave by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.leavesService.findOne(user.tenantId, id);
   }
 
@@ -49,7 +50,7 @@ export class LeavesController {
   @ApiOperation({ summary: 'Update a pending leave' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateLeaveDto,
   ) {
     return this.leavesService.update(user.tenantId, id, dto);
@@ -60,7 +61,7 @@ export class LeavesController {
   @ApiOperation({ summary: 'Approve a leave request' })
   approve(
     @CurrentUser() user: { tenantId: string | null; id?: string },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
   ) {
     return this.leavesService.approve(user.tenantId, id, user.id ?? null);
   }
@@ -70,7 +71,7 @@ export class LeavesController {
   @ApiOperation({ summary: 'Reject a leave request' })
   reject(
     @CurrentUser() user: { tenantId: string | null; id?: string },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
   ) {
     return this.leavesService.reject(user.tenantId, id, user.id ?? null);
   }
@@ -78,7 +79,7 @@ export class LeavesController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.HR, 'write'))
   @ApiOperation({ summary: 'Delete a pending leave' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.leavesService.remove(user.tenantId, id);
   }
 }

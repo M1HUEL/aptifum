@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CreateLeadDto } from './dto/create-lead.dto';
@@ -27,7 +28,7 @@ export class LeadsController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.CRM, 'read'))
   @ApiOperation({ summary: 'Get lead by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.leadsService.findOne(user.tenantId, id);
   }
 
@@ -43,7 +44,7 @@ export class LeadsController {
   @ApiOperation({ summary: 'Convert a lead into a customer' })
   convert(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() body: { customerCode?: string },
   ) {
     return this.leadsService.convert(user.tenantId, id, { customerCode: body?.customerCode });
@@ -54,7 +55,7 @@ export class LeadsController {
   @ApiOperation({ summary: 'Update a lead' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateLeadDto,
   ) {
     return this.leadsService.update(user.tenantId, id, dto);
@@ -63,7 +64,7 @@ export class LeadsController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.CRM, 'write'))
   @ApiOperation({ summary: 'Delete a lead' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.leadsService.remove(user.tenantId, id);
   }
 }

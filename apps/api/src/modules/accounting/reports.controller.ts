@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
@@ -27,7 +28,7 @@ export class ReportsController {
   @ApiOperation({ summary: 'General ledger for a single account' })
   ledger(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('accountId') accountId: string,
+    @Param('accountId', new ParseUUIDPipe()) accountId: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {

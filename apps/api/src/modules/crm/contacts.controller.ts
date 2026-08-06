@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ContactsService } from './contacts.service';
@@ -27,7 +28,7 @@ export class ContactsController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.CRM, 'read'))
   @ApiOperation({ summary: 'Get contact by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.contactsService.findOne(user.tenantId, id);
   }
 
@@ -43,7 +44,7 @@ export class ContactsController {
   @ApiOperation({ summary: 'Update a contact' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateContactDto,
   ) {
     return this.contactsService.update(user.tenantId, id, dto);
@@ -52,7 +53,7 @@ export class ContactsController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.CRM, 'write'))
   @ApiOperation({ summary: 'Delete a contact' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.contactsService.remove(user.tenantId, id);
   }
 }

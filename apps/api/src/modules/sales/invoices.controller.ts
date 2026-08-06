@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Headers, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -26,7 +27,7 @@ export class InvoicesController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.INVOICING, 'read'))
   @ApiOperation({ summary: 'Get invoice by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.invoicesService.findOne(user.tenantId, id);
   }
 
@@ -46,7 +47,7 @@ export class InvoicesController {
   @ApiOperation({ summary: 'Record a payment against an invoice' })
   recordPayment(
     @CurrentUser() user: { tenantId: string | null; id: string },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: CreatePaymentDto,
     @Headers('idempotency-key') idempotencyKey?: string,
   ) {
@@ -58,7 +59,7 @@ export class InvoicesController {
   @ApiOperation({ summary: 'Issue a credit note for an invoice' })
   createCreditNote(
     @CurrentUser() user: { tenantId: string | null; id: string },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Headers('idempotency-key') idempotencyKey?: string,
   ) {
     return this.invoicesService.createCreditNote(user.tenantId, user.id, id, idempotencyKey);

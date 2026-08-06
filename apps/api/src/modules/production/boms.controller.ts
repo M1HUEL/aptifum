@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { BomsService } from './boms.service';
@@ -26,7 +27,7 @@ export class BomsController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.PRODUCTION, 'read'))
   @ApiOperation({ summary: 'Get BOM by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.bomsService.findOne(user.tenantId, id);
   }
 
@@ -42,7 +43,7 @@ export class BomsController {
   @ApiOperation({ summary: 'Update a BOM' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateBomDto,
   ) {
     return this.bomsService.update(user.tenantId, id, dto);
@@ -51,7 +52,7 @@ export class BomsController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.PRODUCTION, 'write'))
   @ApiOperation({ summary: 'Delete a BOM' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.bomsService.remove(user.tenantId, id);
   }
 }

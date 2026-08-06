@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ActivitiesService } from './activities.service';
@@ -34,7 +35,7 @@ export class ActivitiesController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.CRM, 'read'))
   @ApiOperation({ summary: 'Get activity by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.activitiesService.findOne(user.tenantId, id);
   }
 
@@ -50,7 +51,7 @@ export class ActivitiesController {
   @ApiOperation({ summary: 'Update an activity' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateActivityDto,
   ) {
     return this.activitiesService.update(user.tenantId, id, dto);
@@ -59,7 +60,7 @@ export class ActivitiesController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.CRM, 'write'))
   @ApiOperation({ summary: 'Delete an activity' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.activitiesService.remove(user.tenantId, id);
   }
 }

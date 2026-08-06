@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
@@ -27,7 +28,7 @@ export class SuppliersController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.PURCHASING, 'read'))
   @ApiOperation({ summary: 'Get supplier by id' })
-  get(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  get(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.suppliersService.findOne(user.tenantId, id);
   }
 
@@ -43,7 +44,7 @@ export class SuppliersController {
   @ApiOperation({ summary: 'Update a supplier' })
   update(
     @CurrentUser() user: { tenantId: string | null },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateSupplierDto,
   ) {
     return this.suppliersService.update(user.tenantId, id, dto);
@@ -52,7 +53,7 @@ export class SuppliersController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.PURCHASING, 'write'))
   @ApiOperation({ summary: 'Deactivate a supplier' })
-  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id') id: string) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.suppliersService.remove(user.tenantId, id);
   }
 }

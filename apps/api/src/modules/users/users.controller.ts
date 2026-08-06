@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
@@ -19,7 +19,7 @@ export class UsersController {
   @Get(':id')
   @RequirePermissions(permission(ModuleName.USERS, 'read'))
   @ApiOperation({ summary: 'Get user profile by id' })
-  get(@Param('id') id: string) {
+  get(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.usersService.getProfile(id);
   }
 }
