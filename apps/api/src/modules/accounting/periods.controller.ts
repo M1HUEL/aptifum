@@ -1,5 +1,6 @@
 import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { ModuleName, permission } from '@aptifum/core';
 import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -16,8 +17,7 @@ export class PeriodsController {
   @ApiOperation({ summary: 'List accounting periods' })
   list(
     @CurrentUser() user: { tenantId: string | null },
-    @Query('page') page = '1',
-    @Query('limit') limit = '20',
+    @Query() { page, limit }: PaginationQueryDto,
     @Query('status') status?: string,
   ) {
     return this.periodsService.findAll(

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { ModuleName, permission } from '@aptifum/core';
 import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -17,8 +18,7 @@ export class JournalEntriesController {
   @ApiOperation({ summary: 'List journal entries' })
   list(
     @CurrentUser() user: { tenantId: string | null },
-    @Query('page') page = '1',
-    @Query('limit') limit = '20',
+    @Query() { page, limit }: PaginationQueryDto,
     @Query('periodId') periodId?: string,
   ) {
     return this.journalEntriesService.findAll(

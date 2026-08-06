@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { ALL_PERMISSIONS, ModuleName, permission } from '@aptifum/core';
 import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -30,8 +31,7 @@ export class EmployeesController {
   @ApiOperation({ summary: 'List employees' })
   async list(
     @CurrentUser() user: { tenantId: string | null; id?: string },
-    @Query('page') page = '1',
-    @Query('limit') limit = '20',
+    @Query() { page, limit }: PaginationQueryDto,
     @Query('q') q?: string,
   ) {
     const includeSalary = await this.canViewSalary(user.id);

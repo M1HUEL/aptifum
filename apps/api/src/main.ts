@@ -26,7 +26,7 @@ async function bootstrap(): Promise<void> {
   const corsOrigin = env.NODE_ENV === 'production' ? env.CORS_ORIGIN || false : true;
   app.enableCors({ origin: corsOrigin, credentials: true });
   app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
+    new ValidationPipe({ whitelist: true, transform: true }),
   );
   app.useGlobalFilters(new ApiExceptionFilter());
 
