@@ -575,7 +575,6 @@ export class ReportsService {
     const today = this.today();
     const month = today.slice(0, 7);
     const monthStart = `${month}-01`;
-    const params: unknown[] = [tenantId, today, monthStart, today];
 
     const [salesToday]: Array<{ total: number }> = await this.dataSource.query(
       `SELECT COALESCE(SUM(i.total), 0) AS total FROM invoices i

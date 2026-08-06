@@ -3,7 +3,6 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import {
   Customer,
-  DocumentSeriesNotFoundError,
   nextDocumentNumber as dbNextDocumentNumber,
 } from '@aptifum/database';
 import { DocumentSeriesKind, LeadStatus } from '@aptifum/core';

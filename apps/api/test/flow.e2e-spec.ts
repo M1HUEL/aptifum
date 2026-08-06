@@ -57,7 +57,7 @@ describe('Vertical flow: sales -> accounting -> reports (e2e)', () => {
       .expect(200);
     token = login.body.accessToken as string;
 
-    const api = <T>(method: 'get' | 'post', path: string, body?: unknown) => {
+    const api = (method: 'get' | 'post', path: string, body?: unknown) => {
       const req = request(app.getHttpServer())[method](`/api/v1${path}`);
       req.set('Authorization', `Bearer ${token}`);
       if (body !== undefined) {

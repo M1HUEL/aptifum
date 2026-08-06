@@ -6,6 +6,7 @@
     "build": "tsc -p tsconfig.build.json",
     "dev": "node --watch -r ts-node/register src/main.ts",
     "start": "node dist/main.js",
+    "lint": "eslint src test --max-warnings 0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsc -p tsconfig.build.json && vitest run",
     "test:watch": "vitest"
