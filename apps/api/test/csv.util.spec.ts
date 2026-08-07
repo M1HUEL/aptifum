@@ -34,6 +34,28 @@ describe('toCsv', () => {
     const csv = toCsv([{ a: null, b: undefined }]);
     expect(csv.split('\r\n')[1]).toBe(',');
   });
+
+  it('prefixes cells starting with = + - @ to prevent formula injection', () => {
+    const csv = toCsv([
+      { formula: '=1+2', plus: '+cmd', minus: '-2', at: '@cmd', normal: 'ok' },
+    ]);
+    expect(csv.split('\r\n')[1]).toBe("'=1+2,'+cmd,'-2,'@cmd,ok");
+  });
+
+  it('neutralizes cells with leading whitespace before a dangerous prefix', () => {
+    const csv = toCsv([{ a: '  =HYPERLINK("x")' }]);
+    expect(csv.split('\r\n')[1]).toBe('"\'  =HYPERLINK(""x"")"');
+  });
+
+  it('still quotes neutralized cells that contain commas', () => {
+    const csv = toCsv([{ a: '=1,2' }]);
+    expect(csv.split('\r\n')[1]).toBe('"\'=1,2"');
+  });
+
+  it('leaves safe values unchanged', () => {
+    const csv = toCsv([{ a: 500, b: 'ok', c: ' plain', d: '0.00' }]);
+    expect(csv.split('\r\n')[1]).toBe('500,ok, plain,0.00');
+  });
 });
 
 describe('sectionsToCsv', () => {

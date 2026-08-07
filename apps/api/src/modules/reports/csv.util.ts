@@ -1,5 +1,7 @@
 import type { Response } from 'express';
 
+const FORMULA_PREFIX = /^[\s]*[=+\-@]/;
+
 export function toCsv(rows: Array<Record<string, unknown>>): string {
   if (!rows.length) {
     return '';
@@ -7,9 +9,10 @@ export function toCsv(rows: Array<Record<string, unknown>>): string {
   const keys = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
   const escape = (value: unknown): string => {
     const s = value === null || value === undefined ? '' : String(value);
-    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    const neutralized = FORMULA_PREFIX.test(s) ? `'${s}` : s;
+    return /[",\r\n]/.test(neutralized) ? `"${neutralized.replace(/"/g, '""')}"` : neutralized;
   };
-  const header = keys.join(',');
+  const header = keys.map(escape).join(',');
   const body = rows.map((row) => keys.map((key) => escape(row[key])).join(','));
   return [header, ...body].join('\r\n');
 }
