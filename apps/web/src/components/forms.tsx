@@ -56,11 +56,15 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...props} />;
 }
 
-export function Checkbox(props: InputHTMLAttributes<HTMLInputElement>) {
+interface CheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+}
+
+export function Checkbox({ label, ...rest }: CheckboxProps) {
   return (
     <label className="checkbox">
-      <input type="checkbox" {...props} />
-      <span className="checkbox-label">{props.children}</span>
+      <input type="checkbox" {...rest} />
+      <span className="checkbox-label">{label}</span>
     </label>
   );
 }
