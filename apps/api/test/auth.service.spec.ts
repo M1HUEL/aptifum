@@ -23,11 +23,23 @@ function buildAuthService() {
       JWT_REFRESH_TTL: '7d',
     },
   };
+  const sessionsRepo = {
+    create: vi.fn((data: unknown) => data),
+    save: vi.fn(async (data: Record<string, unknown>) => ({
+      ...data,
+      id: 'session-1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })),
+    findOneBy: vi.fn(),
+    update: vi.fn(),
+  };
 
   const service = new AuthService(
     usersService as unknown as UsersService,
     jwtService as unknown as JwtService,
     config as unknown as ConfigService,
+    sessionsRepo as never,
   );
 
   return { service, usersService, jwtService };
