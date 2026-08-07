@@ -6,11 +6,11 @@ import { JournalEntry } from './journal-entry.entity';
 
 @Entity('journal_entry_lines')
 export class JournalEntryLine extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_jel_entry_id')
   @Column({ name: 'entry_id', type: 'uuid' })
   entryId: string;
 
-  @Index()
+  @Index('IDX_jel_account_id')
   @Column({ name: 'account_id', type: 'uuid' })
   accountId: string;
 
@@ -39,10 +39,10 @@ export class JournalEntryLine extends TenantBaseEntity {
   credit: number;
 
   @ManyToOne(() => JournalEntry, (entry) => entry.lines)
-  @JoinColumn({ name: 'entry_id' })
+  @JoinColumn({ name: 'entry_id', foreignKeyConstraintName: 'FK_jel_entry' })
   entry: JournalEntry | null;
 
   @ManyToOne(() => ChartAccount)
-  @JoinColumn({ name: 'account_id' })
+  @JoinColumn({ name: 'account_id', foreignKeyConstraintName: 'FK_jel_account' })
   account: ChartAccount | null;
 }

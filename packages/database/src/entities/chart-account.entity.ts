@@ -3,9 +3,9 @@ import { AccountNormalBalance, AccountType } from '@aptifum/core';
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 
 @Entity('chart_accounts')
-@Unique(['tenantId', 'code'])
+@Unique('UQ_chart_accounts_tenant_code', ['tenantId', 'code'])
 export class ChartAccount extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_chart_accounts_code')
   @Column({ length: 20 })
   code: string;
 
@@ -35,6 +35,6 @@ export class ChartAccount extends TenantBaseEntity {
   version: number;
 
   @ManyToOne(() => ChartAccount)
-  @JoinColumn({ name: 'parent_id' })
+  @JoinColumn({ name: 'parent_id', foreignKeyConstraintName: 'FK_chart_accounts_parent' })
   parent: ChartAccount | null;
 }

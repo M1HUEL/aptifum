@@ -3,9 +3,9 @@ import { AccountingPeriodStatus } from '@aptifum/core';
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 
 @Entity('accounting_periods')
-@Unique(['tenantId', 'period'])
+@Unique('UQ_accounting_periods_tenant_period', ['tenantId', 'period'])
 export class AccountingPeriod extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_accounting_periods_period')
   @Column({ length: 7 })
   period: string;
 

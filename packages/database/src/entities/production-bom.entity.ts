@@ -6,11 +6,11 @@ import { ProductionBomLine } from './production-bom-line.entity';
 
 @Entity('production_boms')
 export class ProductionBom extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_production_boms_name')
   @Column({ length: 120 })
   name: string;
 
-  @Index()
+  @Index('IDX_production_boms_product_id')
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 
@@ -31,7 +31,7 @@ export class ProductionBom extends TenantBaseEntity {
   version: number;
 
   @ManyToOne(() => Product)
-  @JoinColumn({ name: 'product_id' })
+  @JoinColumn({ name: 'product_id', foreignKeyConstraintName: 'FK_production_boms_product' })
   product: Product;
 
   @OneToMany(() => ProductionBomLine, (line) => line.bom)

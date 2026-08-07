@@ -6,9 +6,10 @@ import { AccountingPeriod } from './accounting-period.entity';
 import { JournalEntryLine } from './journal-entry-line.entity';
 
 @Entity('journal_entries')
-@Unique(['tenantId', 'number'])
+@Unique('UQ_journal_entries_tenant_number', ['tenantId', 'number'])
+@Index('IDX_journal_entries_tenant_entry_date', ['tenantId', 'entryDate'])
 export class JournalEntry extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_journal_entries_number')
   @Column({ length: 30 })
   number: string;
 
@@ -16,7 +17,6 @@ export class JournalEntry extends TenantBaseEntity {
   @Column({ name: 'period_id', type: 'uuid' })
   periodId: string;
 
-  @Index('IDX_journal_entries_tenant_entry_date', ['tenantId', 'entryDate'])
   @Column({ name: 'entry_date', type: 'date' })
   entryDate: string;
 
@@ -72,7 +72,7 @@ export class JournalEntry extends TenantBaseEntity {
   version: number;
 
   @ManyToOne(() => AccountingPeriod)
-  @JoinColumn({ name: 'period_id' })
+  @JoinColumn({ name: 'period_id', foreignKeyConstraintName: 'FK_je_period' })
   period: AccountingPeriod | null;
 
   @OneToMany(() => JournalEntryLine, (line) => line.entry, { cascade: true })

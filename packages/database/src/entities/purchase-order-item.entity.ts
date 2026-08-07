@@ -6,7 +6,7 @@ import { PurchaseOrder } from './purchase-order.entity';
 
 @Entity('purchase_order_items')
 export class PurchaseOrderItem extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_poi_order_id')
   @Column({ name: 'order_id', type: 'uuid' })
   orderId: string;
 
@@ -85,10 +85,10 @@ export class PurchaseOrderItem extends TenantBaseEntity {
   receivedQuantity: number;
 
   @ManyToOne(() => PurchaseOrder, (order) => order.items)
-  @JoinColumn({ name: 'order_id' })
+  @JoinColumn({ name: 'order_id', foreignKeyConstraintName: 'FK_poi_order' })
   order: PurchaseOrder;
 
   @ManyToOne(() => Product)
-  @JoinColumn({ name: 'product_id' })
+  @JoinColumn({ name: 'product_id', foreignKeyConstraintName: 'FK_poi_product' })
   product: Product;
 }

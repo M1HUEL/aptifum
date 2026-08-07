@@ -4,9 +4,9 @@ import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { Employee } from './hr-employee.entity';
 
 @Entity('hr_attendance')
-@Unique(['tenantId', 'employeeId', 'workDate'])
+@Unique('UQ_hr_attendance_tenant_employee_work_date', ['tenantId', 'employeeId', 'workDate'])
 export class AttendanceRecord extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_hr_attendance_employee_id')
   @Column({ name: 'employee_id', type: 'uuid' })
   employeeId: string;
 
@@ -22,7 +22,7 @@ export class AttendanceRecord extends TenantBaseEntity {
   @Column({ name: 'worked_minutes', type: 'int', default: 0 })
   workedMinutes: number;
 
-  @Index()
+  @Index('IDX_hr_attendance_status')
   @Column({ type: 'enum', enum: AttendanceStatus, default: AttendanceStatus.PRESENT })
   status: AttendanceStatus;
 
@@ -30,6 +30,6 @@ export class AttendanceRecord extends TenantBaseEntity {
   notes: string | null;
 
   @ManyToOne(() => Employee)
-  @JoinColumn({ name: 'employee_id' })
+  @JoinColumn({ name: 'employee_id', foreignKeyConstraintName: 'FK_hr_attendance_employee' })
   employee: Employee | null;
 }

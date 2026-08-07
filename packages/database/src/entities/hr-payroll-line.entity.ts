@@ -5,9 +5,9 @@ import { Employee } from './hr-employee.entity';
 import { Payroll } from './hr-payroll.entity';
 
 @Entity('hr_payroll_lines')
-@Unique(['tenantId', 'payrollId', 'employeeId'])
+@Unique('UQ_hr_payroll_lines_tenant_payroll_employee', ['tenantId', 'payrollId', 'employeeId'])
 export class PayrollLine extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_hr_payroll_lines_payroll_id')
   @Column({ name: 'payroll_id', type: 'uuid' })
   payrollId: string;
 
@@ -31,10 +31,10 @@ export class PayrollLine extends TenantBaseEntity {
   net: number;
 
   @ManyToOne(() => Payroll, (payroll) => payroll.lines)
-  @JoinColumn({ name: 'payroll_id' })
+  @JoinColumn({ name: 'payroll_id', foreignKeyConstraintName: 'FK_hr_payroll_lines_payroll' })
   payroll: Payroll | null;
 
   @ManyToOne(() => Employee)
-  @JoinColumn({ name: 'employee_id' })
+  @JoinColumn({ name: 'employee_id', foreignKeyConstraintName: 'FK_hr_payroll_lines_employee' })
   employee: Employee | null;
 }

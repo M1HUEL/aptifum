@@ -6,17 +6,17 @@ import { JournalEntry } from './journal-entry.entity';
 import { PayrollLine } from './hr-payroll-line.entity';
 
 @Entity('hr_payrolls')
-@Unique(['tenantId', 'number'])
+@Unique('UQ_hr_payrolls_tenant_number', ['tenantId', 'number'])
 export class Payroll extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_hr_payrolls_number')
   @Column({ length: 30 })
   number: string;
 
-  @Index()
+  @Index('IDX_hr_payrolls_period')
   @Column({ length: 7 })
   period: string;
 
-  @Index()
+  @Index('IDX_hr_payrolls_status')
   @Column({ type: 'enum', enum: PayrollStatus, default: PayrollStatus.DRAFT })
   status: PayrollStatus;
 
@@ -69,6 +69,6 @@ export class Payroll extends TenantBaseEntity {
   lines: PayrollLine[];
 
   @ManyToOne(() => JournalEntry)
-  @JoinColumn({ name: 'posted_entry_id' })
+  @JoinColumn({ name: 'posted_entry_id', foreignKeyConstraintName: 'FK_hr_payrolls_posted_entry' })
   postedEntry: JournalEntry | null;
 }

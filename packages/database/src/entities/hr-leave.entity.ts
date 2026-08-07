@@ -5,11 +5,11 @@ import { Employee } from './hr-employee.entity';
 
 @Entity('hr_leaves')
 export class Leave extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_hr_leaves_employee_id')
   @Column({ name: 'employee_id', type: 'uuid' })
   employeeId: string;
 
-  @Index()
+  @Index('IDX_hr_leaves_leave_type')
   @Column({ name: 'leave_type', type: 'enum', enum: LeaveType })
   leaveType: LeaveType;
 
@@ -22,7 +22,7 @@ export class Leave extends TenantBaseEntity {
   @Column({ type: 'int', default: 1 })
   days: number;
 
-  @Index()
+  @Index('IDX_hr_leaves_status')
   @Column({ type: 'enum', enum: LeaveStatus, default: LeaveStatus.PENDING })
   status: LeaveStatus;
 
@@ -36,6 +36,6 @@ export class Leave extends TenantBaseEntity {
   approvedAt: Date | null;
 
   @ManyToOne(() => Employee)
-  @JoinColumn({ name: 'employee_id' })
+  @JoinColumn({ name: 'employee_id', foreignKeyConstraintName: 'FK_hr_leaves_employee' })
   employee: Employee | null;
 }

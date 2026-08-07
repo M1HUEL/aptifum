@@ -2,9 +2,9 @@ import { Column, Entity, Index, Unique } from 'typeorm';
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 
 @Entity('hr_departments')
-@Unique(['tenantId', 'code'])
+@Unique('UQ_hr_departments_tenant_code', ['tenantId', 'code'])
 export class Department extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_hr_departments_code')
   @Column({ length: 40 })
   code: string;
 

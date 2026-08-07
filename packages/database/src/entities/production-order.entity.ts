@@ -8,16 +8,17 @@ import { ProductionOrderLine } from './production-order-line.entity';
 import { Warehouse } from './warehouse.entity';
 
 @Entity('production_orders')
-@Unique(['tenantId', 'number'])
+@Unique('UQ_production_orders_tenant_number', ['tenantId', 'number'])
 export class ProductionOrder extends TenantBaseEntity {
+  @Index('IDX_production_orders_number')
   @Column({ length: 30 })
   number: string;
 
-  @Index()
+  @Index('IDX_production_orders_product_id')
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 
-  @Index()
+  @Index('IDX_production_orders_bom_id')
   @Column({ name: 'bom_id', type: 'uuid', nullable: true })
   bomId: string | null;
 
@@ -29,7 +30,7 @@ export class ProductionOrder extends TenantBaseEntity {
   })
   quantity: number;
 
-  @Index()
+  @Index('IDX_production_orders_status')
   @Column({
     type: 'enum',
     enum: ProductionOrderStatus,
@@ -37,7 +38,7 @@ export class ProductionOrder extends TenantBaseEntity {
   })
   status: ProductionOrderStatus;
 
-  @Index()
+  @Index('IDX_production_orders_warehouse_id')
   @Column({ name: 'warehouse_id', type: 'uuid' })
   warehouseId: string;
 
@@ -93,15 +94,15 @@ export class ProductionOrder extends TenantBaseEntity {
   version: number;
 
   @ManyToOne(() => Product)
-  @JoinColumn({ name: 'product_id' })
+  @JoinColumn({ name: 'product_id', foreignKeyConstraintName: 'FK_production_orders_product' })
   product: Product;
 
   @ManyToOne(() => ProductionBom, { nullable: true })
-  @JoinColumn({ name: 'bom_id' })
+  @JoinColumn({ name: 'bom_id', foreignKeyConstraintName: 'FK_production_orders_bom' })
   bom: ProductionBom | null;
 
   @ManyToOne(() => Warehouse)
-  @JoinColumn({ name: 'warehouse_id' })
+  @JoinColumn({ name: 'warehouse_id', foreignKeyConstraintName: 'FK_production_orders_warehouse' })
   warehouse: Warehouse;
 
   @OneToMany(() => ProductionOrderLine, (line) => line.order)

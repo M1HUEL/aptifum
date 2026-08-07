@@ -5,13 +5,13 @@ import { Product } from './product.entity';
 import { ProductionOrder } from './production-order.entity';
 
 @Entity('production_order_lines')
-@Unique(['tenantId', 'orderId', 'productId'])
+@Unique('UQ_production_order_lines_tenant_order_product', ['tenantId', 'orderId', 'productId'])
 export class ProductionOrderLine extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_production_order_lines_order_id')
   @Column({ name: 'order_id', type: 'uuid' })
   orderId: string;
 
-  @Index()
+  @Index('IDX_production_order_lines_product_id')
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 
@@ -55,10 +55,10 @@ export class ProductionOrderLine extends TenantBaseEntity {
   lineCost: number;
 
   @ManyToOne(() => ProductionOrder, (order) => order.lines)
-  @JoinColumn({ name: 'order_id' })
+  @JoinColumn({ name: 'order_id', foreignKeyConstraintName: 'FK_production_order_lines_order' })
   order: ProductionOrder;
 
   @ManyToOne(() => Product)
-  @JoinColumn({ name: 'product_id' })
+  @JoinColumn({ name: 'product_id', foreignKeyConstraintName: 'FK_production_order_lines_product' })
   product: Product;
 }

@@ -8,6 +8,7 @@ import { Warehouse } from './warehouse.entity';
 
 @Entity('sales_orders')
 @Unique(['tenantId', 'number'])
+@Index('IDX_sales_orders_tenant_status', ['tenantId', 'status'])
 export class SalesOrder extends TenantBaseEntity {
   @Column({ length: 30 })
   number: string;
@@ -15,7 +16,6 @@ export class SalesOrder extends TenantBaseEntity {
   @Column({ type: 'enum', enum: SalesOrderKind, default: SalesOrderKind.ORDER })
   kind: SalesOrderKind;
 
-  @Index('IDX_sales_orders_tenant_status', ['tenantId', 'status'])
   @Column({ type: 'enum', enum: SalesOrderStatus, default: SalesOrderStatus.DRAFT })
   status: SalesOrderStatus;
 

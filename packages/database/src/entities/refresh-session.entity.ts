@@ -1,15 +1,17 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
+import { User } from './user.entity';
 
 @Entity('refresh_sessions')
+@Unique('UQ_refresh_sessions_token_hash', ['tokenHash'])
 export class RefreshSession {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index()
+  @Index('IDX_refresh_sessions_user_id')
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 
-  @Index()
+  @Index('IDX_refresh_sessions_family_id')
   @Column({ name: 'family_id', type: 'uuid' })
   familyId: string;
 
@@ -35,4 +37,8 @@ export class RefreshSession {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'FK_refresh_sessions_user' })
+  user: User;
 }

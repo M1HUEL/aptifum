@@ -6,12 +6,12 @@ import { Supplier } from './supplier.entity';
 import { Warehouse } from './warehouse.entity';
 
 @Entity('goods_receipts')
-@Unique(['tenantId', 'number'])
+@Unique('UQ_goods_receipts_tenant_number', ['tenantId', 'number'])
 export class GoodsReceipt extends TenantBaseEntity {
   @Column({ length: 30 })
   number: string;
 
-  @Index()
+  @Index('IDX_goods_receipts_order_id')
   @Column({ name: 'order_id', type: 'uuid' })
   orderId: string;
 
@@ -28,15 +28,15 @@ export class GoodsReceipt extends TenantBaseEntity {
   notes: string | null;
 
   @ManyToOne(() => PurchaseOrder)
-  @JoinColumn({ name: 'order_id' })
+  @JoinColumn({ name: 'order_id', foreignKeyConstraintName: 'FK_gr_order' })
   order: PurchaseOrder;
 
   @ManyToOne(() => Supplier)
-  @JoinColumn({ name: 'supplier_id' })
+  @JoinColumn({ name: 'supplier_id', foreignKeyConstraintName: 'FK_gr_supplier' })
   supplier: Supplier;
 
   @ManyToOne(() => Warehouse)
-  @JoinColumn({ name: 'warehouse_id' })
+  @JoinColumn({ name: 'warehouse_id', foreignKeyConstraintName: 'FK_gr_warehouse' })
   warehouse: Warehouse;
 
   @OneToMany(() => GoodsReceiptItem, (item) => item.receipt, { cascade: true })

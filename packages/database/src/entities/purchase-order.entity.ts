@@ -7,16 +7,16 @@ import { Supplier } from './supplier.entity';
 import { Warehouse } from './warehouse.entity';
 
 @Entity('purchase_orders')
-@Unique(['tenantId', 'number'])
+@Unique('UQ_purchase_orders_tenant_number', ['tenantId', 'number'])
+@Index('IDX_purchase_orders_tenant_status', ['tenantId', 'status'])
 export class PurchaseOrder extends TenantBaseEntity {
   @Column({ length: 30 })
   number: string;
 
-  @Index('IDX_purchase_orders_tenant_status', ['tenantId', 'status'])
   @Column({ type: 'enum', enum: PurchaseOrderStatus, default: PurchaseOrderStatus.DRAFT })
   status: PurchaseOrderStatus;
 
-  @Index()
+  @Index('IDX_purchase_orders_supplier_id')
   @Column({ name: 'supplier_id', type: 'uuid' })
   supplierId: string;
 
@@ -75,11 +75,11 @@ export class PurchaseOrder extends TenantBaseEntity {
   version: number;
 
   @ManyToOne(() => Supplier)
-  @JoinColumn({ name: 'supplier_id' })
+  @JoinColumn({ name: 'supplier_id', foreignKeyConstraintName: 'FK_po_supplier' })
   supplier: Supplier;
 
   @ManyToOne(() => Warehouse)
-  @JoinColumn({ name: 'warehouse_id' })
+  @JoinColumn({ name: 'warehouse_id', foreignKeyConstraintName: 'FK_po_warehouse' })
   warehouse: Warehouse;
 
   @OneToMany(() => PurchaseOrderItem, (item) => item.order, { cascade: true })

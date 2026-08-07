@@ -5,9 +5,9 @@ import { numericTransformer } from '../base/transformers';
 import { Department } from './hr-department.entity';
 
 @Entity('hr_employees')
-@Unique(['tenantId', 'employeeNo'])
+@Unique('UQ_hr_employees_tenant_employee_no', ['tenantId', 'employeeNo'])
 export class Employee extends TenantBaseEntity {
-  @Index()
+  @Index('IDX_hr_employees_employee_no')
   @Column({ name: 'employee_no', type: 'varchar', length: 30 })
   employeeNo: string;
 
@@ -60,7 +60,7 @@ export class Employee extends TenantBaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   address: string | null;
 
-  @Index()
+  @Index('IDX_hr_employees_status')
   @Column({ type: 'enum', enum: EmployeeStatus, default: EmployeeStatus.ACTIVE })
   status: EmployeeStatus;
 
@@ -68,6 +68,6 @@ export class Employee extends TenantBaseEntity {
   version: number;
 
   @ManyToOne(() => Department)
-  @JoinColumn({ name: 'department_id' })
+  @JoinColumn({ name: 'department_id', foreignKeyConstraintName: 'FK_hr_employees_department' })
   department: Department | null;
 }

@@ -6,6 +6,7 @@ import { Product } from './product.entity';
 import { Warehouse } from './warehouse.entity';
 
 @Entity('stock_movements')
+@Index('IDX_stock_movements_tenant_occurred_at', ['tenantId', 'occurredAt'])
 export class StockMovement extends BaseEntity {
   @Index()
   @Column({ name: 'tenant_id', type: 'uuid' })
@@ -22,7 +23,6 @@ export class StockMovement extends BaseEntity {
   @Column({ name: 'warehouse_id', type: 'uuid' })
   warehouseId: string;
 
-  @Index('IDX_stock_movements_tenant_occurred_at', ['tenantId', 'occurredAt'])
   @Column({ name: 'occurred_at', type: 'timestamptz', default: () => 'now()' })
   occurredAt: Date;
 

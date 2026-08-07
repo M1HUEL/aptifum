@@ -3,7 +3,7 @@ import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
 
 @Entity('suppliers')
-@Unique(['tenantId', 'code'])
+@Unique('UQ_suppliers_tenant_code', ['tenantId', 'code'])
 export class Supplier extends TenantBaseEntity {
   @Column({ length: 40 })
   code: string;
@@ -14,7 +14,7 @@ export class Supplier extends TenantBaseEntity {
   @Column({ name: 'legal_name', type: 'varchar', length: 255, nullable: true })
   legalName: string | null;
 
-  @Index()
+  @Index('IDX_suppliers_tax_id')
   @Column({ name: 'tax_id', type: 'varchar', length: 40, nullable: true })
   taxId: string | null;
 
