@@ -17,6 +17,8 @@ const EnvSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(16),
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL: z.string().default('7d'),
+  MAX_ACTIVE_SESSIONS_PER_USER: z.coerce.number().min(1).default(5),
+  SESSION_RETENTION_DAYS: z.coerce.number().min(1).default(30),
 });
 
 export type AppEnv = z.infer<typeof EnvSchema>;

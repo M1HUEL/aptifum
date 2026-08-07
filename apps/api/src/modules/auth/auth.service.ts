@@ -5,7 +5,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import * as bcrypt from 'bcryptjs';
 import ms from 'ms';
 import type { StringValue } from 'ms';
-import { IsNull, Repository } from 'typeorm';
+import { In, IsNull, LessThan, Repository } from 'typeorm';
 import { RoleName, UserProfile } from '@aptifum/core';
 import { DEFAULT_TENANT_ID, RefreshSession } from '@aptifum/database';
 import { ConfigService } from '../../config/config.module';
@@ -171,7 +171,25 @@ export class AuthService {
       expiresAt: new Date(Date.now() + ms(this.config.env.JWT_REFRESH_TTL as StringValue)),
     });
     await this.sessionsRepo.save(session);
+    await this.pruneUserSessions(userId);
     return { session, refreshToken };
+  }
+
+  private async pruneUserSessions(userId: string): Promise<void> {
+    const now = new Date();
+    await this.sessionsRepo.delete({ userId, expiresAt: LessThan(now) });
+
+    const maxActive = this.config.env.MAX_ACTIVE_SESSIONS_PER_USER;
+    const active = await this.sessionsRepo.find({
+      where: { userId, revokedAt: IsNull() },
+      order: { createdAt: 'ASC' },
+      select: { id: true },
+    });
+    if (active.length > maxActive) {
+      const excess = active.length - maxActive;
+      const toRevoke = active.slice(0, excess).map((session) => session.id);
+      await this.sessionsRepo.update({ id: In(toRevoke) }, { revokedAt: now });
+    }
   }
 
   private async verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {

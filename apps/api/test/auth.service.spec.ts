@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { JwtService } from '@nestjs/jwt';
+import { In } from 'typeorm';
 import { UserProfile } from '@aptifum/core';
 import { User } from '@aptifum/database';
 import { AuthService } from '../src/modules/auth/auth.service';
@@ -21,6 +22,8 @@ function buildAuthService() {
       JWT_REFRESH_SECRET: 'b'.repeat(16),
       JWT_ACCESS_TTL: '15m',
       JWT_REFRESH_TTL: '7d',
+      MAX_ACTIVE_SESSIONS_PER_USER: 5,
+      SESSION_RETENTION_DAYS: 30,
     },
   };
   const sessionsRepo = {
@@ -32,7 +35,9 @@ function buildAuthService() {
       updatedAt: new Date(),
     })),
     findOneBy: vi.fn(),
+    find: vi.fn<(criteria: unknown) => Promise<Array<{ id: string }>>>(async () => []),
     update: vi.fn(),
+    delete: vi.fn(async () => ({ affected: 0 })),
   };
 
   const service = new AuthService(
@@ -42,7 +47,7 @@ function buildAuthService() {
     sessionsRepo as never,
   );
 
-  return { service, usersService, jwtService };
+  return { service, usersService, jwtService, sessionsRepo };
 }
 
 describe('AuthService', () => {
@@ -98,5 +103,66 @@ describe('AuthService', () => {
     expect(result.refreshToken).toBe('signed-token');
     expect(result.user.email).toBe('user@aptifum.dev');
     expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
+  });
+
+  it('purgues expired sessions of the user on each new session', async () => {
+    const bcrypt = await import('bcryptjs');
+    const hash = await bcrypt.hash('correct-horse', 10);
+    const { service, usersService, sessionsRepo } = buildAuthService();
+    usersService.findByEmailWithPassword.mockResolvedValue({
+      id: 'u1',
+      email: 'user@aptifum.dev',
+      passwordHash: hash,
+      active: true,
+      defaultTenantId: 't1',
+    } as User);
+    usersService.getProfile.mockResolvedValue({
+      id: 'u1',
+      email: 'user@aptifum.dev',
+      name: null,
+      active: true,
+      tenantId: 't1',
+      roles: [],
+    });
+
+    await service.login({ email: 'user@aptifum.dev', password: 'correct-horse' });
+
+    expect(sessionsRepo.delete).toHaveBeenCalledWith({ userId: 'u1', expiresAt: expect.anything() });
+  });
+
+  it('revokes the oldest sessions when the active session limit is exceeded', async () => {
+    const bcrypt = await import('bcryptjs');
+    const hash = await bcrypt.hash('correct-horse', 10);
+    const { service, usersService, sessionsRepo } = buildAuthService();
+    usersService.findByEmailWithPassword.mockResolvedValue({
+      id: 'u1',
+      email: 'user@aptifum.dev',
+      passwordHash: hash,
+      active: true,
+      defaultTenantId: 't1',
+    } as User);
+    usersService.getProfile.mockResolvedValue({
+      id: 'u1',
+      email: 'user@aptifum.dev',
+      name: null,
+      active: true,
+      tenantId: 't1',
+      roles: [],
+    });
+    sessionsRepo.find.mockResolvedValue([
+      { id: 's1' },
+      { id: 's2' },
+      { id: 's3' },
+      { id: 's4' },
+      { id: 's5' },
+      { id: 's6' },
+    ]);
+
+    await service.login({ email: 'user@aptifum.dev', password: 'correct-horse' });
+
+    expect(sessionsRepo.update).toHaveBeenCalledWith(
+      { id: In(['s1']) },
+      { revokedAt: expect.any(Date) },
+    );
   });
 });

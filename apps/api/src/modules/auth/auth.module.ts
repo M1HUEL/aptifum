@@ -7,6 +7,7 @@ import { RbacModule } from '../rbac/rbac.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { SessionCleanupService } from './session-cleanup.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from '../rbac/guards/permissions.guard';
 
@@ -20,6 +21,7 @@ import { PermissionsGuard } from '../rbac/guards/permissions.guard';
   controllers: [AuthController],
   providers: [
     AuthService,
+    SessionCleanupService,
     JwtAuthGuard,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: PermissionsGuard },

@@ -100,4 +100,24 @@ describe('Auth security (e2e)', () => {
 
     await request(server()).get('/api/v1/users').set(auth).expect(403);
   });
+
+  it('enforces the per-user active session limit', async () => {
+    const email = `sessions-${Date.now()}@aptifum.dev`;
+    await request(server())
+      .post('/api/v1/auth/register')
+      .send({ email, password: 'password123' })
+      .expect(201);
+
+    const tokens: string[] = [];
+    for (let i = 0; i < 6; i++) {
+      const res = await request(server())
+        .post('/api/v1/auth/login')
+        .send({ email, password: 'password123' })
+        .expect(200);
+      tokens.push(res.body.refreshToken as string);
+    }
+
+    await refresh(tokens[0]).expect(401);
+    await refresh(tokens[5]).expect(200);
+  });
 });
