@@ -594,6 +594,29 @@ select:focus {
   text-align: right;
 }
 
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.tab-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
 .toast-stack {
   position: fixed;
   bottom: 16px;

@@ -74,6 +74,23 @@ export interface ProductStock {
   warehouse: Warehouse;
 }
 
+export type MovementType = 'inbound' | 'outbound' | 'adjustment' | 'transfer' | 'return' | 'disposal';
+
+export interface StockMovement {
+  id: string;
+  movementType: MovementType;
+  productId: string;
+  warehouseId: string;
+  occurredAt: string;
+  quantity: number;
+  unitCost: number;
+  referenceType: string | null;
+  referenceId: string | null;
+  notes: string | null;
+  product: Product;
+  warehouse: Warehouse;
+}
+
 export interface Customer {
   id: string;
   code: string;

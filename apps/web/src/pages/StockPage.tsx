@@ -1,6 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '../api/client';
-import type { Paginated, ProductStock } from '../api/types';
+import type {
+  MovementType,
+  Paginated,
+  Product,
+  ProductStock,
+  StockMovement,
+  Warehouse,
+} from '../api/types';
 import {
   Badge,
   type Column,
@@ -12,8 +19,33 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
+import {
+  Button,
+  Field,
+  Modal,
+  Select,
+  TextArea,
+  TextInput,
+} from '../components/forms';
+import { useToast } from '../components/toast';
+import { usePagedQuery } from '../hooks/usePagedQuery';
 
-const columns: Column<ProductStock>[] = [
+const movementTypes: MovementType[] = [
+  'inbound',
+  'outbound',
+  'adjustment',
+  'transfer',
+  'return',
+  'disposal',
+];
+
+function movementTone(type: MovementType): 'success' | 'danger' | 'info' {
+  if (type === 'inbound' || type === 'return') return 'success';
+  if (type === 'outbound' || type === 'disposal') return 'danger';
+  return 'info';
+}
+
+const stockColumns: Column<ProductStock>[] = [
   {
     key: 'product',
     header: 'Product',
@@ -43,29 +75,61 @@ const columns: Column<ProductStock>[] = [
   },
 ];
 
-export function StockPage() {
-  const [data, setData] = useState<Paginated<ProductStock> | null>(null);
+function formatDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+const movementColumns: Column<StockMovement>[] = [
+  {
+    key: 'occurredAt',
+    header: 'Date',
+    render: (row) => formatDateTime(row.occurredAt),
+  },
+  {
+    key: 'movementType',
+    header: 'Type',
+    render: (row) => <Badge tone={movementTone(row.movementType)}>{row.movementType}</Badge>,
+  },
+  {
+    key: 'product',
+    header: 'Product',
+    render: (row) => `${row.product.sku} · ${row.product.name}`,
+  },
+  {
+    key: 'warehouse',
+    header: 'Warehouse',
+    render: (row) => row.warehouse.name,
+  },
+  {
+    key: 'quantity',
+    header: 'Qty',
+    render: (row) => formatNumber(row.quantity),
+  },
+  {
+    key: 'unitCost',
+    header: 'Unit cost',
+    render: (row) => `$${row.unitCost.toFixed(2)}`,
+  },
+  { key: 'notes', header: 'Notes', render: (row) => row.notes ?? '—' },
+];
+
+function StockTab() {
   const [page, setPage] = useState(1);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(page), limit: '20' });
-      const result = await apiFetch<Paginated<ProductStock>>(`/api/v1/inventory/stock?${params}`);
-      setData(result);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not load stock.');
-    }
-  }, [page]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const { data, error } = usePagedQuery<ProductStock>({
+    path: '/api/v1/inventory/stock',
+    page,
+  });
 
   return (
     <>
-      <PageHeader title="Stock" subtitle="Stock levels by warehouse" />
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
       {data ? (
@@ -73,11 +137,237 @@ export function StockPage() {
           {data.data.length === 0 ? (
             <EmptyState message="No stock records." />
           ) : (
-            <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
+            <DataTable columns={stockColumns} rows={data.data} rowKey={(row) => row.id} />
           )}
           <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
         </>
       ) : null}
+    </>
+  );
+}
+
+function MovementsTab() {
+  const [page, setPage] = useState(1);
+  const { data, error } = usePagedQuery<StockMovement>({
+    path: '/api/v1/inventory/movements',
+    page,
+  });
+
+  return (
+    <>
+      {error ? <ErrorBanner message={error} /> : null}
+      {!data && !error ? <LoadingBlock /> : null}
+      {data ? (
+        <>
+          {data.data.length === 0 ? (
+            <EmptyState message="No movements yet." />
+          ) : (
+            <DataTable columns={movementColumns} rows={data.data} rowKey={(row) => row.id} />
+          )}
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
+        </>
+      ) : null}
+    </>
+  );
+}
+
+interface MovementForm {
+  productId: string;
+  warehouseId: string;
+  movementType: string;
+  quantity: string;
+  unitCost: string;
+  notes: string;
+}
+
+const emptyForm: MovementForm = {
+  productId: '',
+  warehouseId: '',
+  movementType: 'adjustment',
+  quantity: '',
+  unitCost: '',
+  notes: '',
+};
+
+export function StockPage() {
+  const [tab, setTab] = useState<'stock' | 'movements'>('stock');
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState<MovementForm>(emptyForm);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const toast = useToast();
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      apiFetch<Paginated<Product>>('/api/v1/inventory/products?page=1&limit=100'),
+      apiFetch<Paginated<Warehouse>>('/api/v1/inventory/warehouses?page=1&limit=100'),
+    ])
+      .then(([productsResult, warehousesResult]) => {
+        if (cancelled) return;
+        setProducts(productsResult.data);
+        setWarehouses(warehousesResult.data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const openModal = () => {
+    setForm(emptyForm);
+    setFormError(null);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    if (!saving) setModalOpen(false);
+  };
+
+  const setField = (key: keyof MovementForm, value: string) => {
+    setForm((current) => ({ ...current, [key]: value }));
+  };
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!form.productId || !form.warehouseId || form.quantity === '') {
+      setFormError('Product, warehouse and quantity are required.');
+      return;
+    }
+    setSaving(true);
+    setFormError(null);
+    const body = {
+      movementType: form.movementType,
+      productId: form.productId,
+      warehouseId: form.warehouseId,
+      quantity: Number(form.quantity),
+      unitCost: form.unitCost === '' ? undefined : Number(form.unitCost),
+      notes: form.notes.trim() || undefined,
+    };
+    try {
+      await apiFetch('/api/v1/inventory/movements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      toast.toast('Stock movement recorded.');
+      setModalOpen(false);
+      setRefreshKey((key) => key + 1);
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : 'Could not record movement.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <PageHeader
+        title="Stock"
+        subtitle="Stock levels and movements"
+        action={<Button onClick={openModal}>New movement</Button>}
+      />
+      <div className="tabs">
+        <button type="button" className={tab === 'stock' ? 'tab tab-active' : 'tab'} onClick={() => setTab('stock')}>
+          Stock levels
+        </button>
+        <button
+          type="button"
+          className={tab === 'movements' ? 'tab tab-active' : 'tab'}
+          onClick={() => setTab('movements')}
+        >
+          Movements
+        </button>
+      </div>
+      {tab === 'stock' ? <StockTab key={`stock-${refreshKey}`} /> : <MovementsTab key={`movements-${refreshKey}`} />}
+
+      <Modal open={modalOpen} title="New stock movement" onClose={closeModal} width="md">
+        <form onSubmit={(event) => void submit(event)}>
+          <div className="form-grid">
+            <Field label="Product" htmlFor="movement-product" required>
+              <Select
+                id="movement-product"
+                value={form.productId}
+                onChange={(event) => setField('productId', event.target.value)}
+              >
+                <option value="">— Select product —</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.sku} · {product.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Warehouse" htmlFor="movement-warehouse" required>
+              <Select
+                id="movement-warehouse"
+                value={form.warehouseId}
+                onChange={(event) => setField('warehouseId', event.target.value)}
+              >
+                <option value="">— Select warehouse —</option>
+                {warehouses.map((warehouse) => (
+                  <option key={warehouse.id} value={warehouse.id}>
+                    {warehouse.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Type" htmlFor="movement-type" required>
+              <Select
+                id="movement-type"
+                value={form.movementType}
+                onChange={(event) => setField('movementType', event.target.value)}
+              >
+                {movementTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Quantity" htmlFor="movement-quantity" required>
+              <TextInput
+                id="movement-quantity"
+                type="number"
+                min="0.0001"
+                step="any"
+                value={form.quantity}
+                onChange={(event) => setField('quantity', event.target.value)}
+              />
+            </Field>
+            <Field label="Unit cost" htmlFor="movement-cost">
+              <TextInput
+                id="movement-cost"
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.unitCost}
+                onChange={(event) => setField('unitCost', event.target.value)}
+              />
+            </Field>
+            <Field label="Notes" htmlFor="movement-notes">
+              <TextArea
+                id="movement-notes"
+                rows={2}
+                value={form.notes}
+                onChange={(event) => setField('notes', event.target.value)}
+              />
+            </Field>
+          </div>
+          {formError ? <div className="error-banner">{formError}</div> : null}
+          <div className="modal-footer">
+            <Button variant="ghost" onClick={closeModal} disabled={saving}>
+              Cancel
+            </Button>
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? 'Recording…' : 'Record movement'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </>
   );
 }
