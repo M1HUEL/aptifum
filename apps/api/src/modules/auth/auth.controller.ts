@@ -17,6 +17,7 @@ export class AuthController {
 
   @Post('register')
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a user (demo: demo tenant + seller role)' })
   register(@Body() dto: RegisterDto, @Ip() ip?: string, @Headers('user-agent') userAgent?: string) {
@@ -34,6 +35,7 @@ export class AuthController {
 
   @Post('refresh')
   @Public()
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Rotate access/refresh tokens' })
   refresh(@Body() dto: RefreshDto, @Ip() ip?: string, @Headers('user-agent') userAgent?: string) {
