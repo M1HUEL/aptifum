@@ -30,6 +30,7 @@ import { ProductionOrder } from './production-order.entity';
 import { ProductionOrderLine } from './production-order-line.entity';
 import { PurchaseOrder } from './purchase-order.entity';
 import { PurchaseOrderItem } from './purchase-order-item.entity';
+import { RefreshSession } from './refresh-session.entity';
 import { Role } from './role.entity';
 import { SalesOrder } from './sales-order.entity';
 import { SalesOrderItem } from './sales-order-item.entity';
@@ -64,6 +65,7 @@ export const entities = [
   Supplier,
   PurchaseOrder,
   PurchaseOrderItem,
+  RefreshSession,
   GoodsReceipt,
   GoodsReceiptItem,
   ProductionBom,
@@ -115,6 +117,7 @@ export {
   ProductionOrderLine,
   PurchaseOrder,
   PurchaseOrderItem,
+  RefreshSession,
   Role,
   SalesOrder,
   SalesOrderItem,
