@@ -6,6 +6,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
 import { setCsvHeaders, toCsv } from './csv.util';
+import {
+  SalesByCustomerQueryDto,
+  SalesByProductQueryDto,
+  SalesSummaryQueryDto,
+} from './dto/reports-query.dto';
 
 @ApiTags('reports')
 @Controller('reports/sales')
@@ -17,14 +22,11 @@ export class SalesReportsController {
   @ApiOperation({ summary: 'Sales summary grouped by period' })
   async summary(
     @CurrentUser() user: { tenantId: string | null },
-    @Query('groupBy') groupBy?: string,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-    @Query('format') format?: string,
+    @Query() query: SalesSummaryQueryDto,
     @Res({ passthrough: true }) res?: Response,
   ) {
-    const report = await this.reportsService.salesSummary(user.tenantId, { groupBy, from, to });
-    if (format === 'csv' && res) {
+    const report = await this.reportsService.salesSummary(user.tenantId, query);
+    if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'sales-summary.csv');
       return toCsv(report.data);
     }
@@ -36,13 +38,11 @@ export class SalesReportsController {
   @ApiOperation({ summary: 'Sales, COGS and gross profit per product' })
   async byProduct(
     @CurrentUser() user: { tenantId: string | null },
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-    @Query('format') format?: string,
+    @Query() query: SalesByProductQueryDto,
     @Res({ passthrough: true }) res?: Response,
   ) {
-    const report = await this.reportsService.salesByProduct(user.tenantId, { from, to });
-    if (format === 'csv' && res) {
+    const report = await this.reportsService.salesByProduct(user.tenantId, query);
+    if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'sales-by-product.csv');
       return toCsv(report.data);
     }
@@ -54,13 +54,11 @@ export class SalesReportsController {
   @ApiOperation({ summary: 'Sales and outstanding balance per customer' })
   async byCustomer(
     @CurrentUser() user: { tenantId: string | null },
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-    @Query('format') format?: string,
+    @Query() query: SalesByCustomerQueryDto,
     @Res({ passthrough: true }) res?: Response,
   ) {
-    const report = await this.reportsService.salesByCustomer(user.tenantId, { from, to });
-    if (format === 'csv' && res) {
+    const report = await this.reportsService.salesByCustomer(user.tenantId, query);
+    if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'sales-by-customer.csv');
       return toCsv(report.data);
     }

@@ -6,6 +6,10 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
 import { CsvSection, setCsvHeaders, sectionsToCsv } from './csv.util';
+import {
+  BalanceSheetQueryDto,
+  IncomeStatementQueryDto,
+} from './dto/reports-query.dto';
 
 @ApiTags('reports')
 @Controller('reports/financial')
@@ -17,14 +21,11 @@ export class FinancialReportsController {
   @ApiOperation({ summary: 'Profit and loss statement for a period' })
   async incomeStatement(
     @CurrentUser() user: { tenantId: string | null },
-    @Query('periodId') periodId?: string,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-    @Query('format') format?: string,
+    @Query() query: IncomeStatementQueryDto,
     @Res({ passthrough: true }) res?: Response,
   ) {
-    const report = await this.reportsService.incomeStatement(user.tenantId, { periodId, from, to });
-    if (format === 'csv' && res) {
+    const report = await this.reportsService.incomeStatement(user.tenantId, query);
+    if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'income-statement.csv');
       return sectionsToCsv([
         this.toSection('Revenue', report.revenue),
@@ -44,12 +45,11 @@ export class FinancialReportsController {
   @ApiOperation({ summary: 'Balance sheet as of a date' })
   async balanceSheet(
     @CurrentUser() user: { tenantId: string | null },
-    @Query('asOf') asOf?: string,
-    @Query('format') format?: string,
+    @Query() query: BalanceSheetQueryDto,
     @Res({ passthrough: true }) res?: Response,
   ) {
-    const report = await this.reportsService.balanceSheet(user.tenantId, { asOf });
-    if (format === 'csv' && res) {
+    const report = await this.reportsService.balanceSheet(user.tenantId, query);
+    if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'balance-sheet.csv');
       return sectionsToCsv([
         this.toSection('Assets', report.assets),
