@@ -506,6 +506,24 @@ select:focus {
   grid-column: 1 / -1;
 }
 
+.invoice-items {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.invoice-item {
+  display: grid;
+  grid-template-columns: 3fr 1fr 1.5fr 1fr auto;
+  gap: 10px;
+  align-items: start;
+}
+
+.invoice-item-remove {
+  padding-top: 24px;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
