@@ -10,6 +10,7 @@ export class InvoiceItem extends TenantBaseEntity {
   @Column({ name: 'invoice_id', type: 'uuid' })
   invoiceId: string;
 
+  @Index('IDX_invoice_items_product_id')
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 

@@ -12,9 +12,11 @@ export class JournalEntry extends TenantBaseEntity {
   @Column({ length: 30 })
   number: string;
 
+  @Index('IDX_journal_entries_period_id')
   @Column({ name: 'period_id', type: 'uuid' })
   periodId: string;
 
+  @Index('IDX_journal_entries_tenant_entry_date', ['tenantId', 'entryDate'])
   @Column({ name: 'entry_date', type: 'date' })
   entryDate: string;
 

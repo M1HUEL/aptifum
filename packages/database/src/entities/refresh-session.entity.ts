@@ -22,9 +22,11 @@ export class RefreshSession {
   @Column({ type: 'varchar', length: 45, nullable: true })
   ip: string | null;
 
+  @Index('IDX_refresh_sessions_revoked_at')
   @Column({ name: 'revoked_at', type: 'timestamptz', nullable: true })
   revokedAt: Date | null;
 
+  @Index('IDX_refresh_sessions_expires_at')
   @Column({ name: 'expires_at', type: 'timestamptz' })
   expiresAt: Date;
 

@@ -11,6 +11,7 @@ export class PayrollLine extends TenantBaseEntity {
   @Column({ name: 'payroll_id', type: 'uuid' })
   payrollId: string;
 
+  @Index('IDX_hr_payroll_lines_employee_id')
   @Column({ name: 'employee_id', type: 'uuid' })
   employeeId: string;
 

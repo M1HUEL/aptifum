@@ -18,6 +18,7 @@ export class Product extends TenantBaseEntity {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
+  @Index('IDX_products_category_id')
   @Column({ name: 'category_id', type: 'uuid', nullable: true })
   categoryId: string | null;
 

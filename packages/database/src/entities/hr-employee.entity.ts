@@ -23,6 +23,7 @@ export class Employee extends TenantBaseEntity {
   @Column({ type: 'varchar', length: 40, nullable: true })
   phone: string | null;
 
+  @Index('IDX_hr_employees_department_id')
   @Column({ name: 'department_id', type: 'uuid', nullable: true })
   departmentId: string | null;
 

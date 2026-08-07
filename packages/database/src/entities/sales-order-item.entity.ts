@@ -10,6 +10,7 @@ export class SalesOrderItem extends TenantBaseEntity {
   @Column({ name: 'order_id', type: 'uuid' })
   orderId: string;
 
+  @Index('IDX_sales_order_items_product_id')
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 

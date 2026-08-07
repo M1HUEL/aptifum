@@ -13,6 +13,7 @@ export class GoodsReceiptItem extends TenantBaseEntity {
   @Column({ name: 'order_item_id', type: 'uuid' })
   orderItemId: string;
 
+  @Index('IDX_goods_receipt_items_product_id')
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 

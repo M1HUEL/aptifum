@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { AuditAction } from '@aptifum/core';
 
 @Entity('audit_logs')
@@ -6,6 +6,7 @@ export class AuditLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index('IDX_audit_logs_tenant_created_at', ['tenantId', 'createdAt'])
   @Column({ name: 'tenant_id', type: 'uuid', nullable: true })
   tenantId: string | null;
 
@@ -18,6 +19,7 @@ export class AuditLog {
   @Column({ length: 120 })
   entity: string;
 
+  @Index('IDX_audit_logs_entity_entity_id', ['entity', 'entityId'])
   @Column({ name: 'entity_id', type: 'uuid', nullable: true })
   entityId: string | null;
 

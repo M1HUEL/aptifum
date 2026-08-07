@@ -22,6 +22,10 @@ export class StockMovement extends BaseEntity {
   @Column({ name: 'warehouse_id', type: 'uuid' })
   warehouseId: string;
 
+  @Index('IDX_stock_movements_tenant_occurred_at', ['tenantId', 'occurredAt'])
+  @Column({ name: 'occurred_at', type: 'timestamptz', default: () => 'now()' })
+  occurredAt: Date;
+
   @Column({ name: 'location_id', type: 'uuid', nullable: true })
   locationId: string | null;
 
@@ -54,9 +58,6 @@ export class StockMovement extends BaseEntity {
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;
-
-  @Column({ name: 'occurred_at', type: 'timestamptz', default: () => 'now()' })
-  occurredAt: Date;
 
   @ManyToOne(() => Product, (product) => product.movements)
   @JoinColumn({ name: 'product_id' })

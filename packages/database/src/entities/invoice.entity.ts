@@ -18,6 +18,7 @@ export class Invoice extends TenantBaseEntity {
   @Column({ type: 'enum', enum: InvoiceType, default: InvoiceType.INVOICE })
   type: InvoiceType;
 
+  @Index('IDX_invoices_tenant_status_issue_date', ['tenantId', 'status', 'issueDate'])
   @Column({ type: 'enum', enum: InvoiceStatus, default: InvoiceStatus.DRAFT })
   status: InvoiceStatus;
 

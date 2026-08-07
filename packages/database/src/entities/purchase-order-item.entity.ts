@@ -10,6 +10,7 @@ export class PurchaseOrderItem extends TenantBaseEntity {
   @Column({ name: 'order_id', type: 'uuid' })
   orderId: string;
 
+  @Index('IDX_purchase_order_items_product_id')
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 

@@ -12,6 +12,7 @@ export class PurchaseOrder extends TenantBaseEntity {
   @Column({ length: 30 })
   number: string;
 
+  @Index('IDX_purchase_orders_tenant_status', ['tenantId', 'status'])
   @Column({ type: 'enum', enum: PurchaseOrderStatus, default: PurchaseOrderStatus.DRAFT })
   status: PurchaseOrderStatus;
 
