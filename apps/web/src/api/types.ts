@@ -164,6 +164,9 @@ export interface DashboardReport {
   salesToday: number;
   salesMonth: number;
   monthInvoices: number;
+  salesRange: number;
+  rangeInvoices: number;
+  netIncomeRange: number;
   receivables: number;
   payables: number;
   inventoryValue: number;
