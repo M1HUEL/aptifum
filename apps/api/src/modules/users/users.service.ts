@@ -1,15 +1,24 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Role, User } from '@aptifum/database';
 
 export interface CreateUserInput {
   email: string;
   password: string;
   name?: string;
+  active?: boolean;
   tenantId?: string;
   roleName?: string;
+  roleIds?: string[];
+}
+
+export interface UpdateUserInput {
+  name?: string;
+  active?: boolean;
+  password?: string;
+  roleIds?: string[];
 }
 
 @Injectable()
@@ -29,7 +38,7 @@ export class UsersService {
       email: input.email,
       passwordHash,
       name: input.name ?? null,
-      active: true,
+      active: input.active ?? true,
       defaultTenantId: input.tenantId ?? null,
     });
     const saved = await this.usersRepo.save(user);
@@ -50,7 +59,49 @@ export class UsersService {
           .add(role.id);
       }
     }
-    return saved;
+    if (input.roleIds?.length) {
+      const roles = await this.rolesRepo.findBy({ id: In(input.roleIds) });
+      await this.usersRepo
+        .createQueryBuilder()
+        .relation(User, 'roles')
+        .of(saved.id)
+        .add(roles.map((role) => role.id));
+    }
+    return this.getProfile(saved.id);
+  }
+
+  async update(id: string, input: UpdateUserInput) {
+    const user = await this.usersRepo.findOne({
+      where: { id },
+      relations: { roles: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (input.name !== undefined) {
+      user.name = input.name;
+    }
+    if (input.active !== undefined) {
+      user.active = input.active;
+    }
+    if (input.password) {
+      user.passwordHash = await bcrypt.hash(input.password, 10);
+    }
+    await this.usersRepo.save(user);
+    if (input.roleIds) {
+      const roles = input.roleIds.length
+        ? await this.rolesRepo.findBy({ id: In(input.roleIds) })
+        : [];
+      await this.usersRepo
+        .createQueryBuilder()
+        .relation(User, 'roles')
+        .of(id)
+        .addAndRemove(
+          roles.map((role) => role.id),
+          user.roles.map((role) => role.id),
+        );
+    }
+    return this.getProfile(id);
   }
 
   async findByEmailWithPassword(email: string) {
@@ -96,6 +147,7 @@ export class UsersService {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
+      relations: { roles: true },
       select: {
         id: true,
         email: true,
@@ -112,7 +164,14 @@ export class UsersService {
         name: user.name,
         active: user.active,
         tenantId: user.defaultTenantId,
-        roles: [],
+        createdAt: user.createdAt,
+        roles: user.roles.map((role) => ({
+          id: role.id,
+          name: role.name,
+          description: role.description,
+          isSystem: role.isSystem,
+          permissions: role.permissions,
+        })),
       })),
       meta: { page, limit, total },
     };

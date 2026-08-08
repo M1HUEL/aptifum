@@ -57,7 +57,7 @@ export class AuthService {
       tenantId: DEFAULT_TENANT_ID,
       roleName: RoleName.SELLER,
     });
-    return this.issueTokens(user.id, user.email, user.defaultTenantId, ctx);
+    return this.issueTokens(user.id, user.email, user.tenantId, ctx);
   }
 
   async login(dto: LoginDto, ctx?: RequestContext): Promise<AuthResult> {

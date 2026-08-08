@@ -1,7 +1,25 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  ConflictException,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsArray, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { Repository } from 'typeorm';
 import { ModuleName, permission } from '@aptifum/core';
 import { Role } from '@aptifum/database';
@@ -25,6 +43,26 @@ export class CreateRoleDto {
   permissions: string[];
 }
 
+export class UpdateRoleDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(60)
+  name?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ type: [String], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  permissions?: string[];
+}
+
 @ApiTags('roles')
 @Controller('roles')
 export class RolesController {
@@ -42,7 +80,11 @@ export class RolesController {
   @Post()
   @RequirePermissions(permission(ModuleName.RBAC, 'write'))
   @ApiOperation({ summary: 'Create a role' })
-  create(@Body() dto: CreateRoleDto) {
+  async create(@Body() dto: CreateRoleDto) {
+    const existing = await this.rolesRepo.findOneBy({ name: dto.name });
+    if (existing) {
+      throw new ConflictException('Role name already exists');
+    }
     return this.rolesRepo.save(
       this.rolesRepo.create({
         name: dto.name,
@@ -51,5 +93,47 @@ export class RolesController {
         isSystem: false,
       }),
     );
+  }
+
+  @Patch(':id')
+  @RequirePermissions(permission(ModuleName.RBAC, 'write'))
+  @ApiOperation({ summary: 'Update a role' })
+  async update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: UpdateRoleDto,
+  ) {
+    const role = await this.rolesRepo.findOneBy({ id });
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+    if (dto.name !== undefined) {
+      const existing = await this.rolesRepo.findOneBy({ name: dto.name });
+      if (existing && existing.id !== id) {
+        throw new ConflictException('Role name already exists');
+      }
+      role.name = dto.name;
+    }
+    if (dto.description !== undefined) {
+      role.description = dto.description ?? null;
+    }
+    if (dto.permissions !== undefined) {
+      role.permissions = dto.permissions;
+    }
+    return this.rolesRepo.save(role);
+  }
+
+  @Delete(':id')
+  @RequirePermissions(permission(ModuleName.RBAC, 'write'))
+  @ApiOperation({ summary: 'Delete a role' })
+  async remove(@Param('id', new ParseUUIDPipe()) id: string) {
+    const role = await this.rolesRepo.findOneBy({ id });
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+    if (role.isSystem) {
+      throw new ForbiddenException('System roles cannot be deleted');
+    }
+    await this.rolesRepo.softDelete(id);
+    return { id };
   }
 }
