@@ -5,6 +5,7 @@ import { LoadingBlock } from './components/ui';
 import { AccountingPage } from './pages/AccountingPage';
 import { CustomersPage } from './pages/CustomersPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { HrPage } from './pages/HrPage';
 import { InvoicesPage } from './pages/InvoicesPage';
 import { LoginPage } from './pages/LoginPage';
 import { ProductsPage } from './pages/ProductsPage';
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/customers" element={<CustomersPage />} />
         <Route path="/purchasing" element={<PurchaseOrdersPage />} />
         <Route path="/accounting" element={<AccountingPage />} />
+        <Route path="/hr" element={<HrPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>

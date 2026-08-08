@@ -261,3 +261,62 @@ export interface AccountingPeriod {
   closedAt: string | null;
   closedBy: string | null;
 }
+
+export interface Department {
+  id: string;
+  code: string;
+  name: string;
+  active: boolean;
+}
+
+export type EmployeeStatus = 'active' | 'inactive';
+
+export interface Employee {
+  id: string;
+  employeeNo: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  departmentId: string | null;
+  position: string | null;
+  hireDate: string;
+  terminationDate: string | null;
+  salary: number;
+  salaryFrequency: string;
+  bankName: string | null;
+  bankAccount: string | null;
+  taxId: string | null;
+  address: string | null;
+  status: EmployeeStatus;
+  department: Department | null;
+}
+
+export type PayrollStatus = 'draft' | 'posted' | 'cancelled';
+
+export interface PayrollLine {
+  id: string;
+  payrollId: string;
+  employeeId: string;
+  gross: number;
+  bonus: number;
+  overtime: number;
+  deductions: number;
+  net: number;
+  employee: Employee | null;
+}
+
+export interface Payroll {
+  id: string;
+  number: string;
+  period: string;
+  status: PayrollStatus;
+  currency: string;
+  totalGross: number;
+  totalDeductions: number;
+  totalNet: number;
+  paidAt: string | null;
+  postedEntryId: string | null;
+  postedAt: string | null;
+  lines: PayrollLine[];
+}
