@@ -6,6 +6,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
 import { setCsvHeaders, toCsv } from './csv.util';
+import { DashboardQueryDto } from './dto/reports-query.dto';
 
 @ApiTags('reports')
 @Controller('reports')
@@ -17,11 +18,11 @@ export class ReportsController {
   @ApiOperation({ summary: 'Executive dashboard key metrics' })
   async dashboard(
     @CurrentUser() user: { tenantId: string | null },
-    @Query('format') format?: string,
+    @Query() query: DashboardQueryDto,
     @Res({ passthrough: true }) res?: Response,
   ) {
-    const report = await this.reportsService.dashboard(user.tenantId);
-    if (format === 'csv' && res) {
+    const report = await this.reportsService.dashboard(user.tenantId, query);
+    if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'dashboard.csv');
       return toCsv([report]);
     }

@@ -205,7 +205,7 @@ export class ReportsService {
 
   async salesSummary(
     tenantId: string | null,
-    opts: { from?: string; to?: string; groupBy?: string },
+    opts: { from?: string; to?: string; groupBy?: string; warehouseId?: string },
   ) {
     this.assertTenant(tenantId);
     const groupBy = opts.groupBy ?? 'month';
@@ -224,6 +224,7 @@ export class ReportsService {
       'i.deleted_at IS NULL',
       "i.status = 'issued'",
       this.buildDateClause('i.issue_date', opts, params),
+      this.buildWarehouseClause('i.warehouse_id', opts.warehouseId, params),
     ];
     const rows: Array<{
       period: string;
@@ -265,11 +266,13 @@ export class ReportsService {
     return { groupBy, data, totals };
   }
 
-  async salesByProduct(tenantId: string | null, opts: { from?: string; to?: string }) {
+  async salesByProduct(tenantId: string | null, opts: { from?: string; to?: string; warehouseId?: string }) {
     this.assertTenant(tenantId);
     const params: unknown[] = [tenantId];
     const salesDate = this.buildDateClause('i.issue_date', opts, params);
     const cogsDate = this.buildDateClause('sm.occurred_at::date', opts, params);
+    const salesWarehouse = this.buildWarehouseClause('i.warehouse_id', opts.warehouseId, params);
+    const cogsWarehouse = this.buildWarehouseClause('sm.warehouse_id', opts.warehouseId, params);
     const rows: Array<{
       product_id: string;
       sku: string;
@@ -286,6 +289,7 @@ export class ReportsService {
              JOIN invoices i ON i.id = ii.invoice_id AND i.tenant_id = ii.tenant_id AND i.deleted_at IS NULL
             WHERE ii.tenant_id = $1 AND ii.deleted_at IS NULL AND i.status = 'issued'
               ${salesDate ? `AND ${salesDate}` : ''}
+              ${salesWarehouse ? `AND ${salesWarehouse}` : ''}
             GROUP BY ii.product_id
          ),
          cogs AS (
@@ -294,6 +298,7 @@ export class ReportsService {
             WHERE sm.tenant_id = $1 AND sm.deleted_at IS NULL
               AND sm.reference_type IN ('invoice', 'credit_note')
               ${cogsDate ? `AND ${cogsDate}` : ''}
+              ${cogsWarehouse ? `AND ${cogsWarehouse}` : ''}
             GROUP BY sm.product_id
          )
         SELECT p.id AS product_id, p.sku, p.name,
@@ -615,11 +620,13 @@ export class ReportsService {
     return { data, totals };
   }
 
-  async dashboard(tenantId: string | null) {
+  async dashboard(tenantId: string | null, opts: { from?: string; to?: string } = {}) {
     this.assertTenant(tenantId);
     const today = this.today();
     const month = today.slice(0, 7);
     const monthStart = `${month}-01`;
+    const from = opts.from ?? monthStart;
+    const to = opts.to ?? today;
 
     const [salesToday]: Array<{ total: number }> = await this.dataSource.query(
       `SELECT COALESCE(SUM(i.total), 0) AS total FROM invoices i
@@ -638,6 +645,18 @@ export class ReportsService {
         WHERE i.tenant_id = $1 AND i.deleted_at IS NULL AND i.status = 'issued'
           AND i.issue_date >= $2 AND i.issue_date <= $3`,
       [tenantId, monthStart, today],
+    );
+    const [salesRange]: Array<{ total: number }> = await this.dataSource.query(
+      `SELECT COALESCE(SUM(i.total), 0) AS total FROM invoices i
+        WHERE i.tenant_id = $1 AND i.deleted_at IS NULL AND i.status = 'issued'
+          AND i.type = 'invoice' AND i.issue_date >= $2 AND i.issue_date <= $3`,
+      [tenantId, from, to],
+    );
+    const [rangeInvoices]: Array<{ total: number }> = await this.dataSource.query(
+      `SELECT COUNT(*) AS total FROM invoices i
+        WHERE i.tenant_id = $1 AND i.deleted_at IS NULL AND i.status = 'issued'
+          AND i.issue_date >= $2 AND i.issue_date <= $3`,
+      [tenantId, from, to],
     );
     const [receivables]: Array<{ total: number }> = await this.dataSource.query(
       `SELECT COALESCE(SUM(i.balance_due), 0) AS total FROM invoices i
@@ -676,11 +695,18 @@ export class ReportsService {
       [tenantId],
     );
     const statement = await this.incomeStatement(tenantId, { from: monthStart, to: today });
+    const rangeStatement =
+      from === monthStart && to === today
+        ? statement
+        : await this.incomeStatement(tenantId, { from, to });
     return {
       asOf: today,
       salesToday: round2(Number(salesToday?.total ?? 0)),
       salesMonth: round2(Number(salesMonth?.total ?? 0)),
       monthInvoices: Number(monthInvoices?.total ?? 0),
+      salesRange: round2(Number(salesRange?.total ?? 0)),
+      rangeInvoices: Number(rangeInvoices?.total ?? 0),
+      netIncomeRange: rangeStatement.netIncome,
       receivables: round2(Number(receivables?.total ?? 0)),
       payables: round2(Number(payables?.total ?? 0)),
       inventoryValue: round2(Number(inventoryValue?.total ?? 0)),
@@ -753,6 +779,18 @@ export class ReportsService {
       parts.push(`${column} <= $${params.length}`);
     }
     return parts.join(' AND ');
+  }
+
+  private buildWarehouseClause(
+    column: string,
+    warehouseId: string | undefined,
+    params: unknown[],
+  ): string {
+    if (!warehouseId) {
+      return '';
+    }
+    params.push(warehouseId);
+    return `${column} = $${params.length}`;
   }
 
   private today(): string {

@@ -30,11 +30,21 @@ export class SalesSummaryQueryDto extends DateRangeQueryDto {
   @IsOptional()
   @IsIn(['day', 'month', 'quarter', 'year'])
   groupBy?: 'day' | 'month' | 'quarter' | 'year';
+
+  @IsOptional()
+  @IsUUID()
+  warehouseId?: string;
 }
 
-export class SalesByProductQueryDto extends DateRangeQueryDto {}
+export class SalesByProductQueryDto extends DateRangeQueryDto {
+  @IsOptional()
+  @IsUUID()
+  warehouseId?: string;
+}
 
 export class SalesByCustomerQueryDto extends DateRangeQueryDto {}
+
+export class DashboardQueryDto extends DateRangeQueryDto {}
 
 export class InventoryValuationQueryDto extends FormatQueryDto {
   @IsOptional()

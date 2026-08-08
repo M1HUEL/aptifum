@@ -341,4 +341,32 @@ describe('Vertical flow: sales -> accounting -> reports (e2e)', () => {
       })
       .expect(400);
   });
+
+  it('filters sales reports by warehouse and supports range KPIs', async () => {
+    const dash = await request(app.getHttpServer())
+      .get('/api/v1/reports/dashboard?from=2000-01-01&to=2100-01-01')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(dash.body.salesRange).toBe(43.2);
+    expect(dash.body.rangeInvoices).toBe(1);
+    expect(dash.body.netIncomeRange).toBe(36);
+
+    const byWh = await request(app.getHttpServer())
+      .get(`/api/v1/reports/sales/summary?groupBy=month&warehouseId=${warehouse.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(byWh.body.totals.revenue).toBe(40);
+
+    const other = await request(app.getHttpServer())
+      .post('/api/v1/inventory/warehouses')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ code: 'E2E_WH_FILT', name: 'Filter WH' })
+      .expect(201);
+
+    const empty = await request(app.getHttpServer())
+      .get(`/api/v1/reports/sales/by-product?warehouseId=${other.body.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(empty.body.data).toEqual([]);
+  });
 });
