@@ -362,6 +362,37 @@ export interface Payroll {
   lines: PayrollLine[];
 }
 
+export type AttendanceStatus = 'present' | 'late' | 'absent' | 'leave';
+
+export interface AttendanceRecord {
+  id: string;
+  employeeId: string;
+  workDate: string;
+  clockInAt: string | null;
+  clockOutAt: string | null;
+  workedMinutes: number;
+  status: AttendanceStatus;
+  notes: string | null;
+  employee?: Employee | null;
+}
+
+export type LeaveType = 'vacation' | 'sick' | 'personal' | 'other';
+export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+export interface Leave {
+  id: string;
+  employeeId: string;
+  leaveType: LeaveType;
+  startDate: string;
+  endDate: string;
+  days: number;
+  status: LeaveStatus;
+  reason: string | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  employee?: Employee | null;
+}
+
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'disqualified' | 'converted';
 
 export interface Lead {
