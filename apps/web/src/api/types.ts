@@ -272,12 +272,19 @@ export interface SalesOrder {
   items: SalesOrderItem[];
 }
 
+export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
+export type AccountNormalBalance = 'debit' | 'credit';
+
 export interface ChartAccount {
   id: string;
   code: string;
   name: string;
-  type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
+  type: AccountType;
+  normalBalance: AccountNormalBalance;
+  parentId: string | null;
   active: boolean;
+  description: string | null;
+  parent: ChartAccount | null;
 }
 
 export interface JournalEntryLine {
