@@ -21,6 +21,24 @@ export interface RoleWithPermissions {
   permissions: string[];
 }
 
+export interface Role {
+  id: string;
+  name: string;
+  description: string | null;
+  permissions: string[];
+  isSystem: boolean;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string | null;
+  active: boolean;
+  tenantId: string | null;
+  createdAt: string;
+  roles: Role[];
+}
+
 export interface UserProfile {
   id: string;
   email: string;

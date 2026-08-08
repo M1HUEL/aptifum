@@ -737,3 +737,41 @@ select:focus {
 .chart-box {
   width: 100%;
 }
+
+.muted {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.badge-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.permission-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.permission-group:last-child {
+  border-bottom: none;
+}
+
+.permission-module {
+  width: 120px;
+  flex-shrink: 0;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.permission-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}

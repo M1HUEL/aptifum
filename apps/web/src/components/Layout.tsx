@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { to: '/crm', label: 'CRM', permission: 'crm:read' },
   { to: '/production', label: 'Production', permission: 'production:read' },
   { to: '/reports', label: 'Reports', permission: 'reporting:read' },
+  { to: '/users-roles', label: 'Users & roles', permission: 'users:read' },
 ];
 
 export function Layout() {

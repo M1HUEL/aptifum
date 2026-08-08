@@ -17,6 +17,7 @@ import { PurchaseOrdersPage } from './pages/PurchaseOrdersPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { StockPage } from './pages/StockPage';
 import { SuppliersPage } from './pages/SuppliersPage';
+import { UsersRolesPage } from './pages/UsersRolesPage';
 import { WarehousesCategoriesPage } from './pages/WarehousesCategoriesPage';
 import { SalesOrdersPage } from './pages/SalesOrdersPage';
 
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="/crm" element={<CrmPage />} />
         <Route path="/production" element={<ProductionPage />} />
         <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/users-roles" element={<UsersRolesPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>
