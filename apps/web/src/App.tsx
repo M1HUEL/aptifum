@@ -15,6 +15,7 @@ import { PurchaseOrdersPage } from './pages/PurchaseOrdersPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { StockPage } from './pages/StockPage';
 import { SuppliersPage } from './pages/SuppliersPage';
+import { SalesOrdersPage } from './pages/SalesOrdersPage';
 
 function ProtectedLayout() {
   const { user, initializing } = useAuth();
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/stock" element={<StockPage />} />
         <Route path="/invoices" element={<InvoicesPage />} />
         <Route path="/customers" element={<CustomersPage />} />
+        <Route path="/orders" element={<SalesOrdersPage />} />
         <Route path="/suppliers" element={<SuppliersPage />} />
         <Route path="/purchasing" element={<PurchaseOrdersPage />} />
         <Route path="/accounting" element={<AccountingPage />} />

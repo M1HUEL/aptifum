@@ -223,6 +223,43 @@ export interface PurchaseOrder {
   items: PurchaseOrderItem[];
 }
 
+export type SalesOrderKind = 'quote' | 'order';
+export type SalesOrderStatus = 'draft' | 'confirmed' | 'invoiced' | 'cancelled';
+
+export interface SalesOrderItem {
+  id: string;
+  productId: string;
+  description: string | null;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  taxRate: number;
+  taxAmount: number;
+  lineTotal: number;
+  product?: Product;
+}
+
+export interface SalesOrder {
+  id: string;
+  number: string;
+  kind: SalesOrderKind;
+  status: SalesOrderStatus;
+  customerId: string;
+  warehouseId: string;
+  issueDate: string;
+  dueDate: string | null;
+  currency: string;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  notes: string | null;
+  version: number;
+  customer: Customer | null;
+  warehouse: Warehouse | null;
+  items: SalesOrderItem[];
+}
+
 export interface ChartAccount {
   id: string;
   code: string;
