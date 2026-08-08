@@ -49,6 +49,7 @@ export class PurchaseOrdersService {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
+      relations: { supplier: true, warehouse: true },
     });
     return { data: rows, meta: { page, limit, total } };
   }

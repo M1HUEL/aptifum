@@ -172,3 +172,49 @@ export interface ProductSalesRow {
   grossProfit: number;
   margin: number;
 }
+
+export interface Supplier {
+  id: string;
+  code: string;
+  tradeName: string;
+  taxId: string | null;
+  email: string | null;
+  phone: string | null;
+  currency: string;
+  active: boolean;
+}
+
+export type PurchaseOrderStatus = 'draft' | 'approved' | 'received' | 'cancelled';
+
+export interface PurchaseOrderItem {
+  id: string;
+  productId: string;
+  description: string | null;
+  quantity: number;
+  unitCost: number;
+  taxRate: number;
+  taxAmount: number;
+  lineTotal: number;
+  receivedQuantity: number;
+  discount: number;
+  product?: Product;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  number: string;
+  status: PurchaseOrderStatus;
+  supplierId: string;
+  warehouseId: string;
+  issueDate: string;
+  expectedAt: string | null;
+  currency: string;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  notes: string | null;
+  supplier: Supplier | null;
+  warehouse: Warehouse | null;
+  items: PurchaseOrderItem[];
+}

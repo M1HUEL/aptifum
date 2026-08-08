@@ -7,6 +7,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { InvoicesPage } from './pages/InvoicesPage';
 import { LoginPage } from './pages/LoginPage';
 import { ProductsPage } from './pages/ProductsPage';
+import { PurchaseOrdersPage } from './pages/PurchaseOrdersPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { StockPage } from './pages/StockPage';
 
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/stock" element={<StockPage />} />
         <Route path="/invoices" element={<InvoicesPage />} />
         <Route path="/customers" element={<CustomersPage />} />
+        <Route path="/purchasing" element={<PurchaseOrdersPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
