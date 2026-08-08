@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { LoadingBlock } from './components/ui';
 import { AccountingPage } from './pages/AccountingPage';
 import { CustomersPage } from './pages/CustomersPage';
+import { CrmPage } from './pages/CrmPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { HrPage } from './pages/HrPage';
 import { InvoicesPage } from './pages/InvoicesPage';
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/purchasing" element={<PurchaseOrdersPage />} />
         <Route path="/accounting" element={<AccountingPage />} />
         <Route path="/hr" element={<HrPage />} />
+        <Route path="/crm" element={<CrmPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>

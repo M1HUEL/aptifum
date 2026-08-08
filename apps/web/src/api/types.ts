@@ -320,3 +320,48 @@ export interface Payroll {
   postedAt: string | null;
   lines: PayrollLine[];
 }
+
+export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'disqualified' | 'converted';
+
+export interface Lead {
+  id: string;
+  number: number;
+  source: string | null;
+  companyName: string | null;
+  contactName: string;
+  email: string | null;
+  phone: string | null;
+  status: LeadStatus;
+  estimatedAmount: number;
+  currency: string;
+  assignedUserId: string | null;
+  notes: string | null;
+  convertedCustomerId: string | null;
+  convertedCustomer: Customer | null;
+}
+
+export type OpportunityStage =
+  | 'prospecting'
+  | 'qualification'
+  | 'proposal'
+  | 'negotiation'
+  | 'won'
+  | 'lost';
+
+export interface Opportunity {
+  id: string;
+  name: string;
+  customerId: string | null;
+  leadId: string | null;
+  stage: OpportunityStage;
+  amount: number;
+  currency: string;
+  probability: number;
+  expectedCloseDate: string | null;
+  assignedUserId: string | null;
+  wonAt: string | null;
+  lostAt: string | null;
+  notes: string | null;
+  customer: Customer | null;
+  lead: Lead | null;
+}
