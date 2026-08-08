@@ -111,6 +111,7 @@ export interface StockMovement {
   movementType: MovementType;
   productId: string;
   warehouseId: string;
+  locationId: string | null;
   occurredAt: string;
   quantity: number;
   unitCost: number;

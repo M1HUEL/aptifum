@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '../api/client';
 import type {
   MovementType,
@@ -7,6 +7,7 @@ import type {
   ProductStock,
   StockMovement,
   Warehouse,
+  WarehouseLocation,
 } from '../api/types';
 import {
   Badge,
@@ -146,21 +147,83 @@ function StockTab() {
   );
 }
 
-function MovementsTab() {
+interface MovementFilters {
+  warehouseId: string;
+  movementType: string;
+  from: string;
+  to: string;
+}
+
+const emptyMovementFilters: MovementFilters = {
+  warehouseId: '',
+  movementType: '',
+  from: '',
+  to: '',
+};
+
+function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
   const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<MovementFilters>(emptyMovementFilters);
+  const extraParams = useMemo(() => {
+    const params: Record<string, string> = {};
+    if (filters.warehouseId) params.warehouseId = filters.warehouseId;
+    if (filters.movementType) params.movementType = filters.movementType;
+    if (filters.from) params.from = filters.from;
+    if (filters.to) params.to = filters.to;
+    return params;
+  }, [filters]);
+
   const { data, error } = usePagedQuery<StockMovement>({
     path: '/api/v1/inventory/movements',
     page,
+    extraParams,
   });
+
+  const setFilter = (key: keyof MovementFilters, value: string) => {
+    setFilters((current) => ({ ...current, [key]: value }));
+    setPage(1);
+  };
+
+  const resetFilters = () => {
+    setFilters(emptyMovementFilters);
+    setPage(1);
+  };
+
+  const hasFilters = filters.warehouseId || filters.movementType || filters.from || filters.to;
 
   return (
     <>
+      <div className="toolbar">
+        <Select value={filters.movementType} onChange={(event) => setFilter('movementType', event.target.value)}>
+          <option value="">All types</option>
+          {movementTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </Select>
+        <Select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
+          <option value="">All warehouses</option>
+          {warehouses.map((warehouse) => (
+            <option key={warehouse.id} value={warehouse.id}>
+              {warehouse.name}
+            </option>
+          ))}
+        </Select>
+        <input type="date" value={filters.from} onChange={(event) => setFilter('from', event.target.value)} />
+        <input type="date" value={filters.to} onChange={(event) => setFilter('to', event.target.value)} />
+        {hasFilters ? (
+          <Button variant="ghost" onClick={resetFilters}>
+            Clear filters
+          </Button>
+        ) : null}
+      </div>
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No movements yet." />
+            <EmptyState message="No movements match the filters." />
           ) : (
             <DataTable columns={movementColumns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -175,6 +238,7 @@ interface MovementForm {
   productId: string;
   warehouseId: string;
   movementType: string;
+  locationId: string;
   quantity: string;
   unitCost: string;
   notes: string;
@@ -184,6 +248,7 @@ const emptyForm: MovementForm = {
   productId: '',
   warehouseId: '',
   movementType: 'adjustment',
+  locationId: '',
   quantity: '',
   unitCost: '',
   notes: '',
@@ -198,6 +263,8 @@ export function StockPage() {
   const [form, setForm] = useState<MovementForm>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [locations, setLocations] = useState<WarehouseLocation[]>([]);
+  const [productStock, setProductStock] = useState<ProductStock[]>([]);
   const toast = useToast();
 
   useEffect(() => {
@@ -216,6 +283,47 @@ export function StockPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!form.warehouseId) {
+      setLocations([]);
+      return;
+    }
+    let cancelled = false;
+    apiFetch<WarehouseLocation[]>(`/api/v1/inventory/warehouses/${form.warehouseId}/locations`)
+      .then((result) => {
+        if (cancelled) return;
+        setLocations(result);
+        setForm((current) =>
+          current.locationId && !result.some((location) => location.id === current.locationId)
+            ? { ...current, locationId: '' }
+            : current,
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [form.warehouseId]);
+
+  useEffect(() => {
+    if (!form.productId) {
+      setProductStock([]);
+      return;
+    }
+    let cancelled = false;
+    apiFetch<ProductStock[]>(`/api/v1/inventory/stock/products/${form.productId}`)
+      .then((result) => {
+        if (cancelled) return;
+        setProductStock(result);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [form.productId]);
+
+  const selectedStock = productStock.find((entry) => entry.warehouseId === form.warehouseId);
 
   const openModal = () => {
     setForm(emptyForm);
@@ -243,6 +351,7 @@ export function StockPage() {
       movementType: form.movementType,
       productId: form.productId,
       warehouseId: form.warehouseId,
+      locationId: form.locationId || undefined,
       quantity: Number(form.quantity),
       unitCost: form.unitCost === '' ? undefined : Number(form.unitCost),
       notes: form.notes.trim() || undefined,
@@ -282,7 +391,7 @@ export function StockPage() {
           Movements
         </button>
       </div>
-      {tab === 'stock' ? <StockTab key={`stock-${refreshKey}`} /> : <MovementsTab key={`movements-${refreshKey}`} />}
+      {tab === 'stock' ? <StockTab key={`stock-${refreshKey}`} /> : <MovementsTab key={`movements-${refreshKey}`} warehouses={warehouses} />}
 
       <Modal open={modalOpen} title="New stock movement" onClose={closeModal} width="md">
         <form onSubmit={(event) => void submit(event)}>
@@ -305,7 +414,10 @@ export function StockPage() {
               <Select
                 id="movement-warehouse"
                 value={form.warehouseId}
-                onChange={(event) => setField('warehouseId', event.target.value)}
+                onChange={(event) => {
+                  setField('warehouseId', event.target.value);
+                  setField('locationId', '');
+                }}
               >
                 <option value="">— Select warehouse —</option>
                 {warehouses.map((warehouse) => (
@@ -315,6 +427,22 @@ export function StockPage() {
                 ))}
               </Select>
             </Field>
+            {locations.length > 0 ? (
+              <Field label="Location" htmlFor="movement-location">
+                <Select
+                  id="movement-location"
+                  value={form.locationId}
+                  onChange={(event) => setField('locationId', event.target.value)}
+                >
+                  <option value="">— No location —</option>
+                  {locations.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.code} · {location.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            ) : null}
             <Field label="Type" htmlFor="movement-type" required>
               <Select
                 id="movement-type"
@@ -337,6 +465,14 @@ export function StockPage() {
                 value={form.quantity}
                 onChange={(event) => setField('quantity', event.target.value)}
               />
+              {selectedStock ? (
+                <div className="muted" style={{ marginTop: 6 }}>
+                  Available: {formatNumber(selectedStock.quantity)}
+                  {selectedStock.reservedQuantity > 0
+                    ? ` (reserved ${formatNumber(selectedStock.reservedQuantity)})`
+                    : ''}
+                </div>
+              ) : null}
             </Field>
             <Field label="Unit cost" htmlFor="movement-cost">
               <TextInput
