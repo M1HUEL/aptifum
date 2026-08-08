@@ -177,10 +177,14 @@ export interface Supplier {
   id: string;
   code: string;
   tradeName: string;
+  legalName: string | null;
   taxId: string | null;
   email: string | null;
   phone: string | null;
+  address: string | null;
   currency: string;
+  paymentTerms: string | null;
+  creditLimit: number | null;
   active: boolean;
 }
 
