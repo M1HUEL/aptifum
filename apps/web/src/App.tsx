@@ -10,6 +10,7 @@ import { HrPage } from './pages/HrPage';
 import { InvoicesPage } from './pages/InvoicesPage';
 import { LoginPage } from './pages/LoginPage';
 import { ProductsPage } from './pages/ProductsPage';
+import { ProductionPage } from './pages/ProductionPage';
 import { PurchaseOrdersPage } from './pages/PurchaseOrdersPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { StockPage } from './pages/StockPage';
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/accounting" element={<AccountingPage />} />
         <Route path="/hr" element={<HrPage />} />
         <Route path="/crm" element={<CrmPage />} />
+        <Route path="/production" element={<ProductionPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>

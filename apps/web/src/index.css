@@ -506,6 +506,65 @@ select:focus {
   grid-column: 1 / -1;
 }
 
+.form-grid-3 {
+  grid-template-columns: 3fr 1fr 1fr;
+}
+
+.inline-with-remove {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.inline-with-remove > input {
+  flex: 1;
+}
+
+.form-check {
+  display: flex;
+  align-items: center;
+  padding-top: 24px;
+}
+
+.section-title {
+  font-weight: 600;
+  margin: 16px 0 8px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin-bottom: 8px;
+}
+
+.detail-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.detail-value {
+  display: block;
+  margin-top: 2px;
+}
+
+.detail-notes {
+  margin: 8px 0 0;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table .num {
+  text-align: right;
+}
+
+
 .invoice-items {
   border: 1px solid var(--border);
   border-radius: var(--radius);

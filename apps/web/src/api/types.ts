@@ -365,3 +365,54 @@ export interface Opportunity {
   customer: Customer | null;
   lead: Lead | null;
 }
+
+export type ProductionOrderStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
+
+export interface ProductionBomLine {
+  id: string;
+  productId: string;
+  quantity: number;
+  wasteRate: number;
+  product: Product | null;
+}
+
+export interface ProductionBom {
+  id: string;
+  name: string;
+  productId: string;
+  outputQuantity: number;
+  active: boolean;
+  product: Product;
+  lines: ProductionBomLine[];
+}
+
+export interface ProductionOrderLine {
+  id: string;
+  productId: string;
+  plannedQuantity: number;
+  consumedQuantity: number;
+  unitCost: number;
+  lineCost: number;
+  product: Product;
+}
+
+export interface ProductionOrder {
+  id: string;
+  number: string;
+  productId: string;
+  bomId: string | null;
+  quantity: number;
+  status: ProductionOrderStatus;
+  warehouseId: string;
+  currency: string;
+  laborCost: number;
+  overhead: number;
+  materialCost: number;
+  totalCost: number;
+  completedAt: string | null;
+  notes: string | null;
+  product: Product;
+  bom: ProductionBom | null;
+  warehouse: Warehouse | null;
+  lines: ProductionOrderLine[];
+}

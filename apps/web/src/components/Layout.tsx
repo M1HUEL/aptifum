@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { to: '/accounting', label: 'Accounting', permission: 'accounting:read' },
   { to: '/hr', label: 'HR', permission: 'hr:read' },
   { to: '/crm', label: 'CRM', permission: 'crm:read' },
+  { to: '/production', label: 'Production', permission: 'production:read' },
   { to: '/reports', label: 'Reports', permission: 'reporting:read' },
 ];
 
