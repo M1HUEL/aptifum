@@ -450,6 +450,34 @@ export interface Opportunity {
   lead: Lead | null;
 }
 
+export interface CrmContact {
+  id: string;
+  fullName: string;
+  customerId: string | null;
+  title: string | null;
+  email: string | null;
+  phone: string | null;
+  mobile: string | null;
+  address: string | null;
+  notes: string | null;
+  active: boolean;
+  customer: Customer | null;
+}
+
+export type ActivityType = 'call' | 'meeting' | 'task' | 'note';
+
+export interface CrmActivity {
+  id: string;
+  activityType: ActivityType;
+  subject: string;
+  description: string | null;
+  dueAt: string | null;
+  completedAt: string | null;
+  assigneeId: string | null;
+  referenceType: string | null;
+  referenceId: string | null;
+}
+
 export type ProductionOrderStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
 
 export interface ProductionBomLine {

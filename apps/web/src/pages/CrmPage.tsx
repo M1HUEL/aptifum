@@ -1,6 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '../api/client';
-import type { Customer, Lead, Opportunity, Paginated } from '../api/types';
+import type {
+  ActivityType,
+  CrmActivity,
+  CrmContact,
+  Customer,
+  Lead,
+  Opportunity,
+  Paginated,
+} from '../api/types';
 import {
   Badge,
   type BadgeTone,
@@ -16,6 +24,7 @@ import {
 } from '../components/ui';
 import {
   Button,
+  Checkbox,
   ConfirmDialog,
   Field,
   Modal,
@@ -89,8 +98,62 @@ const emptyOpportunity: OpportunityForm = {
   notes: '',
 };
 
+const activityTypes: ActivityType[] = ['call', 'meeting', 'task', 'note'];
+
+interface ContactForm {
+  fullName: string;
+  customerId: string;
+  title: string;
+  email: string;
+  phone: string;
+  mobile: string;
+  address: string;
+  notes: string;
+  active: boolean;
+}
+
+const emptyContact: ContactForm = {
+  fullName: '',
+  customerId: '',
+  title: '',
+  email: '',
+  phone: '',
+  mobile: '',
+  address: '',
+  notes: '',
+  active: true,
+};
+
+interface ActivityForm {
+  activityType: string;
+  subject: string;
+  description: string;
+  dueAt: string;
+  completedAt: string;
+  referenceType: string;
+  referenceId: string;
+}
+
+const emptyActivity: ActivityForm = {
+  activityType: 'task',
+  subject: '',
+  description: '',
+  dueAt: '',
+  completedAt: '',
+  referenceType: '',
+  referenceId: '',
+};
+
+function toLocalInput(iso: string | null): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export function CrmPage() {
-  const [tab, setTab] = useState<'leads' | 'opportunities'>('leads');
+  const [tab, setTab] = useState<'leads' | 'opportunities' | 'contacts' | 'activities'>('leads');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [leadOpen, setLeadOpen] = useState(false);
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
@@ -107,6 +170,18 @@ export function CrmPage() {
   const [oppForm, setOppForm] = useState<OpportunityForm>(emptyOpportunity);
   const [oppError, setOppError] = useState<string | null>(null);
   const [oppSaving, setOppSaving] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [editingContactId, setEditingContactId] = useState<string | null>(null);
+  const [contactForm, setContactForm] = useState<ContactForm>(emptyContact);
+  const [contactError, setContactError] = useState<string | null>(null);
+  const [contactSaving, setContactSaving] = useState(false);
+  const [deletingContact, setDeletingContact] = useState<CrmContact | null>(null);
+  const [activityOpen, setActivityOpen] = useState(false);
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
+  const [activityForm, setActivityForm] = useState<ActivityForm>(emptyActivity);
+  const [activityError, setActivityError] = useState<string | null>(null);
+  const [activitySaving, setActivitySaving] = useState(false);
+  const [deletingActivity, setDeletingActivity] = useState<CrmActivity | null>(null);
   const toast = useToast();
 
   const {
@@ -120,6 +195,18 @@ export function CrmPage() {
     error: opportunitiesError,
     reload: reloadOpportunities,
   } = usePagedQuery<Opportunity>({ path: '/api/v1/crm/opportunities', page: 1, limit: 50 });
+
+  const {
+    data: contacts,
+    error: contactsError,
+    reload: reloadContacts,
+  } = usePagedQuery<CrmContact>({ path: '/api/v1/crm/contacts', page: 1, limit: 50 });
+
+  const {
+    data: activities,
+    error: activitiesError,
+    reload: reloadActivities,
+  } = usePagedQuery<CrmActivity>({ path: '/api/v1/crm/activities', page: 1, limit: 50 });
 
   useEffect(() => {
     let cancelled = false;
@@ -334,6 +421,186 @@ export function CrmPage() {
     }
   };
 
+  const openContactCreate = () => {
+    setEditingContactId(null);
+    setContactForm(emptyContact);
+    setContactError(null);
+    setContactOpen(true);
+  };
+
+  const openContactEdit = (contact: CrmContact) => {
+    setEditingContactId(contact.id);
+    setContactForm({
+      fullName: contact.fullName,
+      customerId: contact.customerId ?? '',
+      title: contact.title ?? '',
+      email: contact.email ?? '',
+      phone: contact.phone ?? '',
+      mobile: contact.mobile ?? '',
+      address: contact.address ?? '',
+      notes: contact.notes ?? '',
+      active: contact.active,
+    });
+    setContactError(null);
+    setContactOpen(true);
+  };
+
+  const closeContact = () => {
+    if (!contactSaving) setContactOpen(false);
+  };
+
+  const submitContact = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!contactForm.fullName.trim()) {
+      setContactError('Full name is required.');
+      return;
+    }
+    setContactSaving(true);
+    setContactError(null);
+    const body = {
+      fullName: contactForm.fullName.trim(),
+      customerId: contactForm.customerId || undefined,
+      title: contactForm.title.trim() || undefined,
+      email: contactForm.email.trim() || undefined,
+      phone: contactForm.phone.trim() || undefined,
+      mobile: contactForm.mobile.trim() || undefined,
+      address: contactForm.address.trim() || undefined,
+      notes: contactForm.notes.trim() || undefined,
+      active: contactForm.active,
+    };
+    try {
+      if (editingContactId) {
+        await apiFetch(`/api/v1/crm/contacts/${editingContactId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        toast.toast('Contact updated.');
+      } else {
+        await apiFetch('/api/v1/crm/contacts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        toast.toast('Contact created.');
+      }
+      setContactOpen(false);
+      reloadContacts();
+    } catch (err) {
+      setContactError(err instanceof ApiError ? err.message : 'Could not save contact.');
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
+  const confirmDeleteContact = async () => {
+    if (!deletingContact) return;
+    try {
+      await apiFetch(`/api/v1/crm/contacts/${deletingContact.id}`, { method: 'DELETE' });
+      toast.toast('Contact deleted.');
+      setDeletingContact(null);
+      reloadContacts();
+    } catch (err) {
+      toast.toast(err instanceof ApiError ? err.message : 'Could not delete contact.', 'error');
+      setDeletingContact(null);
+    }
+  };
+
+  const openActivityCreate = () => {
+    setEditingActivityId(null);
+    setActivityForm(emptyActivity);
+    setActivityError(null);
+    setActivityOpen(true);
+  };
+
+  const openActivityEdit = (activity: CrmActivity) => {
+    setEditingActivityId(activity.id);
+    setActivityForm({
+      activityType: activity.activityType,
+      subject: activity.subject,
+      description: activity.description ?? '',
+      dueAt: toLocalInput(activity.dueAt),
+      completedAt: toLocalInput(activity.completedAt),
+      referenceType: activity.referenceType ?? '',
+      referenceId: activity.referenceId ?? '',
+    });
+    setActivityError(null);
+    setActivityOpen(true);
+  };
+
+  const closeActivity = () => {
+    if (!activitySaving) setActivityOpen(false);
+  };
+
+  const submitActivity = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!activityForm.subject.trim()) {
+      setActivityError('Subject is required.');
+      return;
+    }
+    setActivitySaving(true);
+    setActivityError(null);
+    const body = {
+      activityType: activityForm.activityType,
+      subject: activityForm.subject.trim(),
+      description: activityForm.description.trim() || undefined,
+      dueAt: activityForm.dueAt ? new Date(activityForm.dueAt).toISOString() : undefined,
+      completedAt: activityForm.completedAt ? new Date(activityForm.completedAt).toISOString() : undefined,
+      referenceType: activityForm.referenceType.trim() || undefined,
+      referenceId: activityForm.referenceId.trim() || undefined,
+    };
+    try {
+      if (editingActivityId) {
+        await apiFetch(`/api/v1/crm/activities/${editingActivityId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        toast.toast('Activity updated.');
+      } else {
+        await apiFetch('/api/v1/crm/activities', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        toast.toast('Activity created.');
+      }
+      setActivityOpen(false);
+      reloadActivities();
+    } catch (err) {
+      setActivityError(err instanceof ApiError ? err.message : 'Could not save activity.');
+    } finally {
+      setActivitySaving(false);
+    }
+  };
+
+  const markComplete = async (activity: CrmActivity) => {
+    try {
+      await apiFetch(`/api/v1/crm/activities/${activity.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completedAt: new Date().toISOString() }),
+      });
+      toast.toast('Activity completed.');
+      reloadActivities();
+    } catch (err) {
+      toast.toast(err instanceof ApiError ? err.message : 'Could not complete activity.', 'error');
+    }
+  };
+
+  const confirmDeleteActivity = async () => {
+    if (!deletingActivity) return;
+    try {
+      await apiFetch(`/api/v1/crm/activities/${deletingActivity.id}`, { method: 'DELETE' });
+      toast.toast('Activity deleted.');
+      setDeletingActivity(null);
+      reloadActivities();
+    } catch (err) {
+      toast.toast(err instanceof ApiError ? err.message : 'Could not delete activity.', 'error');
+      setDeletingActivity(null);
+    }
+  };
+
   const leadColumns: Column<Lead>[] = [
     { key: 'number', header: 'Number' },
     { key: 'contactName', header: 'Contact' },
@@ -431,16 +698,91 @@ export function CrmPage() {
     },
   ];
 
+  const contactColumns: Column<CrmContact>[] = [
+    { key: 'fullName', header: 'Full name' },
+    {
+      key: 'customer',
+      header: 'Customer',
+      render: (row) => row.customer?.tradeName ?? '—',
+    },
+    { key: 'title', header: 'Title', render: (row) => row.title ?? '—' },
+    { key: 'email', header: 'Email', render: (row) => row.email ?? '—' },
+    { key: 'phone', header: 'Phone', render: (row) => row.phone ?? '—' },
+    {
+      key: 'active',
+      header: 'Status',
+      render: (row) => <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>,
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (row) => (
+        <div className="table-actions">
+          <Button variant="ghost" size="sm" onClick={() => openContactEdit(row)}>
+            Edit
+          </Button>
+          <Button variant="danger" size="sm" onClick={() => setDeletingContact(row)}>
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const activityColumns: Column<CrmActivity>[] = [
+    {
+      key: 'activityType',
+      header: 'Type',
+      render: (row) => <Badge tone={row.activityType === 'note' ? 'neutral' : 'info'}>{row.activityType}</Badge>,
+    },
+    { key: 'subject', header: 'Subject' },
+    { key: 'description', header: 'Description', render: (row) => row.description ?? '—' },
+    {
+      key: 'dueAt',
+      header: 'Due',
+      render: (row) => (row.dueAt ? new Date(row.dueAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '—'),
+    },
+    {
+      key: 'completedAt',
+      header: 'Completed',
+      render: (row) =>
+        row.completedAt ? new Date(row.completedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '—',
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (row) => (
+        <div className="table-actions">
+          {!row.completedAt ? (
+            <Button variant="ghost" size="sm" onClick={() => void markComplete(row)}>
+              Complete
+            </Button>
+          ) : null}
+          <Button variant="ghost" size="sm" onClick={() => openActivityEdit(row)}>
+            Edit
+          </Button>
+          <Button variant="danger" size="sm" onClick={() => setDeletingActivity(row)}>
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <>
       <PageHeader
         title="CRM"
-        subtitle="Leads and opportunities"
+        subtitle="Leads, opportunities, contacts and activities"
         action={
           tab === 'leads' ? (
             <Button onClick={openLeadCreate}>New lead</Button>
-          ) : (
+          ) : tab === 'opportunities' ? (
             <Button onClick={openOppCreate}>New opportunity</Button>
+          ) : tab === 'contacts' ? (
+            <Button onClick={openContactCreate}>New contact</Button>
+          ) : (
+            <Button onClick={openActivityCreate}>New activity</Button>
           )
         }
       />
@@ -454,6 +796,20 @@ export function CrmPage() {
           onClick={() => setTab('opportunities')}
         >
           Opportunities
+        </button>
+        <button
+          type="button"
+          className={tab === 'contacts' ? 'tab tab-active' : 'tab'}
+          onClick={() => setTab('contacts')}
+        >
+          Contacts
+        </button>
+        <button
+          type="button"
+          className={tab === 'activities' ? 'tab tab-active' : 'tab'}
+          onClick={() => setTab('activities')}
+        >
+          Activities
         </button>
       </div>
       {tab === 'leads' ? (
@@ -471,7 +827,8 @@ export function CrmPage() {
             </>
           ) : null}
         </>
-      ) : (
+      ) : null}
+      {tab === 'opportunities' ? (
         <>
           {opportunitiesError ? <ErrorBanner message={opportunitiesError} /> : null}
           {!opportunities && !opportunitiesError ? <LoadingBlock /> : null}
@@ -491,7 +848,49 @@ export function CrmPage() {
             </>
           ) : null}
         </>
-      )}
+      ) : null}
+      {tab === 'contacts' ? (
+        <>
+          {contactsError ? <ErrorBanner message={contactsError} /> : null}
+          {!contacts && !contactsError ? <LoadingBlock /> : null}
+          {contacts ? (
+            <>
+              {contacts.data.length === 0 ? (
+                <EmptyState message="No contacts." />
+              ) : (
+                <DataTable columns={contactColumns} rows={contacts.data} rowKey={(row) => row.id} />
+              )}
+              <Pagination
+                page={contacts.meta.page}
+                limit={contacts.meta.limit}
+                total={contacts.meta.total}
+                onPage={() => {}}
+              />
+            </>
+          ) : null}
+        </>
+      ) : null}
+      {tab === 'activities' ? (
+        <>
+          {activitiesError ? <ErrorBanner message={activitiesError} /> : null}
+          {!activities && !activitiesError ? <LoadingBlock /> : null}
+          {activities ? (
+            <>
+              {activities.data.length === 0 ? (
+                <EmptyState message="No activities." />
+              ) : (
+                <DataTable columns={activityColumns} rows={activities.data} rowKey={(row) => row.id} />
+              )}
+              <Pagination
+                page={activities.meta.page}
+                limit={activities.meta.limit}
+                total={activities.meta.total}
+                onPage={() => {}}
+              />
+            </>
+          ) : null}
+        </>
+      ) : null}
 
       <Modal
         open={leadOpen}
@@ -711,6 +1110,180 @@ export function CrmPage() {
         </div>
       </Modal>
 
+      <Modal
+        open={contactOpen}
+        title={editingContactId ? 'Edit contact' : 'New contact'}
+        onClose={closeContact}
+        width="lg"
+      >
+        <form onSubmit={(event) => void submitContact(event)}>
+          <div className="form-grid">
+            <Field label="Full name" htmlFor="contact-name" required>
+              <TextInput
+                id="contact-name"
+                value={contactForm.fullName}
+                onChange={(event) => setContactForm((current) => ({ ...current, fullName: event.target.value }))}
+              />
+            </Field>
+            <Field label="Customer" htmlFor="contact-customer">
+              <Select
+                id="contact-customer"
+                value={contactForm.customerId}
+                onChange={(event) => setContactForm((current) => ({ ...current, customerId: event.target.value }))}
+              >
+                <option value="">— None —</option>
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.tradeName}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Title" htmlFor="contact-title">
+              <TextInput
+                id="contact-title"
+                value={contactForm.title}
+                onChange={(event) => setContactForm((current) => ({ ...current, title: event.target.value }))}
+              />
+            </Field>
+            <Field label="Email" htmlFor="contact-email">
+              <TextInput
+                id="contact-email"
+                type="email"
+                value={contactForm.email}
+                onChange={(event) => setContactForm((current) => ({ ...current, email: event.target.value }))}
+              />
+            </Field>
+            <Field label="Phone" htmlFor="contact-phone">
+              <TextInput
+                id="contact-phone"
+                value={contactForm.phone}
+                onChange={(event) => setContactForm((current) => ({ ...current, phone: event.target.value }))}
+              />
+            </Field>
+            <Field label="Mobile" htmlFor="contact-mobile">
+              <TextInput
+                id="contact-mobile"
+                value={contactForm.mobile}
+                onChange={(event) => setContactForm((current) => ({ ...current, mobile: event.target.value }))}
+              />
+            </Field>
+            <Field label="Address" htmlFor="contact-address">
+              <TextArea
+                id="contact-address"
+                rows={2}
+                value={contactForm.address}
+                onChange={(event) => setContactForm((current) => ({ ...current, address: event.target.value }))}
+              />
+            </Field>
+            <Field label="Notes" htmlFor="contact-notes">
+              <TextArea
+                id="contact-notes"
+                rows={2}
+                value={contactForm.notes}
+                onChange={(event) => setContactForm((current) => ({ ...current, notes: event.target.value }))}
+              />
+            </Field>
+            <Field label="Status">
+              <Checkbox
+                label="Active"
+                checked={contactForm.active}
+                onChange={(event) => setContactForm((current) => ({ ...current, active: event.target.checked }))}
+              />
+            </Field>
+          </div>
+          {contactError ? <div className="error-banner">{contactError}</div> : null}
+          <div className="modal-footer">
+            <Button variant="ghost" onClick={closeContact} disabled={contactSaving}>
+              Cancel
+            </Button>
+            <button type="submit" className="btn btn-primary" disabled={contactSaving}>
+              {contactSaving ? 'Saving…' : editingContactId ? 'Save changes' : 'Create contact'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        open={activityOpen}
+        title={editingActivityId ? 'Edit activity' : 'New activity'}
+        onClose={closeActivity}
+        width="lg"
+      >
+        <form onSubmit={(event) => void submitActivity(event)}>
+          <div className="form-grid">
+            <Field label="Type" htmlFor="activity-type" required>
+              <Select
+                id="activity-type"
+                value={activityForm.activityType}
+                onChange={(event) => setActivityForm((current) => ({ ...current, activityType: event.target.value }))}
+              >
+                {activityTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Subject" htmlFor="activity-subject" required>
+              <TextInput
+                id="activity-subject"
+                value={activityForm.subject}
+                onChange={(event) => setActivityForm((current) => ({ ...current, subject: event.target.value }))}
+              />
+            </Field>
+            <Field label="Due at" htmlFor="activity-due">
+              <TextInput
+                id="activity-due"
+                type="datetime-local"
+                value={activityForm.dueAt}
+                onChange={(event) => setActivityForm((current) => ({ ...current, dueAt: event.target.value }))}
+              />
+            </Field>
+            <Field label="Completed at" htmlFor="activity-completed">
+              <TextInput
+                id="activity-completed"
+                type="datetime-local"
+                value={activityForm.completedAt}
+                onChange={(event) => setActivityForm((current) => ({ ...current, completedAt: event.target.value }))}
+              />
+            </Field>
+            <Field label="Reference type" htmlFor="activity-ref-type">
+              <TextInput
+                id="activity-ref-type"
+                placeholder="e.g. lead, opportunity"
+                value={activityForm.referenceType}
+                onChange={(event) => setActivityForm((current) => ({ ...current, referenceType: event.target.value }))}
+              />
+            </Field>
+            <Field label="Reference id" htmlFor="activity-ref-id">
+              <TextInput
+                id="activity-ref-id"
+                value={activityForm.referenceId}
+                onChange={(event) => setActivityForm((current) => ({ ...current, referenceId: event.target.value }))}
+              />
+            </Field>
+          </div>
+          <Field label="Description" htmlFor="activity-description">
+            <TextArea
+              id="activity-description"
+              rows={3}
+              value={activityForm.description}
+              onChange={(event) => setActivityForm((current) => ({ ...current, description: event.target.value }))}
+            />
+          </Field>
+          {activityError ? <div className="error-banner">{activityError}</div> : null}
+          <div className="modal-footer">
+            <Button variant="ghost" onClick={closeActivity} disabled={activitySaving}>
+              Cancel
+            </Button>
+            <button type="submit" className="btn btn-primary" disabled={activitySaving}>
+              {activitySaving ? 'Saving…' : editingActivityId ? 'Save changes' : 'Create activity'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
       <ConfirmDialog
         open={deleting !== null}
         title={deleting && 'contactName' in deleting ? 'Delete lead' : 'Delete opportunity'}
@@ -723,6 +1296,24 @@ export function CrmPage() {
         busy={deleteBusy}
         onCancel={() => setDeleting(null)}
         onConfirm={() => void confirmDelete()}
+      />
+
+      <ConfirmDialog
+        open={deletingContact !== null}
+        title="Delete contact"
+        message={`Delete contact "${deletingContact?.fullName}"?`}
+        confirmLabel="Delete"
+        onCancel={() => setDeletingContact(null)}
+        onConfirm={() => void confirmDeleteContact()}
+      />
+
+      <ConfirmDialog
+        open={deletingActivity !== null}
+        title="Delete activity"
+        message={`Delete activity "${deletingActivity?.subject}"?`}
+        confirmLabel="Delete"
+        onCancel={() => setDeletingActivity(null)}
+        onConfirm={() => void confirmDeleteActivity()}
       />
     </>
   );
