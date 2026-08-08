@@ -11,21 +11,59 @@ import {
   PageHeader,
 } from '../components/ui';
 
+type Shape = 'list' | 'single' | 'financial';
+
 interface ReportDef {
   id: string;
   label: string;
   endpoint: string;
+  shape: Shape;
+  sections?: Array<{ section: string; key: string }>;
+  summaryRows?: Array<{ code: string; name: string; key: string }>;
 }
 
 const REPORTS: ReportDef[] = [
-  { id: 'sales-summary', label: 'Sales summary', endpoint: '/api/v1/reports/sales/summary' },
-  { id: 'sales-by-product', label: 'Sales by product', endpoint: '/api/v1/reports/sales/by-product' },
-  { id: 'inventory-valuation', label: 'Inventory valuation', endpoint: '/api/v1/reports/inventory/valuation' },
-  { id: 'low-stock', label: 'Low stock', endpoint: '/api/v1/reports/inventory/low-stock' },
-  { id: 'aging-ar', label: 'Aging (accounts receivable)', endpoint: '/api/v1/reports/aging/ar' },
+  { id: 'dashboard', label: 'Dashboard', endpoint: '/api/v1/reports/dashboard', shape: 'single' },
+  { id: 'sales-summary', label: 'Sales summary', endpoint: '/api/v1/reports/sales/summary', shape: 'list' },
+  { id: 'sales-by-product', label: 'Sales by product', endpoint: '/api/v1/reports/sales/by-product', shape: 'list' },
+  { id: 'sales-by-customer', label: 'Sales by customer', endpoint: '/api/v1/reports/sales/by-customer', shape: 'list' },
+  { id: 'inventory-valuation', label: 'Inventory valuation', endpoint: '/api/v1/reports/inventory/valuation', shape: 'list' },
+  { id: 'stock-movements', label: 'Stock movements', endpoint: '/api/v1/reports/inventory/movements', shape: 'list' },
+  { id: 'low-stock', label: 'Low stock', endpoint: '/api/v1/reports/inventory/low-stock', shape: 'list' },
+  { id: 'aging-ar', label: 'Aging (accounts receivable)', endpoint: '/api/v1/reports/aging/ar', shape: 'list' },
+  { id: 'aging-ap', label: 'Aging (accounts payable)', endpoint: '/api/v1/reports/aging/ap', shape: 'list' },
+  {
+    id: 'income-statement',
+    label: 'Income statement',
+    endpoint: '/api/v1/reports/financial/income-statement',
+    shape: 'financial',
+    sections: [
+      { section: 'Revenue', key: 'revenue' },
+      { section: 'Cost of sales', key: 'costOfSales' },
+      { section: 'Operating expenses', key: 'operatingExpenses' },
+    ],
+    summaryRows: [{ code: '', name: 'Net income', key: 'netIncome' }],
+  },
+  {
+    id: 'balance-sheet',
+    label: 'Balance sheet',
+    endpoint: '/api/v1/reports/financial/balance-sheet',
+    shape: 'financial',
+    sections: [
+      { section: 'Assets', key: 'assets' },
+      { section: 'Liabilities', key: 'liabilities' },
+      { section: 'Equity', key: 'equity' },
+    ],
+    summaryRows: [
+      { code: '', name: 'Total assets', key: 'totalAssets' },
+      { code: '', name: 'Total liabilities and equity', key: 'totalLiabilitiesAndEquity' },
+    ],
+  },
+  { id: 'payroll', label: 'Payroll summary', endpoint: '/api/v1/reports/hr/payroll', shape: 'list' },
 ];
 
 type Row = Record<string, unknown>;
+type Json = Record<string, unknown>;
 
 function formatCell(value: unknown): string {
   if (value === null || value === undefined) return '—';
@@ -42,6 +80,28 @@ function buildColumns(rows: Row[]): Column<Row>[] {
     header: key,
     render: (row) => formatCell(row[key]),
   }));
+}
+
+function flattenFinancial(report: ReportDef, payload: Json): Row[] {
+  const rows: Row[] = [];
+  for (const { section, key } of report.sections ?? []) {
+    const sectionData = payload[key] as
+      | { accounts?: Array<Record<string, unknown>>; total?: number }
+      | undefined;
+    for (const account of sectionData?.accounts ?? []) {
+      rows.push({ section, code: account.code, name: account.name, balance: account.balance });
+    }
+    rows.push({
+      section,
+      code: '',
+      name: `Total ${section.toLowerCase()}`,
+      balance: sectionData?.total ?? 0,
+    });
+  }
+  for (const row of report.summaryRows ?? []) {
+    rows.push({ section: 'Summary', code: row.code, name: row.name, balance: payload[row.key] ?? 0 });
+  }
+  return rows;
 }
 
 export function ReportsPage() {
@@ -61,8 +121,14 @@ export function ReportsPage() {
       setLoading(true);
       setError(null);
       try {
-        const payload = await apiFetch<{ data?: Row[]; [key: string]: unknown }>(report.endpoint);
-        setRows(payload.data ?? []);
+        const payload = await apiFetch<Json>(report.endpoint);
+        if (report.shape === 'list') {
+          setRows((payload.data as Row[] | undefined) ?? []);
+        } else if (report.shape === 'single') {
+          setRows([payload]);
+        } else {
+          setRows(flattenFinancial(report, payload));
+        }
       } catch (err) {
         setRows(null);
         setError(err instanceof ApiError ? err.message : 'Could not load the report.');
@@ -101,9 +167,14 @@ export function ReportsPage() {
         title="Reports"
         subtitle="Analytics and exports"
         action={
-          <button type="button" className="btn" onClick={() => void download()}>
-            Download CSV
-          </button>
+          <div className="page-header-actions">
+            <button type="button" className="btn btn-ghost" onClick={() => window.print()}>
+              Print / PDF
+            </button>
+            <button type="button" className="btn" onClick={() => void download()}>
+              Download CSV
+            </button>
+          </div>
         }
       />
       <div className="toolbar">
@@ -114,6 +185,10 @@ export function ReportsPage() {
             </option>
           ))}
         </select>
+      </div>
+      <div className="report-print-heading">
+        <h2>{activeReport.label}</h2>
+        <p>Generated {new Date().toLocaleString()}</p>
       </div>
       {error ? <ErrorBanner message={error} /> : null}
       {downloadError ? <ErrorBanner message={downloadError} /> : null}

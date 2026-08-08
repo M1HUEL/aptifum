@@ -145,6 +145,16 @@ p {
   flex-shrink: 0;
 }
 
+.page-header-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.report-print-heading {
+  display: none;
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -736,6 +746,48 @@ select:focus {
 
 .chart-box {
   width: 100%;
+}
+
+@media print {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar,
+  .page-header,
+  .toolbar,
+  .pagination,
+  .toast-container {
+    display: none !important;
+  }
+
+  .main-content {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .report-print-heading {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .report-print-heading h2 {
+    font-size: 18px;
+  }
+
+  .report-print-heading p {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .data-table {
+    font-size: 11px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 4px 8px;
+  }
 }
 
 .muted {
