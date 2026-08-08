@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/invoices', label: 'Invoices', permission: 'invoicing:read' },
   { to: '/customers', label: 'Customers', permission: 'sales:read' },
   { to: '/purchasing', label: 'Purchasing', permission: 'purchasing:read' },
+  { to: '/accounting', label: 'Accounting', permission: 'accounting:read' },
   { to: '/reports', label: 'Reports', permission: 'reporting:read' },
 ];
 

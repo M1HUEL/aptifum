@@ -218,3 +218,46 @@ export interface PurchaseOrder {
   warehouse: Warehouse | null;
   items: PurchaseOrderItem[];
 }
+
+export interface ChartAccount {
+  id: string;
+  code: string;
+  name: string;
+  type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
+  active: boolean;
+}
+
+export interface JournalEntryLine {
+  id: string;
+  entryId: string;
+  accountId: string;
+  lineIndex: number;
+  description: string | null;
+  debit: number;
+  credit: number;
+  account: ChartAccount | null;
+}
+
+export interface JournalEntry {
+  id: string;
+  number: string;
+  periodId: string;
+  entryDate: string;
+  status: 'draft' | 'posted' | 'reversed';
+  currency: string;
+  description: string | null;
+  debitTotal: number;
+  creditTotal: number;
+  lines: JournalEntryLine[];
+}
+
+export interface AccountingPeriod {
+  id: string;
+  period: string;
+  label: string;
+  startDate: string;
+  endDate: string;
+  status: 'open' | 'closed';
+  closedAt: string | null;
+  closedBy: string | null;
+}
