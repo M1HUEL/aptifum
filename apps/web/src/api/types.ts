@@ -141,3 +141,34 @@ export interface DashboardReport {
   productionInProgress: number;
   netIncomeMonth: number;
 }
+
+export interface SalesSummaryRow {
+  period: string;
+  invoices: number;
+  creditNotes: number;
+  revenue: number;
+  tax: number;
+  total: number;
+}
+
+export interface SalesSummary {
+  groupBy: string;
+  data: SalesSummaryRow[];
+  totals: {
+    invoices: number;
+    revenue: number;
+    tax: number;
+    total: number;
+  };
+}
+
+export interface ProductSalesRow {
+  productId: string;
+  sku: string;
+  name: string;
+  quantity: number;
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  margin: number;
+}
