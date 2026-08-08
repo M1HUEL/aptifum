@@ -24,6 +24,7 @@ export interface ApplyStockMovementInput {
   movementType: MovementType;
   productId: string;
   warehouseId: string;
+  locationId?: string | null;
   quantity: number;
   unitCost?: number;
   referenceType?: string | null;
@@ -88,6 +89,7 @@ export async function applyStockMovement(
       movementType: input.movementType,
       productId: input.productId,
       warehouseId: input.warehouseId,
+      locationId: input.locationId ?? null,
       quantity: sign * qty,
       unitCost,
       referenceType: input.referenceType ?? null,

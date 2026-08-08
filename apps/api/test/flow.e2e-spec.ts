@@ -267,4 +267,78 @@ describe('Vertical flow: sales -> accounting -> reports (e2e)', () => {
     expect(res.text).toContain('productId,sku,');
     expect(res.text).toContain('E2E-A');
   });
+
+  it('filters stock movements by type and warehouse', async () => {
+    const byType = await request(app.getHttpServer())
+      .get('/api/v1/inventory/movements')
+      .query({ movementType: 'inbound' })
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(byType.body.data.length).toBeGreaterThan(0);
+    expect(
+      byType.body.data.every((m: { movementType: string }) => m.movementType === 'inbound'),
+    ).toBe(true);
+
+    const byWarehouse = await request(app.getHttpServer())
+      .get('/api/v1/inventory/movements')
+      .query({ warehouseId: warehouse.id })
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(byWarehouse.body.data.length).toBeGreaterThan(0);
+    expect(
+      byWarehouse.body.data.every((m: { warehouseId: string }) => m.warehouseId === warehouse.id),
+    ).toBe(true);
+
+    const invalid = await request(app.getHttpServer())
+      .get('/api/v1/inventory/movements')
+      .query({ movementType: 'bogus' })
+      .set('Authorization', `Bearer ${token}`)
+      .expect(400);
+    expect(invalid.body.message).toContain('Invalid movement type');
+  });
+
+  it('records a movement with a warehouse location and rejects foreign locations', async () => {
+    const location = await request(app.getHttpServer())
+      .post(`/api/v1/inventory/warehouses/${warehouse.id}/locations`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ code: 'LOC-A1', name: 'Shelf A1' })
+      .expect(201);
+    expect(location.body.id).toBeDefined();
+
+    const created = await request(app.getHttpServer())
+      .post('/api/v1/inventory/movements')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        movementType: 'inbound',
+        productId: productA.id,
+        warehouseId: warehouse.id,
+        locationId: location.body.id,
+        quantity: 5,
+        unitCost: 1,
+      })
+      .expect(201);
+    expect(created.body.locationId).toBe(location.body.id);
+
+    const otherWarehouse = await request(app.getHttpServer())
+      .post('/api/v1/inventory/warehouses')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ code: 'E2E_WH2', name: 'E2E WH 2' })
+      .expect(201);
+    const otherLocation = await request(app.getHttpServer())
+      .post(`/api/v1/inventory/warehouses/${otherWarehouse.body.id}/locations`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ code: 'LOC-B1', name: 'Shelf B1' })
+      .expect(201);
+    await request(app.getHttpServer())
+      .post('/api/v1/inventory/movements')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        movementType: 'inbound',
+        productId: productA.id,
+        warehouseId: warehouse.id,
+        locationId: otherLocation.body.id,
+        quantity: 1,
+      })
+      .expect(400);
+  });
 });

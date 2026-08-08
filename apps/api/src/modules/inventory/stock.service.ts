@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Between, Repository } from 'typeorm';
+import { MovementType } from '@aptifum/core';
 import {
   applyStockMovement,
   InsufficientStockError,
@@ -8,8 +9,17 @@ import {
   ProductStock,
   StockMovement,
   Warehouse,
+  WarehouseLocation,
 } from '@aptifum/database';
 import { CreateMovementDto } from './dto/create-movement.dto';
+
+interface ListMovementFilters {
+  productId?: string;
+  warehouseId?: string;
+  movementType?: MovementType;
+  from?: string;
+  to?: string;
+}
 
 @Injectable()
 export class StockService {
@@ -21,6 +31,8 @@ export class StockService {
     private readonly movementsRepo: Repository<StockMovement>,
     @InjectRepository(Product) private readonly productsRepo: Repository<Product>,
     @InjectRepository(Warehouse) private readonly warehousesRepo: Repository<Warehouse>,
+    @InjectRepository(WarehouseLocation)
+    private readonly locationsRepo: Repository<WarehouseLocation>,
   ) {}
 
   async listStock(tenantId: string | null, page: number, limit: number) {
@@ -48,13 +60,24 @@ export class StockService {
     tenantId: string | null,
     page: number,
     limit: number,
-    productId?: string,
+    filters?: ListMovementFilters,
   ) {
-    const where: { tenantId?: string; productId?: string } = tenantId
-      ? { tenantId }
-      : {};
-    if (productId) {
-      where.productId = productId;
+    const where: Record<string, unknown> = tenantId ? { tenantId } : {};
+    if (filters?.productId) {
+      where.productId = filters.productId;
+    }
+    if (filters?.warehouseId) {
+      where.warehouseId = filters.warehouseId;
+    }
+    if (filters?.movementType) {
+      where.movementType = filters.movementType;
+    }
+    if (filters?.from || filters?.to) {
+      const from = filters.from ? new Date(filters.from) : new Date('1970-01-01T00:00:00Z');
+      const to = filters.to ? new Date(filters.to) : new Date('9999-12-31T23:59:59Z');
+      if (filters.from) from.setHours(0, 0, 0, 0);
+      if (filters.to) to.setHours(23, 59, 59, 999);
+      where.occurredAt = Between(from, to);
     }
     const [rows, total] = await this.movementsRepo.findAndCount({
       where,
@@ -73,6 +96,15 @@ export class StockService {
   ) {
     this.assertTenant(tenantId);
     await this.assertStockContext(tenantId, dto.productId, dto.warehouseId);
+    if (dto.locationId) {
+      const location = await this.locationsRepo.findOneBy({
+        id: dto.locationId,
+        tenantId,
+      });
+      if (!location || location.warehouseId !== dto.warehouseId) {
+        throw new BadRequestException('Location does not belong to the warehouse');
+      }
+    }
 
     try {
       return await this.dataSource.transaction(async (manager) => {
@@ -81,6 +113,7 @@ export class StockService {
           movementType: dto.movementType,
           productId: dto.productId,
           warehouseId: dto.warehouseId,
+          locationId: dto.locationId ?? null,
           quantity: dto.quantity,
           unitCost: dto.unitCost ?? 0,
           referenceType: dto.referenceType ?? null,
