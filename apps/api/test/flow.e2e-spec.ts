@@ -29,19 +29,41 @@ describe('Vertical flow: sales -> accounting -> reports (e2e)', () => {
     const dataSource = createDataSource();
     await dataSource.initialize();
     await dataSource.runMigrations();
-    await dataSource.query(
-      `DELETE FROM invoice_items WHERE invoice_id IN (SELECT id FROM invoices WHERE customer_id IN (SELECT id FROM customers WHERE code LIKE 'E2E-%'));
-       DELETE FROM payments WHERE invoice_id IN (SELECT id FROM invoices WHERE customer_id IN (SELECT id FROM customers WHERE code LIKE 'E2E-%'));
-       DELETE FROM journal_entry_lines WHERE entry_id IN (SELECT id FROM journal_entries WHERE reference_type IN ('invoice','payment','credit_note','purchase_receipt'));
-       DELETE FROM journal_entries WHERE reference_type IN ('invoice','payment','credit_note','purchase_receipt');
-       DELETE FROM invoices WHERE customer_id IN (SELECT id FROM customers WHERE code LIKE 'E2E-%');
-       DELETE FROM stock_movements WHERE product_id IN (SELECT id FROM products WHERE sku LIKE 'E2E-%');
-       DELETE FROM product_stock WHERE product_id IN (SELECT id FROM products WHERE sku LIKE 'E2E-%');
-       DELETE FROM products WHERE sku LIKE 'E2E-%';
-       DELETE FROM warehouses WHERE code = 'E2E_WH';
-       DELETE FROM customers WHERE code LIKE 'E2E-%';
-       UPDATE document_series SET next_number = 1 WHERE kind IN ('invoice','credit_note','purchase_order','goods_receipt','journal_entry');`,
-    );
+    await dataSource.query(`
+      DELETE FROM invoice_items;
+      DELETE FROM payments;
+      DELETE FROM invoices;
+      DELETE FROM sales_order_items;
+      DELETE FROM sales_orders;
+      DELETE FROM crm_activities;
+      DELETE FROM crm_opportunities;
+      DELETE FROM crm_leads;
+      DELETE FROM crm_contacts;
+      DELETE FROM customers;
+      DELETE FROM goods_receipt_items;
+      DELETE FROM goods_receipts;
+      DELETE FROM purchase_order_items;
+      DELETE FROM purchase_orders;
+      DELETE FROM suppliers;
+      DELETE FROM production_order_lines;
+      DELETE FROM production_orders;
+      DELETE FROM production_bom_lines;
+      DELETE FROM production_boms;
+      DELETE FROM stock_movements;
+      DELETE FROM product_stock;
+      DELETE FROM products;
+      DELETE FROM warehouse_locations;
+      DELETE FROM warehouses;
+      DELETE FROM hr_attendance;
+      DELETE FROM hr_leaves;
+      DELETE FROM hr_payroll_lines;
+      DELETE FROM hr_payrolls;
+      DELETE FROM hr_employees;
+      DELETE FROM hr_departments;
+      DELETE FROM journal_entry_lines;
+      DELETE FROM journal_entries;
+      UPDATE document_series SET next_number = 1;
+    `);
     await dataSource.destroy();
     await seed();
 
