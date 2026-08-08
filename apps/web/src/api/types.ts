@@ -39,6 +39,8 @@ export interface AuthResult {
 export interface Category {
   id: string;
   name: string;
+  parentId: string | null;
+  active: boolean;
 }
 
 export interface Product {
@@ -61,6 +63,16 @@ export interface Warehouse {
   id: string;
   code: string;
   name: string;
+  address: string | null;
+  active: boolean;
+}
+
+export interface WarehouseLocation {
+  id: string;
+  warehouseId: string;
+  code: string;
+  name: string;
+  active: boolean;
 }
 
 export interface ProductStock {

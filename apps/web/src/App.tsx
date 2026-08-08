@@ -16,6 +16,7 @@ import { PurchaseOrdersPage } from './pages/PurchaseOrdersPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { StockPage } from './pages/StockPage';
 import { SuppliersPage } from './pages/SuppliersPage';
+import { WarehousesCategoriesPage } from './pages/WarehousesCategoriesPage';
 import { SalesOrdersPage } from './pages/SalesOrdersPage';
 
 function ProtectedLayout() {
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/stock" element={<StockPage />} />
+        <Route path="/warehouses" element={<WarehousesCategoriesPage />} />
         <Route path="/invoices" element={<InvoicesPage />} />
         <Route path="/customers" element={<CustomersPage />} />
         <Route path="/orders" element={<SalesOrdersPage />} />
