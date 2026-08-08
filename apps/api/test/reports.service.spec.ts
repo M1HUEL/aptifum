@@ -126,3 +126,43 @@ describe('ReportsService inventoryValuation aggregation', () => {
     expect(result.data[0].value).toBe(100);
   });
 });
+
+describe('ReportsService payrollSummary aggregation', () => {
+  it('groups payrolls by period and sums money', async () => {
+    const query = vi.fn().mockResolvedValue([
+      {
+        period: '2026-08',
+        payrolls: '2',
+        total_gross: '2300.00',
+        total_deductions: '120.00',
+        total_net: '2180.00',
+      },
+      {
+        period: '2026-07',
+        payrolls: '1',
+        total_gross: '1150.00',
+        total_deductions: '60.00',
+        total_net: '1090.00',
+      },
+    ]);
+    const service = buildService(query);
+    const result = await service.payrollSummary(TENANT, {});
+    expect(result.data).toHaveLength(2);
+    expect(result.data[0]).toMatchObject({
+      period: '2026-08',
+      payrolls: 2,
+      totalGross: 2300,
+      totalDeductions: 120,
+      totalNet: 2180,
+    });
+    expect(result.totals).toEqual({
+      payrolls: 3,
+      totalGross: 3450,
+      totalDeductions: 180,
+      totalNet: 3270,
+    });
+    const sql = query.mock.calls[0][0] as string;
+    expect(sql).toContain('GROUP BY hp.period');
+    expect(sql).toContain('ORDER BY hp.period');
+  });
+});

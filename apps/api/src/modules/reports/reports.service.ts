@@ -570,6 +570,51 @@ export class ReportsService {
     };
   }
 
+  async payrollSummary(tenantId: string | null, opts: { from?: string; to?: string }) {
+    this.assertTenant(tenantId);
+    const params: unknown[] = [tenantId];
+    const where = ['hp.tenant_id = $1', 'hp.deleted_at IS NULL'];
+    const dateClause = this.buildDateClause('hp.period', opts, params);
+    if (dateClause) {
+      where.push(dateClause);
+    }
+    const rows: Array<{
+      period: string;
+      payrolls: number;
+      total_gross: number;
+      total_deductions: number;
+      total_net: number;
+    }> = await this.dataSource.query(
+      `SELECT hp.period,
+              COUNT(*) AS payrolls,
+              SUM(hp.total_gross) AS total_gross,
+              SUM(hp.total_deductions) AS total_deductions,
+              SUM(hp.total_net) AS total_net
+         FROM hr_payrolls hp
+        WHERE ${where.join(' AND ')}
+        GROUP BY hp.period
+        ORDER BY hp.period`,
+      params,
+    );
+    const data = rows.map((row) => ({
+      period: row.period,
+      payrolls: Number(row.payrolls),
+      totalGross: round2(Number(row.total_gross)),
+      totalDeductions: round2(Number(row.total_deductions)),
+      totalNet: round2(Number(row.total_net)),
+    }));
+    const totals = data.reduce(
+      (acc, row) => ({
+        payrolls: acc.payrolls + row.payrolls,
+        totalGross: round2(acc.totalGross + row.totalGross),
+        totalDeductions: round2(acc.totalDeductions + row.totalDeductions),
+        totalNet: round2(acc.totalNet + row.totalNet),
+      }),
+      { payrolls: 0, totalGross: 0, totalDeductions: 0, totalNet: 0 },
+    );
+    return { data, totals };
+  }
+
   async dashboard(tenantId: string | null) {
     this.assertTenant(tenantId);
     const today = this.today();
