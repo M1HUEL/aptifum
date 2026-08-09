@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.env
+**/.env
+.git
+apps/web/test-results
+apps/web/playwright-report
+apps/web/playwright/.cache
+coverage
+*.log

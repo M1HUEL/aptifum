@@ -1,0 +1,67 @@
+name: aptifum
+
+# Copy .env.production.example to .env and fill in the secrets, then:
+#   docker compose up --build -d
+# Web:   http://localhost:8080
+# API:   http://localhost:8080/api/v1  (Swagger: http://localhost:8080/docs)
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-aptifum}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-aptifum_dev_pw}
+      POSTGRES_DB: ${DB_NAME:-aptifum}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Uncomment to reach the database from the host (e.g. DBeaver):
+    # ports:
+    #   - "5432:5432"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER:-aptifum}
+      DB_PASSWORD: ${DB_PASSWORD:-aptifum_dev_pw}
+      DB_NAME: ${DB_NAME:-aptifum}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?Set JWT_ACCESS_SECRET in .env (min 16 chars)}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET in .env (min 16 chars)}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-7d}
+      MAX_ACTIVE_SESSIONS_PER_USER: ${MAX_ACTIVE_SESSIONS_PER_USER:-5}
+      SESSION_RETENTION_DAYS: ${SESSION_RETENTION_DAYS:-30}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

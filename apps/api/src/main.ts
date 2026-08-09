@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { json, urlencoded } from 'express';
+import { json, urlencoded, Request, Response } from 'express';
 import helmet from 'helmet';
 import { getEnv } from '@aptifum/config';
 import { createLogger, LoggerAdapter } from '@aptifum/logger';
@@ -29,6 +29,9 @@ async function bootstrap(): Promise<void> {
     new ValidationPipe({ whitelist: true, transform: true }),
   );
   app.useGlobalFilters(new ApiExceptionFilter());
+  app.getHttpAdapter().get('/healthz', (_req: Request, res: Response) => {
+    res.status(200).json({ status: 'ok' });
+  });
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Aptifum ERP API')
