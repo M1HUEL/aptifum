@@ -16,6 +16,22 @@ export interface Paginated<T> {
   meta: PaginationMeta;
 }
 
+export type AuditAction = 'create' | 'update' | 'delete' | 'login';
+
+export interface AuditLogEntry {
+  id: string;
+  userId: string | null;
+  module: string;
+  entity: string;
+  entityId: string | null;
+  action: AuditAction;
+  before: unknown;
+  after: unknown;
+  requestId: string | null;
+  ip: string | null;
+  createdAt: string;
+}
+
 export interface RoleWithPermissions {
   name: string;
   permissions: string[];

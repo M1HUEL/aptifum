@@ -6,9 +6,10 @@ import * as bcrypt from 'bcryptjs';
 import ms from 'ms';
 import type { StringValue } from 'ms';
 import { In, IsNull, LessThan, Repository } from 'typeorm';
-import { RoleName, UserProfile } from '@aptifum/core';
+import { AuditAction, RoleName, UserProfile } from '@aptifum/core';
 import { DEFAULT_TENANT_ID, RefreshSession } from '@aptifum/database';
 import { ConfigService } from '../../config/config.module';
+import { AuditService } from '../audit/audit.service';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
@@ -27,6 +28,7 @@ export interface AuthResult extends TokenPair {
 export interface RequestContext {
   ip?: string;
   userAgent?: string;
+  requestId?: string;
 }
 
 interface AccessTokenPayload {
@@ -45,6 +47,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly auditService: AuditService,
     @InjectRepository(RefreshSession)
     private readonly sessionsRepo: Repository<RefreshSession>,
   ) {}
@@ -57,6 +60,7 @@ export class AuthService {
       tenantId: DEFAULT_TENANT_ID,
       roleName: RoleName.SELLER,
     });
+    await this.recordAuth(AuditAction.LOGIN, 'register', user.id, user.tenantId, ctx);
     return this.issueTokens(user.id, user.email, user.tenantId, ctx);
   }
 
@@ -69,6 +73,14 @@ export class AuthService {
     if (!matches) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    await this.recordAuth(
+      AuditAction.LOGIN,
+      'login',
+      user.id,
+      user.defaultTenantId,
+      ctx,
+      { email: user.email },
+    );
     return this.issueTokens(user.id, user.email, user.defaultTenantId, ctx);
   }
 
@@ -107,13 +119,20 @@ export class AuthService {
     return { accessToken, refreshToken, user };
   }
 
-  async logout(dto: LogoutDto): Promise<{ success: boolean }> {
+  async logout(dto: LogoutDto, ctx?: RequestContext): Promise<{ success: boolean }> {
     try {
       const payload = await this.verifyRefreshToken(dto.refreshToken);
       const session = await this.sessionsRepo.findOneBy({ id: payload.jti });
       if (session && !session.revokedAt) {
         await this.revokeFamily(session.familyId);
       }
+      await this.recordAuth(
+        AuditAction.LOGIN,
+        'logout',
+        payload.sub,
+        payload.tenantId,
+        ctx,
+      );
     } catch {
       // idempotent: invalid or already-revoked tokens are ignored
     }
@@ -122,6 +141,27 @@ export class AuthService {
 
   async me(userId: string): Promise<UserProfile> {
     return this.usersService.getProfile(userId);
+  }
+
+  private async recordAuth(
+    action: AuditAction,
+    entity: string,
+    userId: string,
+    tenantId: string | null,
+    ctx?: RequestContext,
+    after?: unknown,
+  ): Promise<void> {
+    await this.auditService.record({
+      tenantId,
+      userId,
+      module: 'auth',
+      entity,
+      entityId: null,
+      action,
+      after,
+      requestId: ctx?.requestId ?? null,
+      ip: ctx?.ip ?? null,
+    });
   }
 
   private async issueTokens(

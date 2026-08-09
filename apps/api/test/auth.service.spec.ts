@@ -40,10 +40,15 @@ function buildAuthService() {
     delete: vi.fn(async () => ({ affected: 0 })),
   };
 
+  const auditService = {
+    record: vi.fn(async () => undefined),
+  };
+
   const service = new AuthService(
     usersService as unknown as UsersService,
     jwtService as unknown as JwtService,
     config as unknown as ConfigService,
+    auditService as never,
     sessionsRepo as never,
   );
 

@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { LoadingBlock } from './components/ui';
 import { AccountingPage } from './pages/AccountingPage';
 import { AttendanceLeavesPage } from './pages/AttendanceLeavesPage';
+import { AuditPage } from './pages/AuditPage';
 import { ChartAccountsPage } from './pages/ChartAccountsPage';
 import { CustomersPage } from './pages/CustomersPage';
 import { CrmPage } from './pages/CrmPage';
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="/production" element={<ProductionPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/users-roles" element={<UsersRolesPage />} />
+        <Route path="/audit" element={<AuditPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>

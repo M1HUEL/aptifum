@@ -17,6 +17,9 @@ export class AuditInterceptor implements NestInterceptor {
     if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
       return next.handle();
     }
+    if (moduleFromPath(request.path) === 'auth') {
+      return next.handle();
+    }
     return next.handle().pipe(
       mergeMap(async (response) => {
         await this.auditService.record({
@@ -26,7 +29,7 @@ export class AuditInterceptor implements NestInterceptor {
           entity: entityFromPath(request.path),
           entityId: entityIdFromPath(request.path),
           action: actionForMethod(request.method),
-          after: request.body,
+          after: sanitizeBody(request.body),
           requestId: request.requestId,
           ip: request.ip ?? null,
         });
@@ -34,6 +37,22 @@ export class AuditInterceptor implements NestInterceptor {
       }),
     );
   }
+}
+
+const SENSITIVE_KEYS = ['password', 'passwordhash', 'refreshToken', 'accesstoken', 'token'];
+
+function sanitizeBody(body: unknown): unknown {
+  if (Array.isArray(body)) {
+    return body.map((item) => sanitizeBody(item));
+  }
+  if (body && typeof body === 'object') {
+    return Object.fromEntries(
+      Object.entries(body as Record<string, unknown>)
+        .filter(([key]) => !SENSITIVE_KEYS.includes(key.toLowerCase()))
+        .map(([key, value]) => [key, sanitizeBody(value)]),
+    );
+  }
+  return body;
 }
 
 function segmentsOf(path: string): string[] {

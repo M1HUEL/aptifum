@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshSession } from '@aptifum/database';
 import { RbacModule } from '../rbac/rbac.module';
 import { UsersModule } from '../users/users.module';
+import { AuditModule } from '../audit/audit.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { SessionCleanupService } from './session-cleanup.service';
@@ -17,6 +18,7 @@ import { PermissionsGuard } from '../rbac/guards/permissions.guard';
     TypeOrmModule.forFeature([RefreshSession]),
     UsersModule,
     RbacModule,
+    AuditModule,
   ],
   controllers: [AuthController],
   providers: [
