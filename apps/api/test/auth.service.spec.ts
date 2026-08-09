@@ -11,6 +11,8 @@ function buildAuthService() {
   const usersService = {
     findByEmailWithPassword: vi.fn<(email: string) => Promise<User | null>>(),
     getProfile: vi.fn<(id: string) => Promise<UserProfile>>(),
+    updateName: vi.fn<(id: string, name: string) => Promise<UserProfile>>(),
+    changePassword: vi.fn<(id: string, current: string, next: string) => Promise<void>>(),
   };
   const jwtService = {
     signAsync: vi.fn(async () => 'signed-token'),
@@ -52,7 +54,7 @@ function buildAuthService() {
     sessionsRepo as never,
   );
 
-  return { service, usersService, jwtService, sessionsRepo };
+  return { service, usersService, jwtService, sessionsRepo, auditService };
 }
 
 describe('AuthService', () => {
@@ -168,6 +170,71 @@ describe('AuthService', () => {
     expect(sessionsRepo.update).toHaveBeenCalledWith(
       { id: In(['s1']) },
       { revokedAt: expect.any(Date) },
+    );
+  });
+
+  it('updates the profile name and records the change in the audit log', async () => {
+    const { service, usersService, auditService } = buildAuthService();
+    usersService.updateName.mockResolvedValue({
+      id: 'u1',
+      email: 'user@aptifum.dev',
+      name: 'New Name',
+      active: true,
+      tenantId: 't1',
+      roles: [],
+    });
+    usersService.getProfile.mockResolvedValue({
+      id: 'u1',
+      email: 'user@aptifum.dev',
+      name: 'New Name',
+      active: true,
+      tenantId: 't1',
+      roles: [],
+    });
+
+    const result = await service.updateProfile('u1', { name: 'New Name' });
+
+    expect(usersService.updateName).toHaveBeenCalledWith('u1', 'New Name');
+    expect(result.name).toBe('New Name');
+    expect(auditService.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'u1',
+        entity: 'profile',
+        action: 'update',
+        after: { name: 'New Name', passwordChanged: false },
+      }),
+    );
+  });
+
+  it('rejects a password change without the current password', async () => {
+    const { service } = buildAuthService();
+
+    await expect(
+      service.updateProfile('u1', { newPassword: 'new-secret-pass' }),
+    ).rejects.toThrow('Current password is required');
+  });
+
+  it('changes the password when the current password matches', async () => {
+    const { service, usersService } = buildAuthService();
+    usersService.changePassword.mockResolvedValue(undefined);
+    usersService.getProfile.mockResolvedValue({
+      id: 'u1',
+      email: 'user@aptifum.dev',
+      name: null,
+      active: true,
+      tenantId: 't1',
+      roles: [],
+    });
+
+    await service.updateProfile('u1', {
+      currentPassword: 'correct-horse',
+      newPassword: 'new-secret-pass',
+    });
+
+    expect(usersService.changePassword).toHaveBeenCalledWith(
+      'u1',
+      'correct-horse',
+      'new-secret-pass',
     );
   });
 });

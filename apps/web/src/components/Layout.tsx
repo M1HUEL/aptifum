@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth, usePermission } from '../auth/AuthContext';
 
-const NAV_ITEMS = [
+const NAV_ITEMS: Array<{ to: string; label: string; permission?: string }> = [
   { to: '/dashboard', label: 'Dashboard', permission: 'reporting:read' },
   { to: '/products', label: 'Products', permission: 'inventory:read' },
   { to: '/stock', label: 'Stock', permission: 'inventory:read' },
@@ -20,12 +20,13 @@ const NAV_ITEMS = [
   { to: '/reports', label: 'Reports', permission: 'reporting:read' },
   { to: '/users-roles', label: 'Users & roles', permission: 'users:read' },
   { to: '/audit', label: 'Audit', permission: 'audit:read' },
+  { to: '/profile', label: 'My profile' },
 ];
 
 export function Layout() {
   const { user, logout } = useAuth();
   const can = usePermission();
-  const visibleItems = NAV_ITEMS.filter((item) => can(item.permission));
+  const visibleItems = NAV_ITEMS.filter((item) => !item.permission || can(item.permission));
 
   return (
     <div className="app-shell">

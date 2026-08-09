@@ -26,6 +26,7 @@ const InvoicesPage = lazyPage(() => import('./pages/InvoicesPage'), 'InvoicesPag
 const LoginPage = lazyPage(() => import('./pages/LoginPage'), 'LoginPage');
 const ProductsPage = lazyPage(() => import('./pages/ProductsPage'), 'ProductsPage');
 const ProductionPage = lazyPage(() => import('./pages/ProductionPage'), 'ProductionPage');
+const ProfilePage = lazyPage(() => import('./pages/ProfilePage'), 'ProfilePage');
 const PurchaseOrdersPage = lazyPage(
   () => import('./pages/PurchaseOrdersPage'),
   'PurchaseOrdersPage',
@@ -74,9 +75,10 @@ export default function App() {
           <Route path="/crm" element={<CrmPage />} />
           <Route path="/production" element={<ProductionPage />} />
           <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/users-roles" element={<UsersRolesPage />} />
-          <Route path="/audit" element={<AuditPage />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/users-roles" element={<UsersRolesPage />} />
+        <Route path="/audit" element={<AuditPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>
     </Suspense>

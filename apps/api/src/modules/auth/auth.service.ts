@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomUUID } from 'node:crypto';
@@ -15,6 +19,7 @@ import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 export interface TokenPair {
   accessToken: string;
@@ -141,6 +146,38 @@ export class AuthService {
 
   async me(userId: string): Promise<UserProfile> {
     return this.usersService.getProfile(userId);
+  }
+
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+    ctx?: RequestContext,
+  ): Promise<UserProfile> {
+    if (dto.name !== undefined && dto.name.trim()) {
+      await this.usersService.updateName(userId, dto.name.trim());
+    }
+    if (dto.newPassword) {
+      if (!dto.currentPassword) {
+        throw new BadRequestException('Current password is required');
+      }
+      await this.usersService.changePassword(userId, dto.currentPassword, dto.newPassword);
+    }
+    const profile = await this.usersService.getProfile(userId);
+    await this.auditService.record({
+      tenantId: profile.tenantId,
+      userId,
+      module: 'auth',
+      entity: 'profile',
+      entityId: null,
+      action: AuditAction.UPDATE,
+      after: {
+        ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
+        passwordChanged: Boolean(dto.newPassword),
+      },
+      requestId: ctx?.requestId ?? null,
+      ip: ctx?.ip ?? null,
+    });
+    return profile;
   }
 
   private async recordAuth(

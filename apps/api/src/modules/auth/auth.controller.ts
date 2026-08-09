@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Ip, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Ip, Patch, Post, Req } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
@@ -10,6 +10,7 @@ import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -70,6 +71,17 @@ export class AuthController {
   @ApiOperation({ summary: 'Current user profile' })
   me(@CurrentUser() user: AuthUser) {
     return this.authService.me(user.id);
+  }
+
+  @Patch('me')
+  @ApiOperation({ summary: 'Update own profile (name, password)' })
+  updateMe(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateProfileDto,
+    @Ip() ip?: string,
+    @Req() req?: Request,
+  ) {
+    return this.authService.updateProfile(user.id, dto, this.context(ip, undefined, req));
   }
 
   private context(ip?: string, userAgent?: string, req?: Request): RequestContext {

@@ -15,6 +15,7 @@ interface AuthContextValue {
   initializing: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -73,9 +74,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    const me = await apiFetch<UserProfile>('/api/v1/auth/me');
+    setUser(me);
+  }, []);
+
   const value = useMemo(
-    () => ({ user, initializing, login, logout }),
-    [user, initializing, login, logout],
+    () => ({ user, initializing, login, logout, refreshProfile }),
+    [user, initializing, login, logout, refreshProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
