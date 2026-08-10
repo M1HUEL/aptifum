@@ -48,9 +48,10 @@ interface UserForm {
   password: string;
   active: boolean;
   roleIds: string[];
+  invite: boolean;
 }
 
-const emptyUser: UserForm = { email: '', name: '', password: '', active: true, roleIds: [] };
+const emptyUser: UserForm = { email: '', name: '', password: '', active: true, roleIds: [], invite: false };
 
 interface RoleForm {
   name: string;
@@ -78,6 +79,7 @@ export function UsersRolesPage() {
   const [userForm, setUserForm] = useState<UserForm>(emptyUser);
   const [userFormError, setUserFormError] = useState<string | null>(null);
   const [userSaving, setUserSaving] = useState(false);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
 
   const [roleOpen, setRoleOpen] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
@@ -126,6 +128,7 @@ export function UsersRolesPage() {
     setEditingUserId(null);
     setUserForm(emptyUser);
     setUserFormError(null);
+    setInviteLink(null);
     setUserOpen(true);
   };
 
@@ -137,6 +140,7 @@ export function UsersRolesPage() {
       password: '',
       active: user.active,
       roleIds: user.roles.map((role) => role.id),
+      invite: false,
     });
     setUserFormError(null);
     setUserOpen(true);
@@ -157,7 +161,7 @@ export function UsersRolesPage() {
       setUserFormError('Email is required.');
       return;
     }
-    if (!editingUserId && userForm.password.length < 8) {
+    if (!editingUserId && !userForm.invite && userForm.password.length < 8) {
       setUserFormError('Password must be at least 8 characters.');
       return;
     }
@@ -176,6 +180,22 @@ export function UsersRolesPage() {
           }),
         });
         toast.toast('User updated.');
+      } else if (userForm.invite) {
+        const result = await apiFetch<{ user: User; inviteToken: string }>('/api/v1/auth/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: userForm.email.trim(),
+            name: userForm.name.trim() || undefined,
+            roleIds: userForm.roleIds,
+          }),
+        });
+        setInviteLink(
+          `${window.location.origin}/accept-invite?token=${encodeURIComponent(result.inviteToken)}`,
+        );
+        setUserOpen(false);
+        void loadUsers(userPage);
+        return;
       } else {
         await apiFetch('/api/v1/users', {
           method: 'POST',
@@ -468,11 +488,27 @@ export function UsersRolesPage() {
                 onChange={(event) => setUserForm((current) => ({ ...current, name: event.target.value }))}
               />
             </Field>
-            <Field label={editingUserId ? 'New password (optional)' : 'Password'} htmlFor="usr-password" required={!editingUserId}>
+            {!editingUserId ? (
+              <Field label="Invitation">
+                <Checkbox
+                  label="Invite by email (no password)"
+                  checked={userForm.invite}
+                  onChange={(event) =>
+                    setUserForm((current) => ({ ...current, invite: event.target.checked }))
+                  }
+                />
+              </Field>
+            ) : null}
+            <Field
+              label={editingUserId ? 'New password (optional)' : 'Password'}
+              htmlFor="usr-password"
+              required={!editingUserId && !userForm.invite}
+            >
               <TextInput
                 id="usr-password"
                 type="password"
-                placeholder={editingUserId ? 'Leave blank to keep' : ''}
+                placeholder={editingUserId ? 'Leave blank to keep' : userForm.invite ? 'Set by invite' : ''}
+                disabled={userForm.invite}
                 value={userForm.password}
                 onChange={(event) => setUserForm((current) => ({ ...current, password: event.target.value }))}
               />
@@ -511,6 +547,35 @@ export function UsersRolesPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        open={inviteLink !== null}
+        title="Invitation sent"
+        onClose={() => setInviteLink(null)}
+      >
+        <div className="success-banner">
+          Demo mode has no email server, so share the invite link below with{' '}
+          {userForm.email || 'the user'}:
+        </div>
+        <TextInput readOnly value={inviteLink ?? ''} />
+        <div className="modal-footer">
+          <Button variant="ghost" onClick={() => setInviteLink(null)}>
+            Close
+          </Button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              if (inviteLink) {
+                void navigator.clipboard?.writeText(inviteLink);
+                toast.toast('Invite link copied.');
+              }
+            }}
+          >
+            Copy link
+          </button>
+        </div>
       </Modal>
 
       <Modal

@@ -16,6 +16,7 @@ import { ConfigService } from '../../config/config.module';
 import { AuditService } from '../audit/audit.service';
 import { UsersService } from '../users/users.service';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
+import { AcceptInviteDto } from './dto/accept-invite.dto';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { RefreshDto } from './dto/refresh.dto';
@@ -47,9 +48,9 @@ interface RefreshTokenPayload extends AccessTokenPayload {
   jti: string;
 }
 
-interface PasswordResetTokenPayload {
+interface SignedTokenPayload {
   sub: string;
-  type: 'password_reset';
+  type: 'password_reset' | 'invite';
   jti: string;
 }
 
@@ -163,7 +164,7 @@ export class AuthService {
     if (!user || !user.active) {
       return { sent: true, resetToken: null };
     }
-    const payload: PasswordResetTokenPayload = { sub: user.id, type: 'password_reset', jti: randomUUID() };
+    const payload: SignedTokenPayload = { sub: user.id, type: 'password_reset', jti: randomUUID() };
     const resetToken = await this.jwtService.signAsync(payload, {
       secret: this.config.env.JWT_ACCESS_SECRET,
       expiresIn: this.config.env.PASSWORD_RESET_TTL as StringValue,
@@ -195,6 +196,55 @@ export class AuthService {
     await this.recordAuth(
       AuditAction.UPDATE,
       'password-reset',
+      user.id,
+      user.tenantId,
+      ctx,
+    );
+    return { success: true };
+  }
+
+  async inviteUser(
+    input: { email: string; name?: string; roleIds?: string[] },
+    ctx?: RequestContext,
+  ): Promise<{ user: UserProfile; inviteToken: string }> {
+    const user = await this.usersService.create({
+      email: input.email,
+      name: input.name,
+      roleIds: input.roleIds,
+      tenantId: DEFAULT_TENANT_ID,
+    });
+    const payload: SignedTokenPayload = { sub: user.id, type: 'invite', jti: randomUUID() };
+    const inviteToken = await this.jwtService.signAsync(payload, {
+      secret: this.config.env.JWT_ACCESS_SECRET,
+      expiresIn: this.config.env.INVITE_TTL as StringValue,
+    });
+    await this.recordAuth(
+      AuditAction.UPDATE,
+      'user-invite',
+      user.id,
+      user.tenantId,
+      ctx,
+    );
+    return { user, inviteToken };
+  }
+
+  async acceptInvite(
+    dto: AcceptInviteDto,
+    ctx?: RequestContext,
+  ): Promise<{ success: boolean }> {
+    const payload = await this.verifySignedToken(dto.token, 'invite');
+    const user = await this.usersService.getProfile(payload.sub).catch(() => null);
+    if (!user || !user.active) {
+      throw new BadRequestException('Invalid or expired invite token');
+    }
+    await this.usersService.setPassword(user.id, dto.newPassword);
+    await this.sessionsRepo.update(
+      { userId: user.id, revokedAt: IsNull() },
+      { revokedAt: new Date() },
+    );
+    await this.recordAuth(
+      AuditAction.UPDATE,
+      'invite-accepted',
       user.id,
       user.tenantId,
       ctx,
@@ -337,18 +387,25 @@ export class AuthService {
     }
   }
 
-  private async verifyPasswordResetToken(token: string): Promise<PasswordResetTokenPayload> {
+  private async verifySignedToken(
+    token: string,
+    type: SignedTokenPayload['type'],
+  ): Promise<SignedTokenPayload> {
     try {
-      const payload = await this.jwtService.verifyAsync<PasswordResetTokenPayload>(token, {
+      const payload = await this.jwtService.verifyAsync<SignedTokenPayload>(token, {
         secret: this.config.env.JWT_ACCESS_SECRET,
       });
-      if (payload.type !== 'password_reset' || !payload.jti) {
-        throw new BadRequestException('Invalid or expired reset token');
+      if (payload.type !== type || !payload.jti) {
+        throw new BadRequestException('Invalid or expired token');
       }
       return payload;
     } catch {
-      throw new BadRequestException('Invalid or expired reset token');
+      throw new BadRequestException('Invalid or expired token');
     }
+  }
+
+  private verifyPasswordResetToken(token: string): Promise<SignedTokenPayload> {
+    return this.verifySignedToken(token, 'password_reset');
   }
 
   private async revokeFamily(familyId: string): Promise<void> {

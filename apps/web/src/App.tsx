@@ -12,6 +12,10 @@ function lazyPage<T extends Record<string, ComponentType>>(
 }
 
 const AccountingPage = lazyPage(() => import('./pages/AccountingPage'), 'AccountingPage');
+const AcceptInvitePage = lazyPage(
+  () => import('./pages/AcceptInvitePage'),
+  'AcceptInvitePage',
+);
 const AttendanceLeavesPage = lazyPage(
   () => import('./pages/AttendanceLeavesPage'),
   'AttendanceLeavesPage',
@@ -67,6 +71,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/accept-invite" element={<AcceptInvitePage />} />
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />

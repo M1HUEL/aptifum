@@ -6,12 +6,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'node:crypto';
 import { In, Repository } from 'typeorm';
 import { Role, User } from '@aptifum/database';
 
 export interface CreateUserInput {
   email: string;
-  password: string;
+  password?: string;
   name?: string;
   active?: boolean;
   tenantId?: string;
@@ -38,7 +39,7 @@ export class UsersService {
     if (existing) {
       throw new ConflictException('Email already registered');
     }
-    const passwordHash = await bcrypt.hash(input.password, 10);
+    const passwordHash = await bcrypt.hash(input.password ?? randomUUID(), 10);
     const user = this.usersRepo.create({
       email: input.email,
       passwordHash,

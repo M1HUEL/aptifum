@@ -59,6 +59,10 @@ The seeded admin login is `admin@aptifum.dev` / `Admin123!`. Change it before an
 
 `pnpm db:seed:demo` seeds 2 warehouses, 4 categories, 13 products with initial stock, 5 customers, 4 suppliers, 3 departments and 5 employees. It is idempotent and requires the base seed (tenant) to have run first.
 
+### User invitations
+
+Admins can invite users by email from **Users & Roles**. There is no email server in the demo, so the invite endpoint returns the acceptance token and the dashboard shows a copyable link (`/accept-invite?token=...`) that the invited user opens to set their password.
+
 ## Scripts
 
 | Script | Description |
@@ -88,6 +92,7 @@ The seeded admin login is `admin@aptifum.dev` / `Admin123!`. Change it before an
 | `MAX_ACTIVE_SESSIONS_PER_USER` | `5` | Active sessions per user |
 | `SESSION_RETENTION_DAYS` | `30` | Days expired sessions are kept |
 | `PASSWORD_RESET_TTL` | `15m` | Password reset token lifetime |
+| `INVITE_TTL` | `72h` | User invitation token lifetime |
 
 ## Testing
 

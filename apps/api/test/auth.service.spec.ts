@@ -11,6 +11,7 @@ function buildAuthService(
   jwtOverrides: Partial<{ signAsync: unknown; verifyAsync: unknown }> = {},
 ) {
   const usersService = {
+    create: vi.fn<(input: Record<string, unknown>) => Promise<UserProfile>>(),
     findByEmailWithPassword: vi.fn<(email: string) => Promise<User | null>>(),
     findByEmail: vi.fn<(email: string) => Promise<User | null>>(),
     getProfile: vi.fn<(id: string) => Promise<UserProfile>>(),
@@ -30,6 +31,7 @@ function buildAuthService(
       JWT_ACCESS_TTL: '15m',
       JWT_REFRESH_TTL: '7d',
       PASSWORD_RESET_TTL: '15m',
+      INVITE_TTL: '72h',
       MAX_ACTIVE_SESSIONS_PER_USER: 5,
       SESSION_RETENTION_DAYS: 30,
     },
@@ -305,6 +307,72 @@ describe('AuthService', () => {
 
     await expect(
       service.resetPassword({ token: 'bad-token', newPassword: 'new-secret-pass' }),
-    ).rejects.toThrow('Invalid or expired reset token');
+    ).rejects.toThrow('Invalid or expired token');
+  });
+
+  it('invites a user without a password and returns an invite token', async () => {
+    const { service, usersService, jwtService, auditService } = buildAuthService();
+    usersService.create.mockResolvedValue({
+      id: 'u-invited',
+      email: 'invited@aptifum.dev',
+      name: null,
+      active: true,
+      tenantId: 't1',
+      roles: [],
+    } as UserProfile);
+
+    const result = await service.inviteUser({ email: 'invited@aptifum.dev' });
+
+    expect(result.inviteToken).toBe('signed-token');
+    expect(usersService.create).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'invited@aptifum.dev' }),
+    );
+    expect(usersService.create).toHaveBeenCalledWith(
+      expect.not.objectContaining({ password: expect.anything() }),
+    );
+    expect(jwtService.signAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ sub: 'u-invited', type: 'invite' }),
+      expect.objectContaining({ expiresIn: '72h' }),
+    );
+    expect(auditService.record).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'u-invited', entity: 'user-invite', action: 'update' }),
+    );
+  });
+
+  it('accepts an invite, sets the password and revokes active sessions', async () => {
+    const { service, usersService, sessionsRepo } = buildAuthService({
+      verifyAsync: vi.fn(async () => ({ sub: 'u1', type: 'invite', jti: 'invite-1' })),
+    });
+    usersService.getProfile.mockResolvedValue({
+      id: 'u1',
+      email: 'invited@aptifum.dev',
+      name: null,
+      active: true,
+      tenantId: 't1',
+      roles: [],
+    });
+    usersService.setPassword.mockResolvedValue(undefined);
+
+    const result = await service.acceptInvite({
+      token: 'valid-invite-token',
+      newPassword: 'new-secret-pass',
+    });
+
+    expect(result).toEqual({ success: true });
+    expect(usersService.setPassword).toHaveBeenCalledWith('u1', 'new-secret-pass');
+    expect(sessionsRepo.update).toHaveBeenCalledWith(
+      { userId: 'u1', revokedAt: expect.anything() },
+      { revokedAt: expect.any(Date) },
+    );
+  });
+
+  it('rejects an invite token of the wrong type', async () => {
+    const { service } = buildAuthService({
+      verifyAsync: vi.fn(async () => ({ sub: 'u1', type: 'password_reset', jti: 'x' })),
+    });
+
+    await expect(
+      service.acceptInvite({ token: 'bad-token', newPassword: 'new-secret-pass' }),
+    ).rejects.toThrow('Invalid or expired token');
   });
 });

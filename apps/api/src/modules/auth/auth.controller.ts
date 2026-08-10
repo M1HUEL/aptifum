@@ -2,13 +2,16 @@ import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Ip, Patch, Post, 
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
-import { AuthUser } from '@aptifum/core';
+import { AuthUser, ModuleName, permission } from '@aptifum/core';
 import { AuthService, RequestContext } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
+import { AcceptInviteDto } from './dto/accept-invite.dto';
+import { InviteUserDto } from './dto/invite-user.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -92,6 +95,36 @@ export class AuthController {
     @Req() req?: Request,
   ) {
     return this.authService.resetPassword(dto, this.context(ip, undefined, req));
+  }
+
+  @Post('invite')
+  @RequirePermissions(permission(ModuleName.USERS, 'write'))
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Invite a user by email (demo: returns the invite token)' })
+  invite(
+    @Body() dto: InviteUserDto,
+    @Ip() ip?: string,
+    @Headers('user-agent') userAgent?: string,
+    @Req() req?: Request,
+  ) {
+    return this.authService.inviteUser(
+      { email: dto.email, name: dto.name, roleIds: dto.roleIds },
+      this.context(ip, userAgent, req),
+    );
+  }
+
+  @Post('accept-invite')
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Set a password and activate a user from an invite token' })
+  acceptInvite(
+    @Body() dto: AcceptInviteDto,
+    @Ip() ip?: string,
+    @Req() req?: Request,
+  ) {
+    return this.authService.acceptInvite(dto, this.context(ip, undefined, req));
   }
 
   @Get('me')
