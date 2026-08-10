@@ -603,6 +603,11 @@ select:focus {
   margin: 8px 0 0;
 }
 
+.detail-section-title {
+  margin: 16px 0 8px;
+  font-size: 14px;
+}
+
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;

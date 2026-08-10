@@ -156,12 +156,38 @@ export interface Customer {
 export type InvoiceType = 'invoice' | 'credit_note';
 export type InvoiceStatus = 'draft' | 'issued' | 'cancelled';
 
+export interface InvoiceItem {
+  id: string;
+  productId: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  taxRate: number;
+  taxAmount: number;
+  lineTotal: number;
+  product?: Product;
+}
+
+export interface Payment {
+  id: string;
+  invoiceId: string;
+  method: string;
+  amount: number;
+  receivedAt: string;
+  reference: string | null;
+  notes: string | null;
+}
+
 export interface Invoice {
   id: string;
   number: string;
   type: InvoiceType;
   status: InvoiceStatus;
   customerId: string;
+  seriesId: string;
+  orderId: string | null;
+  warehouseId: string | null;
   issueDate: string;
   dueDate: string | null;
   currency: string;
@@ -172,7 +198,11 @@ export interface Invoice {
   paidAmount: number;
   balanceDue: number;
   notes: string | null;
+  version: number;
+  createdAt: string;
   customer: Customer;
+  items?: InvoiceItem[];
+  payments?: Payment[];
 }
 
 export interface DashboardReport {

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '../api/client';
-import type { Category, Paginated, Product } from '../api/types';
+import type { Category, Paginated, Product, ProductStock } from '../api/types';
 import {
   Badge,
   type Column,
@@ -8,6 +8,7 @@ import {
   EmptyState,
   ErrorBanner,
   formatMoney,
+  formatNumber,
   LoadingBlock,
   PageHeader,
   Pagination,
@@ -63,6 +64,10 @@ export function ProductsPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<Product | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [viewing, setViewing] = useState<Product | null>(null);
+  const [viewLoading, setViewLoading] = useState(false);
+  const [viewError, setViewError] = useState<string | null>(null);
+  const [stock, setStock] = useState<ProductStock[]>([]);
   const toast = useToast();
 
   const { data, error, reload } = usePagedQuery<Product>({
@@ -183,6 +188,25 @@ export function ProductsPage() {
     }
   };
 
+  const openView = async (row: Product) => {
+    setViewing(row);
+    setViewLoading(true);
+    setViewError(null);
+    setStock([]);
+    try {
+      const [detail, stockResult] = await Promise.all([
+        apiFetch<Product>(`/api/v1/inventory/products/${row.id}`),
+        apiFetch<ProductStock[]>(`/api/v1/inventory/stock/products/${row.id}`),
+      ]);
+      setViewing(detail);
+      setStock(stockResult);
+    } catch (err) {
+      setViewError(err instanceof ApiError ? err.message : 'Could not load product.');
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
   const columns: Column<Product>[] = [
     { key: 'sku', header: 'SKU' },
     { key: 'name', header: 'Name' },
@@ -206,6 +230,9 @@ export function ProductsPage() {
       header: 'Actions',
       render: (row) => (
         <div className="table-actions">
+          <Button variant="ghost" size="sm" onClick={() => void openView(row)}>
+            View
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
             Edit
           </Button>
@@ -354,6 +381,91 @@ export function ProductsPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        open={viewing !== null}
+        title={viewing?.name ?? 'Product'}
+        onClose={() => setViewing(null)}
+        width="lg"
+      >
+        {viewLoading ? <LoadingBlock /> : null}
+        {viewError ? <ErrorBanner message={viewError} /> : null}
+        {!viewLoading && viewing ? (
+          <div>
+            <div className="detail-grid">
+              <div className="detail-item">
+                <div className="detail-label">SKU</div>
+                <div className="detail-value">{viewing.sku}</div>
+              </div>
+              <div className="detail-item">
+                <div className="detail-label">Status</div>
+                <div className="detail-value">
+                  <Badge tone={viewing.enabled ? 'success' : 'neutral'}>
+                    {viewing.enabled ? 'Enabled' : 'Disabled'}
+                  </Badge>
+                </div>
+              </div>
+              <div className="detail-item">
+                <div className="detail-label">Category</div>
+                <div className="detail-value">{viewing.category?.name ?? '—'}</div>
+              </div>
+              <div className="detail-item">
+                <div className="detail-label">Brand</div>
+                <div className="detail-value">{viewing.brand ?? '—'}</div>
+              </div>
+              <div className="detail-item">
+                <div className="detail-label">Unit of measure</div>
+                <div className="detail-value">{viewing.unitOfMeasure ?? '—'}</div>
+              </div>
+              <div className="detail-item">
+                <div className="detail-label">Barcode</div>
+                <div className="detail-value">{viewing.barcode ?? '—'}</div>
+              </div>
+              <div className="detail-item">
+                <div className="detail-label">Purchase price</div>
+                <div className="detail-value num">{formatMoney(viewing.purchasePrice)}</div>
+              </div>
+              <div className="detail-item">
+                <div className="detail-label">Sale price</div>
+                <div className="detail-value num">{formatMoney(viewing.salePrice)}</div>
+              </div>
+            </div>
+            {viewing.description ? <div className="detail-notes">{viewing.description}</div> : null}
+            <h4 className="detail-section-title">Stock by warehouse</h4>
+            {stock.length === 0 ? (
+              <p className="modal-message">No stock recorded.</p>
+            ) : (
+              <div className="data-table-wrap">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Warehouse</th>
+                      <th className="num">On hand</th>
+                      <th className="num">Reserved</th>
+                      <th className="num">Avg cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stock.map((entry) => (
+                      <tr key={entry.id}>
+                        <td>{entry.warehouse?.name ?? entry.warehouseId}</td>
+                        <td className="num">{formatNumber(entry.quantity)}</td>
+                        <td className="num">{formatNumber(entry.reservedQuantity)}</td>
+                        <td className="num">{formatMoney(entry.averageCost)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : null}
+        <div className="modal-footer">
+          <Button variant="ghost" onClick={() => setViewing(null)}>
+            Close
+          </Button>
+        </div>
       </Modal>
 
       <ConfirmDialog
