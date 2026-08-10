@@ -6,6 +6,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
 import { setCsvHeaders, toCsv } from './csv.util';
+import { setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
 import {
   buildTablePdf,
   formatMoney,
@@ -70,6 +71,11 @@ export class SalesReportsController {
       setCsvHeaders(res, 'sales-summary.csv');
       return toCsv(report.data);
     }
+    if (query.format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'sales-summary.xlsx');
+      res.send(await toXlsxBuffer(report.data));
+      return;
+    }
     return report;
   }
 
@@ -122,6 +128,11 @@ export class SalesReportsController {
       setCsvHeaders(res, 'sales-by-product.csv');
       return toCsv(report.data);
     }
+    if (query.format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'sales-by-product.xlsx');
+      res.send(await toXlsxBuffer(report.data));
+      return;
+    }
     return report;
   }
 
@@ -170,6 +181,11 @@ export class SalesReportsController {
     if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'sales-by-customer.csv');
       return toCsv(report.data);
+    }
+    if (query.format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'sales-by-customer.xlsx');
+      res.send(await toXlsxBuffer(report.data));
+      return;
     }
     return report;
   }

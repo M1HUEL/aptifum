@@ -27,6 +27,7 @@
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "helmet": "^8.0.0",
     "ms": "^2.1.3",

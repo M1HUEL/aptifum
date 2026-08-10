@@ -6,6 +6,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
 import { setCsvHeaders, toCsv } from './csv.util';
+import { setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
 import { buildTablePdf, formatMoney, formatNumber, rangeText, setPdfHeaders } from './pdf.util';
 import {
   InventoryValuationQueryDto,
@@ -66,6 +67,11 @@ export class InventoryReportsController {
       setCsvHeaders(res, 'inventory-valuation.csv');
       return toCsv(report.data);
     }
+    if (query.format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'inventory-valuation.xlsx');
+      res.send(await toXlsxBuffer(report.data));
+      return;
+    }
     return report;
   }
 
@@ -107,6 +113,11 @@ export class InventoryReportsController {
       setCsvHeaders(res, 'stock-movements.csv');
       return toCsv(report.data);
     }
+    if (query.format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'stock-movements.xlsx');
+      res.send(await toXlsxBuffer(report.data));
+      return;
+    }
     return report;
   }
 
@@ -144,6 +155,11 @@ export class InventoryReportsController {
     if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'low-stock.csv');
       return toCsv(report.data);
+    }
+    if (query.format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'low-stock.xlsx');
+      res.send(await toXlsxBuffer(report.data));
+      return;
     }
     return report;
   }

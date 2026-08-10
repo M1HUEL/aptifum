@@ -164,6 +164,15 @@ export function ReportsPage() {
     }
   };
 
+  const downloadXlsx = async () => {
+    setDownloadError(null);
+    try {
+      await downloadFile(`${activeReport.endpoint}?format=xlsx`, 'export.xlsx');
+    } catch (err) {
+      setDownloadError(err instanceof ApiError ? err.message : 'Could not download the XLSX.');
+    }
+  };
+
   if (!can('reporting:read')) {
     return (
       <>
@@ -187,6 +196,9 @@ export function ReportsPage() {
             ) : null}
             <button type="button" className="btn btn-ghost" onClick={() => window.print()}>
               Print / PDF
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={() => void downloadXlsx()}>
+              Download XLSX
             </button>
             <button type="button" className="btn" onClick={() => void download()}>
               Download CSV

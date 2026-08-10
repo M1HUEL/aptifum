@@ -7,6 +7,7 @@ import { RequirePermissions } from '../rbac/decorators/require-permissions.decor
 import { ReportsService } from './reports.service';
 import { DateRangeQueryDto } from './dto/reports-query.dto';
 import { setCsvHeaders, toCsv } from './csv.util';
+import { setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
 import {
   buildTablePdf,
   formatMoney,
@@ -62,6 +63,11 @@ export class HrReportsController {
     if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'payroll-summary.csv');
       return toCsv(report.data);
+    }
+    if (query.format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'payroll-summary.xlsx');
+      res.send(await toXlsxBuffer(report.data));
+      return;
     }
     return report;
   }

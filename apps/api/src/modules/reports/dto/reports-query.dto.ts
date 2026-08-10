@@ -12,8 +12,8 @@ import { MovementType } from '@aptifum/core';
 
 export class FormatQueryDto {
   @IsOptional()
-  @IsIn(['csv', 'pdf'])
-  format?: 'csv' | 'pdf';
+  @IsIn(['csv', 'pdf', 'xlsx'])
+  format?: 'csv' | 'pdf' | 'xlsx';
 }
 
 export class DateRangeQueryDto extends FormatQueryDto {

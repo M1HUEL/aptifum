@@ -6,6 +6,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
 import { setCsvHeaders, toCsv } from './csv.util';
+import { setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
 import { buildTablePdf, formatMoney, setPdfHeaders } from './pdf.util';
 
 @ApiTags('reports')
@@ -68,6 +69,11 @@ export class AgingReportsController {
       setCsvHeaders(res, 'aging-ar.csv');
       return toCsv(report.data);
     }
+    if (format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'aging-ar.xlsx');
+      res.send(await toXlsxBuffer(report.data));
+      return;
+    }
     return report;
   }
 
@@ -119,6 +125,11 @@ export class AgingReportsController {
     if (format === 'csv' && res) {
       setCsvHeaders(res, 'aging-ap.csv');
       return toCsv(report.data);
+    }
+    if (format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'aging-ap.xlsx');
+      res.send(await toXlsxBuffer(report.data));
+      return;
     }
     return report;
   }

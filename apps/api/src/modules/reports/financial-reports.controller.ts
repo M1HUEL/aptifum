@@ -6,6 +6,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
 import { CsvSection, setCsvHeaders, sectionsToCsv } from './csv.util';
+import { sectionsToXlsxBuffer, setXlsxHeaders } from './xlsx.util';
 import {
   buildFinancialPdf,
   PdfFinancialSection,
@@ -61,6 +62,21 @@ export class FinancialReportsController {
           rows: [{ code: '', name: 'Net income', balance: report.netIncome }],
         },
       ]);
+    }
+    if (query.format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'income-statement.xlsx');
+      res.send(
+        await sectionsToXlsxBuffer([
+          this.toSection('Revenue', report.revenue),
+          this.toSection('Cost of sales', report.costOfSales),
+          this.toSection('Operating expenses', report.operatingExpenses),
+          {
+            section: 'Net income',
+            rows: [{ code: '', name: 'Net income', balance: report.netIncome }],
+          },
+        ]),
+      );
+      return;
     }
     return report;
   }
@@ -118,6 +134,28 @@ export class FinancialReportsController {
           ],
         },
       ]);
+    }
+    if (query.format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'balance-sheet.xlsx');
+      res.send(
+        await sectionsToXlsxBuffer([
+          this.toSection('Assets', report.assets),
+          this.toSection('Liabilities', report.liabilities),
+          this.toSection('Equity', report.equity),
+          {
+            section: 'Totals',
+            rows: [
+              { code: '', name: 'Total assets', balance: report.totalAssets },
+              {
+                code: '',
+                name: 'Total liabilities and equity',
+                balance: report.totalLiabilitiesAndEquity,
+              },
+            ],
+          },
+        ]),
+      );
+      return;
     }
     return report;
   }

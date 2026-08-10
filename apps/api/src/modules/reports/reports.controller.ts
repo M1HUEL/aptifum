@@ -6,6 +6,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
 import { setCsvHeaders, toCsv } from './csv.util';
+import { setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
 import { DashboardQueryDto } from './dto/reports-query.dto';
 
 @ApiTags('reports')
@@ -35,6 +36,11 @@ export class ReportsController {
     if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'dashboard.csv');
       return toCsv([report]);
+    }
+    if (query.format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'dashboard.xlsx');
+      res.send(await toXlsxBuffer([report]));
+      return;
     }
     return report;
   }
