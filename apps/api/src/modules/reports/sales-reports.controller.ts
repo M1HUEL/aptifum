@@ -7,6 +7,13 @@ import { RequirePermissions } from '../rbac/decorators/require-permissions.decor
 import { ReportsService } from './reports.service';
 import { setCsvHeaders, toCsv } from './csv.util';
 import {
+  buildTablePdf,
+  formatMoney,
+  formatNumber,
+  rangeText,
+  setPdfHeaders,
+} from './pdf.util';
+import {
   SalesByCustomerQueryDto,
   SalesByProductQueryDto,
   SalesSummaryQueryDto,
@@ -26,6 +33,39 @@ export class SalesReportsController {
     @Res({ passthrough: true }) res?: Response,
   ) {
     const report = await this.reportsService.salesSummary(user.tenantId, query);
+    if (query.format === 'pdf' && res) {
+      setPdfHeaders(res, 'sales-summary.pdf');
+      const buffer = await buildTablePdf({
+        title: 'Sales Summary',
+        subtitle: rangeText(query),
+        columns: [
+          { header: 'Period' },
+          { header: 'Invoices', align: 'right' },
+          { header: 'Credit notes', align: 'right' },
+          { header: 'Revenue', align: 'right' },
+          { header: 'Tax', align: 'right' },
+          { header: 'Total', align: 'right' },
+        ],
+        rows: report.data.map((row) => [
+          row.period,
+          formatNumber(row.invoices),
+          formatNumber(row.creditNotes),
+          formatMoney(row.revenue),
+          formatMoney(row.tax),
+          formatMoney(row.total),
+        ]),
+        totalsRow: [
+          'Total',
+          formatNumber(report.totals.invoices),
+          '',
+          formatMoney(report.totals.revenue),
+          formatMoney(report.totals.tax),
+          formatMoney(report.totals.total),
+        ],
+      });
+      res.send(buffer);
+      return;
+    }
     if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'sales-summary.csv');
       return toCsv(report.data);
@@ -42,6 +82,42 @@ export class SalesReportsController {
     @Res({ passthrough: true }) res?: Response,
   ) {
     const report = await this.reportsService.salesByProduct(user.tenantId, query);
+    if (query.format === 'pdf' && res) {
+      setPdfHeaders(res, 'sales-by-product.pdf');
+      const buffer = await buildTablePdf({
+        title: 'Sales by Product',
+        subtitle: rangeText(query),
+        columns: [
+          { header: 'SKU' },
+          { header: 'Product' },
+          { header: 'Qty', align: 'right' },
+          { header: 'Revenue', align: 'right' },
+          { header: 'COGS', align: 'right' },
+          { header: 'Gross profit', align: 'right' },
+          { header: 'Margin', align: 'right' },
+        ],
+        rows: report.data.map((row) => [
+          row.sku,
+          row.name,
+          formatNumber(row.quantity),
+          formatMoney(row.revenue),
+          formatMoney(row.cogs),
+          formatMoney(row.grossProfit),
+          `${(row.margin * 100).toFixed(1)}%`,
+        ]),
+        totalsRow: [
+          '',
+          'Total',
+          '',
+          formatMoney(report.totals.revenue),
+          formatMoney(report.totals.cogs),
+          formatMoney(report.totals.grossProfit),
+          '',
+        ],
+      });
+      res.send(buffer);
+      return;
+    }
     if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'sales-by-product.csv');
       return toCsv(report.data);
@@ -58,6 +134,39 @@ export class SalesReportsController {
     @Res({ passthrough: true }) res?: Response,
   ) {
     const report = await this.reportsService.salesByCustomer(user.tenantId, query);
+    if (query.format === 'pdf' && res) {
+      setPdfHeaders(res, 'sales-by-customer.pdf');
+      const buffer = await buildTablePdf({
+        title: 'Sales by Customer',
+        subtitle: rangeText(query),
+        columns: [
+          { header: 'Code' },
+          { header: 'Customer' },
+          { header: 'Invoices', align: 'right' },
+          { header: 'Sold', align: 'right' },
+          { header: 'Paid', align: 'right' },
+          { header: 'Balance', align: 'right' },
+        ],
+        rows: report.data.map((row) => [
+          row.code,
+          row.tradeName,
+          formatNumber(row.invoices),
+          formatMoney(row.totalSold),
+          formatMoney(row.totalPaid),
+          formatMoney(row.balance),
+        ]),
+        totalsRow: [
+          '',
+          'Total',
+          '',
+          formatMoney(report.totals.totalSold),
+          formatMoney(report.totals.totalPaid),
+          formatMoney(report.totals.balance),
+        ],
+      });
+      res.send(buffer);
+      return;
+    }
     if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'sales-by-customer.csv');
       return toCsv(report.data);

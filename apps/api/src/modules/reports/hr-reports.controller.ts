@@ -7,6 +7,13 @@ import { RequirePermissions } from '../rbac/decorators/require-permissions.decor
 import { ReportsService } from './reports.service';
 import { DateRangeQueryDto } from './dto/reports-query.dto';
 import { setCsvHeaders, toCsv } from './csv.util';
+import {
+  buildTablePdf,
+  formatMoney,
+  formatNumber,
+  rangeText,
+  setPdfHeaders,
+} from './pdf.util';
 
 @ApiTags('reports')
 @Controller('reports/hr')
@@ -22,6 +29,36 @@ export class HrReportsController {
     @Res({ passthrough: true }) res?: Response,
   ) {
     const report = await this.reportsService.payrollSummary(user.tenantId, query);
+    if (query.format === 'pdf' && res) {
+      setPdfHeaders(res, 'payroll-summary.pdf');
+      const buffer = await buildTablePdf({
+        title: 'Payroll Summary',
+        subtitle: rangeText(query),
+        columns: [
+          { header: 'Period' },
+          { header: 'Payrolls', align: 'right' },
+          { header: 'Gross', align: 'right' },
+          { header: 'Deductions', align: 'right' },
+          { header: 'Net', align: 'right' },
+        ],
+        rows: report.data.map((row) => [
+          row.period,
+          formatNumber(row.payrolls),
+          formatMoney(row.totalGross),
+          formatMoney(row.totalDeductions),
+          formatMoney(row.totalNet),
+        ]),
+        totalsRow: [
+          'Total',
+          formatNumber(report.totals.payrolls),
+          formatMoney(report.totals.totalGross),
+          formatMoney(report.totals.totalDeductions),
+          formatMoney(report.totals.totalNet),
+        ],
+      });
+      res.send(buffer);
+      return;
+    }
     if (query.format === 'csv' && res) {
       setCsvHeaders(res, 'payroll-summary.csv');
       return toCsv(report.data);

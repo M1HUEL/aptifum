@@ -102,7 +102,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   return (await res.json()) as T;
 }
 
-export async function downloadCsv(path: string): Promise<void> {
+export async function downloadFile(path: string, fallbackName = 'download'): Promise<void> {
   let res = await fetch(path, {
     headers: getAccessToken() ? { Authorization: `Bearer ${getAccessToken()!}` } : {},
   });
@@ -119,7 +119,7 @@ export async function downloadCsv(path: string): Promise<void> {
   }
   const disposition = res.headers.get('Content-Disposition') ?? '';
   const match = /filename="([^"]+)"/.exec(disposition);
-  const filename = match?.[1] ?? 'export.csv';
+  const filename = match?.[1] ?? fallbackName;
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -127,4 +127,8 @@ export async function downloadCsv(path: string): Promise<void> {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+export async function downloadCsv(path: string): Promise<void> {
+  await downloadFile(path, 'export.csv');
 }

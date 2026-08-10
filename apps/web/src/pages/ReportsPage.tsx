@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { apiFetch, ApiError, downloadCsv } from '../api/client';
+import { apiFetch, ApiError, downloadFile } from '../api/client';
 import { usePermission } from '../auth/AuthContext';
 import {
   type Column,
@@ -18,25 +18,27 @@ interface ReportDef {
   label: string;
   endpoint: string;
   shape: Shape;
+  pdf?: boolean;
   sections?: Array<{ section: string; key: string }>;
   summaryRows?: Array<{ code: string; name: string; key: string }>;
 }
 
 const REPORTS: ReportDef[] = [
   { id: 'dashboard', label: 'Dashboard', endpoint: '/api/v1/reports/dashboard', shape: 'single' },
-  { id: 'sales-summary', label: 'Sales summary', endpoint: '/api/v1/reports/sales/summary', shape: 'list' },
-  { id: 'sales-by-product', label: 'Sales by product', endpoint: '/api/v1/reports/sales/by-product', shape: 'list' },
-  { id: 'sales-by-customer', label: 'Sales by customer', endpoint: '/api/v1/reports/sales/by-customer', shape: 'list' },
-  { id: 'inventory-valuation', label: 'Inventory valuation', endpoint: '/api/v1/reports/inventory/valuation', shape: 'list' },
-  { id: 'stock-movements', label: 'Stock movements', endpoint: '/api/v1/reports/inventory/movements', shape: 'list' },
-  { id: 'low-stock', label: 'Low stock', endpoint: '/api/v1/reports/inventory/low-stock', shape: 'list' },
-  { id: 'aging-ar', label: 'Aging (accounts receivable)', endpoint: '/api/v1/reports/aging/ar', shape: 'list' },
-  { id: 'aging-ap', label: 'Aging (accounts payable)', endpoint: '/api/v1/reports/aging/ap', shape: 'list' },
+  { id: 'sales-summary', label: 'Sales summary', endpoint: '/api/v1/reports/sales/summary', shape: 'list', pdf: true },
+  { id: 'sales-by-product', label: 'Sales by product', endpoint: '/api/v1/reports/sales/by-product', shape: 'list', pdf: true },
+  { id: 'sales-by-customer', label: 'Sales by customer', endpoint: '/api/v1/reports/sales/by-customer', shape: 'list', pdf: true },
+  { id: 'inventory-valuation', label: 'Inventory valuation', endpoint: '/api/v1/reports/inventory/valuation', shape: 'list', pdf: true },
+  { id: 'stock-movements', label: 'Stock movements', endpoint: '/api/v1/reports/inventory/movements', shape: 'list', pdf: true },
+  { id: 'low-stock', label: 'Low stock', endpoint: '/api/v1/reports/inventory/low-stock', shape: 'list', pdf: true },
+  { id: 'aging-ar', label: 'Aging (accounts receivable)', endpoint: '/api/v1/reports/aging/ar', shape: 'list', pdf: true },
+  { id: 'aging-ap', label: 'Aging (accounts payable)', endpoint: '/api/v1/reports/aging/ap', shape: 'list', pdf: true },
   {
     id: 'income-statement',
     label: 'Income statement',
     endpoint: '/api/v1/reports/financial/income-statement',
     shape: 'financial',
+    pdf: true,
     sections: [
       { section: 'Revenue', key: 'revenue' },
       { section: 'Cost of sales', key: 'costOfSales' },
@@ -49,6 +51,7 @@ const REPORTS: ReportDef[] = [
     label: 'Balance sheet',
     endpoint: '/api/v1/reports/financial/balance-sheet',
     shape: 'financial',
+    pdf: true,
     sections: [
       { section: 'Assets', key: 'assets' },
       { section: 'Liabilities', key: 'liabilities' },
@@ -59,7 +62,7 @@ const REPORTS: ReportDef[] = [
       { code: '', name: 'Total liabilities and equity', key: 'totalLiabilitiesAndEquity' },
     ],
   },
-  { id: 'payroll', label: 'Payroll summary', endpoint: '/api/v1/reports/hr/payroll', shape: 'list' },
+  { id: 'payroll', label: 'Payroll summary', endpoint: '/api/v1/reports/hr/payroll', shape: 'list', pdf: true },
 ];
 
 type Row = Record<string, unknown>;
@@ -146,9 +149,18 @@ export function ReportsPage() {
   const download = async () => {
     setDownloadError(null);
     try {
-      await downloadCsv(`${activeReport.endpoint}?format=csv`);
+      await downloadFile(`${activeReport.endpoint}?format=csv`, 'export.csv');
     } catch (err) {
       setDownloadError(err instanceof ApiError ? err.message : 'Could not download the CSV.');
+    }
+  };
+
+  const downloadPdf = async () => {
+    setDownloadError(null);
+    try {
+      await downloadFile(`${activeReport.endpoint}?format=pdf`, 'report.pdf');
+    } catch (err) {
+      setDownloadError(err instanceof ApiError ? err.message : 'Could not download the PDF.');
     }
   };
 
@@ -168,6 +180,11 @@ export function ReportsPage() {
         subtitle="Analytics and exports"
         action={
           <div className="page-header-actions">
+            {activeReport.pdf ? (
+              <button type="button" className="btn btn-ghost" onClick={() => void downloadPdf()}>
+                Download PDF
+              </button>
+            ) : null}
             <button type="button" className="btn btn-ghost" onClick={() => window.print()}>
               Print / PDF
             </button>
