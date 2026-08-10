@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { CrmLead, CrmOpportunity, Customer } from '@aptifum/database';
 import { OpportunityStage } from '@aptifum/core';
 import { CreateOpportunityDto } from './dto/create-opportunity.dto';
@@ -13,6 +13,7 @@ export class OpportunitiesService {
     private readonly opportunitiesRepo: Repository<CrmOpportunity>,
     @InjectRepository(Customer) private readonly customersRepo: Repository<Customer>,
     @InjectRepository(CrmLead) private readonly leadsRepo: Repository<CrmLead>,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<CrmOpportunity> {
@@ -106,11 +107,41 @@ export class OpportunitiesService {
     if (opportunity.stage === OpportunityStage.LOST) {
       throw new BadRequestException('Lost opportunities cannot be reopened as won');
     }
-    opportunity.stage = OpportunityStage.WON;
-    opportunity.probability = 100;
-    opportunity.wonAt = new Date();
-    opportunity.lostAt = null;
-    return this.opportunitiesRepo.save(opportunity);
+    this.assertTenant(tenantId);
+    return this.dataSource.transaction(async (manager) => {
+      const opportunitiesRepo = manager.getRepository(CrmOpportunity);
+      const opp = await opportunitiesRepo.findOne({
+        where: { id, tenantId },
+        relations: { lead: true, customer: true },
+      });
+      if (!opp) {
+        throw new NotFoundException('Opportunity not found');
+      }
+      if (!opp.customerId && opp.lead) {
+        const customersRepo = manager.getRepository(Customer);
+        const customer = await customersRepo.save(
+          customersRepo.create({
+            tenantId,
+            code: `CUST-${opp.lead.number.slice(-6)}`,
+            tradeName: opp.lead.companyName ?? opp.lead.contactName,
+            email: opp.lead.email ?? null,
+            phone: opp.lead.phone ?? null,
+            currency: opp.lead.currency,
+          }),
+        );
+        opp.customerId = customer.id;
+        opp.customer = customer;
+      }
+      opp.stage = OpportunityStage.WON;
+      opp.probability = 100;
+      opp.wonAt = new Date();
+      opp.lostAt = null;
+      await opportunitiesRepo.save(opp);
+      return opportunitiesRepo.findOne({
+        where: { id, tenantId },
+        relations: { lead: true, customer: true },
+      });
+    });
   }
 
   async markLost(tenantId: string | null, id: string) {
