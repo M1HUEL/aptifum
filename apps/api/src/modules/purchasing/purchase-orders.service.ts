@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, FindOptionsWhere, In, Repository } from 'typeorm';
+import { DataSource, EntityManager, FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import {
   ACCOUNT_CODES,
   applyStockMovement,
@@ -43,9 +43,20 @@ export class PurchaseOrdersService {
     return tenantId ? { tenantId } : {};
   }
 
-  async findAll(tenantId: string | null, page: number, limit: number) {
+  async findAll(
+    tenantId: string | null,
+    page: number,
+    limit: number,
+    opts: { q?: string; status?: string } = {},
+  ) {
+    if (opts.status && !(Object.values(PurchaseOrderStatus) as string[]).includes(opts.status)) {
+      throw new BadRequestException(`Invalid status: ${opts.status}`);
+    }
+    const where: FindOptionsWhere<PurchaseOrder> = this.scoped(tenantId);
+    if (opts.q) where.number = ILike(`%${opts.q}%`);
+    if (opts.status) where.status = opts.status as PurchaseOrderStatus;
     const [rows, total] = await this.ordersRepo.findAndCount({
-      where: this.scoped(tenantId),
+      where,
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },

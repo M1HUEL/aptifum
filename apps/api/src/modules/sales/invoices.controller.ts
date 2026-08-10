@@ -29,8 +29,15 @@ export class InvoicesController {
   list(
     @CurrentUser() user: { tenantId: string | null },
     @Query() { page, limit }: PaginationQueryDto,
+    @Query('q') q?: string,
+    @Query('status') status?: string,
+    @Query('type') type?: string,
   ) {
-    return this.invoicesService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100));
+    return this.invoicesService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100), {
+      q,
+      status,
+      type,
+    });
   }
 
   @Get(':id')

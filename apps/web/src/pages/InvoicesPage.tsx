@@ -62,6 +62,10 @@ const emptyPayment: PaymentForm = {
 
 export function InvoicesPage() {
   const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [input, setInput] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -88,6 +92,8 @@ export function InvoicesPage() {
   const { data, error, reload } = usePagedQuery<Invoice>({
     path: '/api/v1/sales/invoices',
     page,
+    query,
+    extraParams: { status: statusFilter, type: typeFilter },
   });
 
   useEffect(() => {
@@ -120,6 +126,12 @@ export function InvoicesPage() {
     });
     setInvoiceError(null);
     setInvoiceOpen(true);
+  };
+
+  const submitSearch = (event: FormEvent) => {
+    event.preventDefault();
+    setQuery(input.trim());
+    setPage(1);
   };
 
   const closeInvoice = () => {
@@ -318,6 +330,40 @@ export function InvoicesPage() {
         subtitle="Invoices and credit notes"
         action={<Button onClick={openInvoice}>New invoice</Button>}
       />
+      <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
+        <input
+          type="search"
+          placeholder="Search by number…"
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+        />
+        <Select
+          value={statusFilter}
+          onChange={(event) => {
+            setStatusFilter(event.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">All statuses</option>
+          <option value="draft">Draft</option>
+          <option value="issued">Issued</option>
+          <option value="cancelled">Cancelled</option>
+        </Select>
+        <Select
+          value={typeFilter}
+          onChange={(event) => {
+            setTypeFilter(event.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">All types</option>
+          <option value="invoice">Invoice</option>
+          <option value="credit_note">Credit note</option>
+        </Select>
+        <button type="submit" className="btn">
+          Search
+        </button>
+      </form>
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
       {data ? (

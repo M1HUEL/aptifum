@@ -19,8 +19,15 @@ export class OrdersController {
   list(
     @CurrentUser() user: { tenantId: string | null },
     @Query() { page, limit }: PaginationQueryDto,
+    @Query('q') q?: string,
+    @Query('kind') kind?: string,
+    @Query('status') status?: string,
   ) {
-    return this.ordersService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100));
+    return this.ordersService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100), {
+      q,
+      kind,
+      status,
+    });
   }
 
   @Get(':id')

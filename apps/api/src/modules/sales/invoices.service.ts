@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, FindOptionsWhere, In, Not, Repository } from 'typeorm';
+import { DataSource, EntityManager, FindOptionsWhere, ILike, In, Not, Repository } from 'typeorm';
 import {
   DocumentSeriesKind,
   InvoiceStatus,
@@ -53,9 +53,24 @@ export class InvoicesService {
     return tenantId ? { tenantId } : {};
   }
 
-  async findAll(tenantId: string | null, page: number, limit: number) {
+  async findAll(
+    tenantId: string | null,
+    page: number,
+    limit: number,
+    opts: { q?: string; status?: string; type?: string } = {},
+  ) {
+    if (opts.status && !(Object.values(InvoiceStatus) as string[]).includes(opts.status)) {
+      throw new BadRequestException(`Invalid status: ${opts.status}`);
+    }
+    if (opts.type && !(Object.values(InvoiceType) as string[]).includes(opts.type)) {
+      throw new BadRequestException(`Invalid type: ${opts.type}`);
+    }
+    const where: FindOptionsWhere<Invoice> = this.scoped(tenantId);
+    if (opts.q) where.number = ILike(`%${opts.q}%`);
+    if (opts.status) where.status = opts.status as InvoiceStatus;
+    if (opts.type) where.type = opts.type as InvoiceType;
     const [rows, total] = await this.invoicesRepo.findAndCount({
-      where: this.scoped(tenantId),
+      where,
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },

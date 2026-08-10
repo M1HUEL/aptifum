@@ -65,6 +65,9 @@ interface ReceiveItem {
 
 export function PurchaseOrdersPage() {
   const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [input, setInput] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -89,6 +92,8 @@ export function PurchaseOrdersPage() {
   const { data, error, reload } = usePagedQuery<PurchaseOrder>({
     path: '/api/v1/purchasing/purchase-orders',
     page,
+    query,
+    extraParams: { status: statusFilter },
   });
 
   useEffect(() => {
@@ -125,6 +130,12 @@ export function PurchaseOrdersPage() {
 
   const closeCreate = () => {
     if (!saving) setCreateOpen(false);
+  };
+
+  const submitSearch = (event: FormEvent) => {
+    event.preventDefault();
+    setQuery(input.trim());
+    setPage(1);
   };
 
   const setFormField = (key: keyof PoForm, value: string) => {
@@ -331,6 +342,30 @@ export function PurchaseOrdersPage() {
         subtitle="Procurement"
         action={<Button onClick={openCreate}>New purchase order</Button>}
       />
+      <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
+        <input
+          type="search"
+          placeholder="Search by number…"
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+        />
+        <Select
+          value={statusFilter}
+          onChange={(event) => {
+            setStatusFilter(event.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">All statuses</option>
+          <option value="draft">Draft</option>
+          <option value="approved">Approved</option>
+          <option value="received">Received</option>
+          <option value="cancelled">Cancelled</option>
+        </Select>
+        <button type="submit" className="btn">
+          Search
+        </button>
+      </form>
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
       {data ? (

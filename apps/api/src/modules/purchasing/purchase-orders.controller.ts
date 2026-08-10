@@ -37,8 +37,13 @@ export class PurchaseOrdersController {
   list(
     @CurrentUser() user: { tenantId: string | null },
     @Query() { page, limit }: PaginationQueryDto,
+    @Query('q') q?: string,
+    @Query('status') status?: string,
   ) {
-    return this.purchaseOrdersService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100));
+    return this.purchaseOrdersService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100), {
+      q,
+      status,
+    });
   }
 
   @Get('purchase-orders/:id')

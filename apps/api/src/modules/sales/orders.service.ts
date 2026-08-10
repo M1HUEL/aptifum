@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, FindOptionsWhere, In, Repository } from 'typeorm';
+import { DataSource, FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import {
   DocumentSeriesKind,
   SalesOrderKind,
@@ -34,9 +34,24 @@ export class OrdersService {
     return tenantId ? { tenantId } : {};
   }
 
-  async findAll(tenantId: string | null, page: number, limit: number) {
+  async findAll(
+    tenantId: string | null,
+    page: number,
+    limit: number,
+    opts: { q?: string; kind?: string; status?: string } = {},
+  ) {
+    if (opts.kind && !(Object.values(SalesOrderKind) as string[]).includes(opts.kind)) {
+      throw new BadRequestException(`Invalid kind: ${opts.kind}`);
+    }
+    if (opts.status && !(Object.values(SalesOrderStatus) as string[]).includes(opts.status)) {
+      throw new BadRequestException(`Invalid status: ${opts.status}`);
+    }
+    const where: FindOptionsWhere<SalesOrder> = this.scoped(tenantId);
+    if (opts.q) where.number = ILike(`%${opts.q}%`);
+    if (opts.kind) where.kind = opts.kind as SalesOrderKind;
+    if (opts.status) where.status = opts.status as SalesOrderStatus;
     const [rows, total] = await this.ordersRepo.findAndCount({
-      where: this.scoped(tenantId),
+      where,
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },

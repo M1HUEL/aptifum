@@ -62,6 +62,10 @@ const emptyItem: OrderItemForm = { productId: '', quantity: '1', unitPrice: '', 
 
 export function SalesOrdersPage() {
   const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [input, setInput] = useState('');
+  const [kindFilter, setKindFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -85,6 +89,8 @@ export function SalesOrdersPage() {
   const { data, error, reload } = usePagedQuery<SalesOrder>({
     path: '/api/v1/sales/orders',
     page,
+    query,
+    extraParams: { kind: kindFilter, status: statusFilter },
   });
 
   useEffect(() => {
@@ -123,6 +129,12 @@ export function SalesOrdersPage() {
 
   const closeCreate = () => {
     if (!saving) setCreateOpen(false);
+  };
+
+  const submitSearch = (event: FormEvent) => {
+    event.preventDefault();
+    setQuery(input.trim());
+    setPage(1);
   };
 
   const setFormField = (key: keyof OrderForm, value: string) => {
@@ -296,6 +308,41 @@ export function SalesOrdersPage() {
         subtitle="Quotes and orders"
         action={<Button onClick={openCreate}>New sales order</Button>}
       />
+      <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
+        <input
+          type="search"
+          placeholder="Search by number…"
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+        />
+        <Select
+          value={kindFilter}
+          onChange={(event) => {
+            setKindFilter(event.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">All kinds</option>
+          <option value="quote">Quote</option>
+          <option value="order">Order</option>
+        </Select>
+        <Select
+          value={statusFilter}
+          onChange={(event) => {
+            setStatusFilter(event.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">All statuses</option>
+          <option value="draft">Draft</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="invoiced">Invoiced</option>
+          <option value="cancelled">Cancelled</option>
+        </Select>
+        <button type="submit" className="btn">
+          Search
+        </button>
+      </form>
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
       {data ? (
