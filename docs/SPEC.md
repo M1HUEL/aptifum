@@ -151,7 +151,7 @@ aptifum/
 - **Contacts/leads:** source, contact data.
 - **Opportunities:** pipeline stage (new → proposal → negotiation → won/lost), estimated amount, probability.
 - **Activities:** calls, meetings, tasks, notes; linked to contact/opportunity/customer.
-- **Integration:** won opportunity converts into customer + quote/order.
+- **Integration:** won opportunity creates a customer from its linked lead (no quote/order).
 
 ### 6.7 Production (light / assembly)
 - **BOM / Recipes:** component list with quantities and waste (%).
@@ -249,10 +249,13 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] F1 data model definition (§13).
 - [x] F1 Inventory module (entities, migration, CRUD, movements, valuation).
 - [x] F1 Sales/billing module (customers, orders, invoices, payments, series, idempotency).
+- [x] F1 Stock reservation: confirming an order reserves stock (`reserved_quantity`), cancel releases it, invoicing consumes it (available = quantity − reserved).
 - [x] Domain glossary (`docs/GLOSSARY.md`).
 - [x] F2.1 Purchasing (suppliers, purchase orders, goods receipts) — defined in §15.
+- [x] F2.2 Supplier payments (AP): record payment → Dr AP / Cr Cash, AP aging and dashboard payables net of payments — defined in §15.
 - [x] F2.2 Accounting (chart of accounts, automatic entries, closing) — defined in §16.
 - [x] F3 CRM (contacts, leads, opportunities, activities) — defined in §17.
+- [x] F3 CRM integration: marking an opportunity won creates a customer from its linked lead (no quote/order) — defined in §17.
 - [x] F3 Accounting reports (trial balance, general ledger) — defined in §18.
 - [x] F3 HR (departments, employees, attendance, leaves, payroll) — defined in §19.
 - [x] F3 Production (BOMs, production orders, costing + auto journal entry) — defined in §20.
@@ -362,13 +365,14 @@ Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `numeric(18,4)
 | `purchase_order_items` | `order_id`, `product_id`, `description`, `quantity`, `unit_cost`, `discount`, `tax_rate`, `tax_amount`, `line_total`, `received_quantity` (default 0) | `received_quantity` tracks partial receiving; index `(tenant_id, order_id)` |
 | `goods_receipts` | `number` (unique per tenant), `order_id`, `supplier_id`, `warehouse_id`, `received_at`, `notes` | append-only; index `(tenant_id, number)`, `(tenant_id, order_id)` |
 | `goods_receipt_items` | `receipt_id`, `order_item_id`, `product_id`, `quantity`, `unit_cost` | index `(tenant_id, receipt_id)` |
+| `supplier_payments` | `supplier_id`, `method` (enum: cash/card/transfer/other), `amount` `numeric(14,2)`, `paid_at`, `reference`, `notes` | append-only; index `(tenant_id, supplier_id)` |
 
 ### 15.3 Key flows
 
 1. **PO lifecycle:** `draft → approved → received`, or `cancelled` (from draft/approved only). Receive requires an approved order.
 2. **Receiving (partial or full):** each goods receipt creates one `stock_movement` (`inbound`) per line **in the same transaction** (`reference_type='purchase_receipt'`, `reference_id=<receipt id>`), posting `unit_cost` from the PO line and updating `average_cost`. `purchase_order_items.received_quantity` increments per line; when every line is fully received the PO moves to `received`.
 3. **Numbering:** `document_series` kinds `purchase_order` (prefix `PO`) and `goods_receipt` (prefix `GR`), assigned atomically like sales.
-4. **Supplier invoice / AP:** deferred to F2.2 (reconciliation with PO/receipt, due dates, supplier payments).
+4. **Supplier payments (AP):** `POST /purchasing/payments` records a payment against a supplier in a transaction: saves the `supplier_payments` row and posts a journal entry **Dr `2000` Accounts payable, Cr `1000` Cash** (`reference_type='supplier_payment'`, `reference_id=<payment id>`), reusing the PO receiving journal-entry pattern. Closed period or unbalanced → 400/409 like other auto-postings. `GET /purchasing/payments` lists payments (optionally filtered by `supplierId`).
 
 ### 15.4 Enums to add in `packages/core`
 
@@ -460,6 +464,7 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 
 - **Lead conversion:** `POST /crm/leads/:id/convert` runs in a transaction: creates a `Customer` (code `CUST-<last6 of lead number>`, trade name = company/contact), marks the lead `converted`, links `converted_customer_id`. Re-conversion and edits/deletes of converted leads are rejected (`400`).
 - **Pipeline:** `mark-won`/`mark-lost` set `stage`, `probability = 100` and stamp `won_at`/`lost_at`; once won/lost the opportunity cannot be edited or deleted (`400`).
+- **Won → customer:** `mark-won` runs in a transaction and, if the opportunity has no `customer_id` but has a linked `lead`, creates a `Customer` from it (code `CUST-<last6 of lead number>`, trade name = company/contact, email/phone/currency from the lead) before stamping the stage. No quote/order is generated.
 - **Activities:** freely linked via `reference_type`/`reference_id` to a lead, opportunity or customer; list supports filtering by reference and `q` full-text-ish search.
 
 ### 17.4 API surface (`/crm/...`, module permission `CRM`)
@@ -568,7 +573,7 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 
 ### 21.1 Conventions
 
-- **No new tables or entities.** All reports derive from existing tables: `invoices`, `invoice_items`, `stock_movements`, `product_stock`, `goods_receipts`, `purchase_orders`, `production_orders`, `journal_entries`, `journal_entry_lines`, `payments`.
+- **No new tables or entities.** All reports derive from existing tables: `invoices`, `invoice_items`, `stock_movements`, `product_stock`, `goods_receipts`, `purchase_orders`, `supplier_payments`, `production_orders`, `journal_entries`, `journal_entry_lines`, `payments`.
 - Read-only, tenant-scoped SQL (parametrized, `$1 = tenant_id`), respecting soft deletes and `journal_entries.status <> 'draft'`.
 - Module permission: `reporting:read` (role `accountant` has it seeded). All routes under `/reports/...`; every endpoint supports `?format=csv` (returns `text/csv` with `Content-Disposition` attachment).
 
@@ -584,7 +589,7 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 | `GET /reports/sales/by-product?from=&to=` | per product: quantity, revenue, COGS, grossProfit, margin + totals |
 | `GET /reports/sales/by-customer?from=&to=` | per customer: invoices, totalSold (net), totalPaid, balance (AR) + totals |
 | `GET /reports/aging/ar` | AR per customer bucketed by `CURRENT_DATE - COALESCE(due_date, issue_date)` (current / 1–30 / 31–60 / 61–90 / 90+) |
-| `GET /reports/aging/ap` | AP per supplier bucketed by `goods_receipts.received_at` age |
+| `GET /reports/aging/ap` | AP per supplier bucketed by `goods_receipts.received_at` age, **net of `supplier_payments`** (payments applied FIFO to the oldest buckets first; total = max(0, received − paid)) |
 | `GET /reports/financial/income-statement?periodId=&from=&to=` | revenue / cost of sales / operating expenses sections + net income |
 | `GET /reports/financial/balance-sheet?asOf=` | assets / liabilities / equity sections (equity includes current-period net income) |
 
@@ -593,7 +598,7 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 - **COGS (sales) per product:** `SUM(-sm.quantity × sm.unit_cost)` over `stock_movements` with `reference_type IN ('invoice','credit_note')`. Invoice outbound movements carry the real average cost (`invoices.service.ts` `applyOutbound`).
 - **Income statement:** revenue from `invoices` (issued, credit notes as negative); `costOfSales`/`operatingExpenses` from `journal_entry_lines` joined to expense accounts (`account_code` LIKE `5%` / `6%`); `netIncome = revenue - cogs - opex`.
 - **Balance sheet:** journal entries with `entry_date <= asOf`; equity includes **Net income (current period)** computed from the 1st of the month to `asOf`.
-- **Dashboard:** sales today/month, monthly invoice count, AR balance (sum `balance_due`), AP (goods receipts not yet in JEs), inventory value (physical stock × avg cost), low stock (≤ threshold), open POs (`approved`), production in progress, net income month.
+- **Dashboard:** sales today/month, monthly invoice count, AR balance (sum `balance_due`), AP (goods receipts minus `supplier_payments`), inventory value (physical stock × avg cost), low stock (≤ threshold), open POs (`approved`), production in progress, net income month.
 
 ---
 
