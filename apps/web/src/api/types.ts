@@ -192,6 +192,40 @@ export interface DashboardReport {
   netIncomeMonth: number;
 }
 
+export interface AlertsReport {
+  asOf: string;
+  summary: {
+    lowStock: number;
+    overdueReceivables: number;
+    overduePayables: number;
+  };
+  lowStock: Array<{
+    productId: string;
+    sku: string;
+    name: string;
+    unitOfMeasure: string;
+    quantity: number;
+  }>;
+  overdueReceivables: Array<{
+    invoiceId: string;
+    number: string;
+    dueDate: string | null;
+    balanceDue: number;
+    customerCode: string;
+    customerName: string;
+    daysOverdue: number;
+  }>;
+  overduePayables: Array<{
+    receiptId: string;
+    number: string;
+    receivedAt: string;
+    supplierCode: string;
+    supplierName: string;
+    outstanding: number;
+    daysOutstanding: number;
+  }>;
+}
+
 export interface SalesSummaryRow {
   period: string;
   invoices: number;

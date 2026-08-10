@@ -13,6 +13,16 @@ import { DashboardQueryDto } from './dto/reports-query.dto';
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
+  @Get('alerts')
+  @RequirePermissions(permission(ModuleName.REPORTING, 'read'))
+  @ApiOperation({ summary: 'Actionable alerts: low stock, overdue receivables and payables' })
+  async alerts(
+    @CurrentUser() user: { tenantId: string | null },
+    @Query('limit') limit?: string,
+  ) {
+    return this.reportsService.alerts(user.tenantId, { limit: limit ? Number(limit) : undefined });
+  }
+
   @Get('dashboard')
   @RequirePermissions(permission(ModuleName.REPORTING, 'read'))
   @ApiOperation({ summary: 'Executive dashboard key metrics' })

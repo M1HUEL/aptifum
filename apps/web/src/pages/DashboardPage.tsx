@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Area,
   AreaChart,
@@ -12,7 +13,7 @@ import {
   YAxis,
 } from 'recharts';
 import { apiFetch, ApiError } from '../api/client';
-import type { DashboardReport, Paginated, ProductSalesRow, SalesSummary, Warehouse } from '../api/types';
+import type { AlertsReport, DashboardReport, Paginated, ProductSalesRow, SalesSummary, Warehouse } from '../api/types';
 import {
   Badge,
   Card,
@@ -72,6 +73,7 @@ export function DashboardPage() {
   const [report, setReport] = useState<DashboardReport | null>(null);
   const [summary, setSummary] = useState<SalesSummary | null>(null);
   const [topProducts, setTopProducts] = useState<ProductSalesRow[]>([]);
+  const [alerts, setAlerts] = useState<AlertsReport | null>(null);
   const [groupBy, setGroupBy] = useState('month');
   const [preset, setPreset] = useState('month');
   const [warehouseId, setWarehouseId] = useState('');
@@ -106,10 +108,12 @@ export function DashboardPage() {
         const products = await apiFetch<{ data: ProductSalesRow[] }>(
           `/api/v1/reports/sales/by-product${query}`,
         );
+        const alertReport = await apiFetch<AlertsReport>('/api/v1/reports/alerts?limit=5');
         if (!cancelled) {
           setReport(dashboard);
           setSummary(sales);
           setTopProducts(products.data.slice(0, 8));
+          setAlerts(alertReport);
         }
       } catch (err) {
         if (!cancelled) setError(errorMessage(err, 'Could not load the dashboard.'));
@@ -169,6 +173,61 @@ export function DashboardPage() {
             <StatCard label="Production in progress" value={String(report.productionInProgress)} />
           </div>
         </>
+      ) : null}
+
+      {alerts ? (
+        <Card title="Alerts">
+          <div className="alert-grid">
+            <AlertSection
+              title="Low stock"
+              count={alerts.summary.lowStock}
+              linkTo="/stock"
+              emptyText="All products above reorder level."
+            >
+              {alerts.lowStock.map((product) => (
+                <div className="status-row" key={product.productId}>
+                  <span>
+                    {product.name}
+                    <span className="text-muted"> ({product.sku})</span>
+                  </span>
+                  <Badge tone="warning">{product.quantity} {product.unitOfMeasure}</Badge>
+                </div>
+              ))}
+            </AlertSection>
+            <AlertSection
+              title="Overdue receivables"
+              count={alerts.summary.overdueReceivables}
+              linkTo="/invoices"
+              emptyText="No overdue invoices."
+            >
+              {alerts.overdueReceivables.map((invoice) => (
+                <div className="status-row" key={invoice.invoiceId}>
+                  <span>
+                    {invoice.number}
+                    <span className="text-muted"> · {invoice.customerName}</span>
+                  </span>
+                  <Badge tone="danger">{formatMoney(invoice.balanceDue)}</Badge>
+                </div>
+              ))}
+            </AlertSection>
+            <AlertSection
+              title="Overdue payables"
+              count={alerts.summary.overduePayables}
+              linkTo="/purchasing"
+              emptyText="No overdue payables."
+            >
+              {alerts.overduePayables.map((receipt) => (
+                <div className="status-row" key={receipt.receiptId}>
+                  <span>
+                    {receipt.number}
+                    <span className="text-muted"> · {receipt.supplierName}</span>
+                  </span>
+                  <Badge tone="danger">{formatMoney(receipt.outstanding)}</Badge>
+                </div>
+              ))}
+            </AlertSection>
+          </div>
+        </Card>
       ) : null}
 
       <div className="chart-grid">
@@ -275,6 +334,32 @@ function StatusRow({
     <div className="status-row">
       <span>{label}</span>
       <Badge tone={warn ? 'warning' : 'success'}>{count}</Badge>
+    </div>
+  );
+}
+
+function AlertSection({
+  title,
+  count,
+  linkTo,
+  emptyText,
+  children,
+}: {
+  title: string;
+  count: number;
+  linkTo: string;
+  emptyText: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <div className="alert-head">
+        <strong>{title}</strong>
+        <Link className="alert-link" to={linkTo}>
+          {count > 0 ? `View all (${count})` : emptyText}
+        </Link>
+      </div>
+      {count > 0 ? <div className="status-list">{children}</div> : <p className="alert-empty">{emptyText}</p>}
     </div>
   );
 }

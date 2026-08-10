@@ -717,6 +717,105 @@ export class ReportsService {
     };
   }
 
+  async alerts(tenantId: string | null, opts: { limit?: number } = {}) {
+    this.assertTenant(tenantId);
+    const limit = Math.min(50, Math.max(1, opts.limit ?? 10));
+    const lowStockRows: Array<{
+      product_id: string;
+      sku: string;
+      name: string;
+      unit_of_measure: string;
+      total_quantity: number;
+    }> = await this.dataSource.query(
+      `SELECT p.id AS product_id, p.sku, p.name, p.unit_of_measure,
+              COALESCE(SUM(ps.quantity), 0) AS total_quantity
+         FROM products p
+         LEFT JOIN product_stock ps ON ps.product_id = p.id AND ps.tenant_id = p.tenant_id AND ps.deleted_at IS NULL
+        WHERE p.tenant_id = $1 AND p.deleted_at IS NULL AND p.enabled = true
+        GROUP BY p.id, p.sku, p.name, p.unit_of_measure
+       HAVING COALESCE(SUM(ps.quantity), 0) <= 10
+        ORDER BY total_quantity
+        LIMIT $2`,
+      [tenantId, limit],
+    );
+    const overdueReceivableRows: Array<{
+      invoice_id: string;
+      number: string;
+      due_date: string | null;
+      balance_due: number;
+      customer_code: string;
+      customer_name: string;
+      days_overdue: number;
+    }> = await this.dataSource.query(
+      `SELECT i.id AS invoice_id, i.number, i.due_date, i.balance_due,
+              c.code AS customer_code, c.trade_name AS customer_name,
+              (CURRENT_DATE - COALESCE(i.due_date, i.issue_date)) AS days_overdue
+         FROM invoices i
+         JOIN customers c ON c.id = i.customer_id AND c.tenant_id = i.tenant_id AND c.deleted_at IS NULL
+        WHERE i.tenant_id = $1 AND i.deleted_at IS NULL AND i.status = 'issued' AND i.type = 'invoice'
+          AND i.balance_due > 0 AND COALESCE(i.due_date, i.issue_date) < CURRENT_DATE
+        ORDER BY days_overdue DESC
+        LIMIT $2`,
+      [tenantId, limit],
+    );
+    const overduePayableRows: Array<{
+      receipt_id: string;
+      number: string;
+      received_at: string;
+      supplier_code: string;
+      supplier_name: string;
+      outstanding: number;
+      days_outstanding: number;
+    }> = await this.dataSource.query(
+      `SELECT gr.id AS receipt_id, gr.number, gr.received_at,
+              s.code AS supplier_code, s.trade_name AS supplier_name,
+              SUM(gri.quantity * gri.unit_cost) AS outstanding,
+              (CURRENT_DATE - gr.received_at::date) AS days_outstanding
+         FROM goods_receipts gr
+         JOIN goods_receipt_items gri ON gri.receipt_id = gr.id AND gri.tenant_id = gr.tenant_id AND gri.deleted_at IS NULL
+         JOIN suppliers s ON s.id = gr.supplier_id AND s.tenant_id = gr.tenant_id AND s.deleted_at IS NULL
+        WHERE gr.tenant_id = $1 AND gr.deleted_at IS NULL
+          AND gr.received_at::date < CURRENT_DATE - 30
+        GROUP BY gr.id, gr.number, gr.received_at, s.code, s.trade_name
+        ORDER BY days_outstanding DESC
+        LIMIT $2`,
+      [tenantId, limit],
+    );
+    return {
+      asOf: this.today(),
+      summary: {
+        lowStock: lowStockRows.length,
+        overdueReceivables: overdueReceivableRows.length,
+        overduePayables: overduePayableRows.length,
+      },
+      lowStock: lowStockRows.map((row) => ({
+        productId: row.product_id,
+        sku: row.sku,
+        name: row.name,
+        unitOfMeasure: row.unit_of_measure,
+        quantity: Number(row.total_quantity),
+      })),
+      overdueReceivables: overdueReceivableRows.map((row) => ({
+        invoiceId: row.invoice_id,
+        number: row.number,
+        dueDate: row.due_date,
+        balanceDue: round2(Number(row.balance_due)),
+        customerCode: row.customer_code,
+        customerName: row.customer_name,
+        daysOverdue: Number(row.days_overdue),
+      })),
+      overduePayables: overduePayableRows.map((row) => ({
+        receiptId: row.receipt_id,
+        number: row.number,
+        receivedAt: row.received_at,
+        supplierCode: row.supplier_code,
+        supplierName: row.supplier_name,
+        outstanding: round2(Number(row.outstanding)),
+        daysOutstanding: Number(row.days_outstanding),
+      })),
+    };
+  }
+
   private accountBalance(row: AggregatedAccountRow): number {
     const debit = round2(Number(row.debit));
     const credit = round2(Number(row.credit));
@@ -803,3 +902,4 @@ export class ReportsService {
     }
   }
 }
+
