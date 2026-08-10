@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, FindOptionsWhere, ILike, In, Repository } from 'typeorm';
+import { DataSource, EntityManager, FindOptionsWhere, In, Repository } from 'typeorm';
 import {
   ACCOUNT_CODES,
   applyStockMovement,
@@ -19,6 +19,7 @@ import {
   Warehouse,
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
+import { searchDocumentIds } from '../../common/query/document-search';
 import { DocumentSeriesKind, MovementType, PurchaseOrderStatus, round2 } from '@aptifum/core';
 import { CreateGoodsReceiptDto } from './dto/create-goods-receipt.dto';
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
@@ -53,8 +54,19 @@ export class PurchaseOrdersService {
       throw new BadRequestException(`Invalid status: ${opts.status}`);
     }
     const where: FindOptionsWhere<PurchaseOrder> = this.scoped(tenantId);
-    if (opts.q) where.number = ILike(`%${opts.q}%`);
     if (opts.status) where.status = opts.status as PurchaseOrderStatus;
+    if (opts.q) {
+      const ids = await searchDocumentIds(this.ordersRepo, tenantId, opts.q, {
+        partyColumn: 'supplier_id',
+        partyTable: 'suppliers',
+        itemTable: 'purchase_order_items',
+        itemFkColumn: 'order_id',
+      });
+      if (ids.length === 0) {
+        return { data: [], meta: { page, limit, total: 0 } };
+      }
+      where.id = In(ids);
+    }
     const [rows, total] = await this.ordersRepo.findAndCount({
       where,
       skip: (page - 1) * limit,

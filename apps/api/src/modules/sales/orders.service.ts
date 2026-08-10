@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, FindOptionsWhere, ILike, In, Repository } from 'typeorm';
+import { DataSource, FindOptionsWhere, In, Repository } from 'typeorm';
 import {
   DocumentSeriesKind,
   SalesOrderKind,
@@ -18,6 +18,7 @@ import {
   Warehouse,
 } from '@aptifum/database';
 import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
+import { searchDocumentIds } from '../../common/query/document-search';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
@@ -47,9 +48,20 @@ export class OrdersService {
       throw new BadRequestException(`Invalid status: ${opts.status}`);
     }
     const where: FindOptionsWhere<SalesOrder> = this.scoped(tenantId);
-    if (opts.q) where.number = ILike(`%${opts.q}%`);
     if (opts.kind) where.kind = opts.kind as SalesOrderKind;
     if (opts.status) where.status = opts.status as SalesOrderStatus;
+    if (opts.q) {
+      const ids = await searchDocumentIds(this.ordersRepo, tenantId, opts.q, {
+        partyColumn: 'customer_id',
+        partyTable: 'customers',
+        itemTable: 'sales_order_items',
+        itemFkColumn: 'order_id',
+      });
+      if (ids.length === 0) {
+        return { data: [], meta: { page, limit, total: 0 } };
+      }
+      where.id = In(ids);
+    }
     const [rows, total] = await this.ordersRepo.findAndCount({
       where,
       skip: (page - 1) * limit,

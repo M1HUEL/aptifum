@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, FindOptionsWhere, ILike, In, Not, Repository } from 'typeorm';
+import { DataSource, EntityManager, FindOptionsWhere, In, Not, Repository } from 'typeorm';
 import {
   DocumentSeriesKind,
   InvoiceStatus,
@@ -33,6 +33,7 @@ import {
   Warehouse,
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
+import { searchDocumentIds } from '../../common/query/document-search';
 import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -66,9 +67,20 @@ export class InvoicesService {
       throw new BadRequestException(`Invalid type: ${opts.type}`);
     }
     const where: FindOptionsWhere<Invoice> = this.scoped(tenantId);
-    if (opts.q) where.number = ILike(`%${opts.q}%`);
     if (opts.status) where.status = opts.status as InvoiceStatus;
     if (opts.type) where.type = opts.type as InvoiceType;
+    if (opts.q) {
+      const ids = await searchDocumentIds(this.invoicesRepo, tenantId, opts.q, {
+        partyColumn: 'customer_id',
+        partyTable: 'customers',
+        itemTable: 'invoice_items',
+        itemFkColumn: 'invoice_id',
+      });
+      if (ids.length === 0) {
+        return { data: [], meta: { page, limit, total: 0 } };
+      }
+      where.id = In(ids);
+    }
     const [rows, total] = await this.invoicesRepo.findAndCount({
       where,
       skip: (page - 1) * limit,
