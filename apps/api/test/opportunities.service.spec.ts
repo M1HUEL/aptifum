@@ -5,15 +5,21 @@ import { OpportunitiesService } from '../src/modules/crm/opportunities.service';
 
 const TENANT = '00000000-0000-4000-8000-000000000001';
 
-function buildService(extras: Record<string, unknown> = {}) {
+function buildService(
+  extras: {
+    oppRepo?: Record<string, unknown>;
+    customersRepo?: Record<string, unknown>;
+    leadsRepo?: Record<string, unknown>;
+  } = {},
+) {
   const oppRepo = {
     save: vi.fn((o: unknown) => Promise.resolve(o)),
     create: vi.fn((o: unknown) => o),
     ...(extras.oppRepo ?? {}),
   };
   const customerRepo = {
-    save: vi.fn((c: unknown) => Promise.resolve({ id: 'cust-1', ...c })),
-    create: vi.fn((c: unknown) => c),
+    save: vi.fn((c: Record<string, unknown>) => Promise.resolve({ id: 'cust-1', ...c })),
+    create: vi.fn((c: Record<string, unknown>) => c),
   };
   const manager = {
     getRepository: vi.fn((entity: unknown) => {
