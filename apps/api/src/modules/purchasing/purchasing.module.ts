@@ -7,10 +7,13 @@ import {
   PurchaseOrder,
   PurchaseOrderItem,
   Supplier,
+  SupplierPayment,
   Warehouse,
 } from '@aptifum/database';
 import { PurchaseOrdersController } from './purchase-orders.controller';
 import { PurchaseOrdersService } from './purchase-orders.service';
+import { SupplierPaymentsController } from './supplier-payments.controller';
+import { SupplierPaymentsService } from './supplier-payments.service';
 import { SuppliersController } from './suppliers.controller';
 import { SuppliersService } from './suppliers.service';
 
@@ -18,6 +21,7 @@ import { SuppliersService } from './suppliers.service';
   imports: [
     TypeOrmModule.forFeature([
       Supplier,
+      SupplierPayment,
       PurchaseOrder,
       PurchaseOrderItem,
       GoodsReceipt,
@@ -26,8 +30,12 @@ import { SuppliersService } from './suppliers.service';
       Warehouse,
     ]),
   ],
-  controllers: [SuppliersController, PurchaseOrdersController],
-  providers: [SuppliersService, PurchaseOrdersService],
+  controllers: [
+    SuppliersController,
+    PurchaseOrdersController,
+    SupplierPaymentsController,
+  ],
+  providers: [SuppliersService, PurchaseOrdersService, SupplierPaymentsService],
   exports: [PurchaseOrdersService],
 })
 export class PurchasingModule {}

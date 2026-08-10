@@ -460,16 +460,44 @@ export class ReportsService {
         ORDER BY total_outstanding DESC`,
       [tenantId],
     );
-    const data = rows.map((row) => ({
-      supplierId: row.supplier_id,
-      code: row.code,
-      tradeName: row.trade_name,
-      current: round2(Number(row.current)),
-      days31to60: round2(Number(row.days_31_60)),
-      days61to90: round2(Number(row.days_61_90)),
-      days90plus: round2(Number(row.days_90_plus)),
-      totalOutstanding: round2(Number(row.total_outstanding)),
-    }));
+    const payments: Array<{ supplier_id: string; total: number }> = await this.dataSource.query(
+      `SELECT sp.supplier_id, COALESCE(SUM(sp.amount), 0) AS total
+         FROM supplier_payments sp
+        WHERE sp.tenant_id = $1 AND sp.deleted_at IS NULL
+        GROUP BY sp.supplier_id`,
+      [tenantId],
+    );
+    const paidBySupplier = new Map(payments.map((p) => [p.supplier_id, Number(p.total)]));
+    const data = rows.map((row) => {
+      let remaining = paidBySupplier.get(row.supplier_id) ?? 0;
+      const buckets: Array<'days_90_plus' | 'days_61_90' | 'days_31_60' | 'current'> = [
+        'days_90_plus',
+        'days_61_90',
+        'days_31_60',
+        'current',
+      ];
+      for (const key of buckets) {
+        const amount = Number(row[key]);
+        const applied = Math.min(amount, remaining);
+        row[key] = amount - applied;
+        remaining = remaining - applied;
+      }
+      return {
+        supplierId: row.supplier_id,
+        code: row.code,
+        tradeName: row.trade_name,
+        current: round2(Number(row.current)),
+        days31to60: round2(Number(row.days_31_60)),
+        days61to90: round2(Number(row.days_61_90)),
+        days90plus: round2(Number(row.days_90_plus)),
+        totalOutstanding: round2(
+          Math.max(
+            0,
+            Number(row.current) + Number(row.days_31_60) + Number(row.days_61_90) + Number(row.days_90_plus),
+          ),
+        ),
+      };
+    });
     const totals = data.reduce(
       (acc, row) => ({
         current: round2(acc.current + row.current),
@@ -743,7 +771,8 @@ export class ReportsService {
       [tenantId],
     );
     const [payables]: Array<{ total: number }> = await this.dataSource.query(
-      `SELECT COALESCE(SUM(gri.quantity * gri.unit_cost), 0) AS total
+      `SELECT COALESCE(SUM(gri.quantity * gri.unit_cost), 0)
+            - COALESCE((SELECT SUM(sp.amount) FROM supplier_payments sp WHERE sp.tenant_id = $1 AND sp.deleted_at IS NULL), 0) AS total
          FROM goods_receipts gr
          JOIN goods_receipt_items gri ON gri.receipt_id = gr.id AND gri.tenant_id = gr.tenant_id AND gri.deleted_at IS NULL
         WHERE gr.tenant_id = $1 AND gr.deleted_at IS NULL`,

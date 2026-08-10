@@ -36,6 +36,7 @@ import { SalesOrder } from './sales-order.entity';
 import { SalesOrderItem } from './sales-order-item.entity';
 import { StockMovement } from './stock-movement.entity';
 import { Supplier } from './supplier.entity';
+import { SupplierPayment } from './supplier-payment.entity';
 import { Tax } from './tax.entity';
 import { Tenant } from './tenant.entity';
 import { User } from './user.entity';
@@ -68,6 +69,7 @@ export const entities = [
   RefreshSession,
   GoodsReceipt,
   GoodsReceiptItem,
+  SupplierPayment,
   ProductionBom,
   ProductionBomLine,
   ProductionOrder,
@@ -123,6 +125,7 @@ export {
   SalesOrderItem,
   StockMovement,
   Supplier,
+  SupplierPayment,
   Tax,
   Tenant,
   User,
