@@ -54,10 +54,22 @@ export async function applyStockMovement(
     .andWhere('stock.warehouse_id = :warehouseId', { warehouseId: input.warehouseId })
     .getOne();
 
-  const newQty = (stock?.quantity ?? 0) + sign * qty;
-  if (newQty < 0) {
-    throw new InsufficientStockError();
+  const currentQty = stock?.quantity ?? 0;
+  const currentReserved = stock?.reservedQuantity ?? 0;
+
+  if (sign < 0) {
+    const available = currentQty - currentReserved;
+    if (available + sign * qty < 0) {
+      throw new InsufficientStockError();
+    }
+  } else {
+    const newQty = currentQty + sign * qty;
+    if (newQty < 0) {
+      throw new InsufficientStockError();
+    }
   }
+
+  const newQty = currentQty + sign * qty;
 
   if (stock) {
     let averageCost = stock.averageCost;
@@ -68,6 +80,7 @@ export async function applyStockMovement(
           : unitCost;
     }
     stock.quantity = newQty;
+    stock.reservedQuantity = Math.max(0, currentReserved + Math.min(0, sign * qty));
     stock.averageCost = averageCost;
     await stockRepo.save(stock);
   } else if (newQty > 0) {
@@ -97,4 +110,52 @@ export async function applyStockMovement(
       userId: input.userId ?? null,
     }),
   );
+}
+
+export interface ReserveStockInput {
+  tenantId: string;
+  productId: string;
+  warehouseId: string;
+  quantity: number;
+}
+
+export async function reserveStock(
+  manager: EntityManager,
+  input: ReserveStockInput,
+): Promise<void> {
+  const stockRepo = manager.getRepository(ProductStock);
+  const stock = await stockRepo
+    .createQueryBuilder('stock')
+    .setLock('pessimistic_write')
+    .where('stock.tenant_id = :tenantId', { tenantId: input.tenantId })
+    .andWhere('stock.product_id = :productId', { productId: input.productId })
+    .andWhere('stock.warehouse_id = :warehouseId', { warehouseId: input.warehouseId })
+    .getOne();
+
+  const currentQty = stock?.quantity ?? 0;
+  const currentReserved = stock?.reservedQuantity ?? 0;
+  if (!stock || currentQty - currentReserved < input.quantity) {
+    throw new InsufficientStockError();
+  }
+  stock.reservedQuantity = currentReserved + input.quantity;
+  await stockRepo.save(stock);
+}
+
+export async function releaseStock(
+  manager: EntityManager,
+  input: ReserveStockInput,
+): Promise<void> {
+  const stockRepo = manager.getRepository(ProductStock);
+  const stock = await stockRepo
+    .createQueryBuilder('stock')
+    .setLock('pessimistic_write')
+    .where('stock.tenant_id = :tenantId', { tenantId: input.tenantId })
+    .andWhere('stock.product_id = :productId', { productId: input.productId })
+    .andWhere('stock.warehouse_id = :warehouseId', { warehouseId: input.warehouseId })
+    .getOne();
+  if (!stock) {
+    return;
+  }
+  stock.reservedQuantity = Math.max(0, stock.reservedQuantity - input.quantity);
+  await stockRepo.save(stock);
 }

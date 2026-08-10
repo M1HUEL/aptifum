@@ -13,9 +13,12 @@ import {
 } from '@aptifum/core';
 import {
   Customer,
+  InsufficientStockError,
   Product,
   SalesOrder,
   Warehouse,
+  releaseStock,
+  reserveStock,
 } from '@aptifum/database';
 import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
 import { searchDocumentIds } from '../../common/query/document-search';
@@ -144,8 +147,35 @@ export class OrdersService {
     if (order.status !== SalesOrderStatus.DRAFT) {
       throw new ConflictException('Only draft orders can be confirmed');
     }
-    order.status = SalesOrderStatus.CONFIRMED;
-    return this.ordersRepo.save(order);
+    this.assertTenant(tenantId);
+    if (order.kind !== SalesOrderKind.ORDER) {
+      order.status = SalesOrderStatus.CONFIRMED;
+      return this.ordersRepo.save(order);
+    }
+    return this.dataSource.transaction(async (manager) => {
+      if (order.warehouseId) {
+        for (const item of order.items ?? []) {
+          try {
+            await reserveStock(manager, {
+              tenantId,
+              productId: item.productId,
+              warehouseId: order.warehouseId,
+              quantity: item.quantity,
+            });
+          } catch (error) {
+            if (error instanceof InsufficientStockError) {
+              throw new BadRequestException(
+                `Insufficient stock for product ${item.productId}`,
+              );
+            }
+            throw error;
+          }
+        }
+      }
+      order.status = SalesOrderStatus.CONFIRMED;
+      await manager.getRepository(SalesOrder).save(order);
+      return order;
+    });
   }
 
   async cancel(tenantId: string | null, id: string) {
@@ -156,8 +186,28 @@ export class OrdersService {
     if (order.status === SalesOrderStatus.CANCELLED) {
       throw new ConflictException('Order is already cancelled');
     }
-    order.status = SalesOrderStatus.CANCELLED;
-    return this.ordersRepo.save(order);
+    this.assertTenant(tenantId);
+    const releasesReserved =
+      order.kind === SalesOrderKind.ORDER && order.status === SalesOrderStatus.CONFIRMED;
+    if (!releasesReserved) {
+      order.status = SalesOrderStatus.CANCELLED;
+      return this.ordersRepo.save(order);
+    }
+    return this.dataSource.transaction(async (manager) => {
+      if (order.warehouseId) {
+        for (const item of order.items ?? []) {
+          await releaseStock(manager, {
+            tenantId,
+            productId: item.productId,
+            warehouseId: order.warehouseId,
+            quantity: item.quantity,
+          });
+        }
+      }
+      order.status = SalesOrderStatus.CANCELLED;
+      await manager.getRepository(SalesOrder).save(order);
+      return order;
+    });
   }
 
   async convertToOrder(tenantId: string | null, id: string) {

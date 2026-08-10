@@ -39,7 +39,7 @@
 | **Transfer** | Movement between warehouses; not yet implemented (service rejects it). |
 | **Return** | Stock reintegration, e.g. from a credit note. |
 | **Disposal** | Stock-out for damaged/expired goods. |
-| **Reserved quantity** | Stock committed to open orders (field exists; reservation not yet implemented). |
+| **Reserved quantity** | Stock committed to confirmed orders (`reserved_quantity`); reserved when an order is confirmed, released on cancel, consumed by the outbound movement when invoiced. Available stock = `quantity - reserved_quantity`. |
 
 ## 3. Sales and billing
 
