@@ -12,7 +12,8 @@
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/data-source.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/data-source.ts",
     "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/data-source.ts src/migrations/Migration",
-    "seed": "ts-node src/seeders/seed.ts"
+    "seed": "ts-node src/seeders/seed.ts",
+    "seed:demo": "ts-node src/seeders/seed-demo.ts"
   },
   "dependencies": {
     "@aptifum/config": "workspace:*",

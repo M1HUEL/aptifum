@@ -11,7 +11,9 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "db:seed": "pnpm --filter @aptifum/database seed",
+    "db:seed:demo": "pnpm --filter @aptifum/database seed:demo"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
