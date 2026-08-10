@@ -575,6 +575,85 @@ export class ReportsService {
     };
   }
 
+  async cashFlow(tenantId: string | null, opts: { from?: string; to?: string }) {
+    this.assertTenant(tenantId);
+    const params: unknown[] = [tenantId];
+    const where = [
+      'jl.tenant_id = $1',
+      "je.status <> 'draft'",
+      'jl.deleted_at IS NULL AND je.deleted_at IS NULL AND ca.deleted_at IS NULL',
+      "ca.code = '1000'",
+    ];
+    const dateClause = this.buildDateClause('je.entry_date', opts, params);
+    if (dateClause) {
+      where.push(dateClause);
+    }
+    const rows: Array<{ period: string; debit: number; credit: number }> =
+      await this.dataSource.query(
+        `SELECT to_char(je.entry_date, 'YYYY-MM') AS period,
+                COALESCE(SUM(jl.debit), 0) AS debit,
+                COALESCE(SUM(jl.credit), 0) AS credit
+           FROM journal_entry_lines jl
+           JOIN journal_entries je ON je.id = jl.entry_id
+           JOIN chart_accounts ca ON ca.id = jl.account_id
+          WHERE ${where.join(' AND ')}
+          GROUP BY to_char(je.entry_date, 'YYYY-MM')
+          ORDER BY to_char(je.entry_date, 'YYYY-MM')`,
+        params,
+      );
+
+    let openingBalance = 0;
+    if (opts.from) {
+      const [opening]: Array<{ balance: number }> = await this.dataSource.query(
+        `SELECT COALESCE(
+                 SUM(CASE WHEN ca.normal_balance = 'debit' THEN jl.debit - jl.credit
+                          ELSE jl.credit - jl.debit END), 0) AS balance
+           FROM journal_entry_lines jl
+           JOIN journal_entries je ON je.id = jl.entry_id
+           JOIN chart_accounts ca ON ca.id = jl.account_id
+          WHERE jl.tenant_id = $1
+            AND je.status <> 'draft'
+            AND jl.deleted_at IS NULL AND je.deleted_at IS NULL AND ca.deleted_at IS NULL
+            AND ca.code = '1000'
+            AND je.entry_date < $2`,
+        [tenantId, opts.from],
+      );
+      openingBalance = round2(Number(opening?.balance ?? 0));
+    }
+
+    const buckets = new Map<string, { inflows: number; outflows: number }>();
+    for (const row of rows) {
+      const bucket = buckets.get(row.period) ?? { inflows: 0, outflows: 0 };
+      bucket.inflows += Number(row.debit);
+      bucket.outflows += Number(row.credit);
+      buckets.set(row.period, bucket);
+    }
+    let running = openingBalance;
+    const data = Array.from(buckets.entries()).map(([period, bucket]) => {
+      const inflows = round2(bucket.inflows);
+      const outflows = round2(bucket.outflows);
+      const net = round2(inflows - outflows);
+      running = round2(running + net);
+      return { period, inflows, outflows, net, balance: running };
+    });
+    const totals = data.reduce(
+      (acc, row) => ({
+        inflows: round2(acc.inflows + row.inflows),
+        outflows: round2(acc.outflows + row.outflows),
+        net: round2(acc.net + row.net),
+      }),
+      { inflows: 0, outflows: 0, net: 0 },
+    );
+    return {
+      from: opts.from ?? null,
+      to: opts.to ?? null,
+      openingBalance,
+      closingBalance: data.length ? data[data.length - 1].balance : openingBalance,
+      data,
+      totals,
+    };
+  }
+
   async payrollSummary(tenantId: string | null, opts: { from?: string; to?: string }) {
     this.assertTenant(tenantId);
     const params: unknown[] = [tenantId];

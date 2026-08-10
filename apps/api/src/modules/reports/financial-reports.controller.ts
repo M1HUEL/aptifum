@@ -5,16 +5,19 @@ import { ModuleName, permission } from '@aptifum/core';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
-import { CsvSection, setCsvHeaders, sectionsToCsv } from './csv.util';
-import { sectionsToXlsxBuffer, setXlsxHeaders } from './xlsx.util';
+import { CsvSection, setCsvHeaders, sectionsToCsv, toCsv } from './csv.util';
+import { sectionsToXlsxBuffer, setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
 import {
   buildFinancialPdf,
+  buildTablePdf,
+  formatMoney,
   PdfFinancialSection,
   rangeText,
   setPdfHeaders,
 } from './pdf.util';
 import {
   BalanceSheetQueryDto,
+  DateRangeQueryDto,
   IncomeStatementQueryDto,
 } from './dto/reports-query.dto';
 
@@ -155,6 +158,57 @@ export class FinancialReportsController {
           },
         ]),
       );
+      return;
+    }
+    return report;
+  }
+
+  @Get('cash-flow')
+  @RequirePermissions(permission(ModuleName.REPORTING, 'read'))
+  @ApiOperation({ summary: 'Cash flow statement grouped by month' })
+  async cashFlow(
+    @CurrentUser() user: { tenantId: string | null },
+    @Query() query: DateRangeQueryDto,
+    @Res({ passthrough: true }) res?: Response,
+  ) {
+    const report = await this.reportsService.cashFlow(user.tenantId, query);
+    if (query.format === 'pdf' && res) {
+      setPdfHeaders(res, 'cash-flow.pdf');
+      const buffer = await buildTablePdf({
+        title: 'Cash Flow',
+        subtitle: rangeText(query),
+        columns: [
+          { header: 'Period' },
+          { header: 'Inflows', align: 'right' },
+          { header: 'Outflows', align: 'right' },
+          { header: 'Net', align: 'right' },
+          { header: 'Cash balance', align: 'right' },
+        ],
+        rows: report.data.map((row) => [
+          row.period,
+          formatMoney(row.inflows),
+          formatMoney(row.outflows),
+          formatMoney(row.net),
+          formatMoney(row.balance),
+        ]),
+        totalsRow: [
+          'Total',
+          formatMoney(report.totals.inflows),
+          formatMoney(report.totals.outflows),
+          formatMoney(report.totals.net),
+          formatMoney(report.closingBalance),
+        ],
+      });
+      res.send(buffer);
+      return;
+    }
+    if (query.format === 'csv' && res) {
+      setCsvHeaders(res, 'cash-flow.csv');
+      return toCsv(report.data);
+    }
+    if (query.format === 'xlsx' && res) {
+      setXlsxHeaders(res, 'cash-flow.xlsx');
+      res.send(await toXlsxBuffer(report.data));
       return;
     }
     return report;

@@ -127,6 +127,40 @@ describe('ReportsService inventoryValuation aggregation', () => {
   });
 });
 
+describe('ReportsService cashFlow', () => {
+  it('buckets cash movements by month and computes running balance', async () => {
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce([
+        { period: '2026-08', debit: '100.00', credit: '20.00' },
+        { period: '2026-09', debit: '50.00', credit: '0.00' },
+      ])
+      .mockResolvedValueOnce([{ balance: '500.00' }]);
+    const service = buildService(query);
+    const result = await service.cashFlow(TENANT, { from: '2026-08-01' });
+    expect(result.openingBalance).toBe(500);
+    expect(result.data).toEqual([
+      { period: '2026-08', inflows: 100, outflows: 20, net: 80, balance: 580 },
+      { period: '2026-09', inflows: 50, outflows: 0, net: 50, balance: 630 },
+    ]);
+    expect(result.totals).toEqual({ inflows: 150, outflows: 20, net: 130 });
+    expect(result.closingBalance).toBe(630);
+    const sql = query.mock.calls[0][0] as string;
+    expect(sql).toContain("ca.code = '1000'");
+    expect(sql).toContain('GROUP BY to_char');
+  });
+
+  it('returns zero opening balance when no from is provided', async () => {
+    const query = vi.fn().mockResolvedValue([]);
+    const service = buildService(query);
+    const result = await service.cashFlow(TENANT, {});
+    expect(result.openingBalance).toBe(0);
+    expect(result.closingBalance).toBe(0);
+    expect(result.data).toEqual([]);
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('ReportsService payrollSummary aggregation', () => {
   it('groups payrolls by period and sums money', async () => {
     const query = vi.fn().mockResolvedValue([

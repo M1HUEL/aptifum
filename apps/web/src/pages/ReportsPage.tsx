@@ -46,6 +46,7 @@ const REPORTS: ReportDef[] = [
     ],
     summaryRows: [{ code: '', name: 'Net income', key: 'netIncome' }],
   },
+  { id: 'cash-flow', label: 'Cash flow', endpoint: '/api/v1/reports/financial/cash-flow', shape: 'list', pdf: true },
   {
     id: 'balance-sheet',
     label: 'Balance sheet',

@@ -7,7 +7,7 @@ test('lists reports and exports a CSV', async ({ context, page }) => {
   await expect(page.getByRole('heading', { name: 'Reports' })).toBeVisible();
 
   const reportSelect = page.locator('.toolbar select');
-  await expect(reportSelect.locator('option')).toHaveCount(12);
+  await expect(reportSelect.locator('option')).toHaveCount(13);
   await expect(reportSelect.locator('option[value="payroll"]')).toHaveText('Payroll summary');
 
   await reportSelect.selectOption({ label: 'Inventory valuation' });
