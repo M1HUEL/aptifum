@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 
@@ -11,6 +11,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const notice = (location.state as { notice?: string } | null)?.notice ?? null;
 
   if (user) {
     const from = (location.state as { from?: string } | null)?.from ?? '/dashboard';
@@ -68,11 +69,15 @@ export function LoginPage() {
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
+          {notice ? <div className="success-banner">{notice}</div> : null}
           {error ? <div className="error-banner">{error}</div> : null}
           <button type="submit" className="btn btn-primary btn-block" disabled={submitting}>
             {submitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+        <p className="login-subtitle">
+          <Link to="/forgot-password">Forgot your password?</Link>
+        </p>
       </div>
     </div>
   );

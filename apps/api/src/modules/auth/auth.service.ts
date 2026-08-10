@@ -15,6 +15,7 @@ import { DEFAULT_TENANT_ID, RefreshSession } from '@aptifum/database';
 import { ConfigService } from '../../config/config.module';
 import { AuditService } from '../audit/audit.service';
 import { UsersService } from '../users/users.service';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { RefreshDto } from './dto/refresh.dto';
@@ -43,6 +44,12 @@ interface AccessTokenPayload {
 }
 
 interface RefreshTokenPayload extends AccessTokenPayload {
+  jti: string;
+}
+
+interface PasswordResetTokenPayload {
+  sub: string;
+  type: 'password_reset';
   jti: string;
 }
 
@@ -146,6 +153,53 @@ export class AuthService {
 
   async me(userId: string): Promise<UserProfile> {
     return this.usersService.getProfile(userId);
+  }
+
+  async requestPasswordReset(
+    dto: ForgotPasswordDto,
+    ctx?: RequestContext,
+  ): Promise<{ sent: boolean; resetToken: string | null }> {
+    const user = await this.usersService.findByEmail(dto.email);
+    if (!user || !user.active) {
+      return { sent: true, resetToken: null };
+    }
+    const payload: PasswordResetTokenPayload = { sub: user.id, type: 'password_reset', jti: randomUUID() };
+    const resetToken = await this.jwtService.signAsync(payload, {
+      secret: this.config.env.JWT_ACCESS_SECRET,
+      expiresIn: this.config.env.PASSWORD_RESET_TTL as StringValue,
+    });
+    await this.recordAuth(
+      AuditAction.UPDATE,
+      'password-reset-request',
+      user.id,
+      user.defaultTenantId,
+      ctx,
+    );
+    return { sent: true, resetToken };
+  }
+
+  async resetPassword(
+    dto: ResetPasswordDto,
+    ctx?: RequestContext,
+  ): Promise<{ success: boolean }> {
+    const payload = await this.verifyPasswordResetToken(dto.token);
+    const user = await this.usersService.getProfile(payload.sub).catch(() => null);
+    if (!user || !user.active) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+    await this.usersService.setPassword(user.id, dto.newPassword);
+    await this.sessionsRepo.update(
+      { userId: user.id, revokedAt: IsNull() },
+      { revokedAt: new Date() },
+    );
+    await this.recordAuth(
+      AuditAction.UPDATE,
+      'password-reset',
+      user.id,
+      user.tenantId,
+      ctx,
+    );
+    return { success: true };
   }
 
   async updateProfile(
@@ -280,6 +334,20 @@ export class AuthService {
       return payload;
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  private async verifyPasswordResetToken(token: string): Promise<PasswordResetTokenPayload> {
+    try {
+      const payload = await this.jwtService.verifyAsync<PasswordResetTokenPayload>(token, {
+        secret: this.config.env.JWT_ACCESS_SECRET,
+      });
+      if (payload.type !== 'password_reset' || !payload.jti) {
+        throw new BadRequestException('Invalid or expired reset token');
+      }
+      return payload;
+    } catch {
+      throw new BadRequestException('Invalid or expired reset token');
     }
   }
 

@@ -7,16 +7,21 @@ import { AuthService } from '../src/modules/auth/auth.service';
 import { UsersService } from '../src/modules/users/users.service';
 import { ConfigService } from '../src/config/config.module';
 
-function buildAuthService() {
+function buildAuthService(
+  jwtOverrides: Partial<{ signAsync: unknown; verifyAsync: unknown }> = {},
+) {
   const usersService = {
     findByEmailWithPassword: vi.fn<(email: string) => Promise<User | null>>(),
+    findByEmail: vi.fn<(email: string) => Promise<User | null>>(),
     getProfile: vi.fn<(id: string) => Promise<UserProfile>>(),
     updateName: vi.fn<(id: string, name: string) => Promise<UserProfile>>(),
     changePassword: vi.fn<(id: string, current: string, next: string) => Promise<void>>(),
+    setPassword: vi.fn<(id: string, next: string) => Promise<void>>(),
   };
   const jwtService = {
     signAsync: vi.fn(async () => 'signed-token'),
     verifyAsync: vi.fn(),
+    ...jwtOverrides,
   };
   const config = {
     env: {
@@ -24,6 +29,7 @@ function buildAuthService() {
       JWT_REFRESH_SECRET: 'b'.repeat(16),
       JWT_ACCESS_TTL: '15m',
       JWT_REFRESH_TTL: '7d',
+      PASSWORD_RESET_TTL: '15m',
       MAX_ACTIVE_SESSIONS_PER_USER: 5,
       SESSION_RETENTION_DAYS: 30,
     },
@@ -236,5 +242,69 @@ describe('AuthService', () => {
       'correct-horse',
       'new-secret-pass',
     );
+  });
+
+  it('returns a reset token for an existing user', async () => {
+    const { service, usersService } = buildAuthService();
+    usersService.findByEmail.mockResolvedValue({
+      id: 'u1',
+      email: 'user@aptifum.dev',
+      active: true,
+      defaultTenantId: 't1',
+    } as User);
+
+    const result = await service.requestPasswordReset({ email: 'user@aptifum.dev' });
+
+    expect(result.sent).toBe(true);
+    expect(result.resetToken).toBe('signed-token');
+  });
+
+  it('does not reveal whether an email is registered', async () => {
+    const { service, usersService } = buildAuthService();
+    usersService.findByEmail.mockResolvedValue(null);
+
+    const result = await service.requestPasswordReset({ email: 'ghost@aptifum.dev' });
+
+    expect(result).toEqual({ sent: true, resetToken: null });
+  });
+
+  it('resets the password and revokes all active sessions', async () => {
+    const { service, usersService, sessionsRepo, auditService } = buildAuthService({
+      verifyAsync: vi.fn(async () => ({ sub: 'u1', type: 'password_reset', jti: 'reset-1' })),
+    });
+    usersService.getProfile.mockResolvedValue({
+      id: 'u1',
+      email: 'user@aptifum.dev',
+      name: null,
+      active: true,
+      tenantId: 't1',
+      roles: [],
+    });
+    usersService.setPassword.mockResolvedValue(undefined);
+
+    const result = await service.resetPassword({
+      token: 'valid-token',
+      newPassword: 'new-secret-pass',
+    });
+
+    expect(result).toEqual({ success: true });
+    expect(usersService.setPassword).toHaveBeenCalledWith('u1', 'new-secret-pass');
+    expect(sessionsRepo.update).toHaveBeenCalledWith(
+      { userId: 'u1', revokedAt: expect.anything() },
+      { revokedAt: expect.any(Date) },
+    );
+    expect(auditService.record).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'u1', entity: 'password-reset', action: 'update' }),
+    );
+  });
+
+  it('rejects a reset token of the wrong type', async () => {
+    const { service } = buildAuthService({
+      verifyAsync: vi.fn(async () => ({ sub: 'u1', type: 'refresh', jti: 'x' })),
+    });
+
+    await expect(
+      service.resetPassword({ token: 'bad-token', newPassword: 'new-secret-pass' }),
+    ).rejects.toThrow('Invalid or expired reset token');
   });
 });

@@ -8,6 +8,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -65,6 +66,32 @@ export class AuthController {
   @ApiOperation({ summary: 'Revoke the refresh token family' })
   logout(@Body() dto: LogoutDto, @Ip() ip?: string, @Req() req?: Request) {
     return this.authService.logout(dto, this.context(ip, undefined, req));
+  }
+
+  @Post('forgot-password')
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request a password reset token (demo: returns the token)' })
+  forgotPassword(
+    @Body() dto: ForgotPasswordDto,
+    @Ip() ip?: string,
+    @Req() req?: Request,
+  ) {
+    return this.authService.requestPasswordReset(dto, this.context(ip, undefined, req));
+  }
+
+  @Post('reset-password')
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Set a new password using a reset token' })
+  resetPassword(
+    @Body() dto: ResetPasswordDto,
+    @Ip() ip?: string,
+    @Req() req?: Request,
+  ) {
+    return this.authService.resetPassword(dto, this.context(ip, undefined, req));
   }
 
   @Get('me')

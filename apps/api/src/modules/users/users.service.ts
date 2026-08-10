@@ -148,6 +148,22 @@ export class UsersService {
     });
   }
 
+  async findByEmail(email: string) {
+    return this.usersRepo.findOne({
+      where: { email },
+      select: { id: true, email: true, active: true, defaultTenantId: true },
+    });
+  }
+
+  async setPassword(userId: string, newPassword: string) {
+    const user = await this.usersRepo.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.usersRepo.save(user);
+  }
+
   async getProfile(id: string) {
     const user = await this.usersRepo.findOne({
       where: { id },

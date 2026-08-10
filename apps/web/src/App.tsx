@@ -21,6 +21,10 @@ const ChartAccountsPage = lazyPage(() => import('./pages/ChartAccountsPage'), 'C
 const CustomersPage = lazyPage(() => import('./pages/CustomersPage'), 'CustomersPage');
 const CrmPage = lazyPage(() => import('./pages/CrmPage'), 'CrmPage');
 const DashboardPage = lazyPage(() => import('./pages/DashboardPage'), 'DashboardPage');
+const ForgotPasswordPage = lazyPage(
+  () => import('./pages/ForgotPasswordPage'),
+  'ForgotPasswordPage',
+);
 const HrPage = lazyPage(() => import('./pages/HrPage'), 'HrPage');
 const InvoicesPage = lazyPage(() => import('./pages/InvoicesPage'), 'InvoicesPage');
 const LoginPage = lazyPage(() => import('./pages/LoginPage'), 'LoginPage');
@@ -32,6 +36,10 @@ const PurchaseOrdersPage = lazyPage(
   'PurchaseOrdersPage',
 );
 const ReportsPage = lazyPage(() => import('./pages/ReportsPage'), 'ReportsPage');
+const ResetPasswordPage = lazyPage(
+  () => import('./pages/ResetPasswordPage'),
+  'ResetPasswordPage',
+);
 const StockPage = lazyPage(() => import('./pages/StockPage'), 'StockPage');
 const SuppliersPage = lazyPage(() => import('./pages/SuppliersPage'), 'SuppliersPage');
 const UsersRolesPage = lazyPage(() => import('./pages/UsersRolesPage'), 'UsersRolesPage');
@@ -57,6 +65,8 @@ export default function App() {
     <Suspense fallback={<LoadingBlock />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />
