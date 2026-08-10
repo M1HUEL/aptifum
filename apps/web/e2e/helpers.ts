@@ -10,7 +10,10 @@ interface AuthTokens {
   refreshToken: string;
 }
 
+let cachedTokens: AuthTokens | null = null;
+
 export async function getApiTokens(): Promise<AuthTokens> {
+  if (cachedTokens) return cachedTokens;
   const ctx = await request.newContext({ baseURL: BASE_URL });
   try {
     const res = await ctx.post('/api/v1/auth/login', {
@@ -19,7 +22,8 @@ export async function getApiTokens(): Promise<AuthTokens> {
     if (!res.ok()) {
       throw new Error(`Login failed: ${res.status()} ${await res.text()}`);
     }
-    return (await res.json()) as AuthTokens;
+    cachedTokens = (await res.json()) as AuthTokens;
+    return cachedTokens;
   } finally {
     await ctx.dispose();
   }
@@ -97,6 +101,167 @@ export async function createUser(
     });
     if (!res.ok()) {
       throw new Error(`Create user failed: ${res.status()} ${await res.text()}`);
+    }
+  } finally {
+    await ctx.dispose();
+  }
+}
+
+export async function createCustomer(
+  accessToken: string,
+  input: { code: string; tradeName: string },
+): Promise<{ id: string }> {
+  const ctx = await request.newContext({ baseURL: BASE_URL });
+  try {
+    const res = await ctx.post('/api/v1/sales/customers', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: input,
+    });
+    if (!res.ok()) {
+      throw new Error(`Create customer failed: ${res.status()} ${await res.text()}`);
+    }
+    return (await res.json()) as { id: string };
+  } finally {
+    await ctx.dispose();
+  }
+}
+
+export async function createSupplier(
+  accessToken: string,
+  input: { code: string; tradeName: string },
+): Promise<{ id: string }> {
+  const ctx = await request.newContext({ baseURL: BASE_URL });
+  try {
+    const res = await ctx.post('/api/v1/purchasing/suppliers', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: input,
+    });
+    if (!res.ok()) {
+      throw new Error(`Create supplier failed: ${res.status()} ${await res.text()}`);
+    }
+    return (await res.json()) as { id: string };
+  } finally {
+    await ctx.dispose();
+  }
+}
+
+export async function createProduct(
+  accessToken: string,
+  input: { sku: string; name: string },
+): Promise<{ id: string }> {
+  const ctx = await request.newContext({ baseURL: BASE_URL });
+  try {
+    const res = await ctx.post('/api/v1/inventory/products', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: input,
+    });
+    if (!res.ok()) {
+      throw new Error(`Create product failed: ${res.status()} ${await res.text()}`);
+    }
+    return (await res.json()) as { id: string };
+  } finally {
+    await ctx.dispose();
+  }
+}
+
+export async function addStock(
+  accessToken: string,
+  input: { productId: string; warehouseId: string; quantity: number },
+): Promise<void> {
+  const ctx = await request.newContext({ baseURL: BASE_URL });
+  try {
+    const res = await ctx.post('/api/v1/inventory/movements', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: {
+        movementType: 'inbound',
+        productId: input.productId,
+        warehouseId: input.warehouseId,
+        quantity: input.quantity,
+        unitCost: 5,
+        referenceType: 'e2e',
+        notes: 'E2E inbound stock',
+      },
+    });
+    if (!res.ok()) {
+      throw new Error(`Add stock failed: ${res.status()} ${await res.text()}`);
+    }
+  } finally {
+    await ctx.dispose();
+  }
+}
+
+interface SalesOrderItemInput {
+  productId: string;
+  quantity: number;
+  unitPrice?: number;
+}
+
+export async function createSalesOrder(
+  accessToken: string,
+  input: { customerId: string; warehouseId: string; items: SalesOrderItemInput[] },
+): Promise<{ id: string }> {
+  const ctx = await request.newContext({ baseURL: BASE_URL });
+  try {
+    const res = await ctx.post('/api/v1/sales/orders', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { kind: 'order', customerId: input.customerId, warehouseId: input.warehouseId, items: input.items },
+    });
+    if (!res.ok()) {
+      throw new Error(`Create sales order failed: ${res.status()} ${await res.text()}`);
+    }
+    return (await res.json()) as { id: string };
+  } finally {
+    await ctx.dispose();
+  }
+}
+
+export async function confirmSalesOrder(accessToken: string, id: string): Promise<void> {
+  const ctx = await request.newContext({ baseURL: BASE_URL });
+  try {
+    const res = await ctx.post(`/api/v1/sales/orders/${id}/confirm`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok()) {
+      throw new Error(`Confirm sales order failed: ${res.status()} ${await res.text()}`);
+    }
+  } finally {
+    await ctx.dispose();
+  }
+}
+
+interface PurchaseOrderItemInput {
+  productId: string;
+  quantity: number;
+  unitCost?: number;
+}
+
+export async function createPurchaseOrder(
+  accessToken: string,
+  input: { supplierId: string; warehouseId: string; items: PurchaseOrderItemInput[] },
+): Promise<{ id: string }> {
+  const ctx = await request.newContext({ baseURL: BASE_URL });
+  try {
+    const res = await ctx.post('/api/v1/purchasing/purchase-orders', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { supplierId: input.supplierId, warehouseId: input.warehouseId, items: input.items },
+    });
+    if (!res.ok()) {
+      throw new Error(`Create purchase order failed: ${res.status()} ${await res.text()}`);
+    }
+    return (await res.json()) as { id: string };
+  } finally {
+    await ctx.dispose();
+  }
+}
+
+export async function approvePurchaseOrder(accessToken: string, id: string): Promise<void> {
+  const ctx = await request.newContext({ baseURL: BASE_URL });
+  try {
+    const res = await ctx.post(`/api/v1/purchasing/purchase-orders/${id}/approve`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok()) {
+      throw new Error(`Approve purchase order failed: ${res.status()} ${await res.text()}`);
     }
   } finally {
     await ctx.dispose();

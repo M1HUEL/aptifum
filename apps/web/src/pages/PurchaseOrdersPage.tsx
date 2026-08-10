@@ -521,7 +521,7 @@ export function PurchaseOrdersPage() {
         <form onSubmit={(event) => void submitReceive(event)}>
           {receiving ? (
             <div className="invoice-items">
-              {receiving.items.map((item: PurchaseOrderItem) => {
+              {(receiving.items ?? []).map((item: PurchaseOrderItem) => {
                 const maxReceive = Math.max(0, item.quantity - item.receivedQuantity);
                 return (
                   <div className="invoice-item" key={item.id}>

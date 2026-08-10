@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { createWarehouse, getApiTokens, seedAuth } from './helpers';
+import { createWarehouse, seedAuth } from './helpers';
 
 test('creates a product and records a stock movement', async ({ context, page }) => {
-  await seedAuth(context);
-  const { accessToken } = await getApiTokens();
+  const { accessToken } = await seedAuth(context);
   const warehouse = await createWarehouse(accessToken);
 
   const sku = `E2E-${Date.now()}`;
