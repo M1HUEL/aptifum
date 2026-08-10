@@ -19,6 +19,13 @@ const EnvSchema = z.object({
   JWT_REFRESH_TTL: z.string().default('7d'),
   PASSWORD_RESET_TTL: z.string().default('15m'),
   INVITE_TTL: z.string().default('72h'),
+  APP_URL: z.string().default('http://localhost:5173'),
+  SMTP_HOST: z.string().default(''),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_USER: z.string().default(''),
+  SMTP_PASS: z.string().default(''),
+  SMTP_FROM_EMAIL: z.string().default('no-reply@aptifum.dev'),
+  SMTP_FROM_NAME: z.string().default('Aptifum'),
   MAX_ACTIVE_SESSIONS_PER_USER: z.coerce.number().min(1).default(5),
   SESSION_RETENTION_DAYS: z.coerce.number().min(1).default(30),
 });

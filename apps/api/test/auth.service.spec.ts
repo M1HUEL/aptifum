@@ -32,6 +32,13 @@ function buildAuthService(
       JWT_REFRESH_TTL: '7d',
       PASSWORD_RESET_TTL: '15m',
       INVITE_TTL: '72h',
+      APP_URL: 'http://localhost:5173',
+      SMTP_HOST: '',
+      SMTP_PORT: 587,
+      SMTP_USER: '',
+      SMTP_PASS: '',
+      SMTP_FROM_EMAIL: 'no-reply@aptifum.dev',
+      SMTP_FROM_NAME: 'Aptifum',
       MAX_ACTIVE_SESSIONS_PER_USER: 5,
       SESSION_RETENTION_DAYS: 30,
     },
@@ -54,15 +61,21 @@ function buildAuthService(
     record: vi.fn(async () => undefined),
   };
 
+  const emailService = {
+    isConfigured: vi.fn(() => false),
+    sendMail: vi.fn(async () => true),
+  };
+
   const service = new AuthService(
     usersService as unknown as UsersService,
     jwtService as unknown as JwtService,
     config as unknown as ConfigService,
     auditService as never,
+    emailService as never,
     sessionsRepo as never,
   );
 
-  return { service, usersService, jwtService, sessionsRepo, auditService };
+  return { service, usersService, jwtService, sessionsRepo, auditService, emailService };
 }
 
 describe('AuthService', () => {

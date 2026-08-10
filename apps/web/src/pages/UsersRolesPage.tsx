@@ -80,6 +80,7 @@ export function UsersRolesPage() {
   const [userFormError, setUserFormError] = useState<string | null>(null);
   const [userSaving, setUserSaving] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteEmailSent, setInviteEmailSent] = useState(false);
 
   const [roleOpen, setRoleOpen] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
@@ -181,7 +182,7 @@ export function UsersRolesPage() {
         });
         toast.toast('User updated.');
       } else if (userForm.invite) {
-        const result = await apiFetch<{ user: User; inviteToken: string }>('/api/v1/auth/invite', {
+        const result = await apiFetch<{ user: User; inviteToken: string | null }>('/api/v1/auth/invite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -190,9 +191,13 @@ export function UsersRolesPage() {
             roleIds: userForm.roleIds,
           }),
         });
-        setInviteLink(
-          `${window.location.origin}/accept-invite?token=${encodeURIComponent(result.inviteToken)}`,
-        );
+        if (result.inviteToken) {
+          setInviteLink(
+            `${window.location.origin}/accept-invite?token=${encodeURIComponent(result.inviteToken)}`,
+          );
+        } else {
+          setInviteEmailSent(true);
+        }
         setUserOpen(false);
         void loadUsers(userPage);
         return;
@@ -550,31 +555,50 @@ export function UsersRolesPage() {
       </Modal>
 
       <Modal
-        open={inviteLink !== null}
+        open={inviteLink !== null || inviteEmailSent}
         title="Invitation sent"
-        onClose={() => setInviteLink(null)}
+        onClose={() => {
+          setInviteLink(null);
+          setInviteEmailSent(false);
+        }}
       >
-        <div className="success-banner">
-          Demo mode has no email server, so share the invite link below with{' '}
-          {userForm.email || 'the user'}:
-        </div>
-        <TextInput readOnly value={inviteLink ?? ''} />
+        {inviteEmailSent ? (
+          <div className="success-banner">
+            An invitation email was sent to {userForm.email.trim() || 'the user'}.
+          </div>
+        ) : (
+          <>
+            <div className="success-banner">
+              Demo mode has no email server, so share the invite link below with{' '}
+              {userForm.email || 'the user'}:
+            </div>
+            <TextInput readOnly value={inviteLink ?? ''} />
+          </>
+        )}
         <div className="modal-footer">
-          <Button variant="ghost" onClick={() => setInviteLink(null)}>
-            Close
-          </Button>
-          <button
-            type="button"
-            className="btn btn-primary"
+          <Button
+            variant="ghost"
             onClick={() => {
-              if (inviteLink) {
-                void navigator.clipboard?.writeText(inviteLink);
-                toast.toast('Invite link copied.');
-              }
+              setInviteLink(null);
+              setInviteEmailSent(false);
             }}
           >
-            Copy link
-          </button>
+            Close
+          </Button>
+          {inviteLink ? (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                if (inviteLink) {
+                  void navigator.clipboard?.writeText(inviteLink);
+                  toast.toast('Invite link copied.');
+                }
+              }}
+            >
+              Copy link
+            </button>
+          ) : null}
         </div>
       </Modal>
 

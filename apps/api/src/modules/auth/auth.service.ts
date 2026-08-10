@@ -14,6 +14,7 @@ import { AuditAction, RoleName, UserProfile } from '@aptifum/core';
 import { DEFAULT_TENANT_ID, RefreshSession } from '@aptifum/database';
 import { ConfigService } from '../../config/config.module';
 import { AuditService } from '../audit/audit.service';
+import { EmailService } from '../email/email.service';
 import { UsersService } from '../users/users.service';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
 import { AcceptInviteDto } from './dto/accept-invite.dto';
@@ -61,6 +62,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly auditService: AuditService,
+    private readonly emailService: EmailService,
     @InjectRepository(RefreshSession)
     private readonly sessionsRepo: Repository<RefreshSession>,
   ) {}
@@ -176,7 +178,30 @@ export class AuthService {
       user.defaultTenantId,
       ctx,
     );
+    if (this.emailService.isConfigured()) {
+      try {
+        await this.sendPasswordResetEmail(user, resetToken);
+        return { sent: true, resetToken: null };
+      } catch (error) {
+        console.error('Failed to send password reset email', error);
+      }
+    }
     return { sent: true, resetToken };
+  }
+
+  private async sendPasswordResetEmail(
+    user: { email: string; name?: string | null },
+    resetToken: string,
+  ): Promise<void> {
+    const link = `${this.config.env.APP_URL}/reset-password?token=${encodeURIComponent(resetToken)}`;
+    await this.emailService.sendMail({
+      to: user.email,
+      subject: 'Reset your Aptifum password',
+      html: `<p>Hi ${user.name ?? 'there'},</p>
+<p>We received a request to reset your Aptifum password.</p>
+<p><a href="${link}">Click here to reset your password</a></p>
+<p>This link expires in ${this.config.env.PASSWORD_RESET_TTL}. If you did not request this, you can ignore this email.</p>`,
+    });
   }
 
   async resetPassword(
@@ -206,7 +231,7 @@ export class AuthService {
   async inviteUser(
     input: { email: string; name?: string; roleIds?: string[] },
     ctx?: RequestContext,
-  ): Promise<{ user: UserProfile; inviteToken: string }> {
+  ): Promise<{ user: UserProfile; inviteToken: string | null }> {
     const user = await this.usersService.create({
       email: input.email,
       name: input.name,
@@ -225,7 +250,30 @@ export class AuthService {
       user.tenantId,
       ctx,
     );
+    if (this.emailService.isConfigured()) {
+      try {
+        await this.sendInviteEmail(user, inviteToken);
+        return { user, inviteToken: null };
+      } catch (error) {
+        console.error('Failed to send invite email', error);
+      }
+    }
     return { user, inviteToken };
+  }
+
+  private async sendInviteEmail(
+    user: UserProfile,
+    inviteToken: string,
+  ): Promise<void> {
+    const link = `${this.config.env.APP_URL}/accept-invite?token=${encodeURIComponent(inviteToken)}`;
+    await this.emailService.sendMail({
+      to: user.email,
+      subject: `You've been invited to Aptifum`,
+      html: `<p>Hi ${user.name ?? 'there'},</p>
+<p>You've been invited to join Aptifum.</p>
+<p><a href="${link}">Accept your invitation</a></p>
+<p>This invite expires in ${this.config.env.INVITE_TTL}.</p>`,
+    });
   }
 
   async acceptInvite(
