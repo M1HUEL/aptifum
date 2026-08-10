@@ -1,11 +1,11 @@
 import PDFDocument from 'pdfkit';
 import type { Response } from 'express';
 
-const PAGE_WIDTH = 612; // LETTER portrait
-const PAGE_HEIGHT = 792;
-const MARGIN = 40;
-const BODY_WIDTH = PAGE_WIDTH - MARGIN * 2;
-const ROW_MIN = 18;
+export const PAGE_WIDTH = 612; // LETTER portrait
+export const PAGE_HEIGHT = 792;
+export const MARGIN = 40;
+export const BODY_WIDTH = PAGE_WIDTH - MARGIN * 2;
+export const ROW_MIN = 18;
 const HEADER_HEIGHT = 24;
 
 export function setPdfHeaders(res: Response, filename: string): void {
@@ -72,7 +72,7 @@ function equalColumns(columns: PdfTable['columns']): InternalColumn[] {
   }));
 }
 
-function createDocument() {
+export function createDocument() {
   const doc = new PDFDocument({ size: 'LETTER', margin: MARGIN });
   const chunks: Buffer[] = [];
   doc.on('data', (chunk: Buffer) => chunks.push(chunk));

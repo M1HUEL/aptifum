@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildFinancialPdf, buildTablePdf, formatMoney } from '../src/modules/reports/pdf.util';
+import { buildInvoicePdf } from '../src/modules/sales/invoice-pdf.util';
 
 describe('pdf.util', () => {
   it('produces a valid PDF buffer for a table report', async () => {
@@ -50,5 +51,49 @@ describe('pdf.util', () => {
 
   it('formats money with two decimals', () => {
     expect(formatMoney(1234.5)).toBe('$1,234.50');
+  });
+
+  it('produces a valid PDF buffer for an invoice', async () => {
+    const buffer = await buildInvoicePdf({
+      tenant: { name: 'Aptifum Demo', taxId: 'US-123456', defaultCurrency: 'USD', country: 'US' },
+      invoice: {
+        number: 'INV-000001',
+        type: 'invoice',
+        status: 'issued',
+        issueDate: '2026-08-01',
+        dueDate: '2026-08-31',
+        currency: 'USD',
+        subtotal: 1000,
+        discount: 0,
+        tax: 80,
+        total: 1080,
+        paidAmount: 500,
+        balanceDue: 580,
+        notes: 'Thank you for your business.',
+        customer: {
+          tradeName: 'Acme Corp',
+          legalName: 'Acme Corporation Inc.',
+          taxId: 'US-999888',
+          address: '123 Main St',
+          email: 'billing@acme.test',
+        } as never,
+        items: [
+          {
+            description: 'Consulting services',
+            quantity: 10,
+            unitPrice: 100,
+            discount: 0,
+            taxRate: 0.08,
+            lineTotal: 1080,
+          } as never,
+        ],
+        payments: [
+          { method: 'transfer', amount: 500, receivedAt: new Date('2026-08-05') } as never,
+        ],
+      } as never,
+    });
+
+    expect(buffer.subarray(0, 5).toString()).toBe('%PDF-');
+    expect(buffer.length).toBeGreaterThan(500);
   });
 });

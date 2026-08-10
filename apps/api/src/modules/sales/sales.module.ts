@@ -11,6 +11,7 @@ import {
   SalesOrder,
   SalesOrderItem,
   Tax,
+  Tenant,
   Warehouse,
 } from '@aptifum/database';
 import { CustomersController } from './customers.controller';
@@ -38,6 +39,7 @@ import { TaxesService } from './taxes.service';
       IdempotencyKey,
       Product,
       Warehouse,
+      Tenant,
     ]),
   ],
   controllers: [

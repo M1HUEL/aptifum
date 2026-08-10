@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '../api/client';
+import { apiFetch, ApiError, downloadFile } from '../api/client';
 import type { Customer, Invoice, Paginated, Product, Warehouse } from '../api/types';
 import {
   Badge,
@@ -227,6 +227,14 @@ export function InvoicesPage() {
     }
   };
 
+  const downloadPdf = async (row: Invoice) => {
+    try {
+      await downloadFile(`/api/v1/sales/invoices/${row.id}/pdf`, `invoice-${row.number}.pdf`);
+    } catch (err) {
+      toast.toast(err instanceof ApiError ? err.message : 'Could not download PDF.');
+    }
+  };
+
   const columns: Column<Invoice>[] = [
     { key: 'number', header: 'Number' },
     {
@@ -268,14 +276,18 @@ export function InvoicesPage() {
     {
       key: 'actions',
       header: 'Actions',
-      render: (row) =>
-        row.status === 'issued' && row.balanceDue > 0 ? (
-          <div className="table-actions">
+      render: (row) => (
+        <div className="table-actions">
+          <Button variant="ghost" size="sm" onClick={() => void downloadPdf(row)}>
+            PDF
+          </Button>
+          {row.status === 'issued' && row.balanceDue > 0 ? (
             <Button variant="ghost" size="sm" onClick={() => openPayment(row)}>
               Payment
             </Button>
-          </div>
-        ) : null,
+          ) : null}
+        </div>
+      ),
     },
   ];
 
