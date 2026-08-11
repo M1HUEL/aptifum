@@ -14,6 +14,7 @@ import {
 } from '@aptifum/database';
 import { PurchaseOrdersController } from './purchase-orders.controller';
 import { PurchaseOrdersService } from './purchase-orders.service';
+import { ExchangeRatesModule } from '../exchange-rates/exchange-rates.module';
 import { SupplierBillsController } from './supplier-bills.controller';
 import { SupplierBillsService } from './supplier-bills.service';
 import { SupplierPaymentsController } from './supplier-payments.controller';
@@ -35,6 +36,7 @@ import { SuppliersService } from './suppliers.service';
       Product,
       Warehouse,
     ]),
+    ExchangeRatesModule,
   ],
   controllers: [
     SuppliersController,

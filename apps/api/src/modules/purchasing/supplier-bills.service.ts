@@ -13,9 +13,11 @@ import {
   Supplier,
   SupplierBill,
   SupplierBillItem,
+  Tenant,
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
 import { OutboxService } from '../outbox/outbox.service';
+import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
 import { computeTotals, DocumentSeriesKind, SupplierBillStatus, round2 } from '@aptifum/core';
 import { CreateSupplierBillDto } from './dto/create-supplier-bill.dto';
 
@@ -26,6 +28,7 @@ export class SupplierBillsService {
     private readonly billsRepo: Repository<SupplierBill>,
     private readonly dataSource: DataSource,
     private readonly outbox: OutboxService,
+    private readonly exchangeRates: ExchangeRatesService,
   ) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<SupplierBill> {
@@ -150,11 +153,19 @@ export class SupplierBillsService {
           (receipt?.items ?? []).reduce((sum, item) => sum + item.quantity * item.unitCost, 0),
         );
       }
+      const functional = await this.functionalCurrency(manager, tenantId);
+      const rate = await this.exchangeRates.resolveRate(
+        tenantId,
+        functional,
+        bill.currency,
+        bill.billDate,
+      );
       bill.number = number;
       bill.status = SupplierBillStatus.ISSUED;
       bill.issuedAt = new Date();
+      bill.exchangeRate = rate;
       const saved = await billsRepo.save(bill);
-      const lines = this.billJournalLines(bill.total, receivedAmount);
+      const lines = this.billJournalLines(bill.total, receivedAmount, rate);
       if (lines.length > 0) {
         try {
           await postJournalEntry(manager, tenantId, {
@@ -162,7 +173,7 @@ export class SupplierBillsService {
             description: `Supplier bill ${number}`,
             referenceType: 'supplier_bill',
             referenceId: bill.id,
-            currency: bill.currency,
+            currency: functional,
             userId,
             lines,
           });
@@ -196,8 +207,8 @@ export class SupplierBillsService {
     return this.billsRepo.save(bill);
   }
 
-  private billJournalLines(total: number, receivedAmount: number): JournalLineInput[] {
-    const difference = round2(total - receivedAmount);
+  private billJournalLines(total: number, receivedAmount: number, rate: number): JournalLineInput[] {
+    const difference = round2(round2(total * rate) - receivedAmount);
     if (Math.abs(difference) <= 0.005) {
       return [];
     }
@@ -211,6 +222,11 @@ export class SupplierBillsService {
       { accountCode: ACCOUNT_CODES.ACCOUNTS_PAYABLE, debit: Math.abs(difference) },
       { accountCode: ACCOUNT_CODES.COST_OF_GOODS_SOLD, credit: Math.abs(difference) },
     ];
+  }
+
+  private async functionalCurrency(manager: EntityManager, tenantId: string): Promise<string> {
+    const tenant = await manager.getRepository(Tenant).findOneBy({ id: tenantId });
+    return tenant?.defaultCurrency ?? 'USD';
   }
 
   private async billView(

@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SupplierPaymentsService } from '../src/modules/purchasing/supplier-payments.service';
-import { Supplier, SupplierBill, SupplierPayment, postJournalEntry } from '@aptifum/database';
+import { Supplier, SupplierBill, SupplierPayment, Tenant, postJournalEntry } from '@aptifum/database';
 import { SupplierBillStatus } from '@aptifum/core';
 
 vi.mock('@aptifum/database', async (importOriginal) => {
@@ -21,6 +21,7 @@ function buildService(paymentsRepo: Record<string, unknown>, extras: Record<stri
     (extras.suppliersRepo ?? {}) as never,
     (extras.billsRepo ?? {}) as never,
     (extras.dataSource ?? {}) as never,
+    (extras.exchangeRates ?? { resolveRate: vi.fn().mockResolvedValue(1) }) as never,
   );
 }
 
@@ -47,6 +48,9 @@ function buildDataSource() {
       if (entity === Supplier) return repos.supplier;
       if (entity === SupplierBill) return repos.bill;
       if (entity === SupplierPayment) return repos.payment;
+      if (entity === Tenant) {
+        return { findOneBy: vi.fn().mockResolvedValue({ defaultCurrency: 'USD' }) };
+      }
       throw new Error(`Unexpected repository: ${String(entity)}`);
     }),
   };

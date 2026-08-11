@@ -76,8 +76,10 @@ export const DEFAULT_ACCOUNTS: Array<{
   { code: '3000', name: 'Retained earnings', type: AccountType.EQUITY, normalBalance: AccountNormalBalance.CREDIT },
   { code: '4000', name: 'Sales revenue', type: AccountType.REVENUE, normalBalance: AccountNormalBalance.CREDIT },
   { code: '4100', name: 'Sales returns', type: AccountType.REVENUE, normalBalance: AccountNormalBalance.DEBIT },
+  { code: '4200', name: 'Foreign exchange gain', type: AccountType.REVENUE, normalBalance: AccountNormalBalance.CREDIT },
   { code: '5000', name: 'Cost of goods sold', type: AccountType.EXPENSE, normalBalance: AccountNormalBalance.DEBIT },
   { code: '6000', name: 'Payroll expense', type: AccountType.EXPENSE, normalBalance: AccountNormalBalance.DEBIT },
+  { code: '6100', name: 'Foreign exchange loss', type: AccountType.EXPENSE, normalBalance: AccountNormalBalance.DEBIT },
 ];
 
 export const DEFAULT_TAX_PRESETS: Record<string, Array<{ name: string; rate: number; kind: TaxKind }>> = {

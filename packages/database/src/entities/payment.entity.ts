@@ -21,6 +21,16 @@ export class Payment extends TenantBaseEntity {
   })
   amount: number;
 
+  @Column({
+    name: 'exchange_rate',
+    type: 'numeric',
+    precision: 18,
+    scale: 6,
+    default: 1,
+    transformer: numericTransformer,
+  })
+  exchangeRate: number;
+
   @Column({ name: 'received_at', type: 'timestamptz', default: () => 'now()' })
   receivedAt: Date;
 

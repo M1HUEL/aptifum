@@ -6,6 +6,7 @@ import {
   Invoice,
   InvoiceItem,
   ProductStock,
+  Tenant,
   WALK_IN_CUSTOMER,
 } from '@aptifum/database';
 import { InvoicesService } from '../src/modules/sales/invoices.service';
@@ -48,6 +49,7 @@ function buildService(repos: Record<string, Record<string, unknown>>) {
     (repos.idempotency ?? {}) as never,
     (repos.dataSource ?? {}) as never,
     (repos.outbox ?? {}) as never,
+    (repos.exchangeRates ?? { resolveRate: vi.fn().mockResolvedValue(1) }) as never,
   );
 }
 
@@ -58,6 +60,10 @@ function buildManager(repos: Record<string, Record<string, unknown>>) {
       if (entity === InvoiceItem) return repos.item;
       if (entity === Customer) return repos.customer;
       if (entity === ProductStock) return repos.stock;
+      if (entity === Tenant)
+        return (
+          repos.tenant ?? { findOneBy: vi.fn().mockResolvedValue({ defaultCurrency: 'USD' }) }
+        );
       throw new Error(`Unexpected repository: ${String(entity)}`);
     }),
   };

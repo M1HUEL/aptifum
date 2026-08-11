@@ -11,6 +11,7 @@ import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { EmailModule } from './modules/email/email.module';
+import { ExchangeRatesModule } from './modules/exchange-rates/exchange-rates.module';
 import { HrModule } from './modules/hr/hr.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { OutboxModule } from './modules/outbox/outbox.module';
@@ -48,6 +49,7 @@ import { UsersModule } from './modules/users/users.module';
     }),
     HealthModule,
     EmailModule,
+    ExchangeRatesModule,
     OutboxModule,
     AuthModule,
     UsersModule,

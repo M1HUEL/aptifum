@@ -10,6 +10,7 @@ import {
   Supplier,
   SupplierBill,
   SupplierBillItem,
+  Tenant,
 } from '@aptifum/database';
 import { SupplierBillStatus } from '@aptifum/core';
 
@@ -36,6 +37,7 @@ function buildService(billsRepo: Record<string, unknown>, extras: Record<string,
     billsRepo as never,
     (extras.dataSource ?? {}) as never,
     (extras.outbox ?? {}) as never,
+    (extras.exchangeRates ?? { resolveRate: vi.fn().mockResolvedValue(1) }) as never,
   );
 }
 
@@ -46,6 +48,9 @@ function buildManager(repos: Record<string, Record<string, unknown>>) {
       if (entity === Supplier) return repos.supplier;
       if (entity === GoodsReceipt) return repos.receipt;
       if (entity === SupplierBillItem) return repos.item;
+      if (entity === Tenant) {
+        return { findOneBy: vi.fn().mockResolvedValue({ defaultCurrency: 'USD' }) };
+      }
       throw new Error(`Unexpected repository: ${String(entity)}`);
     }),
   };

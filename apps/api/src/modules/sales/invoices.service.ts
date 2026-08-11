@@ -31,11 +31,13 @@ import {
   Product,
   ProductStock,
   SalesOrder,
+  Tenant,
   WALK_IN_CUSTOMER,
   Warehouse,
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
 import { OutboxService } from '../outbox/outbox.service';
+import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
 import { searchDocumentIds } from '../../common/query/document-search';
 import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -51,6 +53,7 @@ export class InvoicesService {
     private readonly idempotencyRepo: Repository<IdempotencyKey>,
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly outbox: OutboxService,
+    private readonly exchangeRates: ExchangeRatesService,
   ) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<Invoice> {
@@ -158,18 +161,27 @@ export class InvoicesService {
           invoice.paidAmount = newPaid;
           invoice.balanceDue = round2(invoice.total - newPaid);
           await invoicesRepo.save(invoice);
+          const functional = await this.functionalCurrency(manager, tenantId);
+          const receivedAt = dto.receivedAt ? new Date(dto.receivedAt) : new Date();
+          const rate = await this.exchangeRates.resolveRate(
+            tenantId,
+            functional,
+            invoice.currency,
+            receivedAt.toISOString().slice(0, 10),
+          );
           const payment = await manager.getRepository(Payment).save(
             manager.getRepository(Payment).create({
               tenantId,
               invoiceId: invoice.id,
               method: dto.method,
               amount: dto.amount,
-              receivedAt: dto.receivedAt ? new Date(dto.receivedAt) : new Date(),
+              receivedAt,
+              exchangeRate: rate,
               reference: dto.reference ?? null,
               notes: dto.notes ?? null,
             }),
           );
-          await this.postPaymentEntry(manager, tenantId, userId, invoice, payment);
+          await this.postPaymentEntry(manager, tenantId, userId, invoice, payment, rate, functional);
           await this.outbox.emit(manager, tenantId, {
             eventType: 'payment.received',
             aggregateType: 'payment',
@@ -235,6 +247,7 @@ export class InvoicesService {
             }),
           );
           const totals = computeTotals(items, 0);
+          const functional = await this.functionalCurrency(manager, tenantId);
           const creditNote = invoicesRepo.create({
             tenantId,
             number,
@@ -247,6 +260,7 @@ export class InvoicesService {
             issueDate: today(),
             dueDate: null,
             currency: original.currency,
+            exchangeRate: original.exchangeRate ?? 1,
             ...totals,
             paidAmount: 0,
             balanceDue: 0,
@@ -267,7 +281,15 @@ export class InvoicesService {
             );
             cogs = round2(cogs + item.quantity * avgCost);
           }
-          await this.postSaleEntry(manager, tenantId, userId, saved, cogs);
+          await this.postSaleEntry(
+            manager,
+            tenantId,
+            userId,
+            saved,
+            cogs,
+            original.exchangeRate ?? 1,
+            functional,
+          );
           await this.outbox.emit(manager, tenantId, {
             eventType: 'credit_note.issued',
             aggregateType: 'invoice',
@@ -333,6 +355,13 @@ export class InvoicesService {
         }),
       );
       const totals = computeTotals(items, 0);
+      const functional = await this.functionalCurrency(manager, tenantId);
+      const rate = await this.exchangeRates.resolveRate(
+        tenantId,
+        functional,
+        order.currency,
+        today(),
+      );
       const invoice = invoicesRepo.create({
         tenantId,
         number,
@@ -345,6 +374,7 @@ export class InvoicesService {
         issueDate: today(),
         dueDate: order.dueDate,
         currency: order.currency,
+        exchangeRate: rate,
         ...totals,
         paidAmount: 0,
         balanceDue: totals.total,
@@ -365,7 +395,7 @@ export class InvoicesService {
         );
         cogs = round2(cogs + item.quantity * avgCost);
       }
-      await this.postSaleEntry(manager, tenantId, userId, saved, cogs);
+      await this.postSaleEntry(manager, tenantId, userId, saved, cogs, rate, functional);
       await this.outbox.emit(manager, tenantId, {
         eventType: 'invoice.issued',
         aggregateType: 'invoice',
@@ -429,6 +459,13 @@ export class InvoicesService {
         });
       });
       const totals = computeTotals(invoiceItems, discount ?? 0);
+      const functional = await this.functionalCurrency(manager, tenantId);
+      const rate = await this.exchangeRates.resolveRate(
+        tenantId,
+        functional,
+        customer.currency,
+        today(),
+      );
       const invoice = invoicesRepo.create({
         tenantId,
         number,
@@ -441,6 +478,7 @@ export class InvoicesService {
         issueDate: today(),
         dueDate: dueDate ?? null,
         currency: customer.currency,
+        exchangeRate: rate,
         ...totals,
         paidAmount: 0,
         balanceDue: totals.total,
@@ -461,7 +499,7 @@ export class InvoicesService {
         );
         cogs = round2(cogs + item.quantity * avgCost);
       }
-      await this.postSaleEntry(manager, tenantId, userId, saved, cogs);
+      await this.postSaleEntry(manager, tenantId, userId, saved, cogs, rate, functional);
       await this.outbox.emit(manager, tenantId, {
         eventType: 'invoice.issued',
         aggregateType: 'invoice',
@@ -578,23 +616,31 @@ export class InvoicesService {
     return stock?.averageCost ?? 0;
   }
 
+  private async functionalCurrency(manager: EntityManager, tenantId: string): Promise<string> {
+    const tenant = await manager.getRepository(Tenant).findOneBy({ id: tenantId });
+    return tenant?.defaultCurrency ?? 'USD';
+  }
+
   private async postSaleEntry(
     manager: EntityManager,
     tenantId: string,
     userId: string | null,
     invoice: Invoice,
     cogs: number,
+    rate: number,
+    functionalCurrency: string,
   ): Promise<void> {
+    const toF = (value: number): number => round2(value * rate);
     try {
       let lines: JournalLineInput[];
       if (invoice.type === InvoiceType.CREDIT_NOTE) {
         lines = [
           {
             accountCode: ACCOUNT_CODES.SALES_RETURNS,
-            debit: round2(invoice.subtotal - invoice.discount),
+            debit: toF(invoice.subtotal - invoice.discount),
           },
-          { accountCode: ACCOUNT_CODES.OUTPUT_VAT, debit: invoice.tax },
-          { accountCode: ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, credit: invoice.total },
+          { accountCode: ACCOUNT_CODES.OUTPUT_VAT, debit: toF(invoice.tax) },
+          { accountCode: ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, credit: toF(invoice.total) },
         ];
         if (cogs > 0) {
           lines.push(
@@ -604,12 +650,12 @@ export class InvoicesService {
         }
       } else {
         lines = [
-          { accountCode: ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, debit: invoice.total },
+          { accountCode: ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, debit: toF(invoice.total) },
           {
             accountCode: ACCOUNT_CODES.SALES_REVENUE,
-            credit: round2(invoice.subtotal - invoice.discount),
+            credit: toF(invoice.subtotal - invoice.discount),
           },
-          { accountCode: ACCOUNT_CODES.OUTPUT_VAT, credit: invoice.tax },
+          { accountCode: ACCOUNT_CODES.OUTPUT_VAT, credit: toF(invoice.tax) },
         ];
         if (cogs > 0) {
           lines.push(
@@ -632,7 +678,7 @@ export class InvoicesService {
             : `Invoice ${invoice.number}`,
         referenceType: invoice.type === InvoiceType.CREDIT_NOTE ? 'credit_note' : 'invoice',
         referenceId: invoice.id,
-        currency: invoice.currency,
+        currency: functionalCurrency,
         userId,
         lines: cleanLines,
       });
@@ -647,6 +693,8 @@ export class InvoicesService {
     userId: string | null,
     invoice: Invoice,
     payment: Payment,
+    rate: number,
+    functionalCurrency: string,
   ): Promise<void> {
     try {
       await postJournalEntry(manager, tenantId, {
@@ -654,11 +702,11 @@ export class InvoicesService {
         description: `Payment ${invoice.number}`,
         referenceType: 'payment',
         referenceId: payment.id,
-        currency: invoice.currency,
+        currency: functionalCurrency,
         userId,
         lines: [
-          { accountCode: ACCOUNT_CODES.CASH, debit: payment.amount },
-          { accountCode: ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, credit: payment.amount },
+          { accountCode: ACCOUNT_CODES.CASH, debit: round2(payment.amount * rate) },
+          { accountCode: ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, credit: round2(payment.amount * rate) },
         ],
       });
     } catch (error) {

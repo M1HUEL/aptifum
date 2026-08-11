@@ -4,6 +4,7 @@ import { Category } from '../entities/category.entity';
 import { Customer } from '../entities/customer.entity';
 import { Employee } from '../entities/hr-employee.entity';
 import { Department } from '../entities/hr-department.entity';
+import { ExchangeRate } from '../entities/exchange-rate.entity';
 import { Product } from '../entities/product.entity';
 import { StockMovement } from '../entities/stock-movement.entity';
 import { Supplier } from '../entities/supplier.entity';
@@ -44,25 +45,33 @@ const PRODUCTS: Array<{
   { sku: 'HDW-003', name: 'Tool Kit 45 pieces', category: 'Hardware', brand: 'Grip', unitOfMeasure: 'unit', purchasePrice: 32, salePrice: 59, stock: 25 },
 ];
 
-const CUSTOMERS: Array<{ code: string; tradeName: string; taxId: string; email: string; phone: string; creditLimit: number }> = [
+const CUSTOMERS: Array<{ code: string; tradeName: string; taxId: string; email: string; phone: string; creditLimit: number; currency?: string }> = [
   { code: 'C-001', tradeName: 'Cafe Central', taxId: '88-120-4455', email: 'orders@cafecentral.example', phone: '+1 555-0141', creditLimit: 5000 },
   { code: 'C-002', tradeName: 'GreenMart Stores', taxId: '92-300-7710', email: 'purchasing@greenmart.example', phone: '+1 555-0139', creditLimit: 15000 },
   { code: 'C-003', tradeName: 'OfficeHub LLC', taxId: '77-980-2233', email: 'buy@officehub.example', phone: '+1 555-0122', creditLimit: 10000 },
   { code: 'C-004', tradeName: 'Bright School', taxId: '84-556-9010', email: 'admin@brightschool.example', phone: '+1 555-0155', creditLimit: 3000 },
   { code: 'C-005', tradeName: 'Corner Grocery', taxId: '55-221-8840', email: 'mario@cornergrocery.example', phone: '+1 555-0118', creditLimit: 2000 },
+  { code: 'C-006', tradeName: 'Cafe Europa', taxId: 'ES-B-12345678', email: 'purchasing@cafeeuropa.example', phone: '+34 555 01 42', creditLimit: 8000, currency: 'EUR' },
 ];
 
-const SUPPLIERS: Array<{ code: string; tradeName: string; taxId: string; email: string; phone: string; paymentTerms: string }> = [
+const SUPPLIERS: Array<{ code: string; tradeName: string; taxId: string; email: string; phone: string; paymentTerms: string; currency?: string }> = [
   { code: 'S-001', tradeName: 'Alpine Roast Imports', taxId: '10-550-1200', email: 'sales@alpineroast.example', phone: '+1 555-0110', paymentTerms: 'net30' },
   { code: 'S-002', tradeName: 'Sparkle Home Care', taxId: '20-330-7715', email: 'b2b@sparkle.example', phone: '+1 555-0125', paymentTerms: 'net15' },
   { code: 'S-003', tradeName: 'WhiteEdge Paper Co', taxId: '30-990-2210', email: 'sales@whiteedge.example', phone: '+1 555-0130', paymentTerms: 'net30' },
   { code: 'S-004', tradeName: 'VoltMax Electrical', taxId: '40-115-5520', email: 'quotes@voltmax.example', phone: '+1 555-0140', paymentTerms: 'net45' },
+  { code: 'S-005', tradeName: 'Euro Foods GmbH', taxId: 'DE-300123456', email: 'sales@eurofoods.example', phone: '+49 555 011 47', paymentTerms: 'net30', currency: 'EUR' },
 ];
 
 const DEPARTMENTS: Array<{ code: string; name: string }> = [
   { code: 'D-SALES', name: 'Sales' },
   { code: 'D-PROD', name: 'Production' },
   { code: 'D-ADMIN', name: 'Administration' },
+];
+
+const EXCHANGE_RATES: Array<{ baseCurrency: string; quoteCurrency: string; rateDate: string; rate: number }> = [
+  { baseCurrency: 'USD', quoteCurrency: 'EUR', rateDate: '2026-07-01', rate: 0.88 },
+  { baseCurrency: 'USD', quoteCurrency: 'EUR', rateDate: '2026-07-15', rate: 0.9 },
+  { baseCurrency: 'USD', quoteCurrency: 'EUR', rateDate: '2026-08-01', rate: 0.92 },
 ];
 
 const EMPLOYEES: Array<{ employeeNo: string; firstName: string; lastName: string; email: string; position: string; department: string; hireDate: string; salary: number }> = [
@@ -162,6 +171,19 @@ export async function seedDemo(overrides: DataSourceOverrides = {}): Promise<voi
       const existing = await supplierRepo.findOneBy({ tenantId: tenant.id, code: data.code });
       if (!existing) {
         await supplierRepo.save(supplierRepo.create({ tenantId: tenant.id, ...data }));
+      }
+    }
+
+    const ratesRepo = ds.getRepository(ExchangeRate);
+    for (const data of EXCHANGE_RATES) {
+      const existing = await ratesRepo.findOneBy({
+        tenantId: tenant.id,
+        baseCurrency: data.baseCurrency,
+        quoteCurrency: data.quoteCurrency,
+        rateDate: data.rateDate,
+      });
+      if (!existing) {
+        await ratesRepo.save(ratesRepo.create({ tenantId: tenant.id, ...data }));
       }
     }
 

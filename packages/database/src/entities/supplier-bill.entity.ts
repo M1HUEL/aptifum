@@ -34,6 +34,16 @@ export class SupplierBill extends TenantBaseEntity {
   currency: string;
 
   @Column({
+    name: 'exchange_rate',
+    type: 'numeric',
+    precision: 18,
+    scale: 6,
+    default: 1,
+    transformer: numericTransformer,
+  })
+  exchangeRate: number;
+
+  @Column({
     type: 'numeric',
     precision: 14,
     scale: 2,

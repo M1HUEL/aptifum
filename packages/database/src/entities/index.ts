@@ -10,6 +10,7 @@ import { Customer } from './customer.entity';
 import { Department } from './hr-department.entity';
 import { DocumentSeries } from './document-series.entity';
 import { Employee } from './hr-employee.entity';
+import { ExchangeRate } from './exchange-rate.entity';
 import { GoodsReceipt } from './goods-receipt.entity';
 import { GoodsReceiptItem } from './goods-receipt-item.entity';
 import { AttendanceRecord } from './hr-attendance.entity';
@@ -60,6 +61,7 @@ export const entities = [
   Customer,
   Tax,
   DocumentSeries,
+  ExchangeRate,
   SalesOrder,
   SalesOrderItem,
   Invoice,
@@ -105,6 +107,7 @@ export {
   Department,
   DocumentSeries,
   Employee,
+  ExchangeRate,
   GoodsReceipt,
   GoodsReceiptItem,
   AttendanceRecord,

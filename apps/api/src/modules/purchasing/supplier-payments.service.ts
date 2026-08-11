@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
+import { DataSource, EntityManager, FindOptionsWhere, Repository } from 'typeorm';
 import {
   ACCOUNT_CODES,
   ChartAccountNotFoundError,
@@ -9,9 +9,11 @@ import {
   Supplier,
   SupplierBill,
   SupplierPayment,
+  Tenant,
   postJournalEntry,
 } from '@aptifum/database';
 import { SupplierBillStatus, round2 } from '@aptifum/core';
+import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
 import { CreateSupplierPaymentDto } from './dto/create-supplier-payment.dto';
 
 @Injectable()
@@ -22,6 +24,7 @@ export class SupplierPaymentsService {
     @InjectRepository(Supplier) private readonly suppliersRepo: Repository<Supplier>,
     @InjectRepository(SupplierBill) private readonly billsRepo: Repository<SupplierBill>,
     @InjectDataSource() private readonly dataSource: DataSource,
+    private readonly exchangeRates: ExchangeRatesService,
   ) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<SupplierPayment> {
@@ -78,6 +81,14 @@ export class SupplierPaymentsService {
           );
         }
       }
+      const paidAt = dto.paidAt ? new Date(dto.paidAt) : new Date();
+      const functional = await this.functionalCurrency(manager, tenantId);
+      const rate = await this.exchangeRates.resolveRate(
+        tenantId,
+        functional,
+        supplier.currency,
+        paidAt.toISOString().slice(0, 10),
+      );
       const payment = await manager.getRepository(SupplierPayment).save(
         manager.getRepository(SupplierPayment).create({
           tenantId,
@@ -85,7 +96,8 @@ export class SupplierPaymentsService {
           billId: dto.billId ?? null,
           method: dto.method,
           amount: dto.amount,
-          paidAt: dto.paidAt ? new Date(dto.paidAt) : new Date(),
+          paidAt,
+          exchangeRate: rate,
           reference: dto.reference ?? null,
           notes: dto.notes ?? null,
         }),
@@ -96,11 +108,11 @@ export class SupplierPaymentsService {
           description: `Supplier payment ${payment.id.slice(0, 8)}`,
           referenceType: 'supplier_payment',
           referenceId: payment.id,
-          currency: supplier.currency,
+          currency: functional,
           userId,
           lines: [
-            { accountCode: ACCOUNT_CODES.ACCOUNTS_PAYABLE, debit: payment.amount },
-            { accountCode: ACCOUNT_CODES.CASH, credit: payment.amount },
+            { accountCode: ACCOUNT_CODES.ACCOUNTS_PAYABLE, debit: round2(payment.amount * rate) },
+            { accountCode: ACCOUNT_CODES.CASH, credit: round2(payment.amount * rate) },
           ],
         });
       } catch (error) {
@@ -120,6 +132,11 @@ export class SupplierPaymentsService {
         relations: { supplier: true, bill: true },
       });
     });
+  }
+
+  private async functionalCurrency(manager: EntityManager, tenantId: string): Promise<string> {
+    const tenant = await manager.getRepository(Tenant).findOneBy({ id: tenantId });
+    return tenant?.defaultCurrency ?? 'USD';
   }
 
   private mapPostError(error: unknown): never {
