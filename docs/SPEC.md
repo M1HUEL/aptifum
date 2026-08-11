@@ -28,7 +28,7 @@ The goal is to manage the full commercial and financial lifecycle of a business:
 | Backend          | **NestJS** (apps/api), domain-driven modular structure         |
 | ORM              | **TypeORM** + PostgreSQL                                     |
 | Database         | PostgreSQL 16 (transactional, ACID)                          |
-| Auth             | JWT (access + refresh), bcrypt/argon2                        |
+| Auth             | JWT (access + refresh), **bcrypt** (password hashing)                       |
 | Authorization    | RBAC + per-resource permissions (casl or custom guards)      |
 | Events           | @nestjs/event-emitter (in-process) + **transactional outbox** pattern |
 | Validation       | class-validator + class-transformer                          |
@@ -59,6 +59,7 @@ aptifum/
 │   │           ├── invoicing/        # Billing, credit/debit notes, collections
 │   │           ├── purchasing/       # Suppliers, POs, receiving, AP
 │   │           ├── accounting/       # Chart of accounts, entries, closings
+│   │           ├── exchange-rates/   # Exchange rates for multi-currency posting
 │   │           ├── hr/               # Employees, attendance, payroll
 │   │           ├── crm/              # Opportunities, pipeline, activities
 │   │           ├── production/       # BOMs/recipes, production orders
@@ -99,7 +100,7 @@ aptifum/
 - **Auth:** short-lived JWT (access, ~15 min) + rotating refresh token (httpOnly cookie).
 - **Authorization:** global RBAC (admin, accountant, seller, warehouse, HR, ...) + **fine-grained per-resource/action permissions** (e.g., `invoice:approve`, `stock:adjust`).
 - **Tenant isolation:** guard that validates the resource belongs to the token's tenant.
-- **Sensitive data:** hashed passwords (argon2), secrets in env/vault, never in the repo.
+- **Sensitive data:** hashed passwords (bcrypt), secrets in env/vault, never in the repo.
 
 ---
 
@@ -139,7 +140,7 @@ aptifum/
 - **Entries (journal):** double entry, open/closed accounting period, balance validation (debits = credits).
 - **Automatic entries:** generated from sales/credit invoices, collections, payments, inventory movements (valuation), payroll, production.
 - **Accounting close:** period closing, general ledger, journal, trial balance, balance sheet, income statement reports.
-- **Currency:** default functional currency; multi-currency as an extension (exchange rates, revaluation).
+- **Currency:** default functional currency per tenant; exchange rates implemented so foreign-currency documents post in the functional currency. Revaluation of open balances is deferred (see §11 #3 and §16.7).
 
 ### 6.5 Human Resources
 - **Employees:** file, department, position, salary, bank, tax data.
@@ -222,7 +223,8 @@ Entries are generated within the **same transaction** as the source document (ou
 |-------|---------|-------------|
 | **F0 · Foundation** | Monorepo scaffold (Turborepo + pnpm), NestJS API, PostgreSQL, auth + RBAC + tenants, audit, CI/CD, seeders, Swagger | Deployable base API with login and user management |
 | **F1 · Commercial core** | Inventory (products, warehouses, movements, valuation) + Sales/billing (customers, quotes, orders, invoices, collections) | Complete sales flow with stock integration |
-| **F2 · Finance** | Purchasing (suppliers, POs, receiving, AP) + Accounting (chart of accounts, automatic entries, reports) | Operational accounting close || **F3 · Organization** | CRM + Human Resources + Production | Fully integrated modules |
+| **F2 · Finance** | Purchasing (suppliers, POs, receiving, AP) + Accounting (chart of accounts, automatic entries, reports) | Operational accounting close |
+| **F3 · Organization** | CRM + Human Resources + Production | Fully integrated modules |
 | **F4 · Analytics and platform** | BI reports, dashboard, exports, integrations (banks, tax, e-commerce), web frontend | Complete ERP for 20–200 users |
 
 ---
@@ -234,8 +236,8 @@ The following decisions were settled and now constrain the product (see §6 and 
 | # | Decision | Resolution |
 |---|----------|------------|
 | 1 | Country-specific tax rules | **US + Mexico.** Tenants carry a `country` (`US`/`MX`) with seeded tax presets: US → `Sales Tax` 8% (sales), MX → `IVA` 16% (sales). Tax IDs follow the local format (US EIN 9 digits, MX RFC 12–13 chars). Full compliance (CFDI e-invoicing/timbrado, US *sales tax* per state/nexus) is deferred to **F4**. |
-| 2 | Physical POS / offline sales | **Web-only** for now. A web POS/cashier flow is a possible F4 addition; no offline/desktop client. |
-| 3 | Multi-currency | **Single functional currency per tenant** (`default_currency`). Multi-currency (exchange rates, revaluation) is an F4 extension. |
+| 2 | Physical POS / offline sales | **Web-only** — a web POS/cashier (catalog, ticket, payment collection) is **shipped** on the dashboard; no offline/desktop client. |
+| 3 | Multi-currency | **Single functional currency per tenant** (`default_currency`). Exchange rates are **implemented** (per-tenant `exchange_rates`, foreign-currency invoices/payments/supplier bills post in the functional currency, see §16.7). Revaluation of open balances and automatic FX gain/loss entries remain **F4**. |
 | 4 | Notifications | **Email notifications shipped** for invoice/credit-note issuance, payments and goods receipts, delivered by the transactional outbox dispatcher (see §8). SMS and due-date/approval reminders deferred to **F4**. |
 | 5 | Languages | **English only** (single language). UI and API strings are English; no i18n layer for now. |
 | 6 | Team | **Single developer.** Conventions stay simple; lightweight CI. |
@@ -263,6 +265,8 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] Transactional outbox + domain events (`invoice.issued`, `credit_note.issued`, `payment.received`, `purchase_receipt`, `payroll.posted`, `production.completed`) — defined in §1, §2, §6.2, §8.
 - [x] Email notifications consuming outbox events (customers on invoices/credit notes/payments, suppliers on goods receipts) — see §11 #4.
 - [x] F2.2 Supplier bills (AP): PO→receipt→bill reconciliation, draft → issued → paid/cancelled, `SB` series numbering at issue, AP variance entry vs the linked receipt, payments per bill, outbox event `supplier_bill.issued`, AP aging / dashboard payables / overdue alerts spanning bills + unbilled receipts — defined in §15.
+- [x] F4 Multi-currency: `exchange_rates` table + CRUD API; invoices, credit notes, customer payments, supplier bills and supplier payments store `exchange_rate` and post to the tenant's functional currency; FX gain/loss accounts seeded (not yet posted); revaluation deferred — defined in §13.2, §15.2, §16.4, §16.7.
+- [x] Web POS / cashier: catalog, ticket, and payment collection on the dashboard (F4, §11 #2).
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -303,9 +307,9 @@ The following decisions were settled and now constrain the product (see §6 and 
 | `document_series` | `kind` (enum: quote/order/invoice/credit_note), `prefix`, `next_number` (bigint), `active` | per-tenant automatic numbering; atomic increment (row lock/serializable) |
 | `sales_orders` | `number` (unique per tenant), `kind` (enum: quote/order), `status` (enum: draft/confirmed/invoiced/cancelled), `customer_id`, `warehouse_id`, `issue_date`, `due_date`, `currency`, `subtotal`, `discount`, `tax`, `total`, `notes`, `version` | quotes and orders share this table; index `(tenant_id, number)`, `(tenant_id, customer_id, issue_date)` |
 | `sales_order_items` | `order_id`, `product_id`, `description`, `quantity`, `unit_price`, `discount`, `tax_rate`, `tax_amount`, `line_total` | index `(tenant_id, order_id)` |
-| `invoices` | `number` (unique per tenant), `series_id`, `type` (enum: invoice/credit_note), `status` (enum: draft/issued/cancelled), `customer_id`, `order_id` (nullable), `warehouse_id` (nullable, source warehouse for COGS/returns), `issue_date`, `due_date`, `currency`, `subtotal`, `discount`, `tax`, `total`, `paid_amount`, `balance_due`, `notes`, `version` | index `(tenant_id, number)`, `(tenant_id, customer_id, issue_date)` |
+| `invoices` | `number` (unique per tenant), `series_id`, `type` (enum: invoice/credit_note), `status` (enum: draft/issued/cancelled), `customer_id`, `order_id` (nullable), `warehouse_id` (nullable, source warehouse for COGS/returns), `issue_date`, `due_date`, `currency`, `exchange_rate` (default 1), `subtotal`, `discount`, `tax`, `total`, `paid_amount`, `balance_due`, `notes`, `version` | index `(tenant_id, number)`, `(tenant_id, customer_id, issue_date)` |
 | `invoice_items` | `invoice_id`, `product_id`, `description`, `quantity`, `unit_price`, `discount`, `tax_rate`, `tax_amount`, `line_total` | index `(tenant_id, invoice_id)` |
-| `payments` | `invoice_id`, `method` (enum: cash/card/transfer/other), `amount`, `received_at`, `reference`, `notes` | partial payments; index `(tenant_id, invoice_id, received_at)` |
+| `payments` | `invoice_id`, `method` (enum: cash/card/transfer/other), `amount`, `exchange_rate` (default 1), `received_at`, `reference`, `notes` | partial payments; index `(tenant_id, invoice_id, received_at)` |
 | `idempotency_keys` | `key` (unique), `request_hash`, `response` (jsonb), `created_at` | dedupe on financial POSTs (`Idempotency-Key`) |
 
 ### 13.3 Key relationships
@@ -349,7 +353,8 @@ document_series → invoices / sales_orders (numbering)
 2. [x] Implement F1 **Sales/billing** module (customers, orders, invoices, payments, series).
 3. [x] Resolve open decisions in §11 (tax country US/MX, currency, POS, language, team, pilot) — see §11.
 4. [x] Create the **domain glossary** (`docs/GLOSSARY.md`).
-5. [ ] Next phases (see §10): F4 platform extensions (web frontend, integrations, exports Excel/PDF).
+5. [x] Web frontend (React dashboard) and CSV/Excel/PDF exports (see §6.8, §21).
+6. [ ] Next phases (see §10): F4 platform extensions (integrations, multi-currency revaluation, tax compliance).
 
 ---
 
@@ -368,8 +373,8 @@ Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `numeric(18,4)
 | `purchase_order_items` | `order_id`, `product_id`, `description`, `quantity`, `unit_cost`, `discount`, `tax_rate`, `tax_amount`, `line_total`, `received_quantity` (default 0) | `received_quantity` tracks partial receiving; index `(tenant_id, order_id)` |
 | `goods_receipts` | `number` (unique per tenant), `order_id`, `supplier_id`, `warehouse_id`, `received_at`, `notes` | append-only; index `(tenant_id, number)`, `(tenant_id, order_id)` |
 | `goods_receipt_items` | `receipt_id`, `order_item_id`, `product_id`, `quantity`, `unit_cost` | index `(tenant_id, receipt_id)` |
-| `supplier_payments` | `supplier_id`, `bill_id` (nullable), `method` (enum: cash/card/transfer/other), `amount` `numeric(14,2)`, `paid_at`, `reference`, `notes` | append-only; index `(tenant_id, supplier_id)`, `(tenant_id, bill_id)` |
-| `supplier_bills` | `number` (nullable until issued, unique per tenant), `status` (enum: draft/issued/paid/cancelled), `supplier_id`, `order_id` (nullable), `receipt_id` (nullable), `bill_date`, `due_date` (nullable), `currency`, `subtotal`, `tax`, `total`, `paid_amount`, `balance_due`, `notes`, `issued_at`, `version` | index `(tenant_id, number)`, `(tenant_id, supplier_id, bill_date)` |
+| `supplier_payments` | `supplier_id`, `bill_id` (nullable), `method` (enum: cash/card/transfer/other), `amount` `numeric(14,2)`, `exchange_rate` (default 1), `paid_at`, `reference`, `notes` | append-only; index `(tenant_id, supplier_id)`, `(tenant_id, bill_id)` |
+| `supplier_bills` | `number` (nullable until issued, unique per tenant), `status` (enum: draft/issued/paid/cancelled), `supplier_id`, `order_id` (nullable), `receipt_id` (nullable), `bill_date`, `due_date` (nullable), `currency`, `exchange_rate` (default 1), `subtotal`, `tax`, `total`, `paid_amount`, `balance_due`, `notes`, `issued_at`, `version` | index `(tenant_id, number)`, `(tenant_id, supplier_id, bill_date)` |
 | `supplier_bill_items` | `bill_id`, `product_id` (nullable), `description`, `quantity`, `unit_price`, `tax_rate`, `line_total` | index `(tenant_id, bill_id)` |
 
 ### 15.3 Key flows
@@ -379,6 +384,7 @@ Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `numeric(18,4)
 3. **Numbering:** `document_series` kinds `purchase_order` (prefix `PO`), `goods_receipt` (prefix `GR`) and `supplier_bill` (prefix `SB`), assigned atomically like sales.
 4. **Supplier payments (AP):** `POST /purchasing/payments` records a payment against a supplier in a transaction: saves the `supplier_payments` row and posts a journal entry **Dr `2000` Accounts payable, Cr `1000` Cash** (`reference_type='supplier_payment'`, `reference_id=<payment id>`), reusing the PO receiving journal-entry pattern. Closed period or unbalanced → 400/409 like other auto-postings. `GET /purchasing/payments` lists payments (optionally filtered by `supplierId`). When `billId` is provided the payment must belong to an `issued` bill of the same supplier, cannot exceed `balance_due`, and updates `paid_amount`/`balance_due` (status → `paid` when the balance reaches zero).
 5. **Supplier bills (AP reconciliation):** `POST /purchasing/bills` creates a **draft** bill (validates the supplier; optional linked receipt — rejects a draft for a receipt already billed and receipts of another supplier; totals from items via `computeTotals`). `POST /purchasing/bills/:id/issue` requires a draft, assigns the next `SB` series number, stamps `issued_at`, and posts the AP entry **in the same transaction** (outbox pattern) as the **variance vs the linked receipt**: received amount = Σ `goods_receipt_items.quantity × unit_cost`; equal → no entry; bill > receipt → **Dr `5000` COGS, Cr `2000` AP** for the difference; bill < receipt → inverse; no receipt → full amount **Dr `5000`, Cr `2000`**. Emits outbox event `supplier_bill.issued`. `POST /purchasing/bills/:id/cancel` only cancels drafts. `GET /purchasing/bills` lists (optional `supplierId` filter), `GET /purchasing/bills/:id` returns the bill with supplier and items. AP reports (aging, dashboard payables, overdue alerts) span issued bills (`balance_due`) plus receipts without a non-cancelled bill, net of payments not linked to a bill (FIFO).
+6. **Multi-currency in purchasing:** bills and payments issued in a currency other than the tenant's functional currency resolve the rate `functional → document currency` at `bill_date` / `paid_at` (missing rate → 400), store it as `exchange_rate`, and post the AP entry converted to the functional currency. The received amount (`goods_receipt_items.quantity × unit_cost`) is already in functional currency (stock is valued in it), so the variance is computed as `round2(total × rate) − received`.
 
 ### 15.4 Enums to add in `packages/core`
 
@@ -415,8 +421,10 @@ Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `version` opti
 | 3000 | Retained earnings | equity | credit |
 | 4000 | Sales revenue | revenue | credit |
 | 4100 | Sales returns | revenue | debit |
+| 4200 | Foreign exchange gain | revenue | credit |
 | 5000 | Cost of goods sold | expense | debit |
 | 6000 | Payroll expense | expense | debit |
+| 6100 | Foreign exchange loss | expense | debit |
 
 ### 16.4 Auto-posting rules (§8)
 
@@ -426,8 +434,14 @@ Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `version` opti
 | Credit note | 4100 (subtotal − discount); 2100 (tax); 1200 (cogs) | 1100 (total); 5000 (cogs) |
 | Payment received | 1000 (amount) | 1100 (amount) |
 | Goods receipt | 1200 (received amount) | 2000 (received amount) |
+| Supplier payment | 2000 (amount) | 1000 (amount) |
+| Supplier bill variance | 5000 (bill − received, if positive) | 2000 (bill − received); inverse when negative |
+| Payroll posted | 6000 (gross) | 2001 (net); 2002 (deductions) |
+| Production completed | 1200 (total cost) | 1200 (material cost); 6000 (total − material) |
 
-COGS is taken from `product_stock.average_cost` before the outbound movement. Auto-posted entries use `reference_type` `invoice` / `credit_note` / `payment` / `purchase_receipt` and `reference_id` of the source document. A closed period rejects any new posting (409).
+COGS is taken from `product_stock.average_cost` before the outbound movement. Auto-posted entries use `reference_type` `invoice` / `credit_note` / `payment` / `purchase_receipt` / `supplier_payment` / `supplier_bill` / `payroll` / `production_order` and `reference_id` of the source document. A closed period rejects any new posting (409).
+
+**Multi-currency:** every auto-posted entry is denominated in the tenant's **functional currency** (`tenants.default_currency`, default `USD`). For documents in another currency the AR/sales/VAT and AP/cash amounts are converted at the document's stored `exchange_rate` (`round2(amount × rate)`); inventory movements, COGS and stock costs are already in functional currency and are never converted. Missing exchange rate for a pair on the document date → 400. FX gain/loss accounts (`4200`/`6100`) are seeded but not posted automatically (revaluation deferred).
 
 ### 16.5 Key flows
 
@@ -442,6 +456,28 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 - `AccountingPeriodStatus`: open, closed
 - `JournalEntryStatus`: draft, posted, reversed
 - `DocumentSeriesKind` += `journal_entry`
+
+### 16.7 Multi-currency (exchange rates)
+
+**Table** (`exchange_rates`, extends `TenantBaseEntity`)
+
+| Column | Notes |
+|--------|-------|
+| `base_currency` `char(3)` | base currency (e.g. `USD`) |
+| `quote_currency` `char(3)` | quote currency (e.g. `EUR`) |
+| `rate_date` `date` | default `CURRENT_DATE` |
+| `rate` `numeric(18,6)` | `rate = units of quote per 1 unit of base` |
+
+**Unique** `(tenant_id, base_currency, quote_currency, rate_date)`; the latest rate at or before a date is used for conversion.
+
+**API surface** (`/exchange-rates/...`, module permission `ACCOUNTING` with `read`, `write`)
+
+- `GET /exchange-rates?page=&limit=&base=&quote=` — paginated list, newest first.
+- `GET /exchange-rates/latest?base=&quote=&date=` — latest rate for a pair at or before `date` (defaults to the most recent one); `date`/`base`/`quote` optional.
+- `POST /exchange-rates` — body `{ baseCurrency, quoteCurrency, rate, rateDate? }`; rejects equal base/quote (`400`) and duplicate pair+date (`409`).
+- `DELETE /exchange-rates/:id` — soft delete.
+
+**Resolution rule:** `resolveRate(tenantId, base, quote, date)` returns the latest rate for `(base, quote)` with `rate_date <= date`; `base === quote` returns `1`; missing rate → `400`. Callers post in functional currency (see §16.4).
 
 ## 17. F3 CRM data model
 

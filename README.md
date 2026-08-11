@@ -9,6 +9,7 @@ Multi-tenant ERP with sales, purchasing, inventory, manufacturing, HR, accountin
 - **Web** — React 19, Vite, React Router
 - **Packages** — shared core (domain enums/utilities), typed config (zod), database entities/seeders, logger
 - **Auth** — JWT access/refresh with session rotation, RBAC permissions, throttling
+- **Multi-currency** — per-tenant exchange rates; invoices, payments and supplier bills post to the tenant's functional currency
 - **Docs** — PDF (pdfkit) and CSV export across reports and invoices
 
 ## Repository layout
@@ -57,7 +58,9 @@ The seeded admin login is `admin@aptifum.dev` / `Admin123!`. Change it before an
 
 ### Demo data
 
-`pnpm db:seed:demo` seeds 2 warehouses, 4 categories, 13 products with initial stock, 5 customers, 4 suppliers, 3 departments and 5 employees. It is idempotent and requires the base seed (tenant) to have run first.
+`pnpm db:seed:demo` seeds 2 warehouses, 4 categories, 13 products with initial stock, 6 customers, 5 suppliers, 3 departments, 5 employees and USD→EUR exchange rates. Customers and suppliers can carry their own currency (e.g. Cafe Europa in EUR), so foreign-currency invoices, payments and supplier bills post in the tenant's functional currency at the stored rate. It is idempotent and requires the base seed (tenant) to have run first.
+
+`pnpm db:seed:demo:transactions` additionally seeds a set of realistic demo transactions (sales orders, invoices, payments, purchases, goods receipts, supplier bills and payroll) so the reports and dashboard show historical data.
 
 ### User invitations
 
@@ -74,6 +77,7 @@ Admins can invite users by email from **Users & Roles**. There is no email serve
 | `pnpm test` | API unit and e2e tests (needs a `aptifum_test` database) |
 | `pnpm db:seed` | Seed base data (tenant, roles, admin, accounts, series, taxes) |
 | `pnpm db:seed:demo` | Seed demo business data |
+| `pnpm db:seed:demo:transactions` | Seed demo business data plus realistic transactions |
 
 ## Environment variables
 

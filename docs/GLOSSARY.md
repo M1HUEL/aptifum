@@ -32,7 +32,7 @@
 | **Stock movement** | Append-only record of any change to stock (`stock_movements`): signed `quantity`, `unit_cost`, source document reference, user. Each movement is validated and transactional. |
 | **MovementType** | Enum: `inbound`, `outbound`, `adjustment`, `transfer`, `return`, `disposal`. |
 | **Weighted average cost** | Default valuation: `new_avg = (prev_qty * prev_cost + qty * unit_cost) / (prev_qty + qty)`; applied on inbound movements. |
-| **COGS** | Cost of goods sold; posted when an invoice moves stock out, at the current `average_cost`. |
+| **COGS** | Cost of goods sold; posted when an invoice moves stock out, at the current `average_cost`. Always expressed in the functional currency. |
 | **Inbound** | Stock-in movement (receipt, purchase, initial stock). |
 | **Outbound** | Stock-out movement (sale). |
 | **Adjustment** | Authorized change to correct or set stock (`inventory:adjust`); the only movement allowed to fix discrepancies. |
@@ -50,8 +50,8 @@
 | **Sales order** | Confirmed customer commitment (`sales_orders` with `kind = order`); statuses `draft → confirmed → invoiced`, or `cancelled`. |
 | **SalesOrderKind** | Enum: `quote`, `order`. |
 | **SalesOrderStatus** | Enum: `draft`, `confirmed`, `invoiced`, `cancelled`. |
-| **Invoice** | Issued billing document (`invoices`, `type = invoice`), typically generated from a confirmed order or directly. Issuing it moves stock out in the same transaction. |
-| **Credit note (NC)** | Document that reverses an invoice (`invoices`, `type = credit_note`); returns stock to the warehouse when applicable. |
+| **Invoice** | Issued billing document (`invoices`, `type = invoice`), typically generated from a confirmed order or directly. Issuing it moves stock out in the same transaction. Carries a `currency` and an `exchange_rate` against the tenant's functional currency. |
+| **Credit note (NC)** | Document that reverses an invoice (`invoices`, `type = credit_note`); returns stock to the warehouse when applicable. Reuses the original invoice's `exchange_rate`. |
 | **InvoiceType** | Enum: `invoice`, `credit_note`. |
 | **InvoiceStatus** | Enum: `draft`, `issued`, `cancelled`. |
 | **Document series** | Per-tenant numbering configuration (`document_series`): kind, prefix, `next_number`. Numbers are assigned atomically under a row lock (e.g. `INV-000001`). |
@@ -59,11 +59,15 @@
 | **Line total** | `quantity × unit_price` before discount/tax, per item. |
 | **Discount** | Reduction applied at line level or globally to the document (`subtotal − discount → taxable → + tax = total`). |
 | **Tax** | Configured tax rate (`taxes`), `kind` sales/purchase; applied per line via `tax_rate`/`tax_amount`. |
-| **Payment** | Money received against an invoice (`payments`): method, amount, received date, reference. Partials allowed. |
+| **Payment** | Money received against an invoice (`payments`): method, amount, received date, reference, `exchange_rate`. Partials allowed. |
 | **PaymentMethod** | Enum: `cash`, `card`, `transfer`, `other`. |
 | **Paid amount / balance due** | Running totals on the invoice updated with every payment; `balance_due = total − paid_amount`. |
 | **Accounts receivable (AR)** | Outstanding customer balances derived from unpaid invoices. |
 | **Collections** | Process of recording and tracking customer payments (F1: payment recording per invoice). |
+| **Functional currency** | The tenant's reporting currency (`tenants.default_currency`, default `USD`). All automatically posted journal entries are expressed in it. |
+| **Exchange rate** | Per-tenant rate for a `(base, quote)` currency pair on a given date (`exchange_rates`), unique per `(tenant, base, quote, date)`. Stored as `rate = units of quote per 1 unit of base`. |
+| **FX conversion** | Documents issued in a currency other than the functional one store `exchange_rate = functional → document currency` and their automatic entries post converted amounts (AR/sales/VAT, AP/cash). Inventory valuation (COGS/stock) is kept in functional currency and is not converted. |
+| **FX gain / FX loss** | Reserved accounts `4200 Foreign exchange gain` / `6100 Foreign exchange loss` in the seeded chart of accounts. Not yet posted automatically (no revaluation/settlement). |
 
 ## 4. References
 
