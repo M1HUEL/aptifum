@@ -262,6 +262,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] F4 Reporting (BI reports, dashboard, CSV exports) — defined in §21.
 - [x] Transactional outbox + domain events (`invoice.issued`, `credit_note.issued`, `payment.received`, `purchase_receipt`, `payroll.posted`, `production.completed`) — defined in §1, §2, §6.2, §8.
 - [x] Email notifications consuming outbox events (customers on invoices/credit notes/payments, suppliers on goods receipts) — see §11 #4.
+- [x] F2.2 Supplier bills (AP): PO→receipt→bill reconciliation, draft → issued → paid/cancelled, `SB` series numbering at issue, AP variance entry vs the linked receipt, payments per bill, outbox event `supplier_bill.issued`, AP aging / dashboard payables / overdue alerts spanning bills + unbilled receipts — defined in §15.
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -367,19 +368,23 @@ Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `numeric(18,4)
 | `purchase_order_items` | `order_id`, `product_id`, `description`, `quantity`, `unit_cost`, `discount`, `tax_rate`, `tax_amount`, `line_total`, `received_quantity` (default 0) | `received_quantity` tracks partial receiving; index `(tenant_id, order_id)` |
 | `goods_receipts` | `number` (unique per tenant), `order_id`, `supplier_id`, `warehouse_id`, `received_at`, `notes` | append-only; index `(tenant_id, number)`, `(tenant_id, order_id)` |
 | `goods_receipt_items` | `receipt_id`, `order_item_id`, `product_id`, `quantity`, `unit_cost` | index `(tenant_id, receipt_id)` |
-| `supplier_payments` | `supplier_id`, `method` (enum: cash/card/transfer/other), `amount` `numeric(14,2)`, `paid_at`, `reference`, `notes` | append-only; index `(tenant_id, supplier_id)` |
+| `supplier_payments` | `supplier_id`, `bill_id` (nullable), `method` (enum: cash/card/transfer/other), `amount` `numeric(14,2)`, `paid_at`, `reference`, `notes` | append-only; index `(tenant_id, supplier_id)`, `(tenant_id, bill_id)` |
+| `supplier_bills` | `number` (nullable until issued, unique per tenant), `status` (enum: draft/issued/paid/cancelled), `supplier_id`, `order_id` (nullable), `receipt_id` (nullable), `bill_date`, `due_date` (nullable), `currency`, `subtotal`, `tax`, `total`, `paid_amount`, `balance_due`, `notes`, `issued_at`, `version` | index `(tenant_id, number)`, `(tenant_id, supplier_id, bill_date)` |
+| `supplier_bill_items` | `bill_id`, `product_id` (nullable), `description`, `quantity`, `unit_price`, `tax_rate`, `line_total` | index `(tenant_id, bill_id)` |
 
 ### 15.3 Key flows
 
 1. **PO lifecycle:** `draft → approved → received`, or `cancelled` (from draft/approved only). Receive requires an approved order.
 2. **Receiving (partial or full):** each goods receipt creates one `stock_movement` (`inbound`) per line **in the same transaction** (`reference_type='purchase_receipt'`, `reference_id=<receipt id>`), posting `unit_cost` from the PO line and updating `average_cost`. `purchase_order_items.received_quantity` increments per line; when every line is fully received the PO moves to `received`.
-3. **Numbering:** `document_series` kinds `purchase_order` (prefix `PO`) and `goods_receipt` (prefix `GR`), assigned atomically like sales.
-4. **Supplier payments (AP):** `POST /purchasing/payments` records a payment against a supplier in a transaction: saves the `supplier_payments` row and posts a journal entry **Dr `2000` Accounts payable, Cr `1000` Cash** (`reference_type='supplier_payment'`, `reference_id=<payment id>`), reusing the PO receiving journal-entry pattern. Closed period or unbalanced → 400/409 like other auto-postings. `GET /purchasing/payments` lists payments (optionally filtered by `supplierId`).
+3. **Numbering:** `document_series` kinds `purchase_order` (prefix `PO`), `goods_receipt` (prefix `GR`) and `supplier_bill` (prefix `SB`), assigned atomically like sales.
+4. **Supplier payments (AP):** `POST /purchasing/payments` records a payment against a supplier in a transaction: saves the `supplier_payments` row and posts a journal entry **Dr `2000` Accounts payable, Cr `1000` Cash** (`reference_type='supplier_payment'`, `reference_id=<payment id>`), reusing the PO receiving journal-entry pattern. Closed period or unbalanced → 400/409 like other auto-postings. `GET /purchasing/payments` lists payments (optionally filtered by `supplierId`). When `billId` is provided the payment must belong to an `issued` bill of the same supplier, cannot exceed `balance_due`, and updates `paid_amount`/`balance_due` (status → `paid` when the balance reaches zero).
+5. **Supplier bills (AP reconciliation):** `POST /purchasing/bills` creates a **draft** bill (validates the supplier; optional linked receipt — rejects a draft for a receipt already billed and receipts of another supplier; totals from items via `computeTotals`). `POST /purchasing/bills/:id/issue` requires a draft, assigns the next `SB` series number, stamps `issued_at`, and posts the AP entry **in the same transaction** (outbox pattern) as the **variance vs the linked receipt**: received amount = Σ `goods_receipt_items.quantity × unit_cost`; equal → no entry; bill > receipt → **Dr `5000` COGS, Cr `2000` AP** for the difference; bill < receipt → inverse; no receipt → full amount **Dr `5000`, Cr `2000`**. Emits outbox event `supplier_bill.issued`. `POST /purchasing/bills/:id/cancel` only cancels drafts. `GET /purchasing/bills` lists (optional `supplierId` filter), `GET /purchasing/bills/:id` returns the bill with supplier and items. AP reports (aging, dashboard payables, overdue alerts) span issued bills (`balance_due`) plus receipts without a non-cancelled bill, net of payments not linked to a bill (FIFO).
 
 ### 15.4 Enums to add in `packages/core`
 
 - `PurchaseOrderStatus`: draft, approved, received, cancelled
-- `DocumentSeriesKind` += `purchase_order`, `goods_receipt`
+- `SupplierBillStatus`: draft, issued, paid, cancelled
+- `DocumentSeriesKind` += `purchase_order`, `goods_receipt`, `supplier_bill`
 
 ## 16. F2.2 Accounting data model
 
@@ -591,7 +596,7 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 | `GET /reports/sales/by-product?from=&to=` | per product: quantity, revenue, COGS, grossProfit, margin + totals |
 | `GET /reports/sales/by-customer?from=&to=` | per customer: invoices, totalSold (net), totalPaid, balance (AR) + totals |
 | `GET /reports/aging/ar` | AR per customer bucketed by `CURRENT_DATE - COALESCE(due_date, issue_date)` (current / 1–30 / 31–60 / 61–90 / 90+) |
-| `GET /reports/aging/ap` | AP per supplier bucketed by `goods_receipts.received_at` age, **net of `supplier_payments`** (payments applied FIFO to the oldest buckets first; total = max(0, received − paid)) |
+| `GET /reports/aging/ap` | AP per supplier bucketed by `bill_date` (bills) / `received_at` (unbilled receipts) age, **net of `supplier_payments` not linked to a bill** (payments applied FIFO to the oldest buckets first; total = max(0, received − paid)) |
 | `GET /reports/financial/income-statement?periodId=&from=&to=` | revenue / cost of sales / operating expenses sections + net income |
 | `GET /reports/financial/balance-sheet?asOf=` | assets / liabilities / equity sections (equity includes current-period net income) |
 
@@ -600,7 +605,7 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 - **COGS (sales) per product:** `SUM(-sm.quantity × sm.unit_cost)` over `stock_movements` with `reference_type IN ('invoice','credit_note')`. Invoice outbound movements carry the real average cost (`invoices.service.ts` `applyOutbound`).
 - **Income statement:** revenue from `invoices` (issued, credit notes as negative); `costOfSales`/`operatingExpenses` from `journal_entry_lines` joined to expense accounts (`account_code` LIKE `5%` / `6%`); `netIncome = revenue - cogs - opex`.
 - **Balance sheet:** journal entries with `entry_date <= asOf`; equity includes **Net income (current period)** computed from the 1st of the month to `asOf`.
-- **Dashboard:** sales today/month, monthly invoice count, AR balance (sum `balance_due`), AP (goods receipts minus `supplier_payments`), inventory value (physical stock × avg cost), low stock (≤ threshold), open POs (`approved`), production in progress, net income month.
+- **Dashboard:** sales today/month, monthly invoice count, AR balance (sum `balance_due`), AP (issued bill balances + goods receipts minus `supplier_payments` not linked to a bill), inventory value (physical stock × avg cost), low stock (≤ threshold), open POs (`approved`), production in progress, net income month.
 
 ---
 

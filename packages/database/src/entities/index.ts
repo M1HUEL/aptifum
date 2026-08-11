@@ -37,6 +37,8 @@ import { SalesOrder } from './sales-order.entity';
 import { SalesOrderItem } from './sales-order-item.entity';
 import { StockMovement } from './stock-movement.entity';
 import { Supplier } from './supplier.entity';
+import { SupplierBill } from './supplier-bill.entity';
+import { SupplierBillItem } from './supplier-bill-item.entity';
 import { SupplierPayment } from './supplier-payment.entity';
 import { Tax } from './tax.entity';
 import { Tenant } from './tenant.entity';
@@ -65,6 +67,8 @@ export const entities = [
   Payment,
   IdempotencyKey,
   Supplier,
+  SupplierBill,
+  SupplierBillItem,
   PurchaseOrder,
   PurchaseOrderItem,
   RefreshSession,
@@ -128,6 +132,8 @@ export {
   SalesOrderItem,
   StockMovement,
   Supplier,
+  SupplierBill,
+  SupplierBillItem,
   SupplierPayment,
   Tax,
   Tenant,

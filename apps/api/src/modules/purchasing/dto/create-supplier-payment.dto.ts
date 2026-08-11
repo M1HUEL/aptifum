@@ -5,6 +5,10 @@ export class CreateSupplierPaymentDto {
   @IsUUID()
   supplierId: string;
 
+  @IsOptional()
+  @IsUUID()
+  billId?: string;
+
   @IsEnum(PaymentMethod)
   method: PaymentMethod;
 

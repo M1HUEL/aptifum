@@ -14,7 +14,7 @@
 - **Product variants** (§6.1 / §13.1 `product_variants`): entity does not exist (size/color, per-variant sku/barcode/price).
 - **Warehouse locations CRUD** (§13.1): `warehouse_locations` entity exists, but there is no controller/endpoint for it.
 - **Lot/expiry tracking** (§6.1 "lot/expiry tracking for perishables"): not implemented.
-- **Supplier invoice / AP with supplier bills** (§6.3, §15.3): only supplier payments exist (Dr AP / Cr Cash). No supplier bill with PO→receipt→bill reconciliation, no due dates, no payments-per-bill. (Payment-only was a conscious scope decision; the gap remains in the SPEC.)
+- **Supplier invoice / AP with supplier bills** (§6.3, §15.3): ~~only supplier payments exist (Dr AP / Cr Cash). No supplier bill with PO→receipt→bill reconciliation, no due dates, no payments-per-bill. (Payment-only was a conscious scope decision; the gap remains in the SPEC.)~~ **DONE:** `supplier_bills` (+items) with draft → issued → paid/cancelled, number from `SB` series at issue, AP posted as variance vs the linked receipt (Dr/Cr COGS for the difference, full entry when no receipt), optional payments per bill (`bill_id` on `supplier_payments`, PAID when balance hits zero), outbox event `supplier_bill.issued`; AP reports (aging, dashboard payables, overdue alerts) now span bills + unbilled receipts.
 - **Stock transfer between warehouses** (§6.1): `MovementType` has `transfer` / `disposal` / `return`, but the flow only applies generic signed movements; no two-sided origin→destination transfer operation.
 - **Customer statement** (§6.2): explicitly dropped by decision; orphan DTO deleted. Revisit only if requested.
 
@@ -40,7 +40,7 @@
 
 1. ~~**Outbox + domain events**~~ — **DONE** — closes the architectural debt; unblocks notifications, webhooks, integrations, supplier bills.
 2. ~~**Email notifications**~~ — **DONE** — consume outbox events; build on existing `email` module. Emails: invoices/credit notes/payments to customers, receipts to suppliers. Not covered: due-date and approval reminders.
-3. **Supplier bills (AP full)** — PO→receipt→bill reconciliation, due dates, payments per bill; integrates with outbox.
+3. ~~**Supplier bills (AP full)**~~ — **DONE** — PO→receipt→bill reconciliation, due dates, payments per bill; integrates with outbox.
 4. **Web POS / cashier** — visible feature on the existing web app.
 5. **Multi-currency** — exchange rates + revaluation.
 6. **Product variants + lots/expiry** — retail/perishable support.
@@ -51,7 +51,7 @@
 
 1. ~~Outbox + events (foundation, no UI/API-contract change).~~ **DONE** (2026-08).
 2. ~~Email notifications (first consumer of events).~~ **DONE** (2026-08).
-3. Supplier bills AP (closes §6.3; built on outbox).
+3. ~~Supplier bills AP (closes §6.3; built on outbox).~~ **DONE** (2026-08).
 4. POS as the first large visible feature.
 
 ## 6. Minor cleanup items

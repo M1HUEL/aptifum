@@ -7,9 +7,11 @@ import {
   JournalEntryPeriodClosedError,
   JournalEntryUnbalancedError,
   Supplier,
+  SupplierBill,
   SupplierPayment,
   postJournalEntry,
 } from '@aptifum/database';
+import { SupplierBillStatus, round2 } from '@aptifum/core';
 import { CreateSupplierPaymentDto } from './dto/create-supplier-payment.dto';
 
 @Injectable()
@@ -18,6 +20,7 @@ export class SupplierPaymentsService {
     @InjectRepository(SupplierPayment)
     private readonly paymentsRepo: Repository<SupplierPayment>,
     @InjectRepository(Supplier) private readonly suppliersRepo: Repository<Supplier>,
+    @InjectRepository(SupplierBill) private readonly billsRepo: Repository<SupplierBill>,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -54,10 +57,32 @@ export class SupplierPaymentsService {
       if (!supplier) {
         throw new NotFoundException('Supplier not found');
       }
+      let bill: SupplierBill | null = null;
+      if (dto.billId) {
+        bill = await manager.getRepository(SupplierBill).findOneBy({
+          id: dto.billId,
+          tenantId,
+        });
+        if (!bill) {
+          throw new NotFoundException('Supplier bill not found');
+        }
+        if (bill.supplierId !== dto.supplierId) {
+          throw new BadRequestException('Bill belongs to a different supplier');
+        }
+        if (bill.status !== SupplierBillStatus.ISSUED) {
+          throw new BadRequestException('Only issued supplier bills can be paid');
+        }
+        if (round2(dto.amount - bill.balanceDue) > 0.005) {
+          throw new BadRequestException(
+            `Payment exceeds balance due ${bill.balanceDue} for bill ${bill.number}`,
+          );
+        }
+      }
       const payment = await manager.getRepository(SupplierPayment).save(
         manager.getRepository(SupplierPayment).create({
           tenantId,
           supplierId: dto.supplierId,
+          billId: dto.billId ?? null,
           method: dto.method,
           amount: dto.amount,
           paidAt: dto.paidAt ? new Date(dto.paidAt) : new Date(),
@@ -81,9 +106,18 @@ export class SupplierPaymentsService {
       } catch (error) {
         this.mapPostError(error);
       }
-      return this.paymentsRepo.findOne({
+      if (bill) {
+        bill.paidAmount = round2(bill.paidAmount + payment.amount);
+        bill.balanceDue = round2(bill.balanceDue - payment.amount);
+        if (bill.balanceDue <= 0.005) {
+          bill.status = SupplierBillStatus.PAID;
+          bill.balanceDue = 0;
+        }
+        await manager.getRepository(SupplierBill).save(bill);
+      }
+      return manager.getRepository(SupplierPayment).findOne({
         where: { id: payment.id, tenantId },
-        relations: { supplier: true },
+        relations: { supplier: true, bill: true },
       });
     });
   }

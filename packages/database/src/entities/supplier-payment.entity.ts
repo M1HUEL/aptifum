@@ -2,6 +2,7 @@ import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { PaymentMethod } from '@aptifum/core';
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
+import { SupplierBill } from './supplier-bill.entity';
 import { Supplier } from './supplier.entity';
 
 @Entity('supplier_payments')
@@ -9,6 +10,9 @@ export class SupplierPayment extends TenantBaseEntity {
   @Index()
   @Column({ name: 'supplier_id', type: 'uuid' })
   supplierId: string;
+
+  @Column({ name: 'bill_id', type: 'uuid', nullable: true })
+  billId: string | null;
 
   @Column({ type: 'enum', enum: PaymentMethod })
   method: PaymentMethod;
@@ -33,4 +37,8 @@ export class SupplierPayment extends TenantBaseEntity {
   @ManyToOne(() => Supplier)
   @JoinColumn({ name: 'supplier_id' })
   supplier: Supplier;
+
+  @ManyToOne(() => SupplierBill)
+  @JoinColumn({ name: 'bill_id', foreignKeyConstraintName: 'FK_sp_bill' })
+  bill: SupplierBill | null;
 }

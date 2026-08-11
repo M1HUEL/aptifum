@@ -90,6 +90,7 @@ export enum DocumentSeriesKind {
   CREDIT_NOTE = 'credit_note',
   PURCHASE_ORDER = 'purchase_order',
   GOODS_RECEIPT = 'goods_receipt',
+  SUPPLIER_BILL = 'supplier_bill',
   JOURNAL_ENTRY = 'journal_entry',
   LEAD = 'lead',
   PAYROLL = 'payroll',
@@ -100,6 +101,13 @@ export enum PurchaseOrderStatus {
   DRAFT = 'draft',
   APPROVED = 'approved',
   RECEIVED = 'received',
+  CANCELLED = 'cancelled',
+}
+
+export enum SupplierBillStatus {
+  DRAFT = 'draft',
+  ISSUED = 'issued',
+  PAID = 'paid',
   CANCELLED = 'cancelled',
 }
 

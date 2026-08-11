@@ -446,24 +446,35 @@ export class ReportsService {
       days_90_plus: number;
       total_outstanding: number;
     }> = await this.dataSource.query(
-      `SELECT s.id AS supplier_id, s.code, s.trade_name,
-              SUM(CASE WHEN (CURRENT_DATE - gr.received_at::date) <= 30 THEN gri.quantity * gri.unit_cost ELSE 0 END) AS current,
-              SUM(CASE WHEN (CURRENT_DATE - gr.received_at::date) BETWEEN 31 AND 60 THEN gri.quantity * gri.unit_cost ELSE 0 END) AS days_31_60,
-              SUM(CASE WHEN (CURRENT_DATE - gr.received_at::date) BETWEEN 61 AND 90 THEN gri.quantity * gri.unit_cost ELSE 0 END) AS days_61_90,
-              SUM(CASE WHEN (CURRENT_DATE - gr.received_at::date) > 90 THEN gri.quantity * gri.unit_cost ELSE 0 END) AS days_90_plus,
-              SUM(gri.quantity * gri.unit_cost) AS total_outstanding
-         FROM goods_receipts gr
-         JOIN goods_receipt_items gri ON gri.receipt_id = gr.id AND gri.tenant_id = gr.tenant_id AND gri.deleted_at IS NULL
-         JOIN suppliers s ON s.id = gr.supplier_id AND s.tenant_id = gr.tenant_id AND s.deleted_at IS NULL
-        WHERE gr.tenant_id = $1 AND gr.deleted_at IS NULL
-        GROUP BY s.id, s.code, s.trade_name
+      `SELECT supplier_id, code, trade_name,
+              SUM(CASE WHEN (CURRENT_DATE - ref_date) <= 30 THEN amount ELSE 0 END) AS current,
+              SUM(CASE WHEN (CURRENT_DATE - ref_date) BETWEEN 31 AND 60 THEN amount ELSE 0 END) AS days_31_60,
+              SUM(CASE WHEN (CURRENT_DATE - ref_date) BETWEEN 61 AND 90 THEN amount ELSE 0 END) AS days_61_90,
+              SUM(CASE WHEN (CURRENT_DATE - ref_date) > 90 THEN amount ELSE 0 END) AS days_90_plus,
+              SUM(amount) AS total_outstanding
+         FROM (
+           SELECT s.id AS supplier_id, s.code, s.trade_name, sb.bill_date AS ref_date, sb.balance_due AS amount
+             FROM supplier_bills sb
+             JOIN suppliers s ON s.id = sb.supplier_id AND s.tenant_id = sb.tenant_id AND s.deleted_at IS NULL
+            WHERE sb.tenant_id = $1 AND sb.deleted_at IS NULL AND sb.status IN ('issued', 'paid')
+           UNION ALL
+           SELECT s.id AS supplier_id, s.code, s.trade_name, gr.received_at::date AS ref_date,
+                  SUM(gri.quantity * gri.unit_cost) AS amount
+             FROM goods_receipts gr
+             JOIN goods_receipt_items gri ON gri.receipt_id = gr.id AND gri.tenant_id = gr.tenant_id AND gri.deleted_at IS NULL
+             JOIN suppliers s ON s.id = gr.supplier_id AND s.tenant_id = gr.tenant_id AND s.deleted_at IS NULL
+             LEFT JOIN supplier_bills sb2 ON sb2.receipt_id = gr.id AND sb2.tenant_id = gr.tenant_id AND sb2.deleted_at IS NULL AND sb2.status <> 'cancelled'
+            WHERE gr.tenant_id = $1 AND gr.deleted_at IS NULL AND sb2.id IS NULL
+            GROUP BY s.id, s.code, s.trade_name, gr.received_at::date
+         ) u
+        GROUP BY supplier_id, code, trade_name
         ORDER BY total_outstanding DESC`,
       [tenantId],
     );
     const payments: Array<{ supplier_id: string; total: number }> = await this.dataSource.query(
       `SELECT sp.supplier_id, COALESCE(SUM(sp.amount), 0) AS total
          FROM supplier_payments sp
-        WHERE sp.tenant_id = $1 AND sp.deleted_at IS NULL
+        WHERE sp.tenant_id = $1 AND sp.deleted_at IS NULL AND sp.bill_id IS NULL
         GROUP BY sp.supplier_id`,
       [tenantId],
     );
@@ -771,11 +782,16 @@ export class ReportsService {
       [tenantId],
     );
     const [payables]: Array<{ total: number }> = await this.dataSource.query(
-      `SELECT COALESCE(SUM(gri.quantity * gri.unit_cost), 0)
-            - COALESCE((SELECT SUM(sp.amount) FROM supplier_payments sp WHERE sp.tenant_id = $1 AND sp.deleted_at IS NULL), 0) AS total
-         FROM goods_receipts gr
-         JOIN goods_receipt_items gri ON gri.receipt_id = gr.id AND gri.tenant_id = gr.tenant_id AND gri.deleted_at IS NULL
-        WHERE gr.tenant_id = $1 AND gr.deleted_at IS NULL`,
+      `SELECT
+        COALESCE((SELECT SUM(sb.balance_due) FROM supplier_bills sb
+                   WHERE sb.tenant_id = $1 AND sb.deleted_at IS NULL AND sb.status IN ('issued', 'paid')), 0)
+        + COALESCE((SELECT SUM(gri.quantity * gri.unit_cost)
+                      FROM goods_receipts gr
+                      JOIN goods_receipt_items gri ON gri.receipt_id = gr.id AND gri.tenant_id = gr.tenant_id AND gri.deleted_at IS NULL
+                      LEFT JOIN supplier_bills sb2 ON sb2.receipt_id = gr.id AND sb2.tenant_id = gr.tenant_id AND sb2.deleted_at IS NULL AND sb2.status <> 'cancelled'
+                     WHERE gr.tenant_id = $1 AND gr.deleted_at IS NULL AND sb2.id IS NULL), 0)
+        - COALESCE((SELECT SUM(sp.amount) FROM supplier_payments sp
+                     WHERE sp.tenant_id = $1 AND sp.deleted_at IS NULL AND sp.bill_id IS NULL), 0) AS total`,
       [tenantId],
     );
     const [inventoryValue]: Array<{ total: number }> = await this.dataSource.query(
@@ -875,16 +891,31 @@ export class ReportsService {
       outstanding: number;
       days_outstanding: number;
     }> = await this.dataSource.query(
-      `SELECT gr.id AS receipt_id, gr.number, gr.received_at,
-              s.code AS supplier_code, s.trade_name AS supplier_name,
-              SUM(gri.quantity * gri.unit_cost) AS outstanding,
-              (CURRENT_DATE - gr.received_at::date) AS days_outstanding
-         FROM goods_receipts gr
-         JOIN goods_receipt_items gri ON gri.receipt_id = gr.id AND gri.tenant_id = gr.tenant_id AND gri.deleted_at IS NULL
-         JOIN suppliers s ON s.id = gr.supplier_id AND s.tenant_id = gr.tenant_id AND s.deleted_at IS NULL
-        WHERE gr.tenant_id = $1 AND gr.deleted_at IS NULL
-          AND gr.received_at::date < CURRENT_DATE - 30
-        GROUP BY gr.id, gr.number, gr.received_at, s.code, s.trade_name
+      `SELECT receipt_id, number, received_at, supplier_code, supplier_name, outstanding, days_outstanding
+         FROM (
+           SELECT sb.id AS receipt_id, sb.number, sb.bill_date AS received_at,
+                  s.code AS supplier_code, s.trade_name AS supplier_name,
+                  sb.balance_due AS outstanding,
+                  (CURRENT_DATE - sb.due_date::date) AS days_outstanding
+             FROM supplier_bills sb
+             JOIN suppliers s ON s.id = sb.supplier_id AND s.tenant_id = sb.tenant_id AND s.deleted_at IS NULL
+            WHERE sb.tenant_id = $1 AND sb.deleted_at IS NULL
+              AND sb.status = 'issued' AND sb.balance_due > 0
+              AND sb.due_date IS NOT NULL AND sb.due_date::date < CURRENT_DATE
+           UNION ALL
+           SELECT gr.id AS receipt_id, gr.number, gr.received_at::date AS received_at,
+                  s.code AS supplier_code, s.trade_name AS supplier_name,
+                  SUM(gri.quantity * gri.unit_cost) AS outstanding,
+                  (CURRENT_DATE - gr.received_at::date) AS days_outstanding
+             FROM goods_receipts gr
+             JOIN goods_receipt_items gri ON gri.receipt_id = gr.id AND gri.tenant_id = gr.tenant_id AND gri.deleted_at IS NULL
+             JOIN suppliers s ON s.id = gr.supplier_id AND s.tenant_id = gr.tenant_id AND s.deleted_at IS NULL
+             LEFT JOIN supplier_bills sb2 ON sb2.receipt_id = gr.id AND sb2.tenant_id = gr.tenant_id AND sb2.deleted_at IS NULL AND sb2.status <> 'cancelled'
+            WHERE gr.tenant_id = $1 AND gr.deleted_at IS NULL
+              AND sb2.id IS NULL
+              AND gr.received_at::date < CURRENT_DATE - 30
+            GROUP BY gr.id, gr.number, gr.received_at::date, s.code, s.trade_name
+         ) sub
         ORDER BY days_outstanding DESC
         LIMIT $2`,
       [tenantId, limit],

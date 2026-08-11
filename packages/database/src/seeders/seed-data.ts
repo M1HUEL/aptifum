@@ -53,6 +53,7 @@ export const DEFAULT_SERIES: Record<DocumentSeriesKind, string> = {
   [DocumentSeriesKind.CREDIT_NOTE]: 'NC',
   [DocumentSeriesKind.PURCHASE_ORDER]: 'PO',
   [DocumentSeriesKind.GOODS_RECEIPT]: 'GR',
+  [DocumentSeriesKind.SUPPLIER_BILL]: 'SB',
   [DocumentSeriesKind.JOURNAL_ENTRY]: 'JE',
   [DocumentSeriesKind.LEAD]: 'LD',
   [DocumentSeriesKind.PAYROLL]: 'PR',
