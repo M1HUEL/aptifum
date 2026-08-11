@@ -3,6 +3,7 @@ import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
 import { Category } from './category.entity';
 import { ProductStock } from './product-stock.entity';
+import { ProductVariant } from './product-variant.entity';
 import { StockMovement } from './stock-movement.entity';
 
 @Entity('products')
@@ -66,6 +67,9 @@ export class Product extends TenantBaseEntity {
 
   @OneToMany(() => ProductStock, (stock) => stock.product)
   stocks: ProductStock[];
+
+  @OneToMany(() => ProductVariant, (variant) => variant.product)
+  variants: ProductVariant[];
 
   @OneToMany(() => StockMovement, (movement) => movement.product)
   movements: StockMovement[];

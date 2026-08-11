@@ -25,6 +25,7 @@
 |------|------------|
 | **SKU** | Stock keeping unit: the unique code identifying a sellable product within a tenant. |
 | **Product** | An item sold or stocked (`products`), with prices (purchase/sale), category, brand, unit of measure, barcode. |
+| **Product variant** | A variation of a product (`product_variants`, e.g. size/color) with its own SKU, barcode, attributes (jsonb) and prices; SKU unique per tenant. |
 | **Category** | Hierarchical classification of products (`categories`), with optional parent (tree). |
 | **Warehouse** | Physical storage location (`warehouses`), identified by a unique `code` within the tenant. |
 | **Warehouse location** | A named spot inside a warehouse (`warehouse_locations`); informational in F1. |

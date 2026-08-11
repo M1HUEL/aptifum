@@ -250,6 +250,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] Monorepo scaffold (F0): Turborepo + pnpm, NestJS API, PostgreSQL, auth + RBAC + tenants + audit, seeders, Swagger, Vitest.
 - [x] F1 data model definition (§13).
 - [x] F1 Inventory module (entities, migration, CRUD, movements, valuation).
+- [x] Product variants (catalog + nested CRUD under `/inventory/products/:productId/variants`; per-variant sku/barcode/attributes/price; variants embedded in product list/get).
 - [x] F1 Sales/billing module (customers, orders, invoices, payments, series, idempotency).
 - [x] F1 Stock reservation: confirming an order reserves stock (`reserved_quantity`), cancel releases it, invoicing consumes it (available = quantity − reserved).
 - [x] Domain glossary (`docs/GLOSSARY.md`).
@@ -286,7 +287,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 |-------|--------------------------------|-----------------|
 | `categories` | `name`, `parent_id` (self-ref, nullable), `active` | tree; index `(tenant_id, parent_id)` |
 | `products` | `sku`, `name`, `description`, `category_id`, `brand`, `unit_of_measure`, `barcode`, `image_url`, `purchase_price`, `sale_price`, `default_tax_id`, `enabled`, `version` | `sku` unique per tenant; index `(tenant_id, sku)`, `(tenant_id, name)` |
-| `product_variants` | `product_id`, `sku`, `barcode`, `attributes` (jsonb: size/color), `purchase_price`, `sale_price` | optional for F1 |
+| `product_variants` | `product_id`, `sku`, `barcode`, `attributes` (jsonb: size/color), `purchase_price`, `sale_price` | per-variant sku/barcode/price; `sku` **unique per tenant**; FK → `products`; index `(tenant_id, product_id)`; soft delete |
 | `warehouses` | `code`, `name`, `address`, `active` | index `(tenant_id, code)` |
 | `warehouse_locations` | `warehouse_id`, `code`, `name`, `active` | index `(tenant_id, warehouse_id)` |
 | `product_stock` | `product_id`, `warehouse_id`, `quantity` (default 0), `reserved_quantity` (default 0), `average_cost` (default 0), `version` | stock per warehouse in F1 (locations are informational); **unique** `(tenant_id, product_id, warehouse_id)`; optimistic lock |

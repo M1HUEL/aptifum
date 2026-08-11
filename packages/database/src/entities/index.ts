@@ -26,6 +26,7 @@ import { Payroll } from './hr-payroll.entity';
 import { PayrollLine } from './hr-payroll-line.entity';
 import { Product } from './product.entity';
 import { ProductStock } from './product-stock.entity';
+import { ProductVariant } from './product-variant.entity';
 import { ProductionBom } from './production-bom.entity';
 import { ProductionBomLine } from './production-bom-line.entity';
 import { ProductionOrder } from './production-order.entity';
@@ -54,6 +55,7 @@ export const entities = [
   AuditLog,
   Category,
   Product,
+  ProductVariant,
   Warehouse,
   WarehouseLocation,
   ProductStock,
@@ -123,6 +125,7 @@ export {
   PayrollLine,
   Product,
   ProductStock,
+  ProductVariant,
   ProductionBom,
   ProductionBomLine,
   ProductionOrder,

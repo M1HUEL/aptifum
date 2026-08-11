@@ -26,7 +26,7 @@ export class ProductsService {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
-      relations: { category: true },
+      relations: { category: true, variants: true },
     });
     return { data: rows, meta: { page, limit, total } };
   }
@@ -34,7 +34,7 @@ export class ProductsService {
   async findOne(tenantId: string | null, id: string) {
     const product = await this.productsRepo.findOne({
       where: { id, ...this.scoped(tenantId) },
-      relations: { category: true },
+      relations: { category: true, variants: true },
     });
     if (!product) {
       throw new NotFoundException('Product not found');

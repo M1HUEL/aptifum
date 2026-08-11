@@ -4,12 +4,15 @@ import {
   Category,
   Product,
   ProductStock,
+  ProductVariant,
   StockMovement,
   Warehouse,
   WarehouseLocation,
 } from '@aptifum/database';
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
+import { ProductVariantsController } from './product-variants.controller';
+import { ProductVariantsService } from './product-variants.service';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 import { StockController } from './stock.controller';
@@ -22,6 +25,7 @@ import { WarehousesService } from './warehouses.service';
     TypeOrmModule.forFeature([
       Category,
       Product,
+      ProductVariant,
       Warehouse,
       WarehouseLocation,
       ProductStock,
@@ -31,10 +35,17 @@ import { WarehousesService } from './warehouses.service';
   controllers: [
     CategoriesController,
     ProductsController,
+    ProductVariantsController,
     WarehousesController,
     StockController,
   ],
-  providers: [CategoriesService, ProductsService, WarehousesService, StockService],
+  providers: [
+    CategoriesService,
+    ProductsService,
+    ProductVariantsService,
+    WarehousesService,
+    StockService,
+  ],
   exports: [ProductsService, StockService],
 })
 export class InventoryModule {}
