@@ -5,3 +5,4 @@ export * from './seeders/seed-data';
 export * from './services/stock';
 export * from './services/document-numbering';
 export * from './services/accounting';
+export * from './services/outbox';

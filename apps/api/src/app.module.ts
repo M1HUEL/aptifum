@@ -13,6 +13,7 @@ import { CrmModule } from './modules/crm/crm.module';
 import { EmailModule } from './modules/email/email.module';
 import { HrModule } from './modules/hr/hr.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
+import { OutboxModule } from './modules/outbox/outbox.module';
 import { PurchasingModule } from './modules/purchasing/purchasing.module';
 import { ProductionModule } from './modules/production/production.module';
 import { RbacModule } from './modules/rbac/rbac.module';
@@ -47,6 +48,7 @@ import { UsersModule } from './modules/users/users.module';
     }),
     HealthModule,
     EmailModule,
+    OutboxModule,
     AuthModule,
     UsersModule,
     RbacModule,

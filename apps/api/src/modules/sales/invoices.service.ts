@@ -33,6 +33,7 @@ import {
   Warehouse,
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
+import { OutboxService } from '../outbox/outbox.service';
 import { searchDocumentIds } from '../../common/query/document-search';
 import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -48,6 +49,7 @@ export class InvoicesService {
     @InjectRepository(IdempotencyKey)
     private readonly idempotencyRepo: Repository<IdempotencyKey>,
     @InjectDataSource() private readonly dataSource: DataSource,
+    private readonly outbox: OutboxService,
   ) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<Invoice> {
@@ -167,6 +169,14 @@ export class InvoicesService {
             }),
           );
           await this.postPaymentEntry(manager, tenantId, userId, invoice, payment);
+          await this.outbox.emit(manager, tenantId, {
+            eventType: 'payment.received',
+            aggregateType: 'payment',
+            aggregateId: payment.id,
+            payload: { invoiceId: invoice.id, amount: payment.amount, method: payment.method },
+            tenantId,
+            userId,
+          });
           return {
             id: payment.id,
             invoiceId: invoice.id,
@@ -257,6 +267,14 @@ export class InvoicesService {
             cogs = round2(cogs + item.quantity * avgCost);
           }
           await this.postSaleEntry(manager, tenantId, userId, saved, cogs);
+          await this.outbox.emit(manager, tenantId, {
+            eventType: 'credit_note.issued',
+            aggregateType: 'invoice',
+            aggregateId: saved.id,
+            payload: { number: saved.number, customerId: saved.customerId, total: saved.total },
+            tenantId,
+            userId,
+          });
           return this.invoiceView(saved, items);
         });
       },
@@ -347,6 +365,14 @@ export class InvoicesService {
         cogs = round2(cogs + item.quantity * avgCost);
       }
       await this.postSaleEntry(manager, tenantId, userId, saved, cogs);
+      await this.outbox.emit(manager, tenantId, {
+        eventType: 'invoice.issued',
+        aggregateType: 'invoice',
+        aggregateId: saved.id,
+        payload: { number: saved.number, customerId: saved.customerId, total: saved.total },
+        tenantId,
+        userId,
+      });
       order.status = SalesOrderStatus.INVOICED;
       await ordersRepo.save(order);
       return this.invoiceView(saved, items);
@@ -443,6 +469,14 @@ export class InvoicesService {
         cogs = round2(cogs + item.quantity * avgCost);
       }
       await this.postSaleEntry(manager, tenantId, userId, saved, cogs);
+      await this.outbox.emit(manager, tenantId, {
+        eventType: 'invoice.issued',
+        aggregateType: 'invoice',
+        aggregateId: saved.id,
+        payload: { number: saved.number, customerId: saved.customerId, total: saved.total },
+        tenantId,
+        userId,
+      });
       return this.invoiceView(saved, invoiceItems);
     });
   }

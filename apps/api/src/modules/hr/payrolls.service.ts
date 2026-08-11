@@ -19,6 +19,7 @@ import {
   postJournalEntry,
 } from '@aptifum/database';
 import { ACCOUNT_CODES } from '@aptifum/database';
+import { OutboxService } from '../outbox/outbox.service';
 import { GeneratePayrollDto } from './dto/generate-payroll.dto';
 
 @Injectable()
@@ -27,6 +28,7 @@ export class PayrollsService {
     @InjectRepository(Payroll) private readonly payrollsRepo: Repository<Payroll>,
     @InjectRepository(Employee) private readonly employeesRepo: Repository<Employee>,
     @InjectDataSource() private readonly dataSource: DataSource,
+    private readonly outbox: OutboxService,
   ) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<Payroll> {
@@ -168,6 +170,14 @@ export class PayrollsService {
         current.postedEntryId = entry.id;
         current.postedAt = new Date();
         await repo.save(current);
+        await this.outbox.emit(manager, tenantId as string, {
+          eventType: 'payroll.posted',
+          aggregateType: 'payroll',
+          aggregateId: payroll.id,
+          payload: { number: payroll.number, period: payroll.period, totalNet: payroll.totalNet },
+          tenantId: tenantId as string,
+          userId,
+        });
       });
       return this.findOne(tenantId, id);
     } catch (error) {

@@ -19,6 +19,7 @@ import { InvoiceItem } from './invoice-item.entity';
 import { JournalEntry } from './journal-entry.entity';
 import { JournalEntryLine } from './journal-entry-line.entity';
 import { Leave } from './hr-leave.entity';
+import { OutboxEvent } from './outbox-event.entity';
 import { Payment } from './payment.entity';
 import { Payroll } from './hr-payroll.entity';
 import { PayrollLine } from './hr-payroll-line.entity';
@@ -84,6 +85,7 @@ export const entities = [
   Leave,
   Payroll,
   PayrollLine,
+  OutboxEvent,
 ];
 
 export {
@@ -108,6 +110,7 @@ export {
   JournalEntry,
   JournalEntryLine,
   Leave,
+  OutboxEvent,
   Payment,
   Payroll,
   PayrollLine,

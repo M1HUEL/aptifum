@@ -222,6 +222,22 @@ export interface AuthUser {
   tenantId: string | null;
 }
 
+export enum OutboxEventStatus {
+  PENDING = 'pending',
+  DISPATCHED = 'dispatched',
+  FAILED = 'failed',
+}
+
+export interface OutboxEventInput {
+  eventType: string;
+  aggregateType: string;
+  aggregateId: string;
+  payload?: Record<string, unknown>;
+  tenantId: string;
+  occurredAt?: string;
+  userId?: string | null;
+}
+
 export interface RoleWithPermissions {
   name: string;
   permissions: string[];

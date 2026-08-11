@@ -13,6 +13,7 @@ function buildOrdersService(ordersRepo: Record<string, unknown>, extras: Record<
     (extras.productsRepo ?? {}) as never,
     (extras.receiptsRepo ?? {}) as never,
     (extras.dataSource ?? {}) as never,
+    (extras.outbox ?? {}) as never,
   );
 }
 

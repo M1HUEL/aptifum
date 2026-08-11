@@ -22,6 +22,7 @@ import {
   Warehouse,
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
+import { OutboxService } from '../outbox/outbox.service';
 import { CreateProductionOrderDto } from './dto/create-production-order.dto';
 import { UpdateProductionOrderDto } from './dto/update-production-order.dto';
 
@@ -41,6 +42,7 @@ export class ProductionOrdersService {
     @InjectRepository(Tenant)
     private readonly tenantsRepo: Repository<Tenant>,
     private readonly dataSource: DataSource,
+    private readonly outbox: OutboxService,
   ) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<ProductionOrder> {
@@ -230,6 +232,14 @@ export class ProductionOrdersService {
         if (totalCost > 0) {
           await this.postCompletionEntry(manager, tenantId as string, userId, current);
         }
+        await this.outbox.emit(manager, tenantId as string, {
+          eventType: 'production.completed',
+          aggregateType: 'production_order',
+          aggregateId: current.id,
+          payload: { number: current.number, productId: current.productId, totalCost },
+          tenantId: tenantId as string,
+          userId,
+        });
         return current;
       });
     } catch (error) {

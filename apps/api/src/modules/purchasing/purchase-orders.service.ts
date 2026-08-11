@@ -19,6 +19,7 @@ import {
   Warehouse,
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
+import { OutboxService } from '../outbox/outbox.service';
 import { searchDocumentIds } from '../../common/query/document-search';
 import { DocumentSeriesKind, MovementType, PurchaseOrderStatus, round2 } from '@aptifum/core';
 import { CreateGoodsReceiptDto } from './dto/create-goods-receipt.dto';
@@ -38,6 +39,7 @@ export class PurchaseOrdersService {
     @InjectRepository(GoodsReceipt)
     private readonly receiptsRepo: Repository<GoodsReceipt>,
     private readonly dataSource: DataSource,
+    private readonly outbox: OutboxService,
   ) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<PurchaseOrder> {
@@ -255,6 +257,14 @@ export class PurchaseOrdersService {
         saved,
         receivedAmount,
       );
+      await this.outbox.emit(manager, tenantId, {
+        eventType: 'purchase_receipt',
+        aggregateType: 'goods_receipt',
+        aggregateId: saved.id,
+        payload: { number: saved.number, orderId: saved.orderId, supplierId: saved.supplierId },
+        tenantId,
+        userId,
+      });
       return saved;
     });
   }

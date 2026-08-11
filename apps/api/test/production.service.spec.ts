@@ -16,6 +16,7 @@ function buildOrdersService(
     (extras.warehousesRepo ?? {}) as never,
     (extras.tenantsRepo ?? {}) as never,
     (extras.dataSource ?? {}) as never,
+    (extras.outbox ?? {}) as never,
   );
 }
 
