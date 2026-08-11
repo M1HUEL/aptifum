@@ -51,6 +51,7 @@ describe('Vertical flow: sales -> accounting -> reports (e2e)', () => {
       DELETE FROM production_boms;
       DELETE FROM stock_movements;
       DELETE FROM product_stock;
+      DELETE FROM product_variants;
       DELETE FROM products;
       DELETE FROM warehouse_locations;
       DELETE FROM warehouses;

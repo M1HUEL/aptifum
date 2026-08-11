@@ -6,6 +6,7 @@ import { Employee } from '../entities/hr-employee.entity';
 import { Department } from '../entities/hr-department.entity';
 import { ExchangeRate } from '../entities/exchange-rate.entity';
 import { Product } from '../entities/product.entity';
+import { ProductVariant } from '../entities/product-variant.entity';
 import { StockMovement } from '../entities/stock-movement.entity';
 import { Supplier } from '../entities/supplier.entity';
 import { Tenant } from '../entities/tenant.entity';
@@ -43,6 +44,19 @@ const PRODUCTS: Array<{
   { sku: 'HDW-001', name: 'LED Desk Lamp', category: 'Hardware', brand: 'Lumen', unitOfMeasure: 'unit', purchasePrice: 14, salePrice: 29.9, stock: 40 },
   { sku: 'HDW-002', name: 'Extension Cord 5m', category: 'Hardware', brand: 'VoltMax', unitOfMeasure: 'unit', purchasePrice: 9.5, salePrice: 19.8, stock: 55 },
   { sku: 'HDW-003', name: 'Tool Kit 45 pieces', category: 'Hardware', brand: 'Grip', unitOfMeasure: 'unit', purchasePrice: 32, salePrice: 59, stock: 25 },
+];
+
+const VARIANTS: Array<{
+  productSku: string;
+  sku: string;
+  barcode?: string;
+  attributes: Record<string, string>;
+  purchasePrice: number;
+  salePrice: number;
+  stock: number;
+}> = [
+  { productSku: 'FBT-001', sku: 'FBT-001-DARK', barcode: '75010001002', attributes: { size: '1kg', roast: 'Dark' }, purchasePrice: 12.5, salePrice: 26, stock: 45 },
+  { productSku: 'FBT-001', sku: 'FBT-001-MED', barcode: '75010001003', attributes: { size: '1kg', roast: 'Medium' }, purchasePrice: 12.5, salePrice: 26, stock: 30 },
 ];
 
 const CUSTOMERS: Array<{ code: string; tradeName: string; taxId: string; email: string; phone: string; creditLimit: number; currency?: string }> = [
@@ -133,6 +147,49 @@ export async function seedDemo(overrides: DataSourceOverrides = {}): Promise<voi
         );
       }
       productIds[data.sku] = product.id;
+    }
+
+    const variantRepo = ds.getRepository(ProductVariant);
+    const variantIds: Record<string, string> = {};
+    for (const data of VARIANTS) {
+      let variant = await variantRepo.findOneBy({ tenantId: tenant.id, sku: data.sku });
+      if (!variant) {
+        variant = await variantRepo.save(
+          variantRepo.create({
+            tenantId: tenant.id,
+            productId: productIds[data.productSku],
+            sku: data.sku,
+            barcode: data.barcode ?? null,
+            attributes: data.attributes,
+            purchasePrice: data.purchasePrice,
+            salePrice: data.salePrice,
+          }),
+        );
+      }
+      variantIds[data.sku] = variant.id;
+    }
+
+    const variantMovementCount = await ds
+      .getRepository(StockMovement)
+      .createQueryBuilder('sm')
+      .where('sm.tenant_id = :tenantId', { tenantId: tenant.id })
+      .andWhere("sm.reference_type = 'seed-variant'")
+      .getCount();
+    if (variantMovementCount === 0) {
+      await ds.transaction(async (manager) => {
+        for (const data of VARIANTS) {
+          await applyStockMovement(manager, {
+            tenantId: tenant.id,
+            movementType: MovementType.INBOUND,
+            productId: productIds[data.productSku],
+            variantId: variantIds[data.sku],
+            warehouseId: warehouses[0].id,
+            quantity: data.stock,
+            unitCost: data.purchasePrice,
+            referenceType: 'seed-variant',
+          });
+        }
+      });
     }
 
     const movementCount = await ds
@@ -228,6 +285,7 @@ export async function seedDemo(overrides: DataSourceOverrides = {}): Promise<voi
     console.log(`  Warehouses: ${warehouses.length}`);
     console.log(`  Categories: ${CATEGORIES.length}`);
     console.log(`  Products: ${PRODUCTS.length} (${movementCount === 0 ? 'stock seeded' : 'stock kept'})`);
+    console.log(`  Product variants: ${VARIANTS.length} (${variantMovementCount === 0 ? 'stock seeded' : 'stock kept'})`);
     console.log(`  Customers: ${CUSTOMERS.length}`);
     console.log(`  Suppliers: ${SUPPLIERS.length}`);
     console.log(`  Departments: ${DEPARTMENTS.length}`);

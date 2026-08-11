@@ -118,19 +118,19 @@ export class StockService {
         '(COALESCE(stock.quantity, 0) - COALESCE(stock.reserved_quantity, 0))',
         'availableStock',
       )
-      .leftJoin(
-        ProductStock,
-        'stock',
-        `stock.product_id = product.id ${
-          variantsOnly ? 'AND stock.variant_id = variant.id' : 'AND stock.variant_id IS NULL'
-        } AND stock.warehouse_id = :warehouseId AND stock.tenant_id = :tenantId`,
-        { warehouseId, tenantId },
-      )
-      .where('product.tenant_id = :tenantId', { tenantId })
-      .andWhere('product.enabled = true');
+      .where('product.tenant_id = :tenantId', { tenantId });
     if (variantsOnly) {
       builder.innerJoin(ProductVariant, 'variant', 'variant.product_id = product.id');
     }
+    builder.leftJoin(
+      ProductStock,
+      'stock',
+      `stock.product_id = product.id ${
+        variantsOnly ? 'AND stock.variant_id = variant.id' : 'AND stock.variant_id IS NULL'
+      } AND stock.warehouse_id = :warehouseId AND stock.tenant_id = :tenantId`,
+      { warehouseId, tenantId },
+    );
+    builder.andWhere('product.enabled = true');
     if (q) {
       const like = `%${q}%`;
       builder.andWhere(
