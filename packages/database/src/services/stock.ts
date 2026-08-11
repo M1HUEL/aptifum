@@ -46,7 +46,7 @@ export async function applyStockMovement(
   input: ApplyStockMovementInput,
 ): Promise<StockMovement> {
   if (input.movementType === MovementType.TRANSFER) {
-    throw new Error('Transfers are not implemented yet');
+    throw new Error('Transfers must be created via the transfer endpoint');
   }
   const sign = MOVEMENT_SIGN[input.movementType];
   const qty = input.quantity;
@@ -127,11 +127,97 @@ export async function applyStockMovement(
   );
 }
 
-export interface ReserveStockInput {
+export interface TransferStockInput {
   tenantId: string;
   productId: string;
-  warehouseId: string;
+  variantId?: string | null;
+  fromWarehouseId: string;
+  toWarehouseId: string;
   quantity: number;
+  userId?: string | null;
+  notes?: string | null;
+}
+
+export async function transferStock(
+  manager: EntityManager,
+  input: TransferStockInput,
+): Promise<{ from: StockMovement; to: StockMovement }> {
+  const stockRepo = manager.getRepository(ProductStock);
+  const movementsRepo = manager.getRepository(StockMovement);
+  const lockByWarehouse = (warehouseId: string) =>
+    stockRepo
+      .createQueryBuilder('stock')
+      .setLock('pessimistic_write')
+      .where('stock.tenant_id = :tenantId', { tenantId: input.tenantId })
+      .andWhere('stock.product_id = :productId', { productId: input.productId })
+      .andWhere('stock.warehouse_id = :warehouseId', { warehouseId })
+      .andWhere(
+        input.variantId ? 'stock.variant_id = :variantId' : 'stock.variant_id IS NULL',
+        input.variantId ? { variantId: input.variantId } : {},
+      )
+      .getOne();
+
+  const origin = await lockByWarehouse(input.fromWarehouseId);
+  const originQty = origin?.quantity ?? 0;
+  const originReserved = origin?.reservedQuantity ?? 0;
+  if (!origin || originQty - originReserved < input.quantity) {
+    throw new InsufficientStockError();
+  }
+  const averageCost = origin.averageCost;
+
+  origin.quantity = originQty - input.quantity;
+  await stockRepo.save(origin);
+
+  const destination = await lockByWarehouse(input.toWarehouseId);
+  if (destination) {
+    const destQty = destination.quantity;
+    destination.quantity = destQty + input.quantity;
+    destination.averageCost =
+      destination.quantity > 0
+        ? (destQty * destination.averageCost + input.quantity * averageCost) /
+          destination.quantity
+        : averageCost;
+    await stockRepo.save(destination);
+  } else if (input.quantity > 0) {
+    await stockRepo.save(
+      stockRepo.create({
+        tenantId: input.tenantId,
+        productId: input.productId,
+        variantId: input.variantId ?? null,
+        warehouseId: input.toWarehouseId,
+        quantity: input.quantity,
+        reservedQuantity: 0,
+        averageCost,
+      }),
+    );
+  }
+
+  const base = {
+    tenantId: input.tenantId,
+    movementType: MovementType.TRANSFER,
+    productId: input.productId,
+    variantId: input.variantId ?? null,
+    quantity: 0,
+    unitCost: averageCost,
+    referenceType: 'transfer',
+    userId: input.userId ?? null,
+    notes: input.notes ?? null,
+  };
+  const from = await movementsRepo.save(
+    movementsRepo.create({
+      ...base,
+      warehouseId: input.fromWarehouseId,
+      quantity: -input.quantity,
+    }),
+  );
+  const to = await movementsRepo.save(
+    movementsRepo.create({
+      ...base,
+      warehouseId: input.toWarehouseId,
+      quantity: input.quantity,
+    }),
+  );
+  return { from, to };
 }
 
 export async function reserveStock(

@@ -6,6 +6,7 @@ import { ModuleName, MovementType, permission } from '@aptifum/core';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CreateMovementDto } from './dto/create-movement.dto';
+import { CreateTransferDto } from './dto/create-transfer.dto';
 import { StockService } from './stock.service';
 
 @ApiTags('inventory')
@@ -99,5 +100,15 @@ export class StockController {
     @Body() dto: CreateMovementDto,
   ) {
     return this.stockService.createMovement(user.tenantId, user.id, dto);
+  }
+
+  @Post('transfers')
+  @RequirePermissions(permission(ModuleName.INVENTORY, 'adjust'))
+  @ApiOperation({ summary: 'Transfer stock between warehouses' })
+  createTransfer(
+    @CurrentUser() user: { tenantId: string | null; id: string },
+    @Body() dto: CreateTransferDto,
+  ) {
+    return this.stockService.createTransfer(user.tenantId, user.id, dto);
   }
 }

@@ -9,10 +9,12 @@ import {
   ProductStock,
   ProductVariant,
   StockMovement,
+  transferStock,
   Warehouse,
   WarehouseLocation,
 } from '@aptifum/database';
 import { CreateMovementDto } from './dto/create-movement.dto';
+import { CreateTransferDto } from './dto/create-transfer.dto';
 
 interface ListMovementFilters {
   productId?: string;
@@ -221,6 +223,56 @@ export class StockService {
           referenceId: dto.referenceId ?? null,
           userId,
         });
+      });
+    } catch (error) {
+      if (error instanceof InsufficientStockError) {
+        throw new BadRequestException('Insufficient stock');
+      }
+      throw error;
+    }
+  }
+
+  async createTransfer(
+    tenantId: string | null,
+    userId: string | null,
+    dto: CreateTransferDto,
+  ) {
+    this.assertTenant(tenantId);
+    if (dto.fromWarehouseId === dto.toWarehouseId) {
+      throw new BadRequestException('Origin and destination warehouses must differ');
+    }
+    await this.assertStockContext(tenantId, dto.productId, dto.fromWarehouseId);
+    const destination = await this.warehousesRepo.findOneBy({
+      id: dto.toWarehouseId,
+      tenantId,
+    });
+    if (!destination) {
+      throw new NotFoundException('Warehouse not found');
+    }
+    if (dto.variantId) {
+      await this.assertVariant(tenantId, dto.productId, dto.variantId);
+    }
+
+    try {
+      return await this.dataSource.transaction(async (manager) => {
+        const { from, to } = await transferStock(manager, {
+          tenantId,
+          productId: dto.productId,
+          variantId: dto.variantId ?? null,
+          fromWarehouseId: dto.fromWarehouseId,
+          toWarehouseId: dto.toWarehouseId,
+          quantity: dto.quantity,
+          userId,
+          notes: dto.notes ?? null,
+        });
+        return {
+          fromWarehouseId: from.warehouseId,
+          toWarehouseId: to.warehouseId,
+          productId: from.productId,
+          variantId: from.variantId ?? null,
+          quantity: dto.quantity,
+          movements: [from.id, to.id],
+        };
       });
     } catch (error) {
       if (error instanceof InsufficientStockError) {
