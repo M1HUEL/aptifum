@@ -89,6 +89,12 @@ export const DEFAULT_TAX_PRESETS: Record<string, Array<{ name: string; rate: num
   ],
 };
 
+export const WALK_IN_CUSTOMER = {
+  code: 'WALK-IN',
+  tradeName: 'Walk-in Customer',
+  currency: 'USD',
+} as const;
+
 export const DEFAULT_TENANT_ID = '00000000-0000-4000-8000-000000000001';
 export const ADMIN_EMAIL = 'admin@aptifum.dev';
 export const ADMIN_PASSWORD = 'Admin123!';

@@ -3,6 +3,7 @@ import { useAuth, usePermission } from '../auth/AuthContext';
 
 const NAV_ITEMS: Array<{ to: string; label: string; permission?: string }> = [
   { to: '/dashboard', label: 'Dashboard', permission: 'reporting:read' },
+  { to: '/pos', label: 'POS', permission: 'invoicing:read' },
   { to: '/products', label: 'Products', permission: 'inventory:read' },
   { to: '/stock', label: 'Stock', permission: 'inventory:read' },
   { to: '/warehouses', label: 'Warehouses', permission: 'inventory:read' },

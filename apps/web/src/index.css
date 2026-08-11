@@ -791,6 +791,153 @@ select:focus {
   width: 100%;
 }
 
+.pos-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 20px;
+  align-items: start;
+}
+
+.pos-catalog {
+  min-width: 0;
+}
+
+.pos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.pos-product {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  padding: 12px;
+  min-height: 96px;
+}
+
+.pos-product:hover:not(:disabled) {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(47, 95, 230, 0.15);
+}
+
+.pos-product-name {
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.pos-product-sku {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pos-product-price {
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.pos-ticket-col {
+  min-width: 0;
+}
+
+.pos-lines {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  margin-bottom: 12px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.pos-line {
+  display: grid;
+  grid-template-columns: 1fr 60px 80px 52px 86px 28px;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pos-line:last-child {
+  border-bottom: none;
+}
+
+.pos-line-info {
+  min-width: 0;
+}
+
+.pos-line-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pos-line-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pos-qty,
+.pos-price,
+.pos-tax {
+  width: 100%;
+  min-width: 0;
+  text-align: right;
+}
+
+.pos-line-total {
+  font-weight: 600;
+}
+
+.pos-line-remove {
+  padding: 2px 6px;
+}
+
+.pos-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.pos-total-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+}
+
+.pos-total-grand {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.pos-charge {
+  margin-top: 4px;
+  font-size: 15px;
+  padding: 12px;
+}
+
+.pos-success-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .pos-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media print {
   .app-shell {
     display: block;

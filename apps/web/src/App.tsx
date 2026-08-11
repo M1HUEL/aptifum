@@ -39,6 +39,7 @@ const PurchaseOrdersPage = lazyPage(
   () => import('./pages/PurchaseOrdersPage'),
   'PurchaseOrdersPage',
 );
+const PosPage = lazyPage(() => import('./pages/PosPage'), 'PosPage');
 const ReportsPage = lazyPage(() => import('./pages/ReportsPage'), 'ReportsPage');
 const ResetPasswordPage = lazyPage(
   () => import('./pages/ResetPasswordPage'),
@@ -75,6 +76,7 @@ export default function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/pos" element={<PosPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/stock" element={<StockPage />} />
           <Route path="/warehouses" element={<WarehousesCategoriesPage />} />

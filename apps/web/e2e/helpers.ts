@@ -147,13 +147,13 @@ export async function createSupplier(
 
 export async function createProduct(
   accessToken: string,
-  input: { sku: string; name: string },
+  input: { sku: string; name: string; salePrice?: number },
 ): Promise<{ id: string }> {
   const ctx = await request.newContext({ baseURL: BASE_URL });
   try {
     const res = await ctx.post('/api/v1/inventory/products', {
       headers: { Authorization: `Bearer ${accessToken}` },
-      data: input,
+      data: { ...input, salePrice: input.salePrice ?? 5 },
     });
     if (!res.ok()) {
       throw new Error(`Create product failed: ${res.status()} ${await res.text()}`);

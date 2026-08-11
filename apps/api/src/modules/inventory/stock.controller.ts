@@ -33,6 +33,27 @@ export class StockController {
     return this.stockService.stockByProduct(user.tenantId, productId);
   }
 
+  @Get('pos-products')
+  @RequirePermissions(permission(ModuleName.INVENTORY, 'read'))
+  @ApiOperation({ summary: 'List products with available stock for the point of sale' })
+  listPosProducts(
+    @CurrentUser() user: { tenantId: string | null },
+    @Query() { page, limit }: PaginationQueryDto,
+    @Query('warehouseId') warehouseId?: string,
+    @Query('q') q?: string,
+  ) {
+    if (!warehouseId) {
+      throw new BadRequestException('warehouseId is required');
+    }
+    return this.stockService.listPosProducts(
+      user.tenantId,
+      warehouseId,
+      Number(page),
+      Math.min(Number(limit), 100),
+      q,
+    );
+  }
+
   @Get('movements')
   @RequirePermissions(permission(ModuleName.INVENTORY, 'read'))
   @ApiOperation({ summary: 'List stock movements' })

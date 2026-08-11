@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Between, Repository } from 'typeorm';
+import { Brackets, DataSource, Between, Repository } from 'typeorm';
 import { MovementType } from '@aptifum/core';
 import {
   applyStockMovement,
@@ -54,6 +54,68 @@ export class StockService {
       order: { createdAt: 'ASC' },
       relations: { product: true, warehouse: true },
     });
+  }
+
+  async listPosProducts(
+    tenantId: string | null,
+    warehouseId: string,
+    page: number,
+    limit: number,
+    q?: string,
+  ) {
+    this.assertTenant(tenantId);
+    const warehouse = await this.warehousesRepo.findOneBy({ id: warehouseId, tenantId });
+    if (!warehouse) {
+      throw new NotFoundException('Warehouse not found');
+    }
+    const qb = this.productsRepo
+      .createQueryBuilder('product')
+      .leftJoin(
+        ProductStock,
+        'stock',
+        'stock.product_id = product.id AND stock.warehouse_id = :warehouseId AND stock.tenant_id = :tenantId',
+        { warehouseId, tenantId },
+      )
+      .select('product.id', 'id')
+      .addSelect('product.sku', 'sku')
+      .addSelect('product.name', 'name')
+      .addSelect('product.barcode', 'barcode')
+      .addSelect('product.unit_of_measure', 'unitOfMeasure')
+      .addSelect('product.category_id', 'categoryId')
+      .addSelect('product.sale_price', 'salePrice')
+      .addSelect(
+        '(COALESCE(stock.quantity, 0) - COALESCE(stock.reserved_quantity, 0))',
+        'availableStock',
+      )
+      .where('product.tenant_id = :tenantId', { tenantId })
+      .andWhere('product.enabled = true');
+    if (q) {
+      const like = `%${q}%`;
+      qb.andWhere(
+        new Brackets((sub) =>
+          sub
+            .where('product.name ILIKE :q', { q: like })
+            .orWhere('product.sku ILIKE :q', { q: like })
+            .orWhere('product.barcode ILIKE :q', { q: like }),
+        ),
+      );
+    }
+    qb.orderBy('product.name', 'ASC')
+      .skip((page - 1) * limit)
+      .take(limit);
+    const rows = await qb.getRawMany();
+    const total = await qb.getCount();
+    const data = rows.map((row: Record<string, string>) => ({
+      id: row.id,
+      sku: row.sku,
+      name: row.name,
+      barcode: row.barcode,
+      unitOfMeasure: row.unitOfMeasure,
+      categoryId: row.categoryId,
+      salePrice: Number(row.salePrice),
+      availableStock: Number(row.availableStock),
+    }));
+    return { data, meta: { page, limit, total } };
   }
 
   async listMovements(

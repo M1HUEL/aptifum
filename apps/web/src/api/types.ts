@@ -120,6 +120,17 @@ export interface ProductStock {
   warehouse: Warehouse;
 }
 
+export interface PosProduct {
+  id: string;
+  sku: string;
+  name: string;
+  barcode: string | null;
+  unitOfMeasure: string;
+  categoryId: string | null;
+  salePrice: number;
+  availableStock: number;
+}
+
 export type MovementType = 'inbound' | 'outbound' | 'adjustment' | 'transfer' | 'return' | 'disposal';
 
 export interface StockMovement {

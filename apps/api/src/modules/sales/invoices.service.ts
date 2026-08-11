@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import {
   BadRequestException,
   ConflictException,
@@ -30,6 +31,7 @@ import {
   Product,
   ProductStock,
   SalesOrder,
+  WALK_IN_CUSTOMER,
   Warehouse,
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
@@ -43,7 +45,6 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 export class InvoicesService {
   constructor(
     @InjectRepository(Invoice) private readonly invoicesRepo: Repository<Invoice>,
-    @InjectRepository(Customer) private readonly customersRepo: Repository<Customer>,
     @InjectRepository(Warehouse) private readonly warehousesRepo: Repository<Warehouse>,
     @InjectRepository(Product) private readonly productsRepo: Repository<Product>,
     @InjectRepository(IdempotencyKey)
@@ -384,19 +385,10 @@ export class InvoicesService {
     userId: string | null,
     dto: CreateInvoiceDto,
   ) {
-    if (!dto.customerId || !dto.warehouseId || !dto.items) {
-      throw new BadRequestException(
-        'Direct invoices require customerId, warehouseId and items',
-      );
+    if (!dto.warehouseId || !dto.items) {
+      throw new BadRequestException('Direct invoices require warehouseId and items');
     }
-    const { customerId, warehouseId, items, notes, discount, dueDate } = dto;
-    const customer = await this.customersRepo.findOneBy({
-      id: customerId,
-      tenantId,
-    });
-    if (!customer) {
-      throw new NotFoundException('Customer not found');
-    }
+    const { warehouseId, items, notes, discount, dueDate } = dto;
     const warehouse = await this.warehousesRepo.findOneBy({
       id: warehouseId,
       tenantId,
@@ -411,6 +403,7 @@ export class InvoicesService {
 
     return this.dataSource.transaction(async (manager) => {
       const invoicesRepo = manager.getRepository(Invoice);
+      const customer = await this.resolveCustomer(manager, tenantId, dto.customerId);
       const { number, seriesId } = await nextDocumentNumber(
         manager,
         tenantId,
@@ -442,7 +435,7 @@ export class InvoicesService {
         seriesId,
         type: InvoiceType.INVOICE,
         status: InvoiceStatus.ISSUED,
-        customerId,
+        customerId: customer.id,
         orderId: null,
         warehouseId,
         issueDate: today(),
@@ -479,6 +472,47 @@ export class InvoicesService {
       });
       return this.invoiceView(saved, invoiceItems);
     });
+  }
+
+  private async resolveCustomer(
+    manager: EntityManager,
+    tenantId: string,
+    customerId?: string,
+  ): Promise<Customer> {
+    const repo = manager.getRepository(Customer);
+    if (customerId) {
+      const customer = await repo.findOneBy({ id: customerId, tenantId });
+      if (!customer) {
+        throw new NotFoundException('Customer not found');
+      }
+      return customer;
+    }
+    let customer = await repo.findOneBy({
+      code: WALK_IN_CUSTOMER.code,
+      tenantId,
+    });
+    if (!customer) {
+      try {
+        customer = await repo.save(
+          repo.create({
+            tenantId,
+            code: WALK_IN_CUSTOMER.code,
+            tradeName: WALK_IN_CUSTOMER.tradeName,
+            currency: WALK_IN_CUSTOMER.currency,
+            active: true,
+          }),
+        );
+      } catch {
+        customer = await repo.findOneBy({
+          code: WALK_IN_CUSTOMER.code,
+          tenantId,
+        });
+        if (!customer) {
+          throw new BadRequestException('Could not resolve walk-in customer');
+        }
+      }
+    }
+    return customer;
   }
 
   private async applyOutbound(
@@ -652,7 +686,7 @@ export class InvoicesService {
 
   private async withIdempotency<T>(
     key: string | undefined,
-    requestHash: string,
+    requestHashInput: string,
     operation: () => Promise<T>,
   ): Promise<T> {
     if (!key) {
@@ -663,6 +697,7 @@ export class InvoicesService {
       return existing.response as T;
     }
     const result = await operation();
+    const requestHash = createHash('sha256').update(requestHashInput).digest('hex').slice(0, 64);
     await this.idempotencyRepo.save(
       this.idempotencyRepo.create({ key, requestHash, response: result }),
     );

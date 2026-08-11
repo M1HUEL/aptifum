@@ -2,6 +2,7 @@ import { DocumentSeriesKind, RoleName } from '@aptifum/core';
 import * as bcrypt from 'bcryptjs';
 import { createDataSource, DataSourceOverrides } from '../data-source';
 import { ChartAccount } from '../entities/chart-account.entity';
+import { Customer } from '../entities/customer.entity';
 import { DocumentSeries } from '../entities/document-series.entity';
 import { Role } from '../entities/role.entity';
 import { Tax } from '../entities/tax.entity';
@@ -15,6 +16,7 @@ import {
   DEFAULT_SERIES,
   DEFAULT_TAX_PRESETS,
   DEFAULT_TENANT_ID,
+  WALK_IN_CUSTOMER,
 } from './seed-data';
 
 export async function seed(overrides: DataSourceOverrides = {}): Promise<void> {
@@ -90,6 +92,21 @@ export async function seed(overrides: DataSourceOverrides = {}): Promise<void> {
           }),
         );
       }
+    }
+
+    const customerRepo = ds.getRepository(Customer);
+    const walkIn = await customerRepo.findOneBy({
+      tenantId: tenant.id,
+      code: WALK_IN_CUSTOMER.code,
+    });
+    if (!walkIn) {
+      await customerRepo.save(
+        customerRepo.create({
+          tenantId: tenant.id,
+          ...WALK_IN_CUSTOMER,
+          active: true,
+        }),
+      );
     }
 
     const taxRepo = ds.getRepository(Tax);
