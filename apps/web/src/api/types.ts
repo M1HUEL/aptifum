@@ -122,6 +122,7 @@ export interface ProductStock {
 
 export interface PosProduct {
   id: string;
+  variantId: string | null;
   sku: string;
   name: string;
   barcode: string | null;

@@ -3,6 +3,7 @@ import { MovementType } from '@aptifum/core';
 import { BaseEntity } from '../base/base.entity';
 import { numericTransformer } from '../base/transformers';
 import { Product } from './product.entity';
+import { ProductVariant } from './product-variant.entity';
 import { Warehouse } from './warehouse.entity';
 
 @Entity('stock_movements')
@@ -18,6 +19,10 @@ export class StockMovement extends BaseEntity {
   @Index()
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
+
+  @Index('IDX_stock_movements_variant_id')
+  @Column({ name: 'variant_id', type: 'uuid', nullable: true })
+  variantId: string | null;
 
   @Index()
   @Column({ name: 'warehouse_id', type: 'uuid' })
@@ -62,6 +67,10 @@ export class StockMovement extends BaseEntity {
   @ManyToOne(() => Product, (product) => product.movements)
   @JoinColumn({ name: 'product_id' })
   product: Product;
+
+  @ManyToOne(() => ProductVariant, (variant) => variant.movements)
+  @JoinColumn({ name: 'variant_id' })
+  variant: ProductVariant;
 
   @ManyToOne(() => Warehouse)
   @JoinColumn({ name: 'warehouse_id' })

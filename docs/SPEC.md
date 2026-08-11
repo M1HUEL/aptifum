@@ -251,6 +251,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] F1 data model definition (§13).
 - [x] F1 Inventory module (entities, migration, CRUD, movements, valuation).
 - [x] Product variants (catalog + nested CRUD under `/inventory/products/:productId/variants`; per-variant sku/barcode/attributes/price; variants embedded in product list/get).
+- [x] Product variants in stock/POS: per-variant stock rows and movements (`variant_id` on `product_stock`/`stock_movements`), stock helpers accept `variantId`, POS catalog merges product + variant rows (variant sku/barcode search), invoice/order items carry `variantId`, POS ticket merges lines by `productId + variantId`; migration `VariantStock1786800000000`.
 - [x] F1 Sales/billing module (customers, orders, invoices, payments, series, idempotency).
 - [x] F1 Stock reservation: confirming an order reserves stock (`reserved_quantity`), cancel releases it, invoicing consumes it (available = quantity − reserved).
 - [x] Domain glossary (`docs/GLOSSARY.md`).

@@ -11,7 +11,7 @@
 
 ### 1.2 Functional (defined in SPEC, not built)
 
-- **Product variants** (§6.1 / §13.1 `product_variants`): ~~entity does not exist (size/color, per-variant sku/barcode/price)~~ **DONE (partial)** — `product_variants` entity + migration + nested CRUD (`/inventory/products/:productId/variants`), variants embedded in product list/get; SKU unique per tenant. Remaining: variants in stock/POS/lots.
+- **Product variants** (§6.1 / §13.1 `product_variants`): ~~entity does not exist (size/color, per-variant sku/barcode/price)~~ **DONE** — `product_variants` entity + migration + nested CRUD (`/inventory/products/:productId/variants`), variants embedded in product list/get; SKU unique per tenant. **Variants in stock/POS done (2026-08):** per-variant `variant_id` on `product_stock` / `stock_movements` / `invoice_items` / `sales_order_items`, stock helpers take `variantId` (receive/reserve/release/consume/adjust), POS catalog merges product + variant rows with variant sku/barcode search, POS ticket merges lines by `productId + variantId`; migration `VariantStock1786800000000`. Remaining: lots/expiry.
 - **Warehouse locations CRUD** (§13.1): `warehouse_locations` entity exists, but there is no controller/endpoint for it.
 - **Lot/expiry tracking** (§6.1 "lot/expiry tracking for perishables"): not implemented.
 - **Supplier invoice / AP with supplier bills** (§6.3, §15.3): ~~only supplier payments exist (Dr AP / Cr Cash). No supplier bill with PO→receipt→bill reconciliation, no due dates, no payments-per-bill. (Payment-only was a conscious scope decision; the gap remains in the SPEC.)~~ **DONE:** `supplier_bills` (+items) with draft → issued → paid/cancelled, number from `SB` series at issue, AP posted as variance vs the linked receipt (Dr/Cr COGS for the difference, full entry when no receipt), optional payments per bill (`bill_id` on `supplier_payments`, PAID when balance hits zero), outbox event `supplier_bill.issued`; AP reports (aging, dashboard payables, overdue alerts) now span bills + unbilled receipts.
@@ -43,7 +43,7 @@
 3. ~~**Supplier bills (AP full)**~~ — **DONE** — PO→receipt→bill reconciliation, due dates, payments per bill; integrates with outbox.
 4. ~~**Web POS / cashier**~~ — **DONE** — point of sale with catalog, ticket, and payment collection.
 5. ~~**Multi-currency**~~ — **DONE (partial)** — per-tenant `exchange_rates` + CRUD API; invoices/credit notes/customer payments/supplier bills/supplier payments store `exchange_rate` and post to the tenant's functional currency (inventory/COGS stay in functional currency, not converted); FX gain/loss accounts seeded. Remaining: revaluation of open balances and automatic FX entries on settlement; payments in POS.
-6. **Product variants + lots/expiry** — retail/perishable support. **Variants shipped (partial):** catalog + CRUD done (2026-08); lots/expiry still pending.
+6. **Product variants + lots/expiry** — retail/perishable support. **Variants shipped (partial):** catalog + CRUD done (2026-08); variants in stock/POS done (2026-08); lots/expiry still pending.
 7. **Payment/bank integrations** (Stripe, bank feeds).
 8. **MX/US tax compliance** (CFDI/timbrado, sales tax nexus) — largest effort, biggest differentiator.
 

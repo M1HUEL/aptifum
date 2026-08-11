@@ -1,7 +1,9 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
 import { Product } from './product.entity';
+import { ProductStock } from './product-stock.entity';
+import { StockMovement } from './stock-movement.entity';
 
 @Entity('product_variants')
 @Unique(['tenantId', 'sku'])
@@ -42,4 +44,10 @@ export class ProductVariant extends TenantBaseEntity {
   @ManyToOne(() => Product, (product) => product.variants)
   @JoinColumn({ name: 'product_id' })
   product: Product;
+
+  @OneToMany(() => ProductStock, (stock) => stock.variant)
+  stocks: ProductStock[];
+
+  @OneToMany(() => StockMovement, (movement) => movement.variant)
+  movements: StockMovement[];
 }

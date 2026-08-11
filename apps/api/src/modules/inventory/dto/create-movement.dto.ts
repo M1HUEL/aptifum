@@ -16,6 +16,10 @@ export class CreateMovementDto {
   @IsUUID()
   productId: string;
 
+  @IsOptional()
+  @IsUUID()
+  variantId?: string;
+
   @IsUUID()
   warehouseId: string;
 

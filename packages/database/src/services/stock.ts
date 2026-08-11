@@ -23,6 +23,7 @@ export interface ApplyStockMovementInput {
   tenantId: string;
   movementType: MovementType;
   productId: string;
+  variantId?: string | null;
   warehouseId: string;
   locationId?: string | null;
   quantity: number;
@@ -30,6 +31,14 @@ export interface ApplyStockMovementInput {
   referenceType?: string | null;
   referenceId?: string | null;
   userId?: string | null;
+}
+
+export interface ReserveStockInput {
+  tenantId: string;
+  productId: string;
+  variantId?: string | null;
+  warehouseId: string;
+  quantity: number;
 }
 
 export async function applyStockMovement(
@@ -52,6 +61,10 @@ export async function applyStockMovement(
     .where('stock.tenant_id = :tenantId', { tenantId: input.tenantId })
     .andWhere('stock.product_id = :productId', { productId: input.productId })
     .andWhere('stock.warehouse_id = :warehouseId', { warehouseId: input.warehouseId })
+    .andWhere(
+      input.variantId ? 'stock.variant_id = :variantId' : 'stock.variant_id IS NULL',
+      input.variantId ? { variantId: input.variantId } : {},
+    )
     .getOne();
 
   const currentQty = stock?.quantity ?? 0;
@@ -88,6 +101,7 @@ export async function applyStockMovement(
       stockRepo.create({
         tenantId: input.tenantId,
         productId: input.productId,
+        variantId: input.variantId ?? null,
         warehouseId: input.warehouseId,
         quantity: newQty,
         reservedQuantity: 0,
@@ -101,6 +115,7 @@ export async function applyStockMovement(
       tenantId: input.tenantId,
       movementType: input.movementType,
       productId: input.productId,
+      variantId: input.variantId ?? null,
       warehouseId: input.warehouseId,
       locationId: input.locationId ?? null,
       quantity: sign * qty,
@@ -130,6 +145,10 @@ export async function reserveStock(
     .where('stock.tenant_id = :tenantId', { tenantId: input.tenantId })
     .andWhere('stock.product_id = :productId', { productId: input.productId })
     .andWhere('stock.warehouse_id = :warehouseId', { warehouseId: input.warehouseId })
+    .andWhere(
+      input.variantId ? 'stock.variant_id = :variantId' : 'stock.variant_id IS NULL',
+      input.variantId ? { variantId: input.variantId } : {},
+    )
     .getOne();
 
   const currentQty = stock?.quantity ?? 0;
@@ -152,6 +171,10 @@ export async function releaseStock(
     .where('stock.tenant_id = :tenantId', { tenantId: input.tenantId })
     .andWhere('stock.product_id = :productId', { productId: input.productId })
     .andWhere('stock.warehouse_id = :warehouseId', { warehouseId: input.warehouseId })
+    .andWhere(
+      input.variantId ? 'stock.variant_id = :variantId' : 'stock.variant_id IS NULL',
+      input.variantId ? { variantId: input.variantId } : {},
+    )
     .getOne();
   if (!stock) {
     return;

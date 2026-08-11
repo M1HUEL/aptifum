@@ -47,6 +47,7 @@ function buildService(
     {} as never,
     {} as never,
     {} as never,
+    {} as never,
     dataSource as never,
   );
   return { service, stockRepo, salesOrderRepo };

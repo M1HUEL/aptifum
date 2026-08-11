@@ -1,23 +1,20 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import { Brackets } from 'typeorm';
-import { ProductStock } from '@aptifum/database';
 import { StockService } from '../src/modules/inventory/stock.service';
 
 const TENANT = '00000000-0000-4000-8000-000000000001';
 
-function qbChain(rows: unknown[], total: number) {
+function qbChain(rows: unknown[]) {
   return {
-    leftJoin: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     addSelect: vi.fn().mockReturnThis(),
+    leftJoin: vi.fn().mockReturnThis(),
+    innerJoin: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
     andWhere: vi.fn().mockReturnThis(),
     orderBy: vi.fn().mockReturnThis(),
-    skip: vi.fn().mockReturnThis(),
-    take: vi.fn().mockReturnThis(),
     getRawMany: vi.fn().mockResolvedValue(rows),
-    getCount: vi.fn().mockResolvedValue(total),
   };
 }
 
@@ -27,9 +24,25 @@ function buildService(repos: Record<string, Record<string, unknown>>) {
     (repos.stock ?? {}) as never,
     (repos.movements ?? {}) as never,
     (repos.products ?? {}) as never,
+    (repos.variants ?? {}) as never,
     (repos.warehouses ?? {}) as never,
     (repos.locations ?? {}) as never,
   );
+}
+
+function productRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'p1',
+    variantId: null,
+    sku: 'SKU-1',
+    name: 'Espresso',
+    barcode: '75010001',
+    unitOfMeasure: 'unit',
+    categoryId: null,
+    salePrice: '5.00',
+    availableStock: '8',
+    ...overrides,
+  };
 }
 
 describe('StockService listPosProducts', () => {
@@ -49,23 +62,20 @@ describe('StockService listPosProducts', () => {
     );
   });
 
-  it('returns products with available stock and numeric price', async () => {
-    const qb = qbChain(
-      [
-        {
-          id: 'p1',
-          sku: 'SKU-1',
-          name: 'Espresso',
-          barcode: '75010001',
-          unitOfMeasure: 'unit',
-          categoryId: null,
-          salePrice: '5.00',
-          availableStock: '8',
-        },
-      ],
-      1,
-    );
-    const products = { createQueryBuilder: vi.fn(() => qb) };
+  it('merges products and variants, with numeric price and available stock', async () => {
+    const productsQb = qbChain([productRow()]);
+    const variantsQb = qbChain([
+      productRow({
+        id: 'p2',
+        variantId: 'v1',
+        sku: 'SKU-1-RED',
+        name: 'Espresso (Red, M)',
+        barcode: null,
+        salePrice: '6.50',
+        availableStock: '3',
+      }),
+    ]);
+    const products = { createQueryBuilder: vi.fn(() => productsQb).mockReturnValueOnce(productsQb).mockReturnValueOnce(variantsQb) };
     const service = buildService({
       warehouses: { findOneBy: vi.fn().mockResolvedValue({ id: 'w1' }) },
       products,
@@ -74,62 +84,93 @@ describe('StockService listPosProducts', () => {
     const result = await service.listPosProducts(TENANT, 'w1', 1, 20);
 
     expect(products.createQueryBuilder).toHaveBeenCalledWith('product');
-    expect(qb.leftJoin).toHaveBeenCalledWith(
-      ProductStock,
-      'stock',
-      expect.stringContaining('stock.warehouse_id = :warehouseId'),
-      { warehouseId: 'w1', tenantId: TENANT },
-    );
-    expect(qb.where).toHaveBeenCalledWith('product.tenant_id = :tenantId', {
-      tenantId: TENANT,
-    });
-    expect(result.meta.total).toBe(1);
-    expect(result.data[0]).toMatchObject({
-      id: 'p1',
-      salePrice: 5,
-      availableStock: 8,
-    });
+    expect(result.meta.total).toBe(2);
+    expect(result.data).toEqual([
+      {
+        id: 'p1',
+        variantId: null,
+        sku: 'SKU-1',
+        name: 'Espresso',
+        barcode: '75010001',
+        unitOfMeasure: 'unit',
+        categoryId: null,
+        salePrice: 5,
+        availableStock: 8,
+      },
+      {
+        id: 'p2',
+        variantId: 'v1',
+        sku: 'SKU-1-RED',
+        name: 'Espresso (Red, M)',
+        barcode: null,
+        unitOfMeasure: 'unit',
+        categoryId: null,
+        salePrice: 6.5,
+        availableStock: 3,
+      },
+    ]);
   });
 
-  it('searches by name, sku or barcode when q is provided', async () => {
-    const qb = qbChain([], 0);
+  it('searches variants by variant sku or barcode when q is provided', async () => {
+    const productsQb = qbChain([]);
+    const variantsQb = qbChain([]);
+    const products = {
+      createQueryBuilder: vi
+        .fn()
+        .mockReturnValueOnce(productsQb)
+        .mockReturnValueOnce(variantsQb),
+    };
     const service = buildService({
       warehouses: { findOneBy: vi.fn().mockResolvedValue({ id: 'w1' }) },
-      products: { createQueryBuilder: vi.fn(() => qb) },
+      products,
     });
 
-    await service.listPosProducts(TENANT, 'w1', 1, 20, 'cafe');
+    await service.listPosProducts(TENANT, 'w1', 1, 20, 'red');
 
-    const filterCall = qb.andWhere.mock.calls.find(
+    const productFilter = productsQb.andWhere.mock.calls.find(
       (call: unknown[]) => call[0] instanceof Brackets,
-    );
-    expect(filterCall).toBeTruthy();
+    )?.[0];
+    const variantFilter = variantsQb.andWhere.mock.calls.find(
+      (call: unknown[]) => call[0] instanceof Brackets,
+    )?.[0];
+    expect(productFilter).toBeTruthy();
+    expect(variantFilter).toBeTruthy();
     const sub = {
       where: vi.fn().mockReturnThis(),
       orWhere: vi.fn().mockReturnThis(),
     };
-    const bracket = (filterCall as unknown[])[0] as Brackets;
-    bracket.whereFactory(sub as never);
+    const productBracket = productFilter as unknown as { whereFactory: (s: never) => void };
+    const variantBracket = variantFilter as unknown as { whereFactory: (s: never) => void };
+    productBracket.whereFactory(sub as never);
     expect(sub.where).toHaveBeenCalledWith(expect.stringContaining('product.name ILIKE'), {
-      q: '%cafe%',
+      q: '%red%',
     });
-    expect(sub.orWhere).toHaveBeenCalledWith(expect.stringContaining('product.barcode ILIKE'), {
-      q: '%cafe%',
+    variantBracket.whereFactory(sub as never);
+    expect(sub.orWhere).toHaveBeenCalledWith(expect.stringContaining('variant.sku ILIKE'), {
+      q: '%red%',
     });
-    expect(qb.andWhere).toHaveBeenCalledWith('product.enabled = true');
   });
 
-  it('paginates with skip and take', async () => {
-    const qb = qbChain([], 0);
+  it('paginates the merged catalog in memory', async () => {
+    const productsQb = qbChain([
+      productRow({ id: 'a', name: 'Alpha' }),
+      productRow({ id: 'b', name: 'Bravo' }),
+    ]);
+    const variantsQb = qbChain([]);
+    const products = {
+      createQueryBuilder: vi
+        .fn()
+        .mockReturnValueOnce(productsQb)
+        .mockReturnValueOnce(variantsQb),
+    };
     const service = buildService({
       warehouses: { findOneBy: vi.fn().mockResolvedValue({ id: 'w1' }) },
-      products: { createQueryBuilder: vi.fn(() => qb) },
+      products,
     });
 
-    await service.listPosProducts(TENANT, 'w1', 2, 50);
+    const result = await service.listPosProducts(TENANT, 'w1', 2, 1);
 
-    expect(qb.skip).toHaveBeenCalledWith(50);
-    expect(qb.take).toHaveBeenCalledWith(50);
-    expect(qb.orderBy).toHaveBeenCalledWith('product.name', 'ASC');
+    expect(result.meta).toEqual({ page: 2, limit: 1, total: 2 });
+    expect(result.data[0].name).toBe('Bravo');
   });
 });

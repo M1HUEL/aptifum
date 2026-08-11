@@ -15,6 +15,7 @@ import {
   Customer,
   InsufficientStockError,
   Product,
+  ProductVariant,
   SalesOrder,
   Warehouse,
   releaseStock,
@@ -31,6 +32,8 @@ export class OrdersService {
     @InjectRepository(Customer) private readonly customersRepo: Repository<Customer>,
     @InjectRepository(Warehouse) private readonly warehousesRepo: Repository<Warehouse>,
     @InjectRepository(Product) private readonly productsRepo: Repository<Product>,
+    @InjectRepository(ProductVariant)
+    private readonly variantsRepo: Repository<ProductVariant>,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -93,18 +96,32 @@ export class OrdersService {
 
     return this.dataSource.transaction(async (manager) => {
       const products = await this.loadProducts(tenantId, dto.items.map((item) => item.productId));
+      const variants = await this.loadVariants(
+        tenantId,
+        dto.items.filter((item) => item.variantId).map((item) => item.variantId as string),
+      );
       const items = dto.items.map((item) => {
         const product = products.get(item.productId);
         if (!product) {
           throw new NotFoundException(`Product ${item.productId} not found`);
         }
-        const unitPrice = item.unitPrice ?? product.salePrice;
+        const variant = item.variantId ? variants.get(item.variantId) : undefined;
+        if (item.variantId && !variant) {
+          throw new NotFoundException(`Variant ${item.variantId} not found`);
+        }
+        if (variant && variant.productId !== product.id) {
+          throw new BadRequestException(
+            `Variant ${item.variantId} does not belong to product ${product.id}`,
+          );
+        }
+        const unitPrice = item.unitPrice ?? variant?.salePrice ?? product.salePrice;
         const taxRate = item.taxRate ?? 0;
         const discount = item.discount ?? 0;
         const quantity = item.quantity;
         return {
           tenantId,
           productId: item.productId,
+          variantId: item.variantId ?? null,
           description: item.description ?? product.name,
           quantity,
           unitPrice,
@@ -159,6 +176,7 @@ export class OrdersService {
             await reserveStock(manager, {
               tenantId,
               productId: item.productId,
+              variantId: item.variantId ?? null,
               warehouseId: order.warehouseId,
               quantity: item.quantity,
             });
@@ -199,6 +217,7 @@ export class OrdersService {
           await releaseStock(manager, {
             tenantId,
             productId: item.productId,
+            variantId: item.variantId ?? null,
             warehouseId: order.warehouseId,
             quantity: item.quantity,
           });
@@ -239,6 +258,17 @@ export class OrdersService {
   private async loadProducts(tenantId: string, ids: string[]): Promise<Map<string, Product>> {
     const products = await this.productsRepo.findBy({ tenantId, id: In(ids) });
     return new Map(products.map((product) => [product.id, product]));
+  }
+
+  private async loadVariants(
+    tenantId: string,
+    ids: string[],
+  ): Promise<Map<string, ProductVariant>> {
+    if (ids.length === 0) {
+      return new Map();
+    }
+    const variants = await this.variantsRepo.findBy({ tenantId, id: In(ids) });
+    return new Map(variants.map((variant) => [variant.id, variant]));
   }
 
   private assertTenant(tenantId: string | null): asserts tenantId is string {

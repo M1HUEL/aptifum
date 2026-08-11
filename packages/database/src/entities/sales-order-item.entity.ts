@@ -2,6 +2,7 @@ import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
 import { Product } from './product.entity';
+import { ProductVariant } from './product-variant.entity';
 import { SalesOrder } from './sales-order.entity';
 
 @Entity('sales_order_items')
@@ -13,6 +14,10 @@ export class SalesOrderItem extends TenantBaseEntity {
   @Index('IDX_sales_order_items_product_id')
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
+
+  @Index('IDX_sales_order_items_variant_id')
+  @Column({ name: 'variant_id', type: 'uuid', nullable: true })
+  variantId: string | null;
 
   @Column({ length: 255 })
   description: string;
@@ -81,4 +86,8 @@ export class SalesOrderItem extends TenantBaseEntity {
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
   product: Product;
+
+  @ManyToOne(() => ProductVariant)
+  @JoinColumn({ name: 'variant_id' })
+  variant: ProductVariant;
 }

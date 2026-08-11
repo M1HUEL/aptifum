@@ -22,6 +22,7 @@ const todayStr = (): string => new Date().toISOString().slice(0, 10);
 
 interface PosLine {
   productId: string;
+  variantId: string | null;
   sku: string;
   name: string;
   quantity: string;
@@ -136,10 +137,12 @@ export function PosPage() {
 
   const addProduct = (product: PosProduct) => {
     setTicket((current) => {
-      const existing = current.find((line) => line.productId === product.id);
+      const existing = current.find(
+        (line) => line.productId === product.id && line.variantId === product.variantId,
+      );
       if (existing) {
         return current.map((line) =>
-          line.productId === product.id
+          line.productId === product.id && line.variantId === product.variantId
             ? { ...line, quantity: String(Number(line.quantity) + 1) }
             : line,
         );
@@ -148,6 +151,7 @@ export function PosPage() {
         ...current,
         {
           productId: product.id,
+          variantId: product.variantId,
           sku: product.sku,
           name: product.name,
           quantity: '1',
@@ -196,6 +200,7 @@ export function PosPage() {
     }
     const items = ticket.map((line) => ({
       productId: line.productId,
+      variantId: line.variantId ?? undefined,
       quantity: Number(line.quantity),
       unitPrice: line.unitPrice === '' ? undefined : Number(line.unitPrice),
       taxRate: line.taxRate === '' ? undefined : Number(line.taxRate) / 100,
@@ -419,7 +424,10 @@ export function PosPage() {
                   <EmptyState message="Tap a product to add it to the ticket." />
                 ) : (
                   ticket.map((line, index) => (
-                    <div className="pos-line" key={line.productId}>
+                    <div
+                      className="pos-line"
+                      key={`${line.productId}:${line.variantId ?? ''}`}
+                    >
                       <div className="pos-line-info">
                         <div className="pos-line-name">{line.name}</div>
                         <div className="pos-line-meta">{line.sku}</div>

@@ -46,6 +46,7 @@ function buildService(repos: Record<string, Record<string, unknown>>) {
     (repos.invoice ?? {}) as never,
     (repos.warehouse ?? {}) as never,
     (repos.product ?? {}) as never,
+    (repos.variant ?? {}) as never,
     (repos.idempotency ?? {}) as never,
     (repos.dataSource ?? {}) as never,
     (repos.outbox ?? {}) as never,

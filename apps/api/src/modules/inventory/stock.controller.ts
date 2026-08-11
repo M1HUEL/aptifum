@@ -61,6 +61,7 @@ export class StockController {
     @CurrentUser() user: { tenantId: string | null },
     @Query() { page, limit }: PaginationQueryDto,
     @Query('productId') productId?: string,
+    @Query('variantId') variantId?: string,
     @Query('warehouseId') warehouseId?: string,
     @Query('movementType') movementType?: string,
     @Query('from') from?: string,
@@ -81,6 +82,7 @@ export class StockController {
       Math.min(Number(limit), 100),
       {
         productId,
+        variantId,
         warehouseId,
         movementType: movementType as MovementType | undefined,
         from,

@@ -1,15 +1,29 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
 import { Product } from './product.entity';
+import { ProductVariant } from './product-variant.entity';
 import { Warehouse } from './warehouse.entity';
 
 @Entity('product_stock')
-@Unique(['tenantId', 'productId', 'warehouseId'])
+@Index(
+  'UQ_product_stock_tenant_product_warehouse',
+  ['tenantId', 'productId', 'warehouseId'],
+  { unique: true, where: `"variant_id" IS NULL` },
+)
+@Index(
+  'UQ_product_stock_tenant_variant_warehouse',
+  ['tenantId', 'productId', 'variantId', 'warehouseId'],
+  { unique: true, where: `"variant_id" IS NOT NULL` },
+)
 export class ProductStock extends TenantBaseEntity {
   @Index()
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
+
+  @Index('IDX_product_stock_variant_id')
+  @Column({ name: 'variant_id', type: 'uuid', nullable: true })
+  variantId: string | null;
 
   @Index()
   @Column({ name: 'warehouse_id', type: 'uuid' })
@@ -50,6 +64,10 @@ export class ProductStock extends TenantBaseEntity {
   @ManyToOne(() => Product, (product) => product.stocks)
   @JoinColumn({ name: 'product_id' })
   product: Product;
+
+  @ManyToOne(() => ProductVariant, (variant) => variant.stocks)
+  @JoinColumn({ name: 'variant_id' })
+  variant: ProductVariant;
 
   @ManyToOne(() => Warehouse, (warehouse) => warehouse.stocks)
   @JoinColumn({ name: 'warehouse_id' })

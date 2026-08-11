@@ -30,6 +30,7 @@ import {
   postJournalEntry,
   Product,
   ProductStock,
+  ProductVariant,
   SalesOrder,
   Tenant,
   WALK_IN_CUSTOMER,
@@ -49,6 +50,8 @@ export class InvoicesService {
     @InjectRepository(Invoice) private readonly invoicesRepo: Repository<Invoice>,
     @InjectRepository(Warehouse) private readonly warehousesRepo: Repository<Warehouse>,
     @InjectRepository(Product) private readonly productsRepo: Repository<Product>,
+    @InjectRepository(ProductVariant)
+    private readonly variantsRepo: Repository<ProductVariant>,
     @InjectRepository(IdempotencyKey)
     private readonly idempotencyRepo: Repository<IdempotencyKey>,
     @InjectDataSource() private readonly dataSource: DataSource,
@@ -237,6 +240,7 @@ export class InvoicesService {
             manager.getRepository(InvoiceItem).create({
               tenantId,
               productId: item.productId,
+              variantId: item.variantId ?? null,
               description: item.description,
               quantity: item.quantity,
               unitPrice: item.unitPrice,
@@ -278,6 +282,7 @@ export class InvoicesService {
               original.warehouseId,
               item.quantity,
               saved.id,
+              item.variantId ?? null,
             );
             cogs = round2(cogs + item.quantity * avgCost);
           }
@@ -345,6 +350,7 @@ export class InvoicesService {
         manager.getRepository(InvoiceItem).create({
           tenantId,
           productId: item.productId,
+          variantId: item.variantId ?? null,
           description: item.description,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
@@ -392,6 +398,7 @@ export class InvoicesService {
           order.warehouseId,
           item.quantity,
           saved.id,
+          item.variantId ?? null,
         );
         cogs = round2(cogs + item.quantity * avgCost);
       }
@@ -430,6 +437,10 @@ export class InvoicesService {
       tenantId,
       items.map((item) => item.productId),
     );
+    const variants = await this.loadVariants(
+      tenantId,
+      items.filter((item) => item.variantId).map((item) => item.variantId as string),
+    );
 
     return this.dataSource.transaction(async (manager) => {
       const invoicesRepo = manager.getRepository(Invoice);
@@ -444,11 +455,19 @@ export class InvoicesService {
         if (!product) {
           throw new NotFoundException(`Product ${item.productId} not found`);
         }
-        const unitPrice = item.unitPrice ?? product.salePrice;
+        const variant = item.variantId ? variants.get(item.variantId) : undefined;
+        if (item.variantId && !variant) {
+          throw new NotFoundException(`Variant ${item.variantId} not found`);
+        }
+        if (variant && variant.productId !== product.id) {
+          throw new BadRequestException(`Variant ${item.variantId} does not belong to product ${product.id}`);
+        }
+        const unitPrice = item.unitPrice ?? variant?.salePrice ?? product.salePrice;
         const quantity = item.quantity;
         return manager.getRepository(InvoiceItem).create({
           tenantId,
           productId: item.productId,
+          variantId: item.variantId ?? null,
           description: item.description ?? product.name,
           quantity,
           unitPrice,
@@ -496,6 +515,7 @@ export class InvoicesService {
           warehouseId,
           item.quantity,
           saved.id,
+          item.variantId ?? null,
         );
         cogs = round2(cogs + item.quantity * avgCost);
       }
@@ -561,16 +581,21 @@ export class InvoicesService {
     warehouseId: string,
     quantity: number,
     invoiceId: string,
+    variantId?: string | null,
   ): Promise<number> {
-    const stock = await manager
-      .getRepository(ProductStock)
-      .findOneBy({ tenantId, productId, warehouseId });
+    const stock = await manager.getRepository(ProductStock).findOneBy({
+      tenantId,
+      productId,
+      warehouseId,
+      ...(variantId ? { variantId } : {}),
+    });
     const unitCost = stock?.averageCost ?? 0;
     try {
       await applyStockMovement(manager, {
         tenantId,
         movementType: MovementType.OUTBOUND,
         productId,
+        variantId: variantId ?? null,
         warehouseId,
         quantity,
         unitCost,
@@ -595,6 +620,7 @@ export class InvoicesService {
     warehouseId: string | null,
     quantity: number,
     creditNoteId: string,
+    variantId?: string | null,
   ): Promise<number> {
     if (!warehouseId) {
       return 0;
@@ -603,6 +629,7 @@ export class InvoicesService {
       tenantId,
       movementType: MovementType.RETURN,
       productId,
+      variantId: variantId ?? null,
       warehouseId,
       quantity,
       unitCost: 0,
@@ -610,9 +637,12 @@ export class InvoicesService {
       referenceId: creditNoteId,
       userId,
     });
-    const stock = await manager
-      .getRepository(ProductStock)
-      .findOneBy({ tenantId, productId, warehouseId });
+    const stock = await manager.getRepository(ProductStock).findOneBy({
+      tenantId,
+      productId,
+      warehouseId,
+      ...(variantId ? { variantId } : {}),
+    });
     return stock?.averageCost ?? 0;
   }
 
@@ -732,6 +762,17 @@ export class InvoicesService {
     return new Map(products.map((product) => [product.id, product]));
   }
 
+  private async loadVariants(
+    tenantId: string,
+    ids: string[],
+  ): Promise<Map<string, ProductVariant>> {
+    if (ids.length === 0) {
+      return new Map();
+    }
+    const variants = await this.variantsRepo.findBy({ tenantId, id: In(ids) });
+    return new Map(variants.map((variant) => [variant.id, variant]));
+  }
+
   private async withIdempotency<T>(
     key: string | undefined,
     requestHashInput: string,
@@ -772,6 +813,7 @@ export class InvoicesService {
       balanceDue: invoice.balanceDue,
       items: items.map((item) => ({
         productId: item.productId,
+        variantId: item.variantId ?? null,
         description: item.description,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
