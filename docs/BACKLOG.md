@@ -6,7 +6,7 @@
 
 ### 1.1 Architecture
 
-- **Domain events + transactional outbox** (§1, §2, §6.2, §8): SPEC declares modules communicate via domain events with a transactional outbox (`sale.invoiced`, `payment.received`, `credit_note.issued`, ...). Nothing exists today: no `@nestjs/event-emitter`, no outbox table, no dispatcher. Biggest architectural debt.
+- **Domain events + transactional outbox** (§1, §2, §6.2, §8): ~~SPEC declares modules communicate via domain events with a transactional outbox (`sale.invoiced`, `payment.received`, `credit_note.issued`, ...). Nothing exists today: no `@nestjs/event-emitter`, no outbox table, no dispatcher. Biggest architectural debt.~~ **DONE:** `outbox_events` table, `OutboxService.emit` (same transaction as source document), `OutboxDispatcher` cron every 10s with retry/fail, events emitted by sales/purchasing/hr/production. Remaining: consumers beyond email (webhooks, integrations, supplier bills).
 - **Cross-module calls**: several flows already call services/helpers directly across module boundaries (e.g. `postJournalEntry` reused by purchasing/hr/production). When the outbox lands, revisit whether these should become events.
 
 ### 1.2 Functional (defined in SPEC, not built)
@@ -30,7 +30,7 @@
 ## 3. Deferred features (by decision, §11)
 
 - Multi-currency (exchange rates, revaluation) — F4.
-- Notifications (email/SMS for due dates, orders, approvals) — F4. Base exists: `email` module + password-reset flow.
+- Notifications (email/SMS for due dates, orders, approvals) — F4. Email for invoices/payments/receipts **shipped** (via outbox); due-date/approval reminders and SMS remain F4.
 - Physical POS / offline — web POS/cashier possible F4 addition.
 - Country tax compliance: MX CFDI/e-invoicing (timbrado), US sales tax per state/nexus — F4.
 - i18n — English only for now.
@@ -38,8 +38,8 @@
 
 ## 4. Big feature candidates (ordered by recommendation)
 
-1. **Outbox + domain events** — closes the architectural debt; unblocks notifications, webhooks, integrations, supplier bills.
-2. **Email notifications** — consume outbox events; build on existing `email` module.
+1. ~~**Outbox + domain events**~~ — **DONE** — closes the architectural debt; unblocks notifications, webhooks, integrations, supplier bills.
+2. ~~**Email notifications**~~ — **DONE** — consume outbox events; build on existing `email` module. Emails: invoices/credit notes/payments to customers, receipts to suppliers. Not covered: due-date and approval reminders.
 3. **Supplier bills (AP full)** — PO→receipt→bill reconciliation, due dates, payments per bill; integrates with outbox.
 4. **Web POS / cashier** — visible feature on the existing web app.
 5. **Multi-currency** — exchange rates + revaluation.
@@ -49,8 +49,8 @@
 
 ## 5. Proposed sequence (first pass)
 
-1. Outbox + events (foundation, no UI/API-contract change).
-2. Email notifications (first consumer of events).
+1. ~~Outbox + events (foundation, no UI/API-contract change).~~ **DONE** (2026-08).
+2. ~~Email notifications (first consumer of events).~~ **DONE** (2026-08).
 3. Supplier bills AP (closes §6.3; built on outbox).
 4. POS as the first large visible feature.
 

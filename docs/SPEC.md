@@ -236,7 +236,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 | 1 | Country-specific tax rules | **US + Mexico.** Tenants carry a `country` (`US`/`MX`) with seeded tax presets: US → `Sales Tax` 8% (sales), MX → `IVA` 16% (sales). Tax IDs follow the local format (US EIN 9 digits, MX RFC 12–13 chars). Full compliance (CFDI e-invoicing/timbrado, US *sales tax* per state/nexus) is deferred to **F4**. |
 | 2 | Physical POS / offline sales | **Web-only** for now. A web POS/cashier flow is a possible F4 addition; no offline/desktop client. |
 | 3 | Multi-currency | **Single functional currency per tenant** (`default_currency`). Multi-currency (exchange rates, revaluation) is an F4 extension. |
-| 4 | Notifications | **Deferred to F4** (email/SMS for due dates, orders, approvals). No notification infra now. |
+| 4 | Notifications | **Email notifications shipped** for invoice/credit-note issuance, payments and goods receipts, delivered by the transactional outbox dispatcher (see §8). SMS and due-date/approval reminders deferred to **F4**. |
 | 5 | Languages | **English only** (single language). UI and API strings are English; no i18n layer for now. |
 | 6 | Team | **Single developer.** Conventions stay simple; lightweight CI. |
 | 7 | Pilot business | **No real pilot yet.** Business rules are validated with synthetic examples; SPEC remains the reference. |
@@ -260,6 +260,8 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] F3 HR (departments, employees, attendance, leaves, payroll) — defined in §19.
 - [x] F3 Production (BOMs, production orders, costing + auto journal entry) — defined in §20.
 - [x] F4 Reporting (BI reports, dashboard, CSV exports) — defined in §21.
+- [x] Transactional outbox + domain events (`invoice.issued`, `credit_note.issued`, `payment.received`, `purchase_receipt`, `payroll.posted`, `production.completed`) — defined in §1, §2, §6.2, §8.
+- [x] Email notifications consuming outbox events (customers on invoices/credit notes/payments, suppliers on goods receipts) — see §11 #4.
 
 ## 13. F1 data model (inventory + sales/billing)
 
