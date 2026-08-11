@@ -22,8 +22,12 @@ function event(overrides: Partial<OutboxEvent> = {}): OutboxEvent {
   } as OutboxEvent;
 }
 
-function buildDispatcher(outbox: Record<string, unknown>) {
-  return new OutboxDispatcher(outbox as never);
+function buildDispatcher(outbox: Record<string, unknown>, notifications: Record<string, unknown> = {}) {
+  return new OutboxDispatcher(outbox as never, notifications as never);
+}
+
+function freshNotifications() {
+  return { handle: vi.fn(() => Promise.resolve()) };
 }
 
 describe('OutboxDispatcher dispatchPending', () => {
@@ -34,7 +38,7 @@ describe('OutboxDispatcher dispatchPending', () => {
       markDispatched: vi.fn((e: OutboxEvent) => Promise.resolve(e)),
       markFailed: vi.fn(),
     };
-    const dispatcher = buildDispatcher(outbox);
+    const dispatcher = buildDispatcher(outbox, freshNotifications());
     await dispatcher.dispatchPending();
     expect(outbox.markDispatched).toHaveBeenCalledWith(ev);
     expect(outbox.markFailed).not.toHaveBeenCalled();
@@ -47,7 +51,7 @@ describe('OutboxDispatcher dispatchPending', () => {
       markDispatched: vi.fn((e: OutboxEvent) => Promise.resolve(e)),
       markFailed: vi.fn(),
     };
-    const dispatcher = buildDispatcher(outbox);
+    const dispatcher = buildDispatcher(outbox, freshNotifications());
     await dispatcher.dispatchPending();
     expect(outbox.markDispatched).toHaveBeenCalledWith(ev);
   });
