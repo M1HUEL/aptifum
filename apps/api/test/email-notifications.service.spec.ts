@@ -26,13 +26,23 @@ function event(overrides: Partial<OutboxEvent> = {}): OutboxEvent {
 
 function buildService(
   email: Record<string, unknown>,
-  repos: { customers?: Record<string, unknown>; suppliers?: Record<string, unknown>; invoices?: Record<string, unknown> } = {},
+  repos: {
+    customers?: Record<string, unknown>;
+    suppliers?: Record<string, unknown>;
+    invoices?: Record<string, unknown>;
+    supplierBills?: Record<string, unknown>;
+    orders?: Record<string, unknown>;
+  } = {},
+  dataSource: Record<string, unknown> = {},
 ) {
   return new EmailNotificationsService(
     email as never,
     (repos.customers ?? {}) as never,
     (repos.suppliers ?? {}) as never,
     (repos.invoices ?? {}) as never,
+    (repos.supplierBills ?? {}) as never,
+    (repos.orders ?? {}) as never,
+    dataSource as never,
   );
 }
 
@@ -138,5 +148,78 @@ describe('EmailNotificationsService', () => {
     const service = buildService(email);
     await service.handle(event({ eventType: 'payroll.posted' }));
     expect(email.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('sends an overdue receivable reminder to the customer', async () => {
+    const email = { isConfigured: vi.fn(() => true), sendMail: vi.fn(() => Promise.resolve(true)) };
+    const invoicesRepo = {
+      findOneBy: vi.fn().mockResolvedValue({ id: 'inv-1', number: 'INV-000001', customerId: 'c1', total: 200, balanceDue: 200 }),
+    };
+    const customersRepo = {
+      findOneBy: vi.fn().mockResolvedValue({ id: 'c1', email: 'bob@example.com', tradeName: 'Bob Co' }),
+    };
+    const service = buildService(email, { customers: customersRepo, invoices: invoicesRepo });
+    await service.handle(
+      event({ eventType: 'reminder.ar_overdue', payload: { invoiceId: 'inv-1', daysOverdue: 5 } }),
+    );
+    expect(invoicesRepo.findOneBy).toHaveBeenCalledWith({ id: 'inv-1', tenantId: TENANT });
+    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as { to: string; subject: string; text: string };
+    expect(message.to).toBe('bob@example.com');
+    expect(message.subject).toBe('Payment reminder: invoice INV-000001 is overdue');
+    expect(message.text).toContain('5 day(s) overdue');
+    expect(message.text).toContain('Balance due: 200.00');
+  });
+
+  it('sends an overdue payable reminder to users with purchasing:read', async () => {
+    const email = { isConfigured: vi.fn(() => true), sendMail: vi.fn(() => Promise.resolve(true)) };
+    const supplierBillsRepo = {
+      findOneBy: vi.fn().mockResolvedValue({ id: 'sb-1', number: 'SB-000001', supplierId: 's1', balanceDue: 350 }),
+    };
+    const suppliersRepo = {
+      findOneBy: vi.fn().mockResolvedValue({ id: 's1', tradeName: 'Acme Supplies' }),
+    };
+    const dataSource = { query: vi.fn().mockResolvedValue([{ email: 'ap@example.com' }, { email: 'boss@example.com' }]) };
+    const service = buildService(email, { supplierBills: supplierBillsRepo, suppliers: suppliersRepo }, dataSource);
+    await service.handle(
+      event({ eventType: 'reminder.ap_overdue', payload: { billId: 'sb-1', daysOverdue: 3 } }),
+    );
+    expect(supplierBillsRepo.findOneBy).toHaveBeenCalledWith({ id: 'sb-1', tenantId: TENANT });
+    expect(dataSource.query).toHaveBeenCalledWith(expect.any(String), [TENANT, JSON.stringify(['purchasing:read'])]);
+    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as { to: string; subject: string };
+    expect(message.to).toBe('ap@example.com, boss@example.com');
+    expect(message.subject).toBe('Payable reminder: bill SB-000001 is overdue');
+  });
+
+  it('skips the overdue payable reminder when no user has the permission', async () => {
+    const email = { isConfigured: vi.fn(() => true), sendMail: vi.fn() };
+    const supplierBillsRepo = {
+      findOneBy: vi.fn().mockResolvedValue({ id: 'sb-1', number: 'SB-000001', supplierId: 's1', balanceDue: 350 }),
+    };
+    const suppliersRepo = { findOneBy: vi.fn() };
+    const dataSource = { query: vi.fn().mockResolvedValue([]) };
+    const service = buildService(email, { supplierBills: supplierBillsRepo, suppliers: suppliersRepo }, dataSource);
+    await service.handle(event({ eventType: 'reminder.ap_overdue', payload: { billId: 'sb-1' } }));
+    expect(email.sendMail).not.toHaveBeenCalled();
+  });
+
+  it('sends a pending approval reminder to users with purchasing:write', async () => {
+    const email = { isConfigured: vi.fn(() => true), sendMail: vi.fn(() => Promise.resolve(true)) };
+    const ordersRepo = {
+      findOneBy: vi.fn().mockResolvedValue({ id: 'po-1', number: 'PO-000001', supplierId: 's1', total: 800 }),
+    };
+    const suppliersRepo = {
+      findOneBy: vi.fn().mockResolvedValue({ id: 's1', tradeName: 'Acme Supplies' }),
+    };
+    const dataSource = { query: vi.fn().mockResolvedValue([{ email: 'approver@example.com' }]) };
+    const service = buildService(email, { orders: ordersRepo, suppliers: suppliersRepo }, dataSource);
+    await service.handle(
+      event({ eventType: 'reminder.pending_approval', payload: { orderId: 'po-1', daysPending: 2 } }),
+    );
+    expect(ordersRepo.findOneBy).toHaveBeenCalledWith({ id: 'po-1', tenantId: TENANT });
+    expect(dataSource.query).toHaveBeenCalledWith(expect.any(String), [TENANT, JSON.stringify(['purchasing:write'])]);
+    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as { to: string; subject: string; text: string };
+    expect(message.to).toBe('approver@example.com');
+    expect(message.subject).toBe('Purchase order PO-000001 awaiting approval');
+    expect(message.text).toContain('800.00');
   });
 });

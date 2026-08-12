@@ -30,7 +30,7 @@
 ## 3. Deferred features (by decision, §11)
 
 - Multi-currency **revaluation** — exchange rates **shipped** (2026-08, see §4 item 5); **revaluation + settlement FX shipped (2026-08, see §4 item 5)**.
-- Notifications (email/SMS for due dates, orders, approvals) — F4. Email for invoices/payments/receipts **shipped** (via outbox); due-date/approval reminders and SMS remain F4.
+- Notifications (email/SMS for due dates, orders, approvals) — F4. Email for invoices/payments/receipts **shipped** (via outbox); **due-date/approval reminders shipped (2026-08, see §4 item 2)**; SMS remains F4.
 - Physical POS / offline — web POS **shipped**; offline/desktop client not planned.
 - Country tax compliance: MX CFDI/e-invoicing (timbrado), US sales tax per state/nexus — F4.
 - i18n — English only for now.
@@ -39,7 +39,7 @@
 ## 4. Big feature candidates (ordered by recommendation)
 
 1. ~~**Outbox + domain events**~~ — **DONE** — closes the architectural debt; unblocks notifications, webhooks, integrations, supplier bills.
-2. ~~**Email notifications**~~ — **DONE** — consume outbox events; build on existing `email` module. Emails: invoices/credit notes/payments to customers, receipts to suppliers. Not covered: due-date and approval reminders.
+2. ~~**Email notifications**~~ — **DONE** — consume outbox events; build on existing `email` module. Emails: invoices/credit notes/payments to customers, receipts to suppliers. **Due-date/approval reminders shipped (2026-08):** `RemindersService` cron (`EVERY_DAY_AT_4AM`) scans for overdue receivables (invoices `issued`/`balance_due > 0`/past due), overdue payables (supplier bills `issued` past due) and purchase orders stuck in `draft` ≥ 2 days; emits `reminder.ar_overdue` / `reminder.ap_overdue` / `reminder.pending_approval` outbox events (deduped once per aggregate per day) that the email handler delivers — AR overdue to the customer, AP overdue to tenant users with `purchasing:read`, pending approvals to users with `purchasing:write`.
 3. ~~**Supplier bills (AP full)**~~ — **DONE** — PO→receipt→bill reconciliation, due dates, payments per bill; integrates with outbox.
 4. ~~**Web POS / cashier**~~ — **DONE** — point of sale with catalog, ticket, and payment collection.
 5. ~~**Multi-currency**~~ — **DONE** — per-tenant `exchange_rates` + CRUD API; invoices/credit notes/customer payments/supplier bills/supplier payments store `exchange_rate` and post to the tenant's functional currency (inventory/COGS stay in functional currency, not converted); FX gain/loss accounts seeded. **Revaluation shipped (2026-08):** `POST /accounting/revaluations` revalues open foreign-currency balances (`date` + optional `currency`), posting `fx_revaluation` journal entries (Dr/Cr AR·AP vs 4200/6100) with automatic reversal of prior revaluations for the same document before re-posting, so re-runs are idempotent; payments now realize the FX difference vs the booked rate (Dr/Cr FX gain/loss) so AR/AP always nets to zero. **POS multi-currency shipped (2026-08):** invoice create/payment accept `currency` + `exchangeRate` (manual rate or resolved from `exchange_rates`), POS cashier picks sale currency + rate (auto-filled from latest configured rate), totals/payment in sale currency, posting stays functional.
@@ -54,6 +54,7 @@
 3. ~~Supplier bills AP (closes §6.3; built on outbox).~~ **DONE** (2026-08).
 4. ~~POS~~ **DONE** — catalog, ticket, and payment collection on the web app.
 5. ~~Multi-currency exchange rates + functional-currency posting.~~ **DONE** (2026-08). ~~Remaining: revaluation.~~ **Revaluation + settlement FX done (2026-08).**
+6. ~~Due-date/approval reminders (built on the outbox).~~ **DONE** (2026-08) — cron at 04:00 emits `reminder.*` events; email delivery to customers / permissioned users (see §4 item 2).
 
 ## 6. Minor cleanup items
 
