@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '../api/client';
 import type { Customer } from '../api/types';
+import * as core from '@aptifum/core';
 import {
   Badge,
   type Column,
@@ -18,6 +19,7 @@ import {
   ConfirmDialog,
   Field,
   Modal,
+  Select,
   TextArea,
   TextInput,
 } from '../components/forms';
@@ -35,6 +37,8 @@ interface CustomerForm {
   currency: string;
   creditLimit: string;
   priceCategory: string;
+  state: string;
+  taxExempt: boolean;
   active: boolean;
 }
 
@@ -49,6 +53,8 @@ const emptyForm: CustomerForm = {
   currency: 'USD',
   creditLimit: '',
   priceCategory: '',
+  state: '',
+  taxExempt: false,
   active: true,
 };
 
@@ -97,6 +103,8 @@ export function CustomersPage() {
       currency: customer.currency ?? 'USD',
       creditLimit: customer.creditLimit ? String(customer.creditLimit) : '',
       priceCategory: customer.priceCategory ?? '',
+      state: customer.state ?? '',
+      taxExempt: customer.taxExempt,
       active: customer.active,
     });
     setFormError(null);
@@ -130,6 +138,8 @@ export function CustomersPage() {
       currency: form.currency.trim().toUpperCase() || undefined,
       creditLimit: form.creditLimit === '' ? undefined : Number(form.creditLimit),
       priceCategory: form.priceCategory.trim() || undefined,
+      state: form.state.trim() || undefined,
+      taxExempt: form.taxExempt,
       active: form.active,
     };
     try {
@@ -320,6 +330,27 @@ export function CustomersPage() {
                 rows={2}
                 value={form.address}
                 onChange={(event) => setField('address', event.target.value)}
+              />
+            </Field>
+            <Field label="State (US)" htmlFor="customer-state" hint="Used to apply US sales tax automatically.">
+              <Select
+                id="customer-state"
+                value={form.state}
+                onChange={(event) => setField('state', event.target.value)}
+              >
+                <option value="">No state</option>
+                {Object.entries(core.US_STATES).map(([code, info]) => (
+                  <option key={code} value={code}>
+                    {code} — {info.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Tax status">
+              <Checkbox
+                label="Tax exempt"
+                checked={form.taxExempt}
+                onChange={(event) => setField('taxExempt', event.target.checked)}
               />
             </Field>
             <Field label="Status">

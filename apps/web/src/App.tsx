@@ -53,6 +53,7 @@ const WarehousesCategoriesPage = lazyPage(
   'WarehousesCategoriesPage',
 );
 const SalesOrdersPage = lazyPage(() => import('./pages/SalesOrdersPage'), 'SalesOrdersPage');
+const SettingsPage = lazyPage(() => import('./pages/SettingsPage'), 'SettingsPage');
 
 function ProtectedLayout() {
   const { user, initializing } = useAuth();
@@ -94,6 +95,7 @@ export default function App() {
           <Route path="/reports" element={<ReportsPage />} />
         <Route path="/users-roles" element={<UsersRolesPage />} />
         <Route path="/audit" element={<AuditPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>

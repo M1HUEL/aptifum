@@ -186,6 +186,8 @@ export interface Customer {
   currency: string;
   creditLimit: number;
   priceCategory: string | null;
+  state: string | null;
+  taxExempt: boolean;
   active: boolean;
 }
 

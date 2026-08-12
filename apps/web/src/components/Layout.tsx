@@ -21,6 +21,7 @@ const NAV_ITEMS: Array<{ to: string; label: string; permission?: string }> = [
   { to: '/reports', label: 'Reports', permission: 'reporting:read' },
   { to: '/users-roles', label: 'Users & roles', permission: 'users:read' },
   { to: '/audit', label: 'Audit', permission: 'audit:read' },
+  { to: '/settings', label: 'Settings', permission: 'tax:read' },
   { to: '/profile', label: 'My profile' },
 ];
 

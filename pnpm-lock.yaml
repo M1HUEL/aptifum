@@ -147,6 +147,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@aptifum/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       react:
         specifier: ^19.2.0
         version: 19.2.8
