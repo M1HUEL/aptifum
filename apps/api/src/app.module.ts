@@ -22,6 +22,7 @@ import { RbacModule } from './modules/rbac/rbac.module';
 import { RemindersModule } from './modules/reminders/reminders.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { SalesModule } from './modules/sales/sales.module';
+import { TaxModule } from './modules/tax/tax.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -66,6 +67,7 @@ import { UsersModule } from './modules/users/users.module';
     HrModule,
     ProductionModule,
     PaymentsModule,
+    TaxModule,
     RemindersModule,
     ReportsModule,
   ],

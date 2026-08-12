@@ -1,11 +1,13 @@
 import {
   IsBoolean,
+  IsIn,
   IsNumber,
   IsOptional,
   IsString,
   MaxLength,
   Min,
 } from 'class-validator';
+import { FISCAL_REGIMES, USO_CFDI } from '@aptifum/core';
 
 export class UpdateCustomerDto {
   @IsOptional()
@@ -27,6 +29,16 @@ export class UpdateCustomerDto {
   @IsString()
   @MaxLength(40)
   taxId?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(Object.keys(USO_CFDI))
+  usoCfdi?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(Object.keys(FISCAL_REGIMES))
+  regimenFiscal?: string;
 
   @IsOptional()
   @IsString()

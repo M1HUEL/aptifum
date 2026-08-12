@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { OutboxEvent } from '@aptifum/database';
 import { EmailNotificationsService } from '../email/email-notifications.service';
+import { CfdiService } from '../tax/cfdi.service';
 import { OutboxService } from './outbox.service';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class OutboxDispatcher {
   constructor(
     private readonly outbox: OutboxService,
     private readonly notifications: EmailNotificationsService,
+    private readonly cfdi: CfdiService,
   ) {}
 
   @Cron(CronExpression.EVERY_10_SECONDS)
@@ -40,5 +42,6 @@ export class OutboxDispatcher {
 
   private async handle(event: OutboxEvent): Promise<void> {
     await this.notifications.handle(event);
+    await this.cfdi.handle(event);
   }
 }

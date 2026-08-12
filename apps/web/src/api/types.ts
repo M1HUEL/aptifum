@@ -241,6 +241,29 @@ export interface Invoice {
   payments?: Payment[];
 }
 
+export type CfdiStatus = 'pending' | 'stamped' | 'cancelled';
+
+export interface CfdiDocument {
+  id: string;
+  invoiceId: string;
+  uuid: string;
+  serie: string | null;
+  folio: string | null;
+  version: string;
+  type: string;
+  status: CfdiStatus;
+  emitterRfc: string;
+  emitterName: string;
+  receiverRfc: string;
+  receiverName: string;
+  paymentForm: string;
+  paymentMethod: string;
+  currency: string;
+  total: number;
+  stampedAt: string | null;
+  cancelledAt: string | null;
+}
+
 export interface DashboardReport {
   asOf: string;
   salesToday: number;

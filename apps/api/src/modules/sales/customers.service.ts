@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, Repository } from 'typeorm';
-import { Customer } from '@aptifum/database';
+import { Customer, Tenant } from '@aptifum/database';
+import { normalizeRfc, validateEin, validateRfc } from '@aptifum/core';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 
@@ -9,6 +10,7 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
 export class CustomersService {
   constructor(
     @InjectRepository(Customer) private readonly customersRepo: Repository<Customer>,
+    @InjectRepository(Tenant) private readonly tenantsRepo: Repository<Tenant>,
   ) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<Customer> {
@@ -41,13 +43,16 @@ export class CustomersService {
 
   async create(tenantId: string | null, dto: CreateCustomerDto) {
     this.assertTenant(tenantId);
+    const taxId = await this.normalizeTaxId(tenantId as string, dto.taxId);
     return this.customersRepo.save(
       this.customersRepo.create({
         tenantId: tenantId as string,
         code: dto.code,
         tradeName: dto.tradeName,
         legalName: dto.legalName ?? null,
-        taxId: dto.taxId ?? null,
+        taxId,
+        usoCfdi: dto.usoCfdi ?? null,
+        regimenFiscal: dto.regimenFiscal ?? null,
         email: dto.email ?? null,
         phone: dto.phone ?? null,
         address: dto.address ?? null,
@@ -61,11 +66,16 @@ export class CustomersService {
 
   async update(tenantId: string | null, id: string, dto: UpdateCustomerDto) {
     const customer = await this.findOne(tenantId, id);
+    const taxId =
+      dto.taxId === undefined ? customer.taxId : await this.normalizeTaxId(tenantId, dto.taxId);
     Object.assign(customer, {
       code: dto.code ?? customer.code,
       tradeName: dto.tradeName ?? customer.tradeName,
       legalName: dto.legalName === undefined ? customer.legalName : dto.legalName,
-      taxId: dto.taxId === undefined ? customer.taxId : dto.taxId,
+      taxId,
+      usoCfdi: dto.usoCfdi === undefined ? customer.usoCfdi : (dto.usoCfdi ?? null),
+      regimenFiscal:
+        dto.regimenFiscal === undefined ? customer.regimenFiscal : (dto.regimenFiscal ?? null),
       email: dto.email === undefined ? customer.email : dto.email,
       phone: dto.phone === undefined ? customer.phone : dto.phone,
       address: dto.address === undefined ? customer.address : dto.address,
@@ -88,5 +98,28 @@ export class CustomersService {
     if (!tenantId) {
       throw new BadRequestException('Tenant context required');
     }
+  }
+
+  private async normalizeTaxId(tenantId: string | null, value?: string): Promise<string | null> {
+    if (!value || value.trim() === '') {
+      return null;
+    }
+    const tenant = tenantId
+      ? await this.tenantsRepo.findOneBy({ id: tenantId })
+      : null;
+    const country = tenant?.country ?? 'US';
+    if (country === 'MX') {
+      if (!validateRfc(value)) {
+        throw new BadRequestException('Invalid Mexican RFC');
+      }
+      return normalizeRfc(value);
+    }
+    if (country === 'US') {
+      if (!validateEin(value)) {
+        throw new BadRequestException('Invalid US EIN: expected 9 digits (XX-XXXXXXX)');
+      }
+      return value.replace(/[\s\-]/g, '');
+    }
+    return value.trim();
   }
 }

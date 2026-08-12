@@ -244,7 +244,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 
 | # | Decision | Resolution |
 |---|----------|------------|
-| 1 | Country-specific tax rules | **US + Mexico.** Tenants carry a `country` (`US`/`MX`) with seeded tax presets: US → `Sales Tax` 8% (sales), MX → `IVA` 16% (sales). Tax IDs follow the local format (US EIN 9 digits, MX RFC 12–13 chars). Full compliance (CFDI e-invoicing/timbrado, US *sales tax* per state/nexus) is deferred to **F4**. |
+| 1 | Country-specific tax rules | **US + Mexico.** Tenants carry a `country` (`US`/`MX`) with seeded tax presets: US → `Sales Tax` 8% (sales), MX → `IVA` 16% (sales). Tax IDs follow the local format (US EIN 9 digits, MX RFC 12–13 chars). **MX CFDI 4.0 e-invoicing shipped (2026-08, §23):** self-contained XML + digital seal + demo TFD (self-signed per-tenant certificates, no real PAC). Real PAC timbrado and US *sales tax* per state/nexus remain **F4**. |
 | 2 | Physical POS / offline sales | **Web-only** — a web POS/cashier (catalog, ticket, payment collection) is **shipped** on the dashboard; no offline/desktop client. |
 | 3 | Multi-currency | **Single functional currency per tenant** (`default_currency`). Exchange rates are **implemented** (per-tenant `exchange_rates`, foreign-currency invoices/payments/supplier bills post in the functional currency, see §16.7). Revaluation of open balances and automatic FX gain/loss entries remain **F4**. |
 | 4 | Notifications | **Email notifications shipped** for invoice/credit-note issuance, payments and goods receipts, delivered by the transactional outbox dispatcher (see §8). **Due-date/approval reminders shipped (2026-08)**: a daily cron emits `reminder.*` outbox events (overdue AR/AP, purchase orders pending approval ≥ 2 days) delivered to customers and permissioned tenant users. SMS deferred to **F4**. |
@@ -280,6 +280,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] F4 Multi-currency: `exchange_rates` table + CRUD API; invoices, credit notes, customer payments, supplier bills and supplier payments store `exchange_rate` and post to the tenant's functional currency; FX gain/loss accounts seeded (not yet posted); revaluation deferred — defined in §13.2, §15.2, §16.4, §16.7.
 - [x] Web POS / cashier: catalog, ticket, and payment collection on the dashboard (F4, §11 #2).
 - [x] F4 Online card payments (Stripe): per-tenant `payment_providers` config with masked secrets, `POST /payments/invoices/:id/checkout` → Stripe Checkout Session, and `POST /webhooks/stripe` signature-verified webhook that records card payments idempotently — defined in §22.
+- [x] MX/US tax compliance backend (CFDI 4.0): RFC/EIN validation on customers by tenant country, `cfdi_documents` + `cfdi_certificates`, self-contained CFDI 4.0 XML with SAT-compliant cadena original + RSA-SHA256 seal + demo TFD 1.1 (self-signed per-tenant emisor/PAC certificates), outbox consumer auto-generates on `invoice.issued`, `/tax/...` settings/catalogs/cancel/xml endpoints — defined in §23. Web: CFDI UUID + XML download in the invoice detail modal.
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -315,7 +316,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 
 | Table | Columns (besides base + tenant) | Notes / indexes |
 |-------|--------------------------------|-----------------|
-| `customers` | `code`, `trade_name`, `legal_name`, `tax_id`, `email`, `phone`, `address`, `currency`, `credit_limit`, `price_category`, `active`, `version` | index `(tenant_id, code)`, `(tenant_id, tax_id)` |
+| `customers` | `code`, `trade_name`, `legal_name`, `tax_id`, `email`, `phone`, `address`, `currency`, `credit_limit`, `price_category`, `uso_cfdi` (nullable, MX), `regimen_fiscal` (nullable, MX), `active`, `version` | index `(tenant_id, code)`, `(tenant_id, tax_id)` |
 | `taxes` | `name`, `rate` `numeric(6,4)`, `kind` (enum: sales/purchase), `active` | country-agnostic; tenant configures |
 | `document_series` | `kind` (enum: quote/order/invoice/credit_note), `prefix`, `next_number` (bigint), `active` | per-tenant automatic numbering; atomic increment (row lock/serializable) |
 | `sales_orders` | `number` (unique per tenant), `kind` (enum: quote/order), `status` (enum: draft/confirmed/invoiced/cancelled), `customer_id`, `warehouse_id`, `issue_date`, `due_date`, `currency`, `subtotal`, `discount`, `tax`, `total`, `notes`, `version` | quotes and orders share this table; index `(tenant_id, number)`, `(tenant_id, customer_id, issue_date)` |
@@ -367,7 +368,8 @@ document_series → invoices / sales_orders (numbering)
 3. [x] Resolve open decisions in §11 (tax country US/MX, currency, POS, language, team, pilot) — see §11.
 4. [x] Create the **domain glossary** (`docs/GLOSSARY.md`).
 5. [x] Web frontend (React dashboard) and CSV/Excel/PDF exports (see §6.8, §21).
-6. [ ] Next phases (see §10): F4 platform extensions (integrations, multi-currency revaluation, tax compliance).
+6. [x] MX/US tax compliance backend (CFDI 4.0 demo timbrado + EIN/RFC validation, see §23).
+7. [ ] Next phases (see §10): F4 platform extensions (integrations, real PAC timbrado, US sales tax nexus, revaluation).
 
 ---
 
@@ -689,6 +691,52 @@ Module permission `PAYMENTS` (`read`, `write`) for `/payments/...`; `/webhooks/.
 1. **Configure:** an admin stores the Stripe secret key and webhook signing secret (`PUT /payments/providers/stripe`) and enables the provider.
 2. **Checkout:** the dashboard calls the checkout endpoint with an issued invoice; the API builds a Stripe Checkout Session and returns the hosted redirect URL (success/cancel URLs derive from the request `Origin`/`Referer`, defaulting to `http://localhost:5173`).
 3. **Payment:** after the customer pays, Stripe posts `checkout.session.completed` back to `POST /webhooks/stripe`. The API verifies the signature over the **raw** body (captured before `express.json`), then records the payment. The session id (stored as the payment `reference`) makes replays idempotent: a duplicated webhook records no second payment and the outbox holds a single `payment.received` event.
+
+---
+
+## 23. MX/US tax compliance data model (CFDI 4.0)
+
+### 23.1 Conventions
+
+Same as §13.0 (TenantBaseEntity, UUID PK, enums in `packages/core`). The feature is **MX-only and demo-timbrado**: CFDI 4.0 documents are generated locally and self-contained (XML + cadena original + RSA-SHA256 `sello` + Timbre Fiscal Digital 1.1), signed with **self-signed per-tenant certificates** (emisor + a demo PAC `XND000000000`). There is **no real PAC**: no SAT submission, UUIDs are locally generated, and cancellation just flips the status. Real PAC integration is the production hook (F4).
+
+### 23.2 Tables
+
+| Table | Columns (besides base + tenant) | Notes / indexes |
+|-------|--------------------------------|-----------------|
+| `cfdi_documents` | `invoice_id`, `uuid`, `serie` (nullable), `folio` (nullable), `version` (default `4.0`), `type` (`I`/`E`), `status` (enum `CfdiStatus`: pending/stamped/cancelled, default pending), `emitter_rfc`, `emitter_name`, `emitter_regime`, `receiver_rfc`, `receiver_name`, `receiver_uso` (nullable), `payment_form`, `payment_method`, `exportacion` (default `01`), `place_of_expedition`, `currency`, `exchange_rate` (default 1), `subtotal`, `discount`, `tax`, `total`, `xml` (text), `cadena_original` (text), `sello` (text), `cert_number`, `rfc_prov_certif`, `cert_sat_number`, `stamped_at` (nullable), `cancelled_at` (nullable) | **unique** `(tenant_id, invoice_id)` and `(tenant_id, uuid)`; indexes `(tenant_id)`, `(tenant_id, invoice_id)`, `(tenant_id, uuid)`, `(tenant_id, status)` |
+| `cfdi_certificates` | `kind` (`emisor`/`pac`), `rfc`, `name`, `serial_number`, `valid_from`, `valid_to`, `certificate_pem` (text), `private_key_pem` (text), `active` (default true) | **unique** `(tenant_id, kind)`; per-tenant lazily-created self-signed certs |
+| `tenants` (+): | `fiscal_regime` (nullable), `fiscal_address` (jsonb: street/exterior/interior/zip/city), `config.cfdi` (jsonb: `{ enabled, paymentForm, paymentMethod, placeOfExpedition }`) | `placeOfExpedition` falls back to `fiscal_address.zip`, then `00000` |
+
+**Enums and constants added in `packages/core`**
+
+- `CfdiStatus`: pending, stamped, cancelled
+- `ModuleName.TAX` (permissions `tax:read`, `tax:write`; seeded: accountant read+write, seller read)
+- RFC/EIN validators: `validateRfc` (MX: length 12–13, homoclave; returns the reason on failure) + `normalizeRfc` (upper, strips spaces/dashes), `validateEin` (US: 2-1-4 or 9 digits), generic RFCs `XAXX010101000` (receptor) / `XEXX010101000` (emisor)
+- Catalogs: `FISCAL_REGIMES`, `USO_CFDI`, `CFDI_PAYMENT_FORMS`, `CFDI_PAYMENT_METHODS`, `SAT_PRODUCT_KEYS`, `SAT_UNITS` + `satUnitForKey` (maps product unit → SAT `ClaveUnidad`, e.g. `H87` for piece, `KGM` for kg, `E48` for service)
+
+### 23.3 Document generation
+
+- **Trigger:** the outbox consumer `CfdiService.handle` processes `invoice.issued` / `credit_note.issued` and calls `generateForInvoice` (never throws). Generation is **idempotent** — returns the existing record on `(tenant_id, invoice_id)`, and a unique-violation retry re-fetches on race. Skips (returns `null`) when `tenant.country !== 'MX'` or `settings.enabled === false`.
+- **Inputs:** invoice (+ items with product SKU/unit), tenant (name, RFC from `tax_id`, `fiscalRegime` default `601`, `fiscalAddress`), customer (name, RFC from `tax_id`, `usoCfdi` default `G03`, `regimenFiscal` default `616`), and the per-tenant certificates. Generic RFCs (`XAXX010101000`/`XEXX010101000`) are used when the emitter/receptor RFC is missing.
+- **XML:** CFDI 4.0 `cfdi:Comprobante` (`Version 4.0`, `TipoDeComprobante I`/`E`, `Serie`/`Folio` split from the invoice number via `/^([A-Za-z0-9]+)-(\d+)$/` → `INV`/`000001`), `Cfdi:Impuestos` (`001` ISR / `002` IVA / `003` IEPS with `Tasa` type factors), SAT `ClaveProdServ` default `01010101`, `Exportacion 01`, `LugarExpedicion` from settings. TFD 1.1 (`tfd:TimbreFiscalDigital`, `Version 1.1`, `UUID`, `FechaTimbrado`, `RfcProvCertif` = demo PAC `XND000000000`, `SelloCFD`, `NoCertificadoSAT`) is appended.
+- **Cadena original:** CFDI 4.0 comprobante chain + TFD 1.1 chain (`||...||` delimited); `cadenaClean` trims, collapses whitespace, escapes `|` → `||`, removes `\r\n\t`; `sello` = `RSA-SHA256` over the cadena original, base64.
+- **Certificates:** `generateDemoCertificate` (selfsigned 5.5.0, async WebCrypto) creates per-tenant emisor + PAC certs on first use; serial number normalized to 20 hex digits via `crypto.X509Certificate`; `validFrom`/`validTo` stored as `YYYY-MM-DD`; PEMs kept in DB (see `certificate.util.ts`).
+- **Stored UUIDs** are lowercase (Postgres `uuid`); the TFD XML keeps the uppercase canonical form.
+
+### 23.4 API surface (`/tax/...`, module permission `TAX`)
+
+- `GET /tax/settings`, `PUT /tax/settings` — read/update `{ enabled, paymentForm, paymentMethod, placeOfExpedition }` (persisted in `tenant.config.cfdi`); response also includes `rfc`, `regime`, `country` (`tax:read`/`tax:write`).
+- `GET /tax/cfdi?page=&limit=&status=` — paginated list (`tax:read`).
+- `GET /tax/cfdi/invoices/:invoiceId` — the CFDI for an invoice, `404` if none (`tax:read`).
+- `POST /tax/cfdi/invoices/:invoiceId/generate` — idempotent on-demand generation (`tax:write`).
+- `GET /tax/cfdi/:id`, `GET /tax/cfdi/:id/xml` — document and XML download (`application/xml`, `Content-Disposition: attachment; filename="<UUID>.xml"`) (`tax:read`).
+- `PUT /tax/cfdi/:id/cancel` — demo cancel: sets `status = cancelled` + `cancelled_at` (no PAC cancellation) (`tax:write`).
+- `GET /tax/catalogs` — `{ regimes, usos, paymentForms, paymentMethods, productKeys }` (`tax:read`).
+
+### 23.5 Customer validation
+
+`customers.service.ts` validates/normalizes `tax_id` by tenant country on create/update: MX → `validateRfc` + `normalizeRfc`, US → `validateEin` (dashes stripped), others → trim. Customer create/update DTOs accept `uso_cfdi` / `regimen_fiscal` constrained to `USO_CFDI` / `FISCAL_REGIMES` keys (`@IsIn`). Web: the invoice detail modal shows the CFDI UUID, status, total and a "Download XML" button (`GET /tax/cfdi/invoices/:invoiceId` + `GET /tax/cfdi/:id/xml`).
 
 ---
 

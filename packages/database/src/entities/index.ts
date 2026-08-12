@@ -1,6 +1,8 @@
 import { AccountingPeriod } from './accounting-period.entity';
 import { AuditLog } from './audit-log.entity';
 import { Category } from './category.entity';
+import { CfdiCertificate } from './cfdi-certificate.entity';
+import { CfdiDocument } from './cfdi-document.entity';
 import { ChartAccount } from './chart-account.entity';
 import { CrmActivity } from './crm-activity.entity';
 import { CrmContact } from './crm-contact.entity';
@@ -98,12 +100,16 @@ export const entities = [
   PayrollLine,
   OutboxEvent,
   PaymentProviderConfig,
+  CfdiDocument,
+  CfdiCertificate,
 ];
 
 export {
   AccountingPeriod,
   AuditLog,
   Category,
+  CfdiCertificate,
+  CfdiDocument,
   ChartAccount,
   CrmActivity,
   CrmContact,

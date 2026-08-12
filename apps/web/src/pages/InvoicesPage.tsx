@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError, downloadFile } from '../api/client';
-import type { Customer, Invoice, Paginated, Product, Warehouse } from '../api/types';
+import type { CfdiDocument, Customer, Invoice, Paginated, Product, Warehouse } from '../api/types';
 import {
   Badge,
   type Column,
@@ -87,6 +87,8 @@ export function InvoicesPage() {
   const [viewing, setViewing] = useState<Invoice | null>(null);
   const [viewLoading, setViewLoading] = useState(false);
   const [viewError, setViewError] = useState<string | null>(null);
+  const [cfdi, setCfdi] = useState<CfdiDocument | null>(null);
+  const [cfdiLoading, setCfdiLoading] = useState(false);
   const toast = useToast();
 
   const { data, error, reload } = usePagedQuery<Invoice>({
@@ -254,6 +256,8 @@ export function InvoicesPage() {
     setViewing(row);
     setViewLoading(true);
     setViewError(null);
+    setCfdi(null);
+    setCfdiLoading(true);
     try {
       const detail = await apiFetch<Invoice>(`/api/v1/sales/invoices/${row.id}`);
       setViewing(detail);
@@ -261,6 +265,21 @@ export function InvoicesPage() {
       setViewError(err instanceof ApiError ? err.message : 'Could not load invoice.');
     } finally {
       setViewLoading(false);
+    }
+    try {
+      setCfdi(await apiFetch<CfdiDocument>(`/api/v1/tax/cfdi/invoices/${row.id}`));
+    } catch {
+      setCfdi(null);
+    } finally {
+      setCfdiLoading(false);
+    }
+  };
+
+  const downloadCfd = async (cfdiDoc: CfdiDocument) => {
+    try {
+      await downloadFile(`/api/v1/tax/cfdi/${cfdiDoc.id}/xml`, `${cfdiDoc.uuid}.xml`);
+    } catch (err) {
+      toast.toast(err instanceof ApiError ? err.message : 'Could not download CFDI.');
     }
   };
 
@@ -688,6 +707,44 @@ export function InvoicesPage() {
               </>
             ) : null}
             {viewing.notes ? <div className="detail-notes">{viewing.notes}</div> : null}
+            <div className="detail-section-title-row">
+              <h4 className="detail-section-title">CFDI</h4>
+              {!cfdiLoading && cfdi ? (
+                <Button variant="ghost" size="sm" onClick={() => void downloadCfd(cfdi)}>
+                  Download XML
+                </Button>
+              ) : null}
+            </div>
+            {cfdiLoading ? <LoadingBlock /> : null}
+            {!cfdiLoading && cfdi ? (
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <div className="detail-label">UUID</div>
+                  <div className="detail-value">{cfdi.uuid}</div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">Status</div>
+                  <div className="detail-value">
+                    <Badge
+                      tone={cfdi.status === 'stamped' ? 'success' : cfdi.status === 'pending' ? 'neutral' : 'danger'}
+                    >
+                      {cfdi.status}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">Total</div>
+                  <div className="detail-value num">{formatMoney(cfdi.total)}</div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">Stamped</div>
+                  <div className="detail-value">{cfdi.stampedAt ? formatDate(cfdi.stampedAt) : '—'}</div>
+                </div>
+              </div>
+            ) : null}
+            {!cfdiLoading && !cfdi ? (
+              <p className="detail-notes">No CFDI generated for this invoice.</p>
+            ) : null}
           </div>
         ) : null}
         <div className="modal-footer">

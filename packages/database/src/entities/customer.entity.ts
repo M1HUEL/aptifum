@@ -43,6 +43,12 @@ export class Customer extends TenantBaseEntity {
   @Column({ name: 'price_category', type: 'varchar', length: 60, nullable: true })
   priceCategory: string | null;
 
+  @Column({ name: 'uso_cfdi', type: 'varchar', length: 4, nullable: true })
+  usoCfdi: string | null;
+
+  @Column({ name: 'regimen_fiscal', type: 'varchar', length: 5, nullable: true })
+  regimenFiscal: string | null;
+
   @Column({ default: true })
   active: boolean;
 

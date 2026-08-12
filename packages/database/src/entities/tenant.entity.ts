@@ -1,5 +1,6 @@
 import { Column, Entity, ManyToMany } from 'typeorm';
 import { BaseEntity } from '../base/base.entity';
+import { FiscalAddress } from '@aptifum/core';
 import { User } from './user.entity';
 
 @Entity('tenants')
@@ -15,6 +16,12 @@ export class Tenant extends BaseEntity {
 
   @Column({ length: 2, default: 'US' })
   country: string;
+
+  @Column({ name: 'fiscal_regime', type: 'varchar', length: 5, nullable: true })
+  fiscalRegime: string | null;
+
+  @Column({ name: 'fiscal_address', type: 'jsonb', nullable: true })
+  fiscalAddress: FiscalAddress | null;
 
   @Column({ type: 'jsonb', default: () => "'{}'" })
   config: Record<string, unknown>;

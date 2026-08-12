@@ -608,6 +608,17 @@ select:focus {
   font-size: 14px;
 }
 
+.detail-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.detail-section-title-row .detail-section-title {
+  margin: 16px 0 8px;
+}
+
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;

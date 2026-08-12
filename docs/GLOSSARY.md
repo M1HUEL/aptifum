@@ -46,7 +46,7 @@
 
 | Term | Definition |
 |------|------------|
-| **Customer** | Buyer of goods (`customers`): trade/legal name, tax id, contacts, currency, credit limit, price category. |
+| **Customer** | Buyer of goods (`customers`): trade/legal name, tax id, contacts, currency, credit limit, price category. MX customers also carry `uso_cfdi` and `regimen_fiscal` (CFDI §5). |
 | **Quote** | Non-binding sales document (`sales_orders` with `kind = quote`); convertible to an order. |
 | **Sales order** | Confirmed customer commitment (`sales_orders` with `kind = order`); statuses `draft → confirmed → invoiced`, or `cancelled`. |
 | **SalesOrderKind** | Enum: `quote`, `order`. |
@@ -84,9 +84,27 @@
 | **Webhook** | Server-to-server HTTP callback (`POST /api/v1/webhooks/stripe`, public); `checkout.session.completed` is recorded as a **card payment**. |
 | **Card payment** | A `payments` row with `method = card` and `reference = Stripe session id`, recorded by the webhook through the standard payment flow (journal entry + outbox `payment.received`). The session id makes replays idempotent. |
 
-## 5. References
+## 5. Tax compliance (CFDI)
 
-- Model and relationships: `docs/SPEC.md` §13, §22.
+| Term | Definition |
+|------|------------|
+| **RFC** | Mexican fiscal registration number (`customers.tax_id` / `tenants.tax_id`): 12 chars for legal entities, 13 for individuals. Validated/normalized by `validateRfc`/`normalizeRfc` in `packages/core`. |
+| **EIN** | US Employer Identification Number: 9 digits (formatted 2-1-4). Validated by `validateEin`. |
+| **CFDI** | Comprobante Fiscal Digital por Internet — Mexican e-invoice. This project emits **CFDI 4.0** (Ingreso `I` / Egreso `E`) for MX tenants, self-contained: XML + cadena original + digital seal + TFD. |
+| **TFD** | Timbre Fiscal Digital (`tfd:TimbreFiscalDigital` 1.1): the SAT-stamped receipt block with `UUID`, `FechaTimbrado`, `RfcProvCertif`, `SelloCFD`. Here it is **demo**: the UUID is locally generated (not SAT) and the PAC is the demo `XND000000000` ("Aptifum Demo PAC"). |
+| **PAC** | Proveedor Autorizado de Certificación — the authorized third party that timbres a CFDI. Production would submit to a real PAC; today the document is signed locally (demo). |
+| **Cadena original** | Canonical string that the digital seal is computed over (CFDI 4.0 comprobante chain + TFD 1.1 chain), `||`-delimited; whitespace collapsed and `|` escaped to `||`. |
+| **Sello** | Digital seal: `RSA-SHA256` signature over the cadena original, base64 (`cfdi_documents.sello`). |
+| **Uso CFDI** | SAT tax-usage code for the receptor (`customers.uso_cfdi`, catalog `USO_CFDI`, default `G03`). |
+| **Régimen fiscal** | SAT fiscal regime code for emitter/receptor (`FISCAL_REGIMES`; defaults emitter `601` / receptor `616`). |
+| **FormaPago / MetodoPago** | CFDI payment form/method attributes (`CFDI_PAYMENT_FORMS`, `CFDI_PAYMENT_METHODS`; defaults `99` / `PUE`). |
+| **ClaveProdServ / ClaveUnidad** | SAT product key and unit key (`SAT_PRODUCT_KEYS`, `SAT_UNITS`); the unit maps from the product's unit via `satUnitForKey` (e.g. piece → `H87`, kg → `KGM`, service → `E48`). |
+| **CfdiCertificate** | Per-tenant self-signed certificate (`cfdi_certificates`, kinds `emisor`/`pac`) generated with `selfsigned` (async WebCrypto); serial normalized to 20 hex digits, PEMs stored in the DB. |
+
+## 6. References
+
+- Model and relationships: `docs/SPEC.md` §13, §22, §23.
 - Enums: `packages/core/src/index.ts`.
 - Entities: `packages/database/src/entities/`.
 - Stock logic: `packages/database/src/services/stock.ts`.
+- CFDI builder/certs: `apps/api/src/modules/tax/`.

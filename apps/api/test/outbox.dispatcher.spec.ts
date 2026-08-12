@@ -22,11 +22,19 @@ function event(overrides: Partial<OutboxEvent> = {}): OutboxEvent {
   } as OutboxEvent;
 }
 
-function buildDispatcher(outbox: Record<string, unknown>, notifications: Record<string, unknown> = {}) {
-  return new OutboxDispatcher(outbox as never, notifications as never);
+function buildDispatcher(
+  outbox: Record<string, unknown>,
+  notifications: Record<string, unknown> = {},
+  cfdi: Record<string, unknown> = {},
+) {
+  return new OutboxDispatcher(outbox as never, notifications as never, cfdi as never);
 }
 
 function freshNotifications() {
+  return { handle: vi.fn(() => Promise.resolve()) };
+}
+
+function freshCfdi() {
   return { handle: vi.fn(() => Promise.resolve()) };
 }
 
@@ -38,7 +46,7 @@ describe('OutboxDispatcher dispatchPending', () => {
       markDispatched: vi.fn((e: OutboxEvent) => Promise.resolve(e)),
       markFailed: vi.fn(),
     };
-    const dispatcher = buildDispatcher(outbox, freshNotifications());
+    const dispatcher = buildDispatcher(outbox, freshNotifications(), freshCfdi());
     await dispatcher.dispatchPending();
     expect(outbox.markDispatched).toHaveBeenCalledWith(ev);
     expect(outbox.markFailed).not.toHaveBeenCalled();
@@ -51,7 +59,7 @@ describe('OutboxDispatcher dispatchPending', () => {
       markDispatched: vi.fn((e: OutboxEvent) => Promise.resolve(e)),
       markFailed: vi.fn(),
     };
-    const dispatcher = buildDispatcher(outbox, freshNotifications());
+    const dispatcher = buildDispatcher(outbox, freshNotifications(), freshCfdi());
     await dispatcher.dispatchPending();
     expect(outbox.markDispatched).toHaveBeenCalledWith(ev);
   });
@@ -63,7 +71,7 @@ describe('OutboxDispatcher dispatchPending', () => {
       markDispatched: vi.fn((e: OutboxEvent) => Promise.resolve(e)),
       markFailed: vi.fn((e: OutboxEvent) => Promise.resolve(e)),
     };
-    const dispatcher = buildDispatcher(outbox);
+    const dispatcher = buildDispatcher(outbox, freshNotifications(), freshCfdi());
     dispatcher['handle'] = () => Promise.reject(new Error('boom'));
     await dispatcher.dispatchPending();
     expect(outbox.markFailed).toHaveBeenCalledWith(ev, expect.any(Error));
@@ -76,7 +84,7 @@ describe('OutboxDispatcher dispatchPending', () => {
       markDispatched: vi.fn(),
       markFailed: vi.fn(),
     };
-    const dispatcher = buildDispatcher(outbox);
+    const dispatcher = buildDispatcher(outbox, freshNotifications(), freshCfdi());
     await dispatcher.dispatchPending();
     expect(outbox.markDispatched).not.toHaveBeenCalled();
     expect(outbox.markFailed).not.toHaveBeenCalled();

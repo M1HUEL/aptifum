@@ -304,7 +304,12 @@ export class InvoicesService {
             eventType: 'credit_note.issued',
             aggregateType: 'invoice',
             aggregateId: saved.id,
-            payload: { number: saved.number, customerId: saved.customerId, total: saved.total },
+        payload: {
+          number: saved.number,
+          customerId: saved.customerId,
+          total: saved.total,
+          invoiceId: saved.id,
+        },
             tenantId,
             userId,
           });

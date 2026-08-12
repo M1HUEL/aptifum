@@ -20,6 +20,8 @@ export const DEFAULT_ROLES: Record<RoleName, string[]> = {
     p(ModuleName.ACCOUNTING, 'read'),
     p(ModuleName.ACCOUNTING, 'write'),
     p(ModuleName.REPORTING, 'read'),
+    p(ModuleName.TAX, 'read'),
+    p(ModuleName.TAX, 'write'),
   ],
   [RoleName.SELLER]: [
     p(ModuleName.SALES, 'read'),
@@ -29,6 +31,7 @@ export const DEFAULT_ROLES: Record<RoleName, string[]> = {
     p(ModuleName.INVENTORY, 'read'),
     p(ModuleName.CRM, 'read'),
     p(ModuleName.CRM, 'write'),
+    p(ModuleName.TAX, 'read'),
   ],
   [RoleName.WAREHOUSE]: [
     p(ModuleName.INVENTORY, 'read'),

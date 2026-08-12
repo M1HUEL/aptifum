@@ -33,7 +33,7 @@
 - Multi-currency **revaluation** — exchange rates **shipped** (2026-08, see §4 item 5); **revaluation + settlement FX shipped (2026-08, see §4 item 5)**.
 - Notifications (email/SMS for due dates, orders, approvals) — F4. Email for invoices/payments/receipts **shipped** (via outbox); **due-date/approval reminders shipped (2026-08, see §4 item 2)**; SMS remains F4.
 - Physical POS / offline — web POS **shipped**; offline/desktop client not planned.
-- Country tax compliance: MX CFDI/e-invoicing (timbrado), US sales tax per state/nexus — F4.
+- **Country tax compliance**: ~~MX CFDI/e-invoicing (timbrado), US sales tax per state/nexus — F4.~~ **MX CFDI 4.0 shipped (2026-08):** self-contained demo e-invoicing (XML + cadena original + sello + demo TFD with per-tenant self-signed certificates, no real PAC) + RFC/EIN validation + `cfdi_documents`/`cfdi_certificates` + `/tax/...` APIs (settings, catalogs, cancel, XML download) + outbox consumer on `invoice.issued` + CFDI UUID/XML download in the web invoice detail. **Remaining:** real PAC timbrado and US sales tax per state/nexus (F4).
 - i18n — English only for now.
 - Bank/tax/e-commerce integrations — F4.
 
@@ -46,7 +46,7 @@
 5. ~~**Multi-currency**~~ — **DONE** — per-tenant `exchange_rates` + CRUD API; invoices/credit notes/customer payments/supplier bills/supplier payments store `exchange_rate` and post to the tenant's functional currency (inventory/COGS stay in functional currency, not converted); FX gain/loss accounts seeded. **Revaluation shipped (2026-08):** `POST /accounting/revaluations` revalues open foreign-currency balances (`date` + optional `currency`), posting `fx_revaluation` journal entries (Dr/Cr AR·AP vs 4200/6100) with automatic reversal of prior revaluations for the same document before re-posting, so re-runs are idempotent; payments now realize the FX difference vs the booked rate (Dr/Cr FX gain/loss) so AR/AP always nets to zero. **POS multi-currency shipped (2026-08):** invoice create/payment accept `currency` + `exchangeRate` (manual rate or resolved from `exchange_rates`), POS cashier picks sale currency + rate (auto-filled from latest configured rate), totals/payment in sale currency, posting stays functional.
 6. **Product variants + lots/expiry** — retail/perishable support. **Variants shipped (partial):** catalog + CRUD done (2026-08); variants in stock/POS done (2026-08); **lots/expiry done (2026-08)** — `product_lots`, FEFO consumption on outbound/transfer, `stock_movements.lot_id`, `GET /inventory/lots` + status filters, receiving by lot, "Lots" tab in Stock, e2e covered.
 7. **Payment/bank integrations** (Stripe, bank feeds). **Stripe shipped (2026-08):** provider config, checkout redirect, signature-verified webhooks (see §1.2). Bank feeds remain open.
-8. **MX/US tax compliance** (CFDI/timbrado, sales tax nexus) — largest effort, biggest differentiator.
+8. ~~**MX/US tax compliance**~~ — ~~largest effort, biggest differentiator~~ **MX CFDI 4.0 shipped (2026-08, see §3):** demo timbrado (self-signed certs, cadena original, TFD), RFC/EIN validation, `/tax` API + outbox consumer + web UUID/XML download. **Remaining (F4):** real PAC submission/cancellation and US sales tax per state/nexus.
 
 ## 5. Proposed sequence (first pass)
 
@@ -57,6 +57,7 @@
 5. ~~Multi-currency exchange rates + functional-currency posting.~~ **DONE** (2026-08). ~~Remaining: revaluation.~~ **Revaluation + settlement FX done (2026-08).**
 6. ~~Due-date/approval reminders (built on the outbox).~~ **DONE** (2026-08) — cron at 04:00 emits `reminder.*` events; email delivery to customers / permissioned users (see §4 item 2).
 7. ~~Online card payments (Stripe).~~ **DONE** (2026-08) — provider config, checkout redirect, signature-verified webhooks (see §1.2).
+8. ~~MX/US tax compliance (CFDI/timbrado, sales tax nexus).~~ **MX CFDI shipped (2026-08)** — demo timbrado, RFC/EIN validation, `/tax` API, outbox consumer, web UUID/XML download (see §3). Real PAC + US sales tax remain F4.
 
 ## 6. Minor cleanup items
 
