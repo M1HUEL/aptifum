@@ -7,6 +7,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
+import { UpdateLocationDto } from './dto/update-location.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
 import { WarehousesService } from './warehouses.service';
 
@@ -76,5 +77,28 @@ export class WarehousesController {
     @Body() dto: CreateLocationDto,
   ) {
     return this.warehousesService.addLocation(user.tenantId, id, dto);
+  }
+
+  @Patch(':id/locations/:locationId')
+  @RequirePermissions(permission(ModuleName.INVENTORY, 'write'))
+  @ApiOperation({ summary: 'Update a warehouse location' })
+  updateLocation(
+    @CurrentUser() user: { tenantId: string | null },
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('locationId', new ParseUUIDPipe()) locationId: string,
+    @Body() dto: UpdateLocationDto,
+  ) {
+    return this.warehousesService.updateLocation(user.tenantId, id, locationId, dto);
+  }
+
+  @Delete(':id/locations/:locationId')
+  @RequirePermissions(permission(ModuleName.INVENTORY, 'write'))
+  @ApiOperation({ summary: 'Deactivate a warehouse location' })
+  removeLocation(
+    @CurrentUser() user: { tenantId: string | null },
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Param('locationId', new ParseUUIDPipe()) locationId: string,
+  ) {
+    return this.warehousesService.removeLocation(user.tenantId, id, locationId);
   }
 }

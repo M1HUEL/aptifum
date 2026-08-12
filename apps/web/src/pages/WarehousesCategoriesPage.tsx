@@ -66,9 +66,12 @@ export function WarehousesCategoriesPage() {
   const [locationsLoading, setLocationsLoading] = useState(false);
   const [locationsError, setLocationsError] = useState<string | null>(null);
   const [locOpen, setLocOpen] = useState(false);
+  const [editingLocId, setEditingLocId] = useState<string | null>(null);
   const [locForm, setLocForm] = useState<LocationForm>(emptyLocation);
   const [locError, setLocError] = useState<string | null>(null);
   const [locSaving, setLocSaving] = useState(false);
+  const [deletingLoc, setDeletingLoc] = useState<WarehouseLocation | null>(null);
+  const [locDeleteBusy, setLocDeleteBusy] = useState(false);
 
   const [catOpen, setCatOpen] = useState(false);
   const [editingCatId, setEditingCatId] = useState<string | null>(null);
@@ -174,6 +177,18 @@ export function WarehousesCategoriesPage() {
     }
   };
 
+  const openLocation = (location?: WarehouseLocation) => {
+    if (location) {
+      setEditingLocId(location.id);
+      setLocForm({ code: location.code, name: location.name, active: location.active });
+    } else {
+      setEditingLocId(null);
+      setLocForm(emptyLocation);
+    }
+    setLocError(null);
+    setLocOpen(true);
+  };
+
   const submitLocation = async (event: FormEvent) => {
     event.preventDefault();
     if (!locForm.code.trim() || !locForm.name.trim() || !locationsFor) {
@@ -182,23 +197,52 @@ export function WarehousesCategoriesPage() {
     }
     setLocSaving(true);
     setLocError(null);
+    const body = {
+      code: locForm.code.trim(),
+      name: locForm.name.trim(),
+      active: locForm.active,
+    };
     try {
-      await apiFetch(`/api/v1/inventory/warehouses/${locationsFor.id}/locations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: locForm.code.trim(),
-          name: locForm.name.trim(),
-          active: locForm.active,
-        }),
-      });
-      toast.toast('Location added.');
+      if (editingLocId) {
+        await apiFetch(`/api/v1/inventory/warehouses/${locationsFor.id}/locations/${editingLocId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        toast.toast('Location updated.');
+      } else {
+        await apiFetch(`/api/v1/inventory/warehouses/${locationsFor.id}/locations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        toast.toast('Location added.');
+      }
       setLocOpen(false);
       await loadLocations(locationsFor);
     } catch (err) {
-      setLocError(err instanceof ApiError ? err.message : 'Could not add location.');
+      setLocError(err instanceof ApiError ? err.message : 'Could not save location.');
     } finally {
       setLocSaving(false);
+    }
+  };
+
+  const confirmDeleteLoc = async () => {
+    if (!deletingLoc || !locationsFor) return;
+    setLocDeleteBusy(true);
+    try {
+      await apiFetch(
+        `/api/v1/inventory/warehouses/${locationsFor.id}/locations/${deletingLoc.id}`,
+        { method: 'DELETE' },
+      );
+      toast.toast('Location deactivated.');
+      setDeletingLoc(null);
+      await loadLocations(locationsFor);
+    } catch (err) {
+      toast.toast(err instanceof ApiError ? err.message : 'Could not deactivate location.', 'error');
+      setDeletingLoc(null);
+    } finally {
+      setLocDeleteBusy(false);
     }
   };
 
@@ -430,7 +474,7 @@ export function WarehousesCategoriesPage() {
         {!locationsLoading && !locationsError ? (
           <>
             <div className="table-actions" style={{ marginBottom: '1rem' }}>
-              <Button size="sm" onClick={() => setLocOpen(true)}>
+              <Button size="sm" onClick={() => openLocation()}>
                 + Add location
               </Button>
             </div>
@@ -444,6 +488,7 @@ export function WarehousesCategoriesPage() {
                       <th>Code</th>
                       <th>Name</th>
                       <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -455,6 +500,18 @@ export function WarehousesCategoriesPage() {
                           <Badge tone={location.active ? 'success' : 'neutral'}>
                             {location.active ? 'Active' : 'Inactive'}
                           </Badge>
+                        </td>
+                        <td>
+                          <div className="table-actions">
+                            <Button variant="ghost" size="sm" onClick={() => openLocation(location)}>
+                              Edit
+                            </Button>
+                            {location.active ? (
+                              <Button variant="danger" size="sm" onClick={() => setDeletingLoc(location)}>
+                                Deactivate
+                              </Button>
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -471,7 +528,11 @@ export function WarehousesCategoriesPage() {
         </div>
       </Modal>
 
-      <Modal open={locOpen} title="Add location" onClose={() => !locSaving && setLocOpen(false)}>
+      <Modal
+        open={locOpen}
+        title={editingLocId ? 'Edit location' : 'Add location'}
+        onClose={() => !locSaving && setLocOpen(false)}
+      >
         <form onSubmit={(event) => void submitLocation(event)}>
           <Field label="Code" htmlFor="loc-code" required>
             <TextInput
@@ -500,7 +561,7 @@ export function WarehousesCategoriesPage() {
               Cancel
             </Button>
             <button type="submit" className="btn btn-primary" disabled={locSaving}>
-              {locSaving ? 'Adding…' : 'Add location'}
+              {locSaving ? 'Saving…' : editingLocId ? 'Save changes' : 'Add location'}
             </button>
           </div>
         </form>
@@ -571,6 +632,16 @@ export function WarehousesCategoriesPage() {
         confirmLabel="Delete"
         onCancel={() => setDeletingCat(null)}
         onConfirm={() => void confirmDeleteCat()}
+      />
+
+      <ConfirmDialog
+        open={deletingLoc !== null}
+        title="Deactivate location"
+        message={`Deactivate "${deletingLoc?.name}"?`}
+        confirmLabel="Deactivate"
+        busy={locDeleteBusy}
+        onCancel={() => setDeletingLoc(null)}
+        onConfirm={() => void confirmDeleteLoc()}
       />
     </>
   );

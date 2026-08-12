@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Warehouse, WarehouseLocation } from '@aptifum/database';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
+import { UpdateLocationDto } from './dto/update-location.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
 
 @Injectable()
@@ -76,18 +77,71 @@ export class WarehousesService {
     });
   }
 
+  async findLocation(tenantId: string | null, warehouseId: string, locationId: string) {
+    const location = await this.locationsRepo.findOne({
+      where: { id: locationId, warehouseId, ...this.scoped(tenantId) },
+    });
+    if (!location) {
+      throw new NotFoundException('Location not found');
+    }
+    return location;
+  }
+
   async addLocation(tenantId: string | null, warehouseId: string, dto: CreateLocationDto) {
     this.assertTenant(tenantId);
     await this.findOne(tenantId, warehouseId);
-    return this.locationsRepo.save(
-      this.locationsRepo.create({
-        tenantId: tenantId as string,
-        warehouseId,
-        code: dto.code,
-        name: dto.name,
-        active: dto.active ?? true,
-      }),
-    );
+    try {
+      return await this.locationsRepo.save(
+        this.locationsRepo.create({
+          tenantId: tenantId as string,
+          warehouseId,
+          code: dto.code,
+          name: dto.name,
+          active: dto.active ?? true,
+        }),
+      );
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new BadRequestException(
+          `A location with code "${dto.code}" already exists in this warehouse`,
+        );
+      }
+      throw error;
+    }
+  }
+
+  async updateLocation(
+    tenantId: string | null,
+    warehouseId: string,
+    locationId: string,
+    dto: UpdateLocationDto,
+  ) {
+    const location = await this.findLocation(tenantId, warehouseId, locationId);
+    Object.assign(location, {
+      code: dto.code ?? location.code,
+      name: dto.name ?? location.name,
+      active: dto.active ?? location.active,
+    });
+    try {
+      return await this.locationsRepo.save(location);
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new BadRequestException(
+          `A location with code "${location.code}" already exists in this warehouse`,
+        );
+      }
+      throw error;
+    }
+  }
+
+  async removeLocation(tenantId: string | null, warehouseId: string, locationId: string) {
+    await this.findLocation(tenantId, warehouseId, locationId);
+    await this.locationsRepo.softDelete({
+      id: locationId,
+      warehouseId,
+      ...this.scoped(tenantId),
+    });
+    return { id: locationId };
   }
 
   private assertTenant(tenantId: string | null): asserts tenantId is string {
@@ -95,4 +149,14 @@ export class WarehousesService {
       throw new BadRequestException('Tenant context required');
     }
   }
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'driverError' in error &&
+    typeof (error as { driverError: { code?: string } }).driverError?.code === 'string' &&
+    (error as { driverError: { code?: string } }).driverError.code === '23505'
+  );
 }
