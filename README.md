@@ -10,6 +10,7 @@ Multi-tenant ERP with sales, purchasing, inventory, manufacturing, HR, accountin
 - **Packages** — shared core (domain enums/utilities), typed config (zod), database entities/seeders, logger
 - **Auth** — JWT access/refresh with session rotation, RBAC permissions, throttling
 - **Multi-currency** — per-tenant exchange rates; invoices, payments and supplier bills post to the tenant's functional currency
+- **Online payments** — Stripe checkout for issued invoices with signature-verified webhooks recording card payments idempotently
 - **Docs** — PDF (pdfkit) and CSV export across reports and invoices
 
 ## Repository layout

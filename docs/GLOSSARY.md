@@ -70,9 +70,23 @@
 | **FX conversion** | Documents issued in a currency other than the functional one store `exchange_rate = functional → document currency` and their automatic entries post converted amounts (AR/sales/VAT, AP/cash). Inventory valuation (COGS/stock) is kept in functional currency and is not converted. |
 | **FX gain / FX loss** | Reserved accounts `4200 Foreign exchange gain` / `6100 Foreign exchange loss` in the seeded chart of accounts. Not yet posted automatically (no revaluation/settlement). |
 
-## 4. References
+## 4. Payments (online card)
 
-- Model and relationships: `docs/SPEC.md` §13.
+| Term | Definition |
+|------|------------|
+| **Payment provider** | External online payment processor configured per tenant (`payment_providers`): provider, environment, secrets (Stripe key + webhook signing secret), `is_enabled`. |
+| **PaymentProvider** | Enum of supported gateways; today only `stripe`. |
+| **PaymentProviderEnvironment** | Enum `test` / `live` for a provider config. |
+| **Masked secret** | Provider configs never return raw secrets; responses expose `secretKeyMasked` / `webhookSecretMasked` (`first6********last4`, or `********` for secrets ≤ 8 chars). |
+| **Stripe** | Payment gateway used for online card checkout (`stripe-client.service.ts`); the API builds sessions server-side and hosts a signature-verified webhook endpoint. |
+| **Checkout session** | A Stripe Checkout Session created per invoice (`checkout:<invoiceId>` idempotency key); returns a hosted redirect URL where the customer pays. |
+| **Stripe signature** | Webhook header `t=<timestamp>,v1=<hmac-sha256>`; verified against the tenant's stored `webhook_secret` with a ±300 s timestamp tolerance over the exact (raw) request body. |
+| **Webhook** | Server-to-server HTTP callback (`POST /api/v1/webhooks/stripe`, public); `checkout.session.completed` is recorded as a **card payment**. |
+| **Card payment** | A `payments` row with `method = card` and `reference = Stripe session id`, recorded by the webhook through the standard payment flow (journal entry + outbox `payment.received`). The session id makes replays idempotent. |
+
+## 5. References
+
+- Model and relationships: `docs/SPEC.md` §13, §22.
 - Enums: `packages/core/src/index.ts`.
 - Entities: `packages/database/src/entities/`.
 - Stock logic: `packages/database/src/services/stock.ts`.

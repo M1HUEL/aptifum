@@ -17,6 +17,7 @@
 - **Supplier invoice / AP with supplier bills** (§6.3, §15.3): ~~only supplier payments exist (Dr AP / Cr Cash). No supplier bill with PO→receipt→bill reconciliation, no due dates, no payments-per-bill. (Payment-only was a conscious scope decision; the gap remains in the SPEC.)~~ **DONE:** `supplier_bills` (+items) with draft → issued → paid/cancelled, number from `SB` series at issue, AP posted as variance vs the linked receipt (Dr/Cr COGS for the difference, full entry when no receipt), optional payments per bill (`bill_id` on `supplier_payments`, PAID when balance hits zero), outbox event `supplier_bill.issued`; AP reports (aging, dashboard payables, overdue alerts) now span bills + unbilled receipts.
 - **Stock transfer between warehouses** (§6.1): ~~`MovementType` has `transfer` / `disposal` / `return`, but the flow only applies generic signed movements; no two-sided origin→destination transfer operation.~~ **DONE (2026-08):** `transferStock` helper (single transaction, pessimistic locks on both warehouses, preserves origin average cost, weighted-avg into destination, records a `transfer` movement per side: −qty origin / +qty destination) + `POST /inventory/transfers` (`CreateTransferDto`, productId/variantId/fromWarehouseId/toWarehouseId/quantity/notes); rejects same-warehouse (400), insufficient stock (400), unknown product/variant/destination (404).
 - **Customer statement** (§6.2): explicitly dropped by decision; orphan DTO deleted. Revisit only if requested.
+- **Online payments / Stripe** (§6.9, §22): ~~no payment-gateway integration; payments were recorded manually only (cash/card/transfer)~~ **DONE (2026-08):** `payment_providers` per-tenant config (secrets masked in responses), `PUT /payments/providers/:provider` upsert, `POST /payments/invoices/:id/checkout` creates a Stripe Checkout Session for issued invoices with an outstanding balance (idempotency key `checkout:<invoiceId>`), and `POST /webhooks/stripe` (public) verifies the `Stripe-Signature` header (HMAC-SHA256, raw body captured before `express.json`, ±300 s) against the tenant's `webhook_secret` and records `checkout.session.completed` as a `card` payment via the standard payment flow (journal entry + outbox `payment.received`); replays are idempotent (session id stored as payment `reference`). Remaining: other gateways and bank feeds.
 
 ## 2. Ambiguities / inconsistencies in SPEC
 
@@ -44,7 +45,7 @@
 4. ~~**Web POS / cashier**~~ — **DONE** — point of sale with catalog, ticket, and payment collection.
 5. ~~**Multi-currency**~~ — **DONE** — per-tenant `exchange_rates` + CRUD API; invoices/credit notes/customer payments/supplier bills/supplier payments store `exchange_rate` and post to the tenant's functional currency (inventory/COGS stay in functional currency, not converted); FX gain/loss accounts seeded. **Revaluation shipped (2026-08):** `POST /accounting/revaluations` revalues open foreign-currency balances (`date` + optional `currency`), posting `fx_revaluation` journal entries (Dr/Cr AR·AP vs 4200/6100) with automatic reversal of prior revaluations for the same document before re-posting, so re-runs are idempotent; payments now realize the FX difference vs the booked rate (Dr/Cr FX gain/loss) so AR/AP always nets to zero. **POS multi-currency shipped (2026-08):** invoice create/payment accept `currency` + `exchangeRate` (manual rate or resolved from `exchange_rates`), POS cashier picks sale currency + rate (auto-filled from latest configured rate), totals/payment in sale currency, posting stays functional.
 6. **Product variants + lots/expiry** — retail/perishable support. **Variants shipped (partial):** catalog + CRUD done (2026-08); variants in stock/POS done (2026-08); **lots/expiry done (2026-08)** — `product_lots`, FEFO consumption on outbound/transfer, `stock_movements.lot_id`, `GET /inventory/lots` + status filters, receiving by lot, "Lots" tab in Stock, e2e covered.
-7. **Payment/bank integrations** (Stripe, bank feeds).
+7. **Payment/bank integrations** (Stripe, bank feeds). **Stripe shipped (2026-08):** provider config, checkout redirect, signature-verified webhooks (see §1.2). Bank feeds remain open.
 8. **MX/US tax compliance** (CFDI/timbrado, sales tax nexus) — largest effort, biggest differentiator.
 
 ## 5. Proposed sequence (first pass)
@@ -55,6 +56,7 @@
 4. ~~POS~~ **DONE** — catalog, ticket, and payment collection on the web app.
 5. ~~Multi-currency exchange rates + functional-currency posting.~~ **DONE** (2026-08). ~~Remaining: revaluation.~~ **Revaluation + settlement FX done (2026-08).**
 6. ~~Due-date/approval reminders (built on the outbox).~~ **DONE** (2026-08) — cron at 04:00 emits `reminder.*` events; email delivery to customers / permissioned users (see §4 item 2).
+7. ~~Online card payments (Stripe).~~ **DONE** (2026-08) — provider config, checkout redirect, signature-verified webhooks (see §1.2).
 
 ## 6. Minor cleanup items
 

@@ -62,6 +62,7 @@ aptifum/
 │   │           ├── exchange-rates/   # Exchange rates for multi-currency posting
 │   │           ├── hr/               # Employees, attendance, payroll
 │   │           ├── crm/              # Opportunities, pipeline, activities
+│   │           ├── payments/         # Online card payments (Stripe), webhooks
 │   │           ├── production/       # BOMs/recipes, production orders
 │   │           └── reporting/        # Reports, exports
 │   └── web/                          # (Future) Frontend dashboard
@@ -169,6 +170,13 @@ aptifum/
 - Executive dashboard (key metrics).
 - **Implemented (F4):** read-only endpoints under `/reports/...` deriving everything from existing tables (no new entities). Module permission `reporting:read`. CSV export via `?format=csv`. See §21.
 
+### 6.9 Payments (online card)
+
+- **Payment providers:** per-tenant configuration (`payment_providers`): provider, environment (`test`/`live`), Stripe secret key + webhook signing secret, enabled flag. Secrets are **never returned** — every response exposes a masked form (`first6********last4`).
+- **Checkout:** `POST /payments/invoices/:id/checkout` creates a Stripe **Checkout Session** for an issued invoice with an outstanding balance and returns the hosted redirect URL; creation is idempotent per invoice (`Idempotency-Key: checkout:<invoiceId>`).
+- **Webhook:** `POST /webhooks/stripe` is public but signature-verified (HMAC-SHA256, timestamp tolerance ±300 s) against the tenant's stored signing secret, then records the card payment through the standard payment flow → journal entry + outbox `payment.received`. Replays are safe (Stripe session id is stored as the payment `reference` and the flow is idempotent). The **raw** body is captured before JSON parsing so the signature verifies the exact bytes sent by Stripe.
+- **Emits events:** `payment.received` (already emitted by the standard collection flow).
+
 ---
 
 ## 7. API design
@@ -181,6 +189,7 @@ aptifum/
   - Soft delete: `DELETE` deactivates; `PATCH` to reactivate.
   - Standardized errors: `{ code, message, details, requestId }`.
   - Idempotency: `Idempotency-Key` header on financial POSTs.
+  - Webhooks: webhook routes capture the **raw** request body (the server disables the default body parser for `/api/v1/webhooks/*` and buffers the bytes) so signature verification is exact.
 - **Swagger** enabled at `/docs` (only in non-production environments if desired).
 - **Traceability:** `requestId` in logs and error responses.
 
@@ -225,7 +234,7 @@ Entries are generated within the **same transaction** as the source document (ou
 | **F1 · Commercial core** | Inventory (products, warehouses, movements, valuation) + Sales/billing (customers, quotes, orders, invoices, collections) | Complete sales flow with stock integration |
 | **F2 · Finance** | Purchasing (suppliers, POs, receiving, AP) + Accounting (chart of accounts, automatic entries, reports) | Operational accounting close |
 | **F3 · Organization** | CRM + Human Resources + Production | Fully integrated modules |
-| **F4 · Analytics and platform** | BI reports, dashboard, exports, integrations (banks, tax, e-commerce), web frontend | Complete ERP for 20–200 users |
+| **F4 · Analytics and platform** | BI reports, dashboard, exports, **online card payments (Stripe)**, integrations (banks, tax, e-commerce), web frontend | Complete ERP for 20–200 users |
 
 ---
 
@@ -242,6 +251,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 | 5 | Languages | **English only** (single language). UI and API strings are English; no i18n layer for now. |
 | 6 | Team | **Single developer.** Conventions stay simple; lightweight CI. |
 | 7 | Pilot business | **No real pilot yet.** Business rules are validated with synthetic examples; SPEC remains the reference. |
+| 8 | Online payments | **Stripe shipped (2026-08).** Per-tenant provider config (`test`/`live`), server-side Checkout Sessions for issued invoices with an outstanding balance, and a signature-verified webhook that records card payments idempotently (see §6.9, §22). Bank feeds and other gateways remain **F4**. |
 
 ---
 
@@ -269,6 +279,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] F2.2 Supplier bills (AP): PO→receipt→bill reconciliation, draft → issued → paid/cancelled, `SB` series numbering at issue, AP variance entry vs the linked receipt, payments per bill, outbox event `supplier_bill.issued`, AP aging / dashboard payables / overdue alerts spanning bills + unbilled receipts — defined in §15.
 - [x] F4 Multi-currency: `exchange_rates` table + CRUD API; invoices, credit notes, customer payments, supplier bills and supplier payments store `exchange_rate` and post to the tenant's functional currency; FX gain/loss accounts seeded (not yet posted); revaluation deferred — defined in §13.2, §15.2, §16.4, §16.7.
 - [x] Web POS / cashier: catalog, ticket, and payment collection on the dashboard (F4, §11 #2).
+- [x] F4 Online card payments (Stripe): per-tenant `payment_providers` config with masked secrets, `POST /payments/invoices/:id/checkout` → Stripe Checkout Session, and `POST /webhooks/stripe` signature-verified webhook that records card payments idempotently — defined in §22.
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -644,6 +655,40 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 - **Income statement:** revenue from `invoices` (issued, credit notes as negative); `costOfSales`/`operatingExpenses` from `journal_entry_lines` joined to expense accounts (`account_code` LIKE `5%` / `6%`); `netIncome = revenue - cogs - opex`.
 - **Balance sheet:** journal entries with `entry_date <= asOf`; equity includes **Net income (current period)** computed from the 1st of the month to `asOf`.
 - **Dashboard:** sales today/month, monthly invoice count, AR balance (sum `balance_due`), AP (issued bill balances + goods receipts minus `supplier_payments` not linked to a bill), inventory value (physical stock × avg cost), low stock (≤ threshold), open POs (`approved`), production in progress, net income month.
+
+---
+
+## 22. F4 Payments data model (online card via Stripe)
+
+### 22.1 Conventions
+
+Same as §13.0 (TenantBaseEntity, UUID PK, enums in `packages/core`). Secrets (Stripe secret key, webhook signing secret) are stored per tenant and **never returned**: responses expose `secretKeyMasked` / `webhookSecretMasked` (`first6********last4`, or `********` when ≤ 8 chars).
+
+### 22.2 Tables
+
+| Table | Columns (besides base + tenant) | Notes / indexes |
+|-------|--------------------------------|-----------------|
+| `payment_providers` | `provider` (enum: stripe), `environment` (enum: test/live), `secret_key`, `webhook_secret`, `is_enabled` (default false) | one row per `(tenant_id, provider)`; index `(tenant_id, provider)` |
+
+**Enums added in `packages/core`**
+
+- `PaymentProvider`: stripe
+- `PaymentProviderEnvironment`: test, live
+
+### 22.3 API surface
+
+Module permission `PAYMENTS` (`read`, `write`) for `/payments/...`; `/webhooks/...` is `@Public()`.
+
+- `GET /payments/providers` — list configured providers with masked secrets (`payments:read`).
+- `PUT /payments/providers/:provider` — create or update a provider config (`{ environment, secretKey, webhookSecret, isEnabled? }`); secrets are stored and masked in the response (`payments:write`).
+- `POST /payments/invoices/:id/checkout` — requires an **issued** invoice with `balance_due > 0` and an enabled provider; creates a Stripe Checkout Session server-side (amount = `balance_due`, currency = invoice currency, unit amounts in cents, metadata `invoiceId`/`tenantId`, idempotency key `checkout:<invoiceId>`) and returns `{ url }` (`invoicing:write`). No config → `400`; provider disabled → `400`; unknown invoice → `404`; not issued / fully paid → `400`.
+- `POST /webhooks/stripe` — **public**, signature-verified. Verifies the `Stripe-Signature` header (`t=<ts>,v1=<hmac-sha256>`, timestamp tolerance ±300 s) against the enabled Stripe config's `webhook_secret` (any tenant whose secret matches), then for `checkout.session.completed` records a card payment on the referenced invoice (`method = card`, `reference = session id`, `amount_total`/`currency` from the session) via the standard payment flow → journal entry + outbox `payment.received`. Missing/invalid signature → `400`; unrelated event types → `{ received: true }`.
+
+### 22.4 Key flows
+
+1. **Configure:** an admin stores the Stripe secret key and webhook signing secret (`PUT /payments/providers/stripe`) and enables the provider.
+2. **Checkout:** the dashboard calls the checkout endpoint with an issued invoice; the API builds a Stripe Checkout Session and returns the hosted redirect URL (success/cancel URLs derive from the request `Origin`/`Referer`, defaulting to `http://localhost:5173`).
+3. **Payment:** after the customer pays, Stripe posts `checkout.session.completed` back to `POST /webhooks/stripe`. The API verifies the signature over the **raw** body (captured before `express.json`), then records the payment. The session id (stored as the payment `reference`) makes replays idempotent: a duplicated webhook records no second payment and the outbox holds a single `payment.received` event.
 
 ---
 
