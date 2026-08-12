@@ -24,7 +24,7 @@ interface ReportDef {
 }
 
 const REPORTS: ReportDef[] = [
-  { id: 'dashboard', label: 'Dashboard', endpoint: '/api/v1/reports/dashboard', shape: 'single' },
+  { id: 'dashboard', label: 'Dashboard', endpoint: '/api/v1/reports/dashboard', shape: 'single', pdf: true },
   { id: 'sales-summary', label: 'Sales summary', endpoint: '/api/v1/reports/sales/summary', shape: 'list', pdf: true },
   { id: 'sales-by-product', label: 'Sales by product', endpoint: '/api/v1/reports/sales/by-product', shape: 'list', pdf: true },
   { id: 'sales-by-customer', label: 'Sales by customer', endpoint: '/api/v1/reports/sales/by-customer', shape: 'list', pdf: true },

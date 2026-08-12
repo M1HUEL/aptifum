@@ -7,6 +7,7 @@ import { RequirePermissions } from '../rbac/decorators/require-permissions.decor
 import { ReportsService } from './reports.service';
 import { setCsvHeaders, toCsv } from './csv.util';
 import { setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
+import { buildTablePdf, formatMoney, rangeText, setPdfHeaders } from './pdf.util';
 import { DashboardQueryDto } from './dto/reports-query.dto';
 
 @ApiTags('reports')
@@ -40,6 +41,34 @@ export class ReportsController {
     if (query.format === 'xlsx' && res) {
       setXlsxHeaders(res, 'dashboard.xlsx');
       res.send(await toXlsxBuffer([report]));
+      return;
+    }
+    if (query.format === 'pdf' && res) {
+      setPdfHeaders(res, 'dashboard.pdf');
+      const rows: string[][] = [
+        ['Sales today', formatMoney(report.salesToday)],
+        ['Sales this month', formatMoney(report.salesMonth)],
+        ['Net income (period)', formatMoney(report.netIncomeRange)],
+        ['Net income (month)', formatMoney(report.netIncomeMonth)],
+        ['Receivables', formatMoney(report.receivables)],
+        ['Payables', formatMoney(report.payables)],
+        ['Inventory value', formatMoney(report.inventoryValue)],
+        ['Low stock products', String(report.lowStockProducts)],
+        ['Open purchase orders', String(report.openPurchaseOrders)],
+        ['Production in progress', String(report.productionInProgress)],
+        ['Invoices this month', String(report.monthInvoices)],
+        ['Invoices in period', String(report.rangeInvoices)],
+      ];
+      const buffer = await buildTablePdf({
+        title: 'Executive Dashboard',
+        subtitle: rangeText({ from: query.from, to: query.to }),
+        columns: [
+          { header: 'Metric' },
+          { header: 'Value', align: 'right' },
+        ],
+        rows,
+      });
+      res.send(buffer);
       return;
     }
     return report;

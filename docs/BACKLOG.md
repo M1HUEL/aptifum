@@ -21,7 +21,7 @@
 ## 2. Ambiguities / inconsistencies in SPEC
 
 - **§11 roadmap table**: ~~F2 and F3 are merged into one row with a stray `||`~~ **DONE** — split them.
-- **§6.8 vs §21.1**: §6.8 says exports "CSV, Excel, PDF"; §21.1 only mentions `?format=csv`. In practice csv/pdf/xlsx exist for most reports **except** the dashboard (csv/xlsx only — add PDF).
+- **§6.8 vs §21.1**: §6.8 says exports "CSV, Excel, PDF"; §21.1 only mentions `?format=csv`. In practice csv/pdf/xlsx exist for most reports — **dashboard PDF shipped (2026-08)**, so `?format=pdf` now works for every report.
 - **§16.4 auto-posting table**: ~~missing rows for the newer auto-posts already in code (supplier payment, payroll, production)~~ **DONE** — added them (and the supplier-bill variance).
 - **§14 "Next steps" item 5**: ~~says "F4 platform extensions (web frontend, integrations, exports Excel/PDF)" but the web app and Excel/PDF exports already exist~~ **DONE** — updated.
 - **§2 auth**: ~~says "bcrypt/argon2"; code uses bcrypt only~~ **DONE** — pinned to bcrypt (§2, §5).
@@ -57,7 +57,7 @@
 
 ## 6. Minor cleanup items
 
-- Dashboard report: add `?format=pdf` to match other reports.
+- Dashboard report: ~~add `?format=pdf` to match other reports~~ **DONE (2026-08)** — `GET /api/v1/reports/dashboard?format=pdf` renders the KPI metric table; "Download PDF" enabled in the Reports page.
 - §16.4 table: ~~add supplier-payment / payroll / production posting rows~~ **DONE** — added (plus supplier-bill variance and the functional-currency note).
 - §14 item 5: ~~mark web frontend + Excel/PDF as done~~ **DONE**.
 - Pin single password hashing library in §2: ~~bcrypt/argon2~~ **DONE** — bcrypt.

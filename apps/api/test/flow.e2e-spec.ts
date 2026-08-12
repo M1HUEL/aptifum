@@ -273,6 +273,17 @@ describe('Vertical flow: sales -> accounting -> reports (e2e)', () => {
     expect(res.text).toContain('E2E-A');
   });
 
+  it('exports the dashboard as PDF', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/reports/dashboard?format=pdf')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(res.headers['content-type']).toContain('application/pdf');
+    expect(res.headers['content-disposition']).toContain('dashboard.pdf');
+    expect(res.body).toBeInstanceOf(Buffer);
+    expect((res.body as Buffer).length).toBeGreaterThan(1000);
+  });
+
   it('filters stock movements by type and warehouse', async () => {
     const byType = await request(app.getHttpServer())
       .get('/api/v1/inventory/movements')
