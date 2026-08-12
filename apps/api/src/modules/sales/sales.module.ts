@@ -60,6 +60,5 @@ import { TaxesService } from './taxes.service';
     OrdersService,
     InvoicesService,
   ],
-  exports: [InvoicesService],
 })
 export class SalesModule {}

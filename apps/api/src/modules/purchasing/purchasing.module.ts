@@ -50,6 +50,5 @@ import { SuppliersService } from './suppliers.service';
     SupplierBillsService,
     SupplierPaymentsService,
   ],
-  exports: [PurchaseOrdersService],
 })
 export class PurchasingModule {}

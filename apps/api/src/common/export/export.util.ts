@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import { CsvSection, sectionsToCsv, setCsvHeaders, toCsv } from './csv.util';
-import { setPdfHeaders } from './pdf.util';
+import { setPdfHeaders } from '../pdf/pdf.util';
 import { sectionsToXlsxBuffer, setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
 
 export function sendCsv(

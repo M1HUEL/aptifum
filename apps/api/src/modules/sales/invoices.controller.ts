@@ -9,7 +9,7 @@ import { ModuleName, permission } from '@aptifum/core';
 import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
-import { sendPdf } from '../reports/export.util';
+import { sendPdf } from '../../common/export/export.util';
 import { buildInvoicePdf } from './invoice-pdf.util';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';

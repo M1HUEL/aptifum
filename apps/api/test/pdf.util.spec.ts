@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildFinancialPdf, buildTablePdf, formatMoney } from '../src/modules/reports/pdf.util';
+import { buildFinancialPdf, buildTablePdf, formatMoney } from '../src/common/pdf/pdf.util';
 import { buildInvoicePdf } from '../src/modules/sales/invoice-pdf.util';
 
 describe('pdf.util', () => {

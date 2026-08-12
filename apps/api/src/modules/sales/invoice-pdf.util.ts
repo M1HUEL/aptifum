@@ -1,5 +1,5 @@
 import type { Invoice, InvoiceItem } from '@aptifum/database';
-import { BODY_WIDTH, MARGIN, PAGE_HEIGHT, ROW_MIN, createDocument } from '../reports/pdf.util';
+import { BODY_WIDTH, MARGIN, PAGE_HEIGHT, ROW_MIN, createDocument } from '../../common/pdf/pdf.util';
 
 interface TenantBrief {
   name: string;

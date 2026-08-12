@@ -6,8 +6,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
 import { DateRangeQueryDto } from './dto/reports-query.dto';
-import { sendCsv, sendPdf, sendXlsx } from './export.util';
-import { buildTablePdf, formatMoney, formatNumber, rangeText } from './pdf.util';
+import { sendCsv, sendPdf, sendXlsx } from '../../common/export/export.util';
+import { buildTablePdf, formatMoney, formatNumber, rangeText } from '../../common/pdf/pdf.util';
 
 @ApiTags('reports')
 @Controller('reports/hr')

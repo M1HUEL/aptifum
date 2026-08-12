@@ -5,7 +5,7 @@ import {
   sectionsToXlsxBuffer,
   setXlsxHeaders,
   toXlsxBuffer,
-} from '../src/modules/reports/xlsx.util';
+} from '../src/common/export/xlsx.util';
 
 function loadWorkbook(data: Uint8Array): Promise<ExcelJS.Workbook> {
   const workbook = new ExcelJS.Workbook();

@@ -5,8 +5,8 @@ import { ModuleName, permission } from '@aptifum/core';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
-import { sendCsv, sendPdf, sendXlsx } from './export.util';
-import { buildTablePdf, formatMoney, formatNumber, rangeText } from './pdf.util';
+import { sendCsv, sendPdf, sendXlsx } from '../../common/export/export.util';
+import { buildTablePdf, formatMoney, formatNumber, rangeText } from '../../common/pdf/pdf.util';
 import {
   SalesByCustomerQueryDto,
   SalesByProductQueryDto,

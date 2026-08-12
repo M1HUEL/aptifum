@@ -5,15 +5,15 @@ import { ModuleName, permission } from '@aptifum/core';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
-import type { CsvSection } from './csv.util';
-import { sendCsv, sendPdf, sendSectionsCsv, sendSectionsXlsx, sendXlsx } from './export.util';
+import type { CsvSection } from '../../common/export/csv.util';
+import { sendCsv, sendPdf, sendSectionsCsv, sendSectionsXlsx, sendXlsx } from '../../common/export/export.util';
 import {
   buildFinancialPdf,
   buildTablePdf,
   formatMoney,
   PdfFinancialSection,
   rangeText,
-} from './pdf.util';
+} from '../../common/pdf/pdf.util';
 import {
   BalanceSheetQueryDto,
   DateRangeQueryDto,
