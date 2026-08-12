@@ -5,9 +5,8 @@ import { ModuleName, permission } from '@aptifum/core';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
-import { setCsvHeaders, toCsv } from './csv.util';
-import { setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
-import { buildTablePdf, formatMoney, setPdfHeaders } from './pdf.util';
+import { sendCsv, sendPdf, sendXlsx } from './export.util';
+import { buildTablePdf, formatMoney } from './pdf.util';
 
 @ApiTags('reports')
 @Controller('reports/aging')
@@ -24,55 +23,51 @@ export class AgingReportsController {
   ) {
     const report = await this.reportsService.arAging(user.tenantId);
     if (format === 'pdf' && res) {
-      setPdfHeaders(res, 'aging-ar.pdf');
-      const buffer = await buildTablePdf({
-        title: 'Accounts Receivable Aging',
-        subtitle: `As of ${report.asOf}`,
-        columns: [
-          { header: 'Code' },
-          { header: 'Customer' },
-          { header: 'Credit notes', align: 'right' },
-          { header: 'Current', align: 'right' },
-          { header: '1-30', align: 'right' },
-          { header: '31-60', align: 'right' },
-          { header: '61-90', align: 'right' },
-          { header: '90+', align: 'right' },
-          { header: 'Outstanding', align: 'right' },
-        ],
-        rows: report.data.map((row) => [
-          row.code,
-          row.tradeName,
-          formatMoney(row.creditNotes),
-          formatMoney(row.current),
-          formatMoney(row.days1to30),
-          formatMoney(row.days31to60),
-          formatMoney(row.days61to90),
-          formatMoney(row.days90plus),
-          formatMoney(row.totalOutstanding),
-        ]),
-        totalsRow: [
-          '',
-          'Total',
-          '',
-          formatMoney(report.totals.current),
-          formatMoney(report.totals.days1to30),
-          formatMoney(report.totals.days31to60),
-          formatMoney(report.totals.days61to90),
-          formatMoney(report.totals.days90plus),
-          formatMoney(report.totals.totalOutstanding),
-        ],
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'aging-ar.pdf', () =>
+        buildTablePdf({
+          title: 'Accounts Receivable Aging',
+          subtitle: `As of ${report.asOf}`,
+          columns: [
+            { header: 'Code' },
+            { header: 'Customer' },
+            { header: 'Credit notes', align: 'right' },
+            { header: 'Current', align: 'right' },
+            { header: '1-30', align: 'right' },
+            { header: '31-60', align: 'right' },
+            { header: '61-90', align: 'right' },
+            { header: '90+', align: 'right' },
+            { header: 'Outstanding', align: 'right' },
+          ],
+          rows: report.data.map((row) => [
+            row.code,
+            row.tradeName,
+            formatMoney(row.creditNotes),
+            formatMoney(row.current),
+            formatMoney(row.days1to30),
+            formatMoney(row.days31to60),
+            formatMoney(row.days61to90),
+            formatMoney(row.days90plus),
+            formatMoney(row.totalOutstanding),
+          ]),
+          totalsRow: [
+            '',
+            'Total',
+            '',
+            formatMoney(report.totals.current),
+            formatMoney(report.totals.days1to30),
+            formatMoney(report.totals.days31to60),
+            formatMoney(report.totals.days61to90),
+            formatMoney(report.totals.days90plus),
+            formatMoney(report.totals.totalOutstanding),
+          ],
+        }),
+      );
     }
     if (format === 'csv' && res) {
-      setCsvHeaders(res, 'aging-ar.csv');
-      return toCsv(report.data);
+      return sendCsv(res, 'aging-ar.csv', report.data);
     }
     if (format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'aging-ar.xlsx');
-      res.send(await toXlsxBuffer(report.data));
-      return;
+      return sendXlsx(res, 'aging-ar.xlsx', report.data);
     }
     return report;
   }
@@ -87,49 +82,45 @@ export class AgingReportsController {
   ) {
     const report = await this.reportsService.apAging(user.tenantId);
     if (format === 'pdf' && res) {
-      setPdfHeaders(res, 'aging-ap.pdf');
-      const buffer = await buildTablePdf({
-        title: 'Accounts Payable Aging',
-        subtitle: `As of ${report.asOf}`,
-        columns: [
-          { header: 'Code' },
-          { header: 'Supplier' },
-          { header: 'Current', align: 'right' },
-          { header: '31-60', align: 'right' },
-          { header: '61-90', align: 'right' },
-          { header: '90+', align: 'right' },
-          { header: 'Outstanding', align: 'right' },
-        ],
-        rows: report.data.map((row) => [
-          row.code,
-          row.tradeName,
-          formatMoney(row.current),
-          formatMoney(row.days31to60),
-          formatMoney(row.days61to90),
-          formatMoney(row.days90plus),
-          formatMoney(row.totalOutstanding),
-        ]),
-        totalsRow: [
-          '',
-          'Total',
-          formatMoney(report.totals.current),
-          formatMoney(report.totals.days31to60),
-          formatMoney(report.totals.days61to90),
-          formatMoney(report.totals.days90plus),
-          formatMoney(report.totals.totalOutstanding),
-        ],
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'aging-ap.pdf', () =>
+        buildTablePdf({
+          title: 'Accounts Payable Aging',
+          subtitle: `As of ${report.asOf}`,
+          columns: [
+            { header: 'Code' },
+            { header: 'Supplier' },
+            { header: 'Current', align: 'right' },
+            { header: '31-60', align: 'right' },
+            { header: '61-90', align: 'right' },
+            { header: '90+', align: 'right' },
+            { header: 'Outstanding', align: 'right' },
+          ],
+          rows: report.data.map((row) => [
+            row.code,
+            row.tradeName,
+            formatMoney(row.current),
+            formatMoney(row.days31to60),
+            formatMoney(row.days61to90),
+            formatMoney(row.days90plus),
+            formatMoney(row.totalOutstanding),
+          ]),
+          totalsRow: [
+            '',
+            'Total',
+            formatMoney(report.totals.current),
+            formatMoney(report.totals.days31to60),
+            formatMoney(report.totals.days61to90),
+            formatMoney(report.totals.days90plus),
+            formatMoney(report.totals.totalOutstanding),
+          ],
+        }),
+      );
     }
     if (format === 'csv' && res) {
-      setCsvHeaders(res, 'aging-ap.csv');
-      return toCsv(report.data);
+      return sendCsv(res, 'aging-ap.csv', report.data);
     }
     if (format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'aging-ap.xlsx');
-      res.send(await toXlsxBuffer(report.data));
-      return;
+      return sendXlsx(res, 'aging-ap.xlsx', report.data);
     }
     return report;
   }

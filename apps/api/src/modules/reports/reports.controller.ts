@@ -5,9 +5,8 @@ import { ModuleName, permission } from '@aptifum/core';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
-import { setCsvHeaders, toCsv } from './csv.util';
-import { setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
-import { buildTablePdf, formatMoney, rangeText, setPdfHeaders } from './pdf.util';
+import { sendCsv, sendPdf, sendXlsx } from './export.util';
+import { buildTablePdf, formatMoney, rangeText } from './pdf.util';
 import { DashboardQueryDto } from './dto/reports-query.dto';
 
 @ApiTags('reports')
@@ -35,16 +34,12 @@ export class ReportsController {
   ) {
     const report = await this.reportsService.dashboard(user.tenantId, query);
     if (query.format === 'csv' && res) {
-      setCsvHeaders(res, 'dashboard.csv');
-      return toCsv([report]);
+      return sendCsv(res, 'dashboard.csv', [report]);
     }
     if (query.format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'dashboard.xlsx');
-      res.send(await toXlsxBuffer([report]));
-      return;
+      return sendXlsx(res, 'dashboard.xlsx', [report]);
     }
     if (query.format === 'pdf' && res) {
-      setPdfHeaders(res, 'dashboard.pdf');
       const rows: string[][] = [
         ['Sales today', formatMoney(report.salesToday)],
         ['Sales this month', formatMoney(report.salesMonth)],
@@ -59,17 +54,17 @@ export class ReportsController {
         ['Invoices this month', String(report.monthInvoices)],
         ['Invoices in period', String(report.rangeInvoices)],
       ];
-      const buffer = await buildTablePdf({
-        title: 'Executive Dashboard',
-        subtitle: rangeText({ from: query.from, to: query.to }),
-        columns: [
-          { header: 'Metric' },
-          { header: 'Value', align: 'right' },
-        ],
-        rows,
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'dashboard.pdf', () =>
+        buildTablePdf({
+          title: 'Executive Dashboard',
+          subtitle: rangeText({ from: query.from, to: query.to }),
+          columns: [
+            { header: 'Metric' },
+            { header: 'Value', align: 'right' },
+          ],
+          rows,
+        }),
+      );
     }
     return report;
   }

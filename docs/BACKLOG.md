@@ -25,7 +25,7 @@
 - **§16.4 auto-posting table**: ~~missing rows for the newer auto-posts already in code (supplier payment, payroll, production)~~ **DONE** — added them (and the supplier-bill variance).
 - **§14 "Next steps" item 5**: ~~says "F4 platform extensions (web frontend, integrations, exports Excel/PDF)" but the web app and Excel/PDF exports already exist~~ **DONE** — updated.
 - **§2 auth**: ~~says "bcrypt/argon2"; code uses bcrypt only~~ **DONE** — pinned to bcrypt (§2, §5).
-- **§6.8**: "Export: CSV, Excel, PDF" — no single shared export contract documented (per-endpoint format handling is duplicated); consider centralizing.
+- **§6.8**: "Export: CSV, Excel, PDF" — ~~no single shared export contract documented (per-endpoint format handling is duplicated)~~ **DONE (2026-08)** — `reports/export.util.ts` centralizes the contract: `sendCsv`/`sendSectionsCsv`/`sendXlsx`/`sendSectionsXlsx` (headers + body) and `sendPdf` (headers + send of a builder buffer); all reports controllers and the invoice PDF endpoint use it; financial sections (income statement / balance sheet) are now built once and shared across pdf/csv/xlsx.
 
 ## 3. Deferred features (by decision, §11)
 
@@ -58,6 +58,7 @@
 ## 6. Minor cleanup items
 
 - Dashboard report: ~~add `?format=pdf` to match other reports~~ **DONE (2026-08)** — `GET /api/v1/reports/dashboard?format=pdf` renders the KPI metric table; "Download PDF" enabled in the Reports page.
+- §6.8 export contract: ~~duplicated per-endpoint format handling~~ **DONE (2026-08)** — centralized in `reports/export.util.ts` (see §2).
 - §16.4 table: ~~add supplier-payment / payroll / production posting rows~~ **DONE** — added (plus supplier-bill variance and the functional-currency note).
 - §14 item 5: ~~mark web frontend + Excel/PDF as done~~ **DONE**.
 - Pin single password hashing library in §2: ~~bcrypt/argon2~~ **DONE** — bcrypt.

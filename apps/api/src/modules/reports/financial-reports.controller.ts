@@ -5,15 +5,14 @@ import { ModuleName, permission } from '@aptifum/core';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
-import { CsvSection, setCsvHeaders, sectionsToCsv, toCsv } from './csv.util';
-import { sectionsToXlsxBuffer, setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
+import type { CsvSection } from './csv.util';
+import { sendCsv, sendPdf, sendSectionsCsv, sendSectionsXlsx, sendXlsx } from './export.util';
 import {
   buildFinancialPdf,
   buildTablePdf,
   formatMoney,
   PdfFinancialSection,
   rangeText,
-  setPdfHeaders,
 } from './pdf.util';
 import {
   BalanceSheetQueryDto,
@@ -35,51 +34,33 @@ export class FinancialReportsController {
     @Res({ passthrough: true }) res?: Response,
   ) {
     const report = await this.reportsService.incomeStatement(user.tenantId, query);
+    const netIncomeRow = { code: '', name: 'Net income', balance: report.netIncome };
+    const sections = [
+      this.toSection('Revenue', report.revenue),
+      this.toSection('Cost of sales', report.costOfSales),
+      this.toSection('Operating expenses', report.operatingExpenses),
+      { section: 'Net income', rows: [netIncomeRow] },
+    ];
+    const pdfSections = [
+      this.toFinancialSection('Revenue', report.revenue),
+      this.toFinancialSection('Cost of sales', report.costOfSales),
+      this.toFinancialSection('Operating expenses', report.operatingExpenses),
+      { name: 'Net income', rows: [netIncomeRow], total: report.netIncome },
+    ];
     if (query.format === 'pdf' && res) {
-      setPdfHeaders(res, 'income-statement.pdf');
-      const buffer = await buildFinancialPdf({
-        title: 'Income Statement',
-        subtitle: rangeText(query),
-        sections: [
-          this.toFinancialSection('Revenue', report.revenue),
-          this.toFinancialSection('Cost of sales', report.costOfSales),
-          this.toFinancialSection('Operating expenses', report.operatingExpenses),
-          {
-            name: 'Net income',
-            rows: [{ code: '', name: 'Net income', balance: report.netIncome }],
-            total: report.netIncome,
-          },
-        ],
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'income-statement.pdf', () =>
+        buildFinancialPdf({
+          title: 'Income Statement',
+          subtitle: rangeText(query),
+          sections: pdfSections,
+        }),
+      );
     }
     if (query.format === 'csv' && res) {
-      setCsvHeaders(res, 'income-statement.csv');
-      return sectionsToCsv([
-        this.toSection('Revenue', report.revenue),
-        this.toSection('Cost of sales', report.costOfSales),
-        this.toSection('Operating expenses', report.operatingExpenses),
-        {
-          section: 'Net income',
-          rows: [{ code: '', name: 'Net income', balance: report.netIncome }],
-        },
-      ]);
+      return sendSectionsCsv(res, 'income-statement.csv', sections);
     }
     if (query.format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'income-statement.xlsx');
-      res.send(
-        await sectionsToXlsxBuffer([
-          this.toSection('Revenue', report.revenue),
-          this.toSection('Cost of sales', report.costOfSales),
-          this.toSection('Operating expenses', report.operatingExpenses),
-          {
-            section: 'Net income',
-            rows: [{ code: '', name: 'Net income', balance: report.netIncome }],
-          },
-        ]),
-      );
-      return;
+      return sendSectionsXlsx(res, 'income-statement.xlsx', sections);
     }
     return report;
   }
@@ -93,72 +74,40 @@ export class FinancialReportsController {
     @Res({ passthrough: true }) res?: Response,
   ) {
     const report = await this.reportsService.balanceSheet(user.tenantId, query);
+    const totalRows = [
+      { code: '', name: 'Total assets', balance: report.totalAssets },
+      {
+        code: '',
+        name: 'Total liabilities and equity',
+        balance: report.totalLiabilitiesAndEquity,
+      },
+    ];
+    const sections = [
+      this.toSection('Assets', report.assets),
+      this.toSection('Liabilities', report.liabilities),
+      this.toSection('Equity', report.equity),
+      { section: 'Totals', rows: totalRows },
+    ];
+    const pdfSections = [
+      this.toFinancialSection('Assets', report.assets),
+      this.toFinancialSection('Liabilities', report.liabilities),
+      this.toFinancialSection('Equity', report.equity),
+      { name: 'Totals', rows: totalRows, total: report.totalLiabilitiesAndEquity },
+    ];
     if (query.format === 'pdf' && res) {
-      setPdfHeaders(res, 'balance-sheet.pdf');
-      const buffer = await buildFinancialPdf({
-        title: 'Balance Sheet',
-        subtitle: `As of ${report.asOf}`,
-        sections: [
-          this.toFinancialSection('Assets', report.assets),
-          this.toFinancialSection('Liabilities', report.liabilities),
-          this.toFinancialSection('Equity', report.equity),
-          {
-            name: 'Totals',
-            rows: [
-              { code: '', name: 'Total assets', balance: report.totalAssets },
-              {
-                code: '',
-                name: 'Total liabilities and equity',
-                balance: report.totalLiabilitiesAndEquity,
-              },
-            ],
-            total: report.totalLiabilitiesAndEquity,
-          },
-        ],
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'balance-sheet.pdf', () =>
+        buildFinancialPdf({
+          title: 'Balance Sheet',
+          subtitle: `As of ${report.asOf}`,
+          sections: pdfSections,
+        }),
+      );
     }
     if (query.format === 'csv' && res) {
-      setCsvHeaders(res, 'balance-sheet.csv');
-      return sectionsToCsv([
-        this.toSection('Assets', report.assets),
-        this.toSection('Liabilities', report.liabilities),
-        this.toSection('Equity', report.equity),
-        {
-          section: 'Totals',
-          rows: [
-            { code: '', name: 'Total assets', balance: report.totalAssets },
-            {
-              code: '',
-              name: 'Total liabilities and equity',
-              balance: report.totalLiabilitiesAndEquity,
-            },
-          ],
-        },
-      ]);
+      return sendSectionsCsv(res, 'balance-sheet.csv', sections);
     }
     if (query.format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'balance-sheet.xlsx');
-      res.send(
-        await sectionsToXlsxBuffer([
-          this.toSection('Assets', report.assets),
-          this.toSection('Liabilities', report.liabilities),
-          this.toSection('Equity', report.equity),
-          {
-            section: 'Totals',
-            rows: [
-              { code: '', name: 'Total assets', balance: report.totalAssets },
-              {
-                code: '',
-                name: 'Total liabilities and equity',
-                balance: report.totalLiabilitiesAndEquity,
-              },
-            ],
-          },
-        ]),
-      );
-      return;
+      return sendSectionsXlsx(res, 'balance-sheet.xlsx', sections);
     }
     return report;
   }
@@ -173,43 +122,39 @@ export class FinancialReportsController {
   ) {
     const report = await this.reportsService.cashFlow(user.tenantId, query);
     if (query.format === 'pdf' && res) {
-      setPdfHeaders(res, 'cash-flow.pdf');
-      const buffer = await buildTablePdf({
-        title: 'Cash Flow',
-        subtitle: rangeText(query),
-        columns: [
-          { header: 'Period' },
-          { header: 'Inflows', align: 'right' },
-          { header: 'Outflows', align: 'right' },
-          { header: 'Net', align: 'right' },
-          { header: 'Cash balance', align: 'right' },
-        ],
-        rows: report.data.map((row) => [
-          row.period,
-          formatMoney(row.inflows),
-          formatMoney(row.outflows),
-          formatMoney(row.net),
-          formatMoney(row.balance),
-        ]),
-        totalsRow: [
-          'Total',
-          formatMoney(report.totals.inflows),
-          formatMoney(report.totals.outflows),
-          formatMoney(report.totals.net),
-          formatMoney(report.closingBalance),
-        ],
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'cash-flow.pdf', () =>
+        buildTablePdf({
+          title: 'Cash Flow',
+          subtitle: rangeText(query),
+          columns: [
+            { header: 'Period' },
+            { header: 'Inflows', align: 'right' },
+            { header: 'Outflows', align: 'right' },
+            { header: 'Net', align: 'right' },
+            { header: 'Cash balance', align: 'right' },
+          ],
+          rows: report.data.map((row) => [
+            row.period,
+            formatMoney(row.inflows),
+            formatMoney(row.outflows),
+            formatMoney(row.net),
+            formatMoney(row.balance),
+          ]),
+          totalsRow: [
+            'Total',
+            formatMoney(report.totals.inflows),
+            formatMoney(report.totals.outflows),
+            formatMoney(report.totals.net),
+            formatMoney(report.closingBalance),
+          ],
+        }),
+      );
     }
     if (query.format === 'csv' && res) {
-      setCsvHeaders(res, 'cash-flow.csv');
-      return toCsv(report.data);
+      return sendCsv(res, 'cash-flow.csv', report.data);
     }
     if (query.format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'cash-flow.xlsx');
-      res.send(await toXlsxBuffer(report.data));
-      return;
+      return sendXlsx(res, 'cash-flow.xlsx', report.data);
     }
     return report;
   }

@@ -5,15 +5,8 @@ import { ModuleName, permission } from '@aptifum/core';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
-import { setCsvHeaders, toCsv } from './csv.util';
-import { setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
-import {
-  buildTablePdf,
-  formatMoney,
-  formatNumber,
-  rangeText,
-  setPdfHeaders,
-} from './pdf.util';
+import { sendCsv, sendPdf, sendXlsx } from './export.util';
+import { buildTablePdf, formatMoney, formatNumber, rangeText } from './pdf.util';
 import {
   SalesByCustomerQueryDto,
   SalesByProductQueryDto,
@@ -35,46 +28,42 @@ export class SalesReportsController {
   ) {
     const report = await this.reportsService.salesSummary(user.tenantId, query);
     if (query.format === 'pdf' && res) {
-      setPdfHeaders(res, 'sales-summary.pdf');
-      const buffer = await buildTablePdf({
-        title: 'Sales Summary',
-        subtitle: rangeText(query),
-        columns: [
-          { header: 'Period' },
-          { header: 'Invoices', align: 'right' },
-          { header: 'Credit notes', align: 'right' },
-          { header: 'Revenue', align: 'right' },
-          { header: 'Tax', align: 'right' },
-          { header: 'Total', align: 'right' },
-        ],
-        rows: report.data.map((row) => [
-          row.period,
-          formatNumber(row.invoices),
-          formatNumber(row.creditNotes),
-          formatMoney(row.revenue),
-          formatMoney(row.tax),
-          formatMoney(row.total),
-        ]),
-        totalsRow: [
-          'Total',
-          formatNumber(report.totals.invoices),
-          '',
-          formatMoney(report.totals.revenue),
-          formatMoney(report.totals.tax),
-          formatMoney(report.totals.total),
-        ],
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'sales-summary.pdf', () =>
+        buildTablePdf({
+          title: 'Sales Summary',
+          subtitle: rangeText(query),
+          columns: [
+            { header: 'Period' },
+            { header: 'Invoices', align: 'right' },
+            { header: 'Credit notes', align: 'right' },
+            { header: 'Revenue', align: 'right' },
+            { header: 'Tax', align: 'right' },
+            { header: 'Total', align: 'right' },
+          ],
+          rows: report.data.map((row) => [
+            row.period,
+            formatNumber(row.invoices),
+            formatNumber(row.creditNotes),
+            formatMoney(row.revenue),
+            formatMoney(row.tax),
+            formatMoney(row.total),
+          ]),
+          totalsRow: [
+            'Total',
+            formatNumber(report.totals.invoices),
+            '',
+            formatMoney(report.totals.revenue),
+            formatMoney(report.totals.tax),
+            formatMoney(report.totals.total),
+          ],
+        }),
+      );
     }
     if (query.format === 'csv' && res) {
-      setCsvHeaders(res, 'sales-summary.csv');
-      return toCsv(report.data);
+      return sendCsv(res, 'sales-summary.csv', report.data);
     }
     if (query.format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'sales-summary.xlsx');
-      res.send(await toXlsxBuffer(report.data));
-      return;
+      return sendXlsx(res, 'sales-summary.xlsx', report.data);
     }
     return report;
   }
@@ -89,49 +78,45 @@ export class SalesReportsController {
   ) {
     const report = await this.reportsService.salesByProduct(user.tenantId, query);
     if (query.format === 'pdf' && res) {
-      setPdfHeaders(res, 'sales-by-product.pdf');
-      const buffer = await buildTablePdf({
-        title: 'Sales by Product',
-        subtitle: rangeText(query),
-        columns: [
-          { header: 'SKU' },
-          { header: 'Product' },
-          { header: 'Qty', align: 'right' },
-          { header: 'Revenue', align: 'right' },
-          { header: 'COGS', align: 'right' },
-          { header: 'Gross profit', align: 'right' },
-          { header: 'Margin', align: 'right' },
-        ],
-        rows: report.data.map((row) => [
-          row.sku,
-          row.name,
-          formatNumber(row.quantity),
-          formatMoney(row.revenue),
-          formatMoney(row.cogs),
-          formatMoney(row.grossProfit),
-          `${(row.margin * 100).toFixed(1)}%`,
-        ]),
-        totalsRow: [
-          '',
-          'Total',
-          '',
-          formatMoney(report.totals.revenue),
-          formatMoney(report.totals.cogs),
-          formatMoney(report.totals.grossProfit),
-          '',
-        ],
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'sales-by-product.pdf', () =>
+        buildTablePdf({
+          title: 'Sales by Product',
+          subtitle: rangeText(query),
+          columns: [
+            { header: 'SKU' },
+            { header: 'Product' },
+            { header: 'Qty', align: 'right' },
+            { header: 'Revenue', align: 'right' },
+            { header: 'COGS', align: 'right' },
+            { header: 'Gross profit', align: 'right' },
+            { header: 'Margin', align: 'right' },
+          ],
+          rows: report.data.map((row) => [
+            row.sku,
+            row.name,
+            formatNumber(row.quantity),
+            formatMoney(row.revenue),
+            formatMoney(row.cogs),
+            formatMoney(row.grossProfit),
+            `${(row.margin * 100).toFixed(1)}%`,
+          ]),
+          totalsRow: [
+            '',
+            'Total',
+            '',
+            formatMoney(report.totals.revenue),
+            formatMoney(report.totals.cogs),
+            formatMoney(report.totals.grossProfit),
+            '',
+          ],
+        }),
+      );
     }
     if (query.format === 'csv' && res) {
-      setCsvHeaders(res, 'sales-by-product.csv');
-      return toCsv(report.data);
+      return sendCsv(res, 'sales-by-product.csv', report.data);
     }
     if (query.format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'sales-by-product.xlsx');
-      res.send(await toXlsxBuffer(report.data));
-      return;
+      return sendXlsx(res, 'sales-by-product.xlsx', report.data);
     }
     return report;
   }
@@ -146,46 +131,42 @@ export class SalesReportsController {
   ) {
     const report = await this.reportsService.salesByCustomer(user.tenantId, query);
     if (query.format === 'pdf' && res) {
-      setPdfHeaders(res, 'sales-by-customer.pdf');
-      const buffer = await buildTablePdf({
-        title: 'Sales by Customer',
-        subtitle: rangeText(query),
-        columns: [
-          { header: 'Code' },
-          { header: 'Customer' },
-          { header: 'Invoices', align: 'right' },
-          { header: 'Sold', align: 'right' },
-          { header: 'Paid', align: 'right' },
-          { header: 'Balance', align: 'right' },
-        ],
-        rows: report.data.map((row) => [
-          row.code,
-          row.tradeName,
-          formatNumber(row.invoices),
-          formatMoney(row.totalSold),
-          formatMoney(row.totalPaid),
-          formatMoney(row.balance),
-        ]),
-        totalsRow: [
-          '',
-          'Total',
-          '',
-          formatMoney(report.totals.totalSold),
-          formatMoney(report.totals.totalPaid),
-          formatMoney(report.totals.balance),
-        ],
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'sales-by-customer.pdf', () =>
+        buildTablePdf({
+          title: 'Sales by Customer',
+          subtitle: rangeText(query),
+          columns: [
+            { header: 'Code' },
+            { header: 'Customer' },
+            { header: 'Invoices', align: 'right' },
+            { header: 'Sold', align: 'right' },
+            { header: 'Paid', align: 'right' },
+            { header: 'Balance', align: 'right' },
+          ],
+          rows: report.data.map((row) => [
+            row.code,
+            row.tradeName,
+            formatNumber(row.invoices),
+            formatMoney(row.totalSold),
+            formatMoney(row.totalPaid),
+            formatMoney(row.balance),
+          ]),
+          totalsRow: [
+            '',
+            'Total',
+            '',
+            formatMoney(report.totals.totalSold),
+            formatMoney(report.totals.totalPaid),
+            formatMoney(report.totals.balance),
+          ],
+        }),
+      );
     }
     if (query.format === 'csv' && res) {
-      setCsvHeaders(res, 'sales-by-customer.csv');
-      return toCsv(report.data);
+      return sendCsv(res, 'sales-by-customer.csv', report.data);
     }
     if (query.format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'sales-by-customer.xlsx');
-      res.send(await toXlsxBuffer(report.data));
-      return;
+      return sendXlsx(res, 'sales-by-customer.xlsx', report.data);
     }
     return report;
   }

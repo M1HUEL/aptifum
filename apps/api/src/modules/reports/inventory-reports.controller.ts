@@ -5,9 +5,8 @@ import { ModuleName, permission } from '@aptifum/core';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { ReportsService } from './reports.service';
-import { setCsvHeaders, toCsv } from './csv.util';
-import { setXlsxHeaders, toXlsxBuffer } from './xlsx.util';
-import { buildTablePdf, formatMoney, formatNumber, rangeText, setPdfHeaders } from './pdf.util';
+import { sendCsv, sendPdf, sendXlsx } from './export.util';
+import { buildTablePdf, formatMoney, formatNumber, rangeText } from './pdf.util';
 import {
   InventoryValuationQueryDto,
   LowStockQueryDto,
@@ -29,48 +28,44 @@ export class InventoryReportsController {
   ) {
     const report = await this.reportsService.inventoryValuation(user.tenantId, query);
     if (query.format === 'pdf' && res) {
-      setPdfHeaders(res, 'inventory-valuation.pdf');
-      const buffer = await buildTablePdf({
-        title: 'Inventory Valuation',
-        columns: [
-          { header: 'SKU' },
-          { header: 'Product' },
-          { header: 'UoM' },
-          { header: 'Warehouse' },
-          { header: 'Qty', align: 'right' },
-          { header: 'Avg cost', align: 'right' },
-          { header: 'Value', align: 'right' },
-        ],
-        rows: report.data.map((row) => [
-          row.sku,
-          row.name,
-          row.unitOfMeasure,
-          row.warehouseCode,
-          formatNumber(row.quantity),
-          formatMoney(row.averageCost),
-          formatMoney(row.value),
-        ]),
-        totalsRow: [
-          '',
-          'Total',
-          '',
-          '',
-          formatNumber(report.totals.quantity),
-          '',
-          formatMoney(report.totals.value),
-        ],
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'inventory-valuation.pdf', () =>
+        buildTablePdf({
+          title: 'Inventory Valuation',
+          columns: [
+            { header: 'SKU' },
+            { header: 'Product' },
+            { header: 'UoM' },
+            { header: 'Warehouse' },
+            { header: 'Qty', align: 'right' },
+            { header: 'Avg cost', align: 'right' },
+            { header: 'Value', align: 'right' },
+          ],
+          rows: report.data.map((row) => [
+            row.sku,
+            row.name,
+            row.unitOfMeasure,
+            row.warehouseCode,
+            formatNumber(row.quantity),
+            formatMoney(row.averageCost),
+            formatMoney(row.value),
+          ]),
+          totalsRow: [
+            '',
+            'Total',
+            '',
+            '',
+            formatNumber(report.totals.quantity),
+            '',
+            formatMoney(report.totals.value),
+          ],
+        }),
+      );
     }
     if (query.format === 'csv' && res) {
-      setCsvHeaders(res, 'inventory-valuation.csv');
-      return toCsv(report.data);
+      return sendCsv(res, 'inventory-valuation.csv', report.data);
     }
     if (query.format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'inventory-valuation.xlsx');
-      res.send(await toXlsxBuffer(report.data));
-      return;
+      return sendXlsx(res, 'inventory-valuation.xlsx', report.data);
     }
     return report;
   }
@@ -85,38 +80,34 @@ export class InventoryReportsController {
   ) {
     const report = await this.reportsService.stockMovements(user.tenantId, query);
     if (query.format === 'pdf' && res) {
-      setPdfHeaders(res, 'stock-movements.pdf');
-      const buffer = await buildTablePdf({
-        title: 'Stock Movements',
-        subtitle: rangeText(query),
-        columns: [
-          { header: 'Date' },
-          { header: 'Type' },
-          { header: 'Product' },
-          { header: 'Warehouse' },
-          { header: 'Qty', align: 'right' },
-          { header: 'Unit cost', align: 'right' },
-        ],
-        rows: report.data.map((row) => [
-          row.occurredAt,
-          row.movementType,
-          row.productName,
-          row.warehouseCode ?? '',
-          formatNumber(row.quantity),
-          formatMoney(row.unitCost),
-        ]),
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'stock-movements.pdf', () =>
+        buildTablePdf({
+          title: 'Stock Movements',
+          subtitle: rangeText(query),
+          columns: [
+            { header: 'Date' },
+            { header: 'Type' },
+            { header: 'Product' },
+            { header: 'Warehouse' },
+            { header: 'Qty', align: 'right' },
+            { header: 'Unit cost', align: 'right' },
+          ],
+          rows: report.data.map((row) => [
+            row.occurredAt,
+            row.movementType,
+            row.productName,
+            row.warehouseCode ?? '',
+            formatNumber(row.quantity),
+            formatMoney(row.unitCost),
+          ]),
+        }),
+      );
     }
     if (query.format === 'csv' && res) {
-      setCsvHeaders(res, 'stock-movements.csv');
-      return toCsv(report.data);
+      return sendCsv(res, 'stock-movements.csv', report.data);
     }
     if (query.format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'stock-movements.xlsx');
-      res.send(await toXlsxBuffer(report.data));
-      return;
+      return sendXlsx(res, 'stock-movements.xlsx', report.data);
     }
     return report;
   }
@@ -131,35 +122,31 @@ export class InventoryReportsController {
   ) {
     const report = await this.reportsService.lowStock(user.tenantId, query);
     if (query.format === 'pdf' && res) {
-      setPdfHeaders(res, 'low-stock.pdf');
-      const buffer = await buildTablePdf({
-        title: 'Low Stock',
-        subtitle: `Threshold: ${report.threshold}`,
-        columns: [
-          { header: 'SKU' },
-          { header: 'Product' },
-          { header: 'UoM' },
-          { header: 'Qty on hand', align: 'right' },
-        ],
-        rows: report.data.map((row) => [
-          row.sku,
-          row.name,
-          row.unitOfMeasure,
-          formatNumber(row.totalQuantity),
-        ]),
-        totalsRow: ['', 'Total products', '', formatNumber(report.totals.lowStock)],
-      });
-      res.send(buffer);
-      return;
+      return sendPdf(res, 'low-stock.pdf', () =>
+        buildTablePdf({
+          title: 'Low Stock',
+          subtitle: `Threshold: ${report.threshold}`,
+          columns: [
+            { header: 'SKU' },
+            { header: 'Product' },
+            { header: 'UoM' },
+            { header: 'Qty on hand', align: 'right' },
+          ],
+          rows: report.data.map((row) => [
+            row.sku,
+            row.name,
+            row.unitOfMeasure,
+            formatNumber(row.totalQuantity),
+          ]),
+          totalsRow: ['', 'Total products', '', formatNumber(report.totals.lowStock)],
+        }),
+      );
     }
     if (query.format === 'csv' && res) {
-      setCsvHeaders(res, 'low-stock.csv');
-      return toCsv(report.data);
+      return sendCsv(res, 'low-stock.csv', report.data);
     }
     if (query.format === 'xlsx' && res) {
-      setXlsxHeaders(res, 'low-stock.xlsx');
-      res.send(await toXlsxBuffer(report.data));
-      return;
+      return sendXlsx(res, 'low-stock.xlsx', report.data);
     }
     return report;
   }

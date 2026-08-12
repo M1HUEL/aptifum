@@ -9,7 +9,7 @@ import { ModuleName, permission } from '@aptifum/core';
 import { ParseUUIDPipe } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
-import { setPdfHeaders } from '../reports/pdf.util';
+import { sendPdf } from '../reports/export.util';
 import { buildInvoicePdf } from './invoice-pdf.util';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -57,13 +57,12 @@ export class InvoicesController {
   ) {
     const invoice = await this.invoicesService.findOne(user.tenantId, id);
     const tenant = user.tenantId ? await this.tenantsRepo.findOneBy({ id: user.tenantId }) : null;
-    const buffer = await buildInvoicePdf({ tenant, invoice });
     if (res) {
-      setPdfHeaders(res, `invoice-${invoice.number}.pdf`);
-      res.send(buffer);
-      return;
+      return sendPdf(res, `invoice-${invoice.number}.pdf`, () =>
+        buildInvoicePdf({ tenant, invoice }),
+      );
     }
-    return buffer;
+    return buildInvoicePdf({ tenant, invoice });
   }
 
   @Post()
