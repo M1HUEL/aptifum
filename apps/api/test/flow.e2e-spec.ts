@@ -44,6 +44,9 @@ describe('Vertical flow: sales -> accounting -> reports (e2e)', () => {
       DELETE FROM goods_receipts;
       DELETE FROM purchase_order_items;
       DELETE FROM purchase_orders;
+      DELETE FROM supplier_payments;
+      DELETE FROM supplier_bill_items;
+      DELETE FROM supplier_bills;
       DELETE FROM suppliers;
       DELETE FROM production_order_lines;
       DELETE FROM production_orders;

@@ -12,6 +12,7 @@ import {
   Tenant,
   postJournalEntry,
 } from '@aptifum/database';
+import type { JournalLineInput } from '@aptifum/database';
 import { SupplierBillStatus, round2 } from '@aptifum/core';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
 import { CreateSupplierPaymentDto } from './dto/create-supplier-payment.dto';
@@ -103,6 +104,19 @@ export class SupplierPaymentsService {
         }),
       );
       try {
+        const bookedRate = bill?.exchangeRate ?? rate;
+        const settled = round2(payment.amount * bookedRate);
+        const paid = round2(payment.amount * rate);
+        const fx = round2(paid - settled);
+        const lines: JournalLineInput[] = [
+          { accountCode: ACCOUNT_CODES.ACCOUNTS_PAYABLE, debit: settled },
+          { accountCode: ACCOUNT_CODES.CASH, credit: paid },
+        ];
+        if (fx > 0.005) {
+          lines.push({ accountCode: ACCOUNT_CODES.FOREIGN_EXCHANGE_LOSS, debit: fx });
+        } else if (fx < -0.005) {
+          lines.push({ accountCode: ACCOUNT_CODES.FOREIGN_EXCHANGE_GAIN, credit: -fx });
+        }
         await postJournalEntry(manager, tenantId, {
           entryDate: payment.paidAt.toISOString().slice(0, 10),
           description: `Supplier payment ${payment.id.slice(0, 8)}`,
@@ -110,10 +124,7 @@ export class SupplierPaymentsService {
           referenceId: payment.id,
           currency: functional,
           userId,
-          lines: [
-            { accountCode: ACCOUNT_CODES.ACCOUNTS_PAYABLE, debit: round2(payment.amount * rate) },
-            { accountCode: ACCOUNT_CODES.CASH, credit: round2(payment.amount * rate) },
-          ],
+          lines,
         });
       } catch (error) {
         this.mapPostError(error);

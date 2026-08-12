@@ -29,7 +29,7 @@
 
 ## 3. Deferred features (by decision, §11)
 
-- Multi-currency **revaluation** — exchange rates **shipped** (2026-08, see §4 item 5); revaluation of open balances and automatic FX gain/loss entries remain **F4**.
+- Multi-currency **revaluation** — exchange rates **shipped** (2026-08, see §4 item 5); **revaluation + settlement FX shipped (2026-08, see §4 item 5)**.
 - Notifications (email/SMS for due dates, orders, approvals) — F4. Email for invoices/payments/receipts **shipped** (via outbox); due-date/approval reminders and SMS remain F4.
 - Physical POS / offline — web POS **shipped**; offline/desktop client not planned.
 - Country tax compliance: MX CFDI/e-invoicing (timbrado), US sales tax per state/nexus — F4.
@@ -42,7 +42,7 @@
 2. ~~**Email notifications**~~ — **DONE** — consume outbox events; build on existing `email` module. Emails: invoices/credit notes/payments to customers, receipts to suppliers. Not covered: due-date and approval reminders.
 3. ~~**Supplier bills (AP full)**~~ — **DONE** — PO→receipt→bill reconciliation, due dates, payments per bill; integrates with outbox.
 4. ~~**Web POS / cashier**~~ — **DONE** — point of sale with catalog, ticket, and payment collection.
-5. ~~**Multi-currency**~~ — **DONE (partial)** — per-tenant `exchange_rates` + CRUD API; invoices/credit notes/customer payments/supplier bills/supplier payments store `exchange_rate` and post to the tenant's functional currency (inventory/COGS stay in functional currency, not converted); FX gain/loss accounts seeded. Remaining: revaluation of open balances and automatic FX entries on settlement; payments in POS.
+5. ~~**Multi-currency**~~ — **DONE** — per-tenant `exchange_rates` + CRUD API; invoices/credit notes/customer payments/supplier bills/supplier payments store `exchange_rate` and post to the tenant's functional currency (inventory/COGS stay in functional currency, not converted); FX gain/loss accounts seeded. **Revaluation shipped (2026-08):** `POST /accounting/revaluations` revalues open foreign-currency balances (`date` + optional `currency`), posting `fx_revaluation` journal entries (Dr/Cr AR·AP vs 4200/6100) with automatic reversal of prior revaluations for the same document before re-posting, so re-runs are idempotent; payments now realize the FX difference vs the booked rate (Dr/Cr FX gain/loss) so AR/AP always nets to zero. Remaining: payments in POS.
 6. **Product variants + lots/expiry** — retail/perishable support. **Variants shipped (partial):** catalog + CRUD done (2026-08); variants in stock/POS done (2026-08); lots/expiry still pending.
 7. **Payment/bank integrations** (Stripe, bank feeds).
 8. **MX/US tax compliance** (CFDI/timbrado, sales tax nexus) — largest effort, biggest differentiator.
@@ -53,7 +53,7 @@
 2. ~~Email notifications (first consumer of events).~~ **DONE** (2026-08).
 3. ~~Supplier bills AP (closes §6.3; built on outbox).~~ **DONE** (2026-08).
 4. ~~POS~~ **DONE** — catalog, ticket, and payment collection on the web app.
-5. ~~Multi-currency exchange rates + functional-currency posting.~~ **DONE** (2026-08). Remaining: revaluation.
+5. ~~Multi-currency exchange rates + functional-currency posting.~~ **DONE** (2026-08). ~~Remaining: revaluation.~~ **Revaluation + settlement FX done (2026-08).**
 
 ## 6. Minor cleanup items
 

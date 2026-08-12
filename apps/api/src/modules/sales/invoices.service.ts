@@ -727,6 +727,19 @@ export class InvoicesService {
     functionalCurrency: string,
   ): Promise<void> {
     try {
+      const bookedRate = invoice.exchangeRate ?? 1;
+      const received = round2(payment.amount * rate);
+      const settled = round2(payment.amount * bookedRate);
+      const fx = round2(received - settled);
+      const lines: JournalLineInput[] = [
+        { accountCode: ACCOUNT_CODES.CASH, debit: received },
+        { accountCode: ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, credit: settled },
+      ];
+      if (fx > 0.005) {
+        lines.push({ accountCode: ACCOUNT_CODES.FOREIGN_EXCHANGE_GAIN, credit: fx });
+      } else if (fx < -0.005) {
+        lines.push({ accountCode: ACCOUNT_CODES.FOREIGN_EXCHANGE_LOSS, debit: -fx });
+      }
       await postJournalEntry(manager, tenantId, {
         entryDate: payment.receivedAt.toISOString().slice(0, 10),
         description: `Payment ${invoice.number}`,
@@ -734,10 +747,7 @@ export class InvoicesService {
         referenceId: payment.id,
         currency: functionalCurrency,
         userId,
-        lines: [
-          { accountCode: ACCOUNT_CODES.CASH, debit: round2(payment.amount * rate) },
-          { accountCode: ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, credit: round2(payment.amount * rate) },
-        ],
+        lines,
       });
     } catch (error) {
       this.mapPostError(error);
