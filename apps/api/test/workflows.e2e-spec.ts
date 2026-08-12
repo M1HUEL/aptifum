@@ -41,6 +41,7 @@ describe('E2E workflows: purchasing -> inventory and payroll -> accounting', () 
     await dataSource.initialize();
     await dataSource.runMigrations();
     await dataSource.query(`
+      DELETE FROM product_lots;
       DELETE FROM invoice_items;
       DELETE FROM payments;
       DELETE FROM invoices;
@@ -199,6 +200,7 @@ describe('E2E workflows: purchasing -> inventory and payroll -> accounting', () 
     const dataSource = createDataSource();
     await dataSource.initialize();
     await dataSource.query(`
+      DELETE FROM product_lots;
       DELETE FROM invoice_items;
       DELETE FROM payments;
       DELETE FROM invoices;
@@ -329,6 +331,7 @@ describe('E2E supplier bills: receipt -> bill -> payment', () => {
     await dataSource.initialize();
     await dataSource.runMigrations();
     await dataSource.query(`
+      DELETE FROM product_lots;
       DELETE FROM invoice_items;
       DELETE FROM payments;
       DELETE FROM invoices;
@@ -462,6 +465,7 @@ describe('E2E supplier bills: receipt -> bill -> payment', () => {
     const dataSource = createDataSource();
     await dataSource.initialize();
     await dataSource.query(`
+      DELETE FROM product_lots;
       DELETE FROM invoice_items;
       DELETE FROM payments;
       DELETE FROM invoices;

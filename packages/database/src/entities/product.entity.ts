@@ -2,6 +2,7 @@ import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
 import { Category } from './category.entity';
+import { ProductLot } from './product-lot.entity';
 import { ProductStock } from './product-stock.entity';
 import { ProductVariant } from './product-variant.entity';
 import { StockMovement } from './stock-movement.entity';
@@ -73,4 +74,7 @@ export class Product extends TenantBaseEntity {
 
   @OneToMany(() => StockMovement, (movement) => movement.product)
   movements: StockMovement[];
+
+  @OneToMany(() => ProductLot, (lot) => lot.product)
+  lots: ProductLot[];
 }

@@ -27,6 +27,7 @@ function buildService(repos: Record<string, Record<string, unknown>>) {
     (repos.variants ?? {}) as never,
     (repos.warehouses ?? {}) as never,
     (repos.locations ?? {}) as never,
+    (repos.lots ?? {}) as never,
   );
 }
 

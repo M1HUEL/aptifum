@@ -238,6 +238,8 @@ export class PurchaseOrdersService {
           referenceType: 'purchase_receipt',
           referenceId: saved.id,
           userId,
+          lotNumber: line.lotNumber,
+          expiryDate: line.expiryDate,
         });
         receivedAmount = round2(receivedAmount + orderItem.unitCost * line.quantity);
       }

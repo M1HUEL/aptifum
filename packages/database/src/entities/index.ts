@@ -25,6 +25,7 @@ import { Payment } from './payment.entity';
 import { Payroll } from './hr-payroll.entity';
 import { PayrollLine } from './hr-payroll-line.entity';
 import { Product } from './product.entity';
+import { ProductLot } from './product-lot.entity';
 import { ProductStock } from './product-stock.entity';
 import { ProductVariant } from './product-variant.entity';
 import { ProductionBom } from './production-bom.entity';
@@ -60,6 +61,7 @@ export const entities = [
   WarehouseLocation,
   ProductStock,
   StockMovement,
+  ProductLot,
   Customer,
   Tax,
   DocumentSeries,
@@ -124,6 +126,7 @@ export {
   Payroll,
   PayrollLine,
   Product,
+  ProductLot,
   ProductStock,
   ProductVariant,
   ProductionBom,

@@ -6,6 +6,7 @@ import {
   applyStockMovement,
   InsufficientStockError,
   Product,
+  ProductLot,
   ProductStock,
   ProductVariant,
   StockMovement,
@@ -39,6 +40,7 @@ export class StockService {
     @InjectRepository(Warehouse) private readonly warehousesRepo: Repository<Warehouse>,
     @InjectRepository(WarehouseLocation)
     private readonly locationsRepo: Repository<WarehouseLocation>,
+    @InjectRepository(ProductLot) private readonly lotsRepo: Repository<ProductLot>,
   ) {}
 
   async listStock(tenantId: string | null, page: number, limit: number) {
@@ -60,6 +62,63 @@ export class StockService {
       order: { createdAt: 'ASC' },
       relations: { product: true, warehouse: true, variant: true },
     });
+  }
+
+  async listLots(
+    tenantId: string | null,
+    options: {
+      page: number;
+      limit: number;
+      warehouseId?: string;
+      productId?: string;
+      status?: 'active' | 'expiring' | 'expired';
+      expiringInDays?: number;
+    },
+  ) {
+    const { page, limit } = options;
+    const builder = this.lotsRepo
+      .createQueryBuilder('lot')
+      .innerJoinAndSelect('lot.product', 'product')
+      .leftJoinAndSelect('lot.variant', 'variant')
+      .leftJoinAndSelect('lot.warehouse', 'warehouse')
+      .where('lot.tenantId = :tenantId', { tenantId: tenantId ?? '' });
+    if (!tenantId) {
+      throw new BadRequestException('Tenant context is required');
+    }
+    if (options.warehouseId) {
+      builder.andWhere('lot.warehouseId = :warehouseId', { warehouseId: options.warehouseId });
+    }
+    if (options.productId) {
+      builder.andWhere('lot.productId = :productId', { productId: options.productId });
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const horizon = new Date(today);
+    horizon.setDate(horizon.getDate() + (options.expiringInDays ?? 30));
+    if (options.status === 'expired') {
+      builder.andWhere('lot.expiryDate < :today', { today });
+    } else if (options.status === 'expiring') {
+      builder.andWhere('lot.expiryDate >= :today', { today }).andWhere('lot.expiryDate <= :horizon', {
+        horizon,
+      });
+    } else if (options.status === 'active') {
+      builder.andWhere('lot.expiryDate > :horizon', { horizon });
+    }
+    builder.addOrderBy('lot.expiryDate', 'ASC', 'NULLS LAST');
+    builder.skip((page - 1) * limit).take(limit);
+    const [rows, total] = await builder.getManyAndCount();
+    const data = rows.map((lot) => ({
+      ...lot,
+      quantity: Number(lot.quantity),
+      status: !lot.expiryDate
+        ? 'active'
+        : new Date(lot.expiryDate) < today
+          ? 'expired'
+          : new Date(lot.expiryDate) <= horizon
+            ? 'expiring'
+            : 'active',
+    }));
+    return { data, meta: { page, limit, total } };
   }
 
   async listPosProducts(
@@ -222,11 +281,21 @@ export class StockService {
           referenceType: dto.referenceType ?? null,
           referenceId: dto.referenceId ?? null,
           userId,
+          lotNumber: dto.lotNumber,
+          expiryDate: dto.expiryDate,
+          lotId: dto.lotId,
         });
       });
     } catch (error) {
       if (error instanceof InsufficientStockError) {
         throw new BadRequestException('Insufficient stock');
+      }
+      if (
+        error instanceof Error &&
+        (error.message === 'expiryDate is required when creating a lot' ||
+          error.message === 'Lot does not match the product, variant and warehouse')
+      ) {
+        throw new BadRequestException(error.message);
       }
       throw error;
     }

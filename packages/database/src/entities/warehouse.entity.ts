@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, Unique } from 'typeorm';
 import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { ProductLot } from './product-lot.entity';
 import { ProductStock } from './product-stock.entity';
 import { WarehouseLocation } from './warehouse-location.entity';
 
@@ -23,4 +24,7 @@ export class Warehouse extends TenantBaseEntity {
 
   @OneToMany(() => ProductStock, (stock) => stock.warehouse)
   stocks: ProductStock[];
+
+  @OneToMany(() => ProductLot, (lot) => lot.warehouse)
+  lots: ProductLot[];
 }

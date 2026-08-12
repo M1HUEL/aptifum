@@ -57,6 +57,7 @@ describe('FX revaluation and realized FX on settlement (e2e)', () => {
     await dataSource.initialize();
     await dataSource.runMigrations();
     await dataSource.query(`
+      DELETE FROM product_lots;
       DELETE FROM invoice_items;
       DELETE FROM payments;
       DELETE FROM invoices;

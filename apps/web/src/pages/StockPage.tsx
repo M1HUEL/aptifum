@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '../api/client';
 import type {
+  LotStatus,
   MovementType,
   Paginated,
   Product,
+  ProductLot,
   ProductStock,
   StockMovement,
   Warehouse,
@@ -87,6 +89,61 @@ function formatDateTime(value: string): string {
     minute: '2-digit',
   });
 }
+
+function formatDate(value: string | null): string {
+  if (!value) return '—';
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function lotTone(status: LotStatus): 'success' | 'warning' | 'danger' {
+  if (status === 'expired') return 'danger';
+  if (status === 'expiring') return 'warning';
+  return 'success';
+}
+
+const lotColumns: Column<ProductLot>[] = [
+  {
+    key: 'product',
+    header: 'Product',
+    render: (row) => `${row.product.sku} · ${row.product.name}`,
+  },
+  {
+    key: 'variant',
+    header: 'Variant',
+    render: (row) => (row.variant ? Object.values(row.variant.attributes ?? {}).join(' · ') || row.variant.sku : '—'),
+  },
+  {
+    key: 'lotNumber',
+    header: 'Lot',
+    render: (row) => row.lotNumber,
+  },
+  {
+    key: 'warehouse',
+    header: 'Warehouse',
+    render: (row) => row.warehouse.name,
+  },
+  {
+    key: 'expiryDate',
+    header: 'Expiry',
+    render: (row) => formatDate(row.expiryDate),
+  },
+  {
+    key: 'quantity',
+    header: 'Qty',
+    render: (row) => formatNumber(row.quantity),
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    render: (row) => <Badge tone={lotTone(row.status)}>{row.status}</Badge>,
+  },
+];
 
 const movementColumns: Column<StockMovement>[] = [
   {
@@ -234,6 +291,83 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
   );
 }
 
+interface LotFilters {
+  warehouseId: string;
+  status: string;
+}
+
+const emptyLotFilters: LotFilters = {
+  warehouseId: '',
+  status: '',
+};
+
+function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
+  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<LotFilters>(emptyLotFilters);
+  const extraParams = useMemo(() => {
+    const params: Record<string, string> = {};
+    if (filters.warehouseId) params.warehouseId = filters.warehouseId;
+    if (filters.status) params.status = filters.status;
+    return params;
+  }, [filters]);
+
+  const { data, error } = usePagedQuery<ProductLot>({
+    path: '/api/v1/inventory/lots',
+    page,
+    extraParams,
+  });
+
+  const setFilter = (key: keyof LotFilters, value: string) => {
+    setFilters((current) => ({ ...current, [key]: value }));
+    setPage(1);
+  };
+
+  const resetFilters = () => {
+    setFilters(emptyLotFilters);
+    setPage(1);
+  };
+
+  const hasFilters = filters.warehouseId || filters.status;
+
+  return (
+    <>
+      <div className="toolbar">
+        <Select value={filters.status} onChange={(event) => setFilter('status', event.target.value)}>
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="expiring">Expiring soon</option>
+          <option value="expired">Expired</option>
+        </Select>
+        <Select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
+          <option value="">All warehouses</option>
+          {warehouses.map((warehouse) => (
+            <option key={warehouse.id} value={warehouse.id}>
+              {warehouse.name}
+            </option>
+          ))}
+        </Select>
+        {hasFilters ? (
+          <Button variant="ghost" onClick={resetFilters}>
+            Clear filters
+          </Button>
+        ) : null}
+      </div>
+      {error ? <ErrorBanner message={error} /> : null}
+      {!data && !error ? <LoadingBlock /> : null}
+      {data ? (
+        <>
+          {data.data.length === 0 ? (
+            <EmptyState message="No lots match the filters." />
+          ) : (
+            <DataTable columns={lotColumns} rows={data.data} rowKey={(row) => row.id} />
+          )}
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
+        </>
+      ) : null}
+    </>
+  );
+}
+
 interface MovementForm {
   productId: string;
   warehouseId: string;
@@ -241,6 +375,8 @@ interface MovementForm {
   locationId: string;
   quantity: string;
   unitCost: string;
+  lotNumber: string;
+  expiryDate: string;
   notes: string;
 }
 
@@ -251,11 +387,13 @@ const emptyForm: MovementForm = {
   locationId: '',
   quantity: '',
   unitCost: '',
+  lotNumber: '',
+  expiryDate: '',
   notes: '',
 };
 
 export function StockPage() {
-  const [tab, setTab] = useState<'stock' | 'movements'>('stock');
+  const [tab, setTab] = useState<'stock' | 'movements' | 'lots'>('stock');
   const [refreshKey, setRefreshKey] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -354,6 +492,8 @@ export function StockPage() {
       locationId: form.locationId || undefined,
       quantity: Number(form.quantity),
       unitCost: form.unitCost === '' ? undefined : Number(form.unitCost),
+      lotNumber: form.lotNumber.trim() || undefined,
+      expiryDate: form.expiryDate || undefined,
       notes: form.notes.trim() || undefined,
     };
     try {
@@ -390,8 +530,17 @@ export function StockPage() {
         >
           Movements
         </button>
+        <button
+          type="button"
+          className={tab === 'lots' ? 'tab tab-active' : 'tab'}
+          onClick={() => setTab('lots')}
+        >
+          Lots
+        </button>
       </div>
-      {tab === 'stock' ? <StockTab key={`stock-${refreshKey}`} /> : <MovementsTab key={`movements-${refreshKey}`} warehouses={warehouses} />}
+      {tab === 'stock' ? <StockTab key={`stock-${refreshKey}`} /> : null}
+      {tab === 'movements' ? <MovementsTab key={`movements-${refreshKey}`} warehouses={warehouses} /> : null}
+      {tab === 'lots' ? <LotsTab key={`lots-${refreshKey}`} warehouses={warehouses} /> : null}
 
       <Modal open={modalOpen} title="New stock movement" onClose={closeModal} width="md">
         <form onSubmit={(event) => void submit(event)}>
@@ -482,6 +631,22 @@ export function StockPage() {
                 step="0.01"
                 value={form.unitCost}
                 onChange={(event) => setField('unitCost', event.target.value)}
+              />
+            </Field>
+            <Field label="Lot number" htmlFor="movement-lot">
+              <TextInput
+                id="movement-lot"
+                value={form.lotNumber}
+                placeholder="LOT-001"
+                onChange={(event) => setField('lotNumber', event.target.value)}
+              />
+            </Field>
+            <Field label="Expiry date" htmlFor="movement-expiry">
+              <TextInput
+                id="movement-expiry"
+                type="date"
+                value={form.expiryDate}
+                onChange={(event) => setField('expiryDate', event.target.value)}
               />
             </Field>
             <Field label="Notes" htmlFor="movement-notes">

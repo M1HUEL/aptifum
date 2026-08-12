@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   Category,
   Product,
+  ProductLot,
   ProductStock,
   ProductVariant,
   StockMovement,
@@ -30,6 +31,7 @@ import { WarehousesService } from './warehouses.service';
       WarehouseLocation,
       ProductStock,
       StockMovement,
+      ProductLot,
     ]),
   ],
   controllers: [

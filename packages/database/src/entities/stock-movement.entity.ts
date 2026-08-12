@@ -3,6 +3,7 @@ import { MovementType } from '@aptifum/core';
 import { BaseEntity } from '../base/base.entity';
 import { numericTransformer } from '../base/transformers';
 import { Product } from './product.entity';
+import { ProductLot } from './product-lot.entity';
 import { ProductVariant } from './product-variant.entity';
 import { Warehouse } from './warehouse.entity';
 
@@ -61,6 +62,10 @@ export class StockMovement extends BaseEntity {
   @Column({ name: 'user_id', type: 'uuid', nullable: true })
   userId: string | null;
 
+  @Index('IDX_stock_movements_lot_id')
+  @Column({ name: 'lot_id', type: 'uuid', nullable: true })
+  lotId: string | null;
+
   @Column({ type: 'text', nullable: true })
   notes: string | null;
 
@@ -75,4 +80,8 @@ export class StockMovement extends BaseEntity {
   @ManyToOne(() => Warehouse)
   @JoinColumn({ name: 'warehouse_id' })
   warehouse: Warehouse;
+
+  @ManyToOne(() => ProductLot, (lot) => lot.id, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'lot_id' })
+  lot: ProductLot | null;
 }

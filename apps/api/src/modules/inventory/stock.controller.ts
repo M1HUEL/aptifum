@@ -55,6 +55,30 @@ export class StockController {
     );
   }
 
+  @Get('lots')
+  @RequirePermissions(permission(ModuleName.INVENTORY, 'read'))
+  @ApiOperation({ summary: 'List product lots with expiry status' })
+  listLots(
+    @CurrentUser() user: { tenantId: string | null },
+    @Query() { page, limit }: PaginationQueryDto,
+    @Query('warehouseId') warehouseId?: string,
+    @Query('productId') productId?: string,
+    @Query('status') status?: string,
+    @Query('expiringInDays') expiringInDays?: string,
+  ) {
+    if (status && !['active', 'expiring', 'expired'].includes(status)) {
+      throw new BadRequestException('Invalid status');
+    }
+    return this.stockService.listLots(user.tenantId, {
+      page: Number(page),
+      limit: Math.min(Number(limit), 100),
+      warehouseId,
+      productId,
+      status: status as 'active' | 'expiring' | 'expired' | undefined,
+      expiringInDays: expiringInDays ? Number(expiringInDays) : undefined,
+    });
+  }
+
   @Get('movements')
   @RequirePermissions(permission(ModuleName.INVENTORY, 'read'))
   @ApiOperation({ summary: 'List stock movements' })

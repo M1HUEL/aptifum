@@ -120,6 +120,29 @@ export interface ProductStock {
   warehouse: Warehouse;
 }
 
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  sku: string;
+  attributes: Record<string, string> | null;
+}
+
+export type LotStatus = 'active' | 'expiring' | 'expired';
+
+export interface ProductLot {
+  id: string;
+  productId: string;
+  variantId: string | null;
+  warehouseId: string;
+  lotNumber: string;
+  expiryDate: string | null;
+  quantity: number;
+  status: LotStatus;
+  product: Product;
+  warehouse: Warehouse;
+  variant: ProductVariant | null;
+}
+
 export interface PosProduct {
   id: string;
   variantId: string | null;
@@ -146,6 +169,7 @@ export interface StockMovement {
   referenceType: string | null;
   referenceId: string | null;
   notes: string | null;
+  lotId: string | null;
   product: Product;
   warehouse: Warehouse;
 }

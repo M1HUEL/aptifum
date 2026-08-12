@@ -1,4 +1,5 @@
 import {
+  IsDateString,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -48,4 +49,17 @@ export class CreateMovementDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  lotNumber?: string;
+
+  @IsOptional()
+  @IsDateString()
+  expiryDate?: string;
+
+  @IsOptional()
+  @IsUUID()
+  lotId?: string;
 }
