@@ -20,6 +20,7 @@ import { CustomersService } from './customers.service';
 import { DocumentSeriesController } from './document-series.controller';
 import { DocumentSeriesService } from './document-series.service';
 import { ExchangeRatesModule } from '../exchange-rates/exchange-rates.module';
+import { TaxModule } from '../tax/tax.module';
 import { InvoicesController } from './invoices.controller';
 import { InvoicesService } from './invoices.service';
 import { OrdersController } from './orders.controller';
@@ -45,6 +46,7 @@ import { TaxesService } from './taxes.service';
       Tenant,
     ]),
     ExchangeRatesModule,
+    TaxModule,
   ],
   controllers: [
     CustomersController,

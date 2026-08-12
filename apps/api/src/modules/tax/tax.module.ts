@@ -10,6 +10,7 @@ import {
 } from '@aptifum/database';
 import { TaxController } from './tax.controller';
 import { CfdiService } from './cfdi.service';
+import { UsSalesTaxService } from './us-sales-tax.service';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { CfdiService } from './cfdi.service';
     ]),
   ],
   controllers: [TaxController],
-  providers: [CfdiService],
-  exports: [CfdiService],
+  providers: [CfdiService, UsSalesTaxService],
+  exports: [CfdiService, UsSalesTaxService],
 })
 export class TaxModule {}

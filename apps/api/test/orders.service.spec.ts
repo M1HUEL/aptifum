@@ -47,8 +47,8 @@ function buildService(
     {} as never,
     {} as never,
     {} as never,
-    {} as never,
     dataSource as never,
+    { resolveRate: vi.fn().mockResolvedValue(0) } as never,
   );
   return { service, stockRepo, salesOrderRepo };
 }

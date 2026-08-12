@@ -26,11 +26,16 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 import { CfdiService } from './cfdi.service';
 import { UpdateCfdiSettingsDto } from './dto/update-cfdi-settings.dto';
+import { UpdateUsSalesTaxDto } from './dto/update-us-sales-tax.dto';
+import { UsSalesTaxService } from './us-sales-tax.service';
 
 @ApiTags('tax')
 @Controller('tax')
 export class TaxController {
-  constructor(private readonly cfdi: CfdiService) {}
+  constructor(
+    private readonly cfdi: CfdiService,
+    private readonly usSalesTax: UsSalesTaxService,
+  ) {}
 
   @Get('settings')
   @RequirePermissions(permission(ModuleName.TAX, 'read'))
@@ -128,5 +133,29 @@ export class TaxController {
       paymentMethods: CFDI_PAYMENT_METHODS,
       productKeys: SAT_PRODUCT_KEYS,
     };
+  }
+
+  @Get('us-sales-tax')
+  @RequirePermissions(permission(ModuleName.TAX, 'read'))
+  @ApiOperation({ summary: 'Get US sales tax (nexus) configuration for the current tenant' })
+  getUsSalesTax(@CurrentUser() user: AuthUser) {
+    return this.usSalesTax.getConfig(user.tenantId);
+  }
+
+  @Put('us-sales-tax')
+  @RequirePermissions(permission(ModuleName.TAX, 'write'))
+  @ApiOperation({ summary: 'Update US sales tax (nexus) configuration' })
+  updateUsSalesTax(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateUsSalesTaxDto,
+  ) {
+    return this.usSalesTax.updateConfig(user.tenantId, dto);
+  }
+
+  @Get('us-sales-tax/states')
+  @RequirePermissions(permission(ModuleName.TAX, 'read'))
+  @ApiOperation({ summary: 'US states catalog with default sales tax rates' })
+  usStates() {
+    return this.usSalesTax.states();
   }
 }

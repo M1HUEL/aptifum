@@ -7,7 +7,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { FISCAL_REGIMES, USO_CFDI } from '@aptifum/core';
+import { FISCAL_REGIMES, USO_CFDI, US_STATES } from '@aptifum/core';
 
 export class UpdateCustomerDto {
   @IsOptional()
@@ -64,6 +64,16 @@ export class UpdateCustomerDto {
   @IsNumber()
   @Min(0)
   creditLimit?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2)
+  @IsIn(Object.keys(US_STATES))
+  state?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  taxExempt?: boolean;
 
   @IsOptional()
   @IsString()

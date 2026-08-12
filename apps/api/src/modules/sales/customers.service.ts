@@ -59,6 +59,8 @@ export class CustomersService {
         currency: dto.currency ?? 'USD',
         creditLimit: dto.creditLimit ?? 0,
         priceCategory: dto.priceCategory ?? null,
+        state: dto.state ?? null,
+        taxExempt: dto.taxExempt ?? false,
         active: dto.active ?? true,
       }),
     );
@@ -83,6 +85,8 @@ export class CustomersService {
       creditLimit: dto.creditLimit ?? customer.creditLimit,
       priceCategory:
         dto.priceCategory === undefined ? customer.priceCategory : dto.priceCategory,
+      state: dto.state === undefined ? customer.state : (dto.state ?? null),
+      taxExempt: dto.taxExempt ?? customer.taxExempt,
       active: dto.active ?? customer.active,
     });
     return this.customersRepo.save(customer);

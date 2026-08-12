@@ -39,6 +39,7 @@ import {
 import type { JournalLineInput } from '@aptifum/database';
 import { OutboxService } from '../outbox/outbox.service';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
+import { UsSalesTaxService } from '../tax/us-sales-tax.service';
 import { searchDocumentIds } from '../../common/query/document-search';
 import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -57,6 +58,7 @@ export class InvoicesService {
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly outbox: OutboxService,
     private readonly exchangeRates: ExchangeRatesService,
+    private readonly usSalesTax: UsSalesTaxService,
   ) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<Invoice> {
@@ -453,6 +455,11 @@ export class InvoicesService {
     return this.dataSource.transaction(async (manager) => {
       const invoicesRepo = manager.getRepository(Invoice);
       const customer = await this.resolveCustomer(manager, tenantId, dto.customerId);
+      const usTaxRate = await this.usSalesTax.resolveRate(
+        tenantId,
+        customer.state,
+        customer.taxExempt,
+      );
       const { number, seriesId } = await nextDocumentNumber(
         manager,
         tenantId,
@@ -472,6 +479,7 @@ export class InvoicesService {
         }
         const unitPrice = item.unitPrice ?? variant?.salePrice ?? product.salePrice;
         const quantity = item.quantity;
+        const taxRate = item.taxRate ?? usTaxRate;
         return manager.getRepository(InvoiceItem).create({
           tenantId,
           productId: item.productId,
@@ -480,8 +488,8 @@ export class InvoicesService {
           quantity,
           unitPrice,
           discount: 0,
-          taxRate: item.taxRate ?? 0,
-          taxAmount: round2(quantity * unitPrice * (item.taxRate ?? 0)),
+          taxRate,
+          taxAmount: round2(quantity * unitPrice * taxRate),
           lineTotal: round2(quantity * unitPrice),
         });
       });

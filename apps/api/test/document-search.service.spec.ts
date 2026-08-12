@@ -37,6 +37,7 @@ describe('document search (q) on invoices', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
     );
 
     const result = await service.findAll(TENANT, 1, 20, {
@@ -75,6 +76,7 @@ describe('document search (q) on invoices', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
     );
 
     const result = await service.findAll(TENANT, 1, 20, { q: 'nomatch' });
@@ -91,6 +93,7 @@ describe('document search (q) on invoices', () => {
     };
     const service = new InvoicesService(
       invoicesRepo as never,
+      {} as never,
       {} as never,
       {} as never,
       {} as never,

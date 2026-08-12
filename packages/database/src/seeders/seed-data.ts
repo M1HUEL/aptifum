@@ -94,6 +94,11 @@ export const DEFAULT_TAX_PRESETS: Record<string, Array<{ name: string; rate: num
   ],
 };
 
+export const DEFAULT_US_SALES_TAX_CONFIG = {
+  nexusStates: ['CA', 'TX'],
+  rates: {},
+} as const;
+
 export const WALK_IN_CUSTOMER = {
   code: 'WALK-IN',
   tradeName: 'Walk-in Customer',

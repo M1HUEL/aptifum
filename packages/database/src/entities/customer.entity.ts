@@ -49,6 +49,12 @@ export class Customer extends TenantBaseEntity {
   @Column({ name: 'regimen_fiscal', type: 'varchar', length: 5, nullable: true })
   regimenFiscal: string | null;
 
+  @Column({ type: 'varchar', length: 2, nullable: true })
+  state: string | null;
+
+  @Column({ name: 'tax_exempt', default: false })
+  taxExempt: boolean;
+
   @Column({ default: true })
   active: boolean;
 

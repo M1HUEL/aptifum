@@ -16,6 +16,7 @@ import {
   DEFAULT_SERIES,
   DEFAULT_TAX_PRESETS,
   DEFAULT_TENANT_ID,
+  DEFAULT_US_SALES_TAX_CONFIG,
   WALK_IN_CUSTOMER,
 } from './seed-data';
 
@@ -36,6 +37,10 @@ export async function seed(overrides: DataSourceOverrides = {}): Promise<void> {
     }
     if (!tenant.country) {
       tenant.country = 'US';
+      await tenantRepo.save(tenant);
+    }
+    if (tenant.country === 'US' && !(tenant.config?.usSalesTax)) {
+      tenant.config = { ...tenant.config, usSalesTax: DEFAULT_US_SALES_TAX_CONFIG };
       await tenantRepo.save(tenant);
     }
 

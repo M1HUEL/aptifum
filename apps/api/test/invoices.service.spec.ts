@@ -51,6 +51,7 @@ function buildService(repos: Record<string, Record<string, unknown>>) {
     (repos.dataSource ?? {}) as never,
     (repos.outbox ?? {}) as never,
     (repos.exchangeRates ?? { resolveRate: vi.fn().mockResolvedValue(1) }) as never,
+    (repos.usSalesTax ?? { resolveRate: vi.fn().mockResolvedValue(0) }) as never,
   );
 }
 

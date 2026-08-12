@@ -24,17 +24,18 @@ import {
 import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
 import { searchDocumentIds } from '../../common/query/document-search';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UsSalesTaxService } from '../tax/us-sales-tax.service';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(SalesOrder) private readonly ordersRepo: Repository<SalesOrder>,
-    @InjectRepository(Customer) private readonly customersRepo: Repository<Customer>,
     @InjectRepository(Warehouse) private readonly warehousesRepo: Repository<Warehouse>,
     @InjectRepository(Product) private readonly productsRepo: Repository<Product>,
     @InjectRepository(ProductVariant)
     private readonly variantsRepo: Repository<ProductVariant>,
     @InjectDataSource() private readonly dataSource: DataSource,
+    private readonly usSalesTax: UsSalesTaxService,
   ) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<SalesOrder> {
@@ -91,10 +92,21 @@ export class OrdersService {
 
   async create(tenantId: string | null, dto: CreateOrderDto) {
     this.assertTenant(tenantId);
-    await this.ensureCustomer(tenantId, dto.customerId);
     await this.ensureWarehouse(tenantId, dto.warehouseId);
 
     return this.dataSource.transaction(async (manager) => {
+      const customer = await manager.getRepository(Customer).findOneBy({
+        id: dto.customerId,
+        tenantId,
+      });
+      if (!customer) {
+        throw new NotFoundException('Customer not found');
+      }
+      const usTaxRate = await this.usSalesTax.resolveRate(
+        tenantId,
+        customer.state,
+        customer.taxExempt,
+      );
       const products = await this.loadProducts(tenantId, dto.items.map((item) => item.productId));
       const variants = await this.loadVariants(
         tenantId,
@@ -115,7 +127,7 @@ export class OrdersService {
           );
         }
         const unitPrice = item.unitPrice ?? variant?.salePrice ?? product.salePrice;
-        const taxRate = item.taxRate ?? 0;
+        const taxRate = item.taxRate ?? usTaxRate;
         const discount = item.discount ?? 0;
         const quantity = item.quantity;
         return {
@@ -239,13 +251,6 @@ export class OrdersService {
     }
     order.kind = SalesOrderKind.ORDER;
     return this.ordersRepo.save(order);
-  }
-
-  private async ensureCustomer(tenantId: string, customerId: string) {
-    const customer = await this.customersRepo.findOneBy({ id: customerId, tenantId });
-    if (!customer) {
-      throw new NotFoundException('Customer not found');
-    }
   }
 
   private async ensureWarehouse(tenantId: string, warehouseId: string) {
