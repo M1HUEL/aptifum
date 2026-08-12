@@ -16,6 +16,9 @@ import { useToast } from '../components/toast';
 
 const paymentMethods = ['cash', 'card', 'transfer', 'other'] as const;
 
+const FUNCTIONAL_CURRENCY = 'USD';
+const SALE_CURRENCIES = ['USD', 'EUR', 'MXN', 'CAD', 'GBP'] as const;
+
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
 const todayStr = (): string => new Date().toISOString().slice(0, 10);
@@ -36,6 +39,8 @@ interface InvoiceLike {
   total: number;
   balanceDue: number;
   paidAmount: number;
+  currency: string;
+  exchangeRate: number;
 }
 
 interface PaymentForm {
@@ -51,6 +56,7 @@ interface CompletedSale {
   total: number;
   paidAmount: number;
   balanceDue: number;
+  currency: string;
 }
 
 export function PosPage() {
@@ -68,6 +74,8 @@ export function PosPage() {
   const [ticket, setTicket] = useState<PosLine[]>([]);
   const [discount, setDiscount] = useState('');
   const [customerId, setCustomerId] = useState('');
+  const [saleCurrency, setSaleCurrency] = useState<string>(FUNCTIONAL_CURRENCY);
+  const [saleRate, setSaleRate] = useState('1');
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [charging, setCharging] = useState(false);
 
@@ -193,6 +201,21 @@ export function PosPage() {
     return { subtotal, tax, discount: round2(d), total: round2(subtotal + tax - d) };
   }, [ticket, discount]);
 
+  const changeSaleCurrency = (currency: string) => {
+    setSaleCurrency(currency);
+    if (currency === FUNCTIONAL_CURRENCY) {
+      setSaleRate('1');
+      return;
+    }
+    apiFetch<{ rate?: number } | null>(
+      `/api/v1/exchange-rates/latest?base=${FUNCTIONAL_CURRENCY}&quote=${currency}`,
+    )
+      .then((result) => {
+        if (result && typeof result.rate === 'number') setSaleRate(String(result.rate));
+      })
+      .catch(() => {});
+  };
+
   const submitCharge = async () => {
     if (!warehouseId) {
       setCheckoutError('Select a warehouse to start the sale.');
@@ -209,9 +232,17 @@ export function PosPage() {
       setCheckoutError('Add at least one product to the ticket.');
       return;
     }
+    if (saleCurrency !== FUNCTIONAL_CURRENCY) {
+      const rate = Number(saleRate);
+      if (!Number.isFinite(rate) || rate <= 0) {
+        setCheckoutError('Enter a valid exchange rate for the sale currency.');
+        return;
+      }
+    }
     setCharging(true);
     setCheckoutError(null);
     try {
+      const foreign = saleCurrency !== FUNCTIONAL_CURRENCY;
       const invoice = await apiFetch<InvoiceLike>('/api/v1/sales/invoices', {
         method: 'POST',
         headers: {
@@ -222,6 +253,8 @@ export function PosPage() {
           customerId: customerId || undefined,
           warehouseId,
           discount: discount === '' ? undefined : Number(discount),
+          currency: foreign ? saleCurrency : undefined,
+          exchangeRate: foreign ? Number(saleRate) : undefined,
           items,
         }),
       });
@@ -257,6 +290,14 @@ export function PosPage() {
           body: JSON.stringify({
             method: paymentForm.method,
             amount: Number(paymentForm.amount),
+            currency:
+              pendingInvoice.currency !== FUNCTIONAL_CURRENCY
+                ? pendingInvoice.currency
+                : undefined,
+            exchangeRate:
+              pendingInvoice.currency !== FUNCTIONAL_CURRENCY
+                ? pendingInvoice.exchangeRate
+                : undefined,
             receivedAt: paymentForm.receivedAt || undefined,
             reference: paymentForm.reference.trim() || undefined,
           }),
@@ -268,6 +309,7 @@ export function PosPage() {
         total: pendingInvoice.total,
         paidAmount: result.paidAmount,
         balanceDue: result.balanceDue,
+        currency: pendingInvoice.currency,
       });
       setPendingInvoice(null);
       toast.toast('Sale completed.');
@@ -290,6 +332,8 @@ export function PosPage() {
     setTicket([]);
     setDiscount('');
     setCustomerId('');
+    setSaleCurrency(FUNCTIONAL_CURRENCY);
+    setSaleRate('1');
     setCompleted(null);
     setPendingInvoice(null);
     setInput('');
@@ -379,16 +423,22 @@ export function PosPage() {
               <div className="detail-grid">
                 <div className="detail-item">
                   <div className="detail-label">Total</div>
-                  <div className="detail-value num">{formatMoney(completed.total)}</div>
+                  <div className="detail-value num">
+                    {formatMoney(completed.total, completed.currency)}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Paid</div>
-                  <div className="detail-value num">{formatMoney(completed.paidAmount)}</div>
+                  <div className="detail-value num">
+                    {formatMoney(completed.paidAmount, completed.currency)}
+                  </div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">Balance due</div>
                   <div className="detail-value num">
-                    {completed.balanceDue > 0 ? formatMoney(completed.balanceDue) : '—'}
+                    {completed.balanceDue > 0
+                      ? formatMoney(completed.balanceDue, completed.currency)
+                      : '—'}
                   </div>
                 </div>
               </div>
@@ -419,6 +469,36 @@ export function PosPage() {
                   ))}
                 </Select>
               </Field>
+              <div className="pos-currency-row">
+                <Field label="Sale currency" htmlFor="pos-currency">
+                  <Select
+                    id="pos-currency"
+                    value={saleCurrency}
+                    onChange={(event) => changeSaleCurrency(event.target.value)}
+                  >
+                    {SALE_CURRENCIES.map((currency) => (
+                      <option key={currency} value={currency}>
+                        {currency}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                {saleCurrency !== FUNCTIONAL_CURRENCY ? (
+                  <Field
+                    label={`Exchange rate (1 ${FUNCTIONAL_CURRENCY} = ? ${saleCurrency})`}
+                    htmlFor="pos-rate"
+                  >
+                    <TextInput
+                      id="pos-rate"
+                      type="number"
+                      min="0.000001"
+                      step="0.000001"
+                      value={saleRate}
+                      onChange={(event) => setSaleRate(event.target.value)}
+                    />
+                  </Field>
+                ) : null}
+              </div>
               <div className="pos-lines">
                 {ticket.length === 0 ? (
                   <EmptyState message="Tap a product to add it to the ticket." />
@@ -462,7 +542,10 @@ export function PosPage() {
                         onChange={(event) => setLineField(index, 'taxRate', event.target.value)}
                       />
                       <span className="pos-line-total num">
-                        {formatMoney(Number(line.quantity) * Number(line.unitPrice || 0))}
+                        {formatMoney(
+                          Number(line.quantity) * Number(line.unitPrice || 0),
+                          saleCurrency,
+                        )}
                       </span>
                       <button
                         type="button"
@@ -489,19 +572,19 @@ export function PosPage() {
               <div className="pos-totals">
                 <div className="pos-total-row">
                   <span>Subtotal</span>
-                  <span className="num">{formatMoney(totals.subtotal)}</span>
+                  <span className="num">{formatMoney(totals.subtotal, saleCurrency)}</span>
                 </div>
                 <div className="pos-total-row">
                   <span>Discount</span>
-                  <span className="num">−{formatMoney(totals.discount)}</span>
+                  <span className="num">−{formatMoney(totals.discount, saleCurrency)}</span>
                 </div>
                 <div className="pos-total-row">
                   <span>Tax</span>
-                  <span className="num">{formatMoney(totals.tax)}</span>
+                  <span className="num">{formatMoney(totals.tax, saleCurrency)}</span>
                 </div>
                 <div className="pos-total-row pos-total-grand">
                   <span>Total</span>
-                  <span className="num">{formatMoney(totals.total)}</span>
+                  <span className="num">{formatMoney(totals.total, saleCurrency)}</span>
                 </div>
               </div>
               {!warehouseId ? (
@@ -514,7 +597,9 @@ export function PosPage() {
                 disabled={charging || ticket.length === 0 || !warehouseId}
                 onClick={() => void submitCharge()}
               >
-                {charging ? 'Charging…' : `Charge ${formatMoney(totals.total)}`}
+                {charging
+                  ? 'Charging…'
+                  : `Charge ${formatMoney(totals.total, saleCurrency)}`}
               </button>
             </div>
           )}
@@ -547,7 +632,14 @@ export function PosPage() {
             label="Amount"
             htmlFor="payment-amount"
             required
-            hint={pendingInvoice ? `Total due: ${formatMoney(pendingInvoice.total)}` : undefined}
+            hint={
+              pendingInvoice
+                ? `Total due: ${formatMoney(
+                    pendingInvoice.total,
+                    pendingInvoice.currency,
+                  )}${pendingInvoice.currency !== FUNCTIONAL_CURRENCY ? ` · rate ${pendingInvoice.exchangeRate}` : ''}`
+                : undefined
+            }
           >
             <TextInput
               id="payment-amount"

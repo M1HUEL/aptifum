@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-export function formatMoney(value: number): string {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+export function formatMoney(value: number, currency = 'USD'): string {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
 }
 
 export function formatNumber(value: number): string {

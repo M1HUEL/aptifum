@@ -157,6 +157,9 @@ export class InvoicesService {
           if (invoice.status === InvoiceStatus.CANCELLED) {
             throw new BadRequestException('Cannot pay a cancelled invoice');
           }
+          if (dto.currency && dto.currency !== invoice.currency) {
+            throw new BadRequestException('Payment currency does not match invoice currency');
+          }
           const newPaid = round2(invoice.paidAmount + dto.amount);
           if (newPaid - invoice.total > 0.005) {
             throw new BadRequestException('Payment exceeds invoice balance');
@@ -166,12 +169,14 @@ export class InvoicesService {
           await invoicesRepo.save(invoice);
           const functional = await this.functionalCurrency(manager, tenantId);
           const receivedAt = dto.receivedAt ? new Date(dto.receivedAt) : new Date();
-          const rate = await this.exchangeRates.resolveRate(
-            tenantId,
-            functional,
-            invoice.currency,
-            receivedAt.toISOString().slice(0, 10),
-          );
+          const rate =
+            dto.exchangeRate ??
+            (await this.exchangeRates.resolveRate(
+              tenantId,
+              functional,
+              invoice.currency,
+              receivedAt.toISOString().slice(0, 10),
+            ));
           const payment = await manager.getRepository(Payment).save(
             manager.getRepository(Payment).create({
               tenantId,
@@ -362,12 +367,10 @@ export class InvoicesService {
       );
       const totals = computeTotals(items, 0);
       const functional = await this.functionalCurrency(manager, tenantId);
-      const rate = await this.exchangeRates.resolveRate(
-        tenantId,
-        functional,
-        order.currency,
-        today(),
-      );
+      const currency = dto.currency ?? order.currency;
+      const rate =
+        dto.exchangeRate ??
+        (await this.exchangeRates.resolveRate(tenantId, functional, currency, today()));
       const invoice = invoicesRepo.create({
         tenantId,
         number,
@@ -379,7 +382,7 @@ export class InvoicesService {
         warehouseId: order.warehouseId,
         issueDate: today(),
         dueDate: order.dueDate,
-        currency: order.currency,
+        currency,
         exchangeRate: rate,
         ...totals,
         paidAmount: 0,
@@ -479,12 +482,10 @@ export class InvoicesService {
       });
       const totals = computeTotals(invoiceItems, discount ?? 0);
       const functional = await this.functionalCurrency(manager, tenantId);
-      const rate = await this.exchangeRates.resolveRate(
-        tenantId,
-        functional,
-        customer.currency,
-        today(),
-      );
+      const currency = dto.currency ?? customer.currency;
+      const rate =
+        dto.exchangeRate ??
+        (await this.exchangeRates.resolveRate(tenantId, functional, currency, today()));
       const invoice = invoicesRepo.create({
         tenantId,
         number,
@@ -496,7 +497,7 @@ export class InvoicesService {
         warehouseId,
         issueDate: today(),
         dueDate: dueDate ?? null,
-        currency: customer.currency,
+        currency,
         exchangeRate: rate,
         ...totals,
         paidAmount: 0,
@@ -815,6 +816,7 @@ export class InvoicesService {
       issueDate: invoice.issueDate,
       dueDate: invoice.dueDate,
       currency: invoice.currency,
+      exchangeRate: invoice.exchangeRate,
       subtotal: invoice.subtotal,
       discount: invoice.discount,
       tax: invoice.tax,

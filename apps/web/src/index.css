@@ -843,6 +843,19 @@ select:focus {
   min-width: 0;
 }
 
+.pos-currency-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 480px) {
+  .pos-currency-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pos-lines {
   border: 1px solid var(--border);
   border-radius: var(--radius);

@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
   MaxLength,
   Min,
   ValidateNested,
@@ -60,6 +61,15 @@ export class CreateInvoiceDto {
   @IsNumber()
   @Min(0)
   discount?: number;
+
+  @IsOptional()
+  @Matches(/^[A-Z]{3}$/, { message: 'currency must be a 3-letter ISO code' })
+  currency?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0.000001)
+  exchangeRate?: number;
 
   @IsOptional()
   @IsString()
