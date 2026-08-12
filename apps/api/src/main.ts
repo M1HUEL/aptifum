@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { json, urlencoded, Request, Response } from 'express';
+import { json, urlencoded, Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import { getEnv } from '@aptifum/config';
 import { createLogger, LoggerAdapter } from '@aptifum/logger';
@@ -16,6 +16,18 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     bodyParser: false,
+  });
+  app.use((req: Request & { rawBody?: Buffer }, _res: Response, next: NextFunction) => {
+    if (!req.url.startsWith('/api/v1/webhooks/')) {
+      return next();
+    }
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => {
+      req.rawBody = Buffer.concat(chunks);
+      next();
+    });
+    req.on('error', next);
   });
   app.use(json({ limit: '1mb' }));
   app.use(urlencoded({ extended: true, limit: '1mb' }));

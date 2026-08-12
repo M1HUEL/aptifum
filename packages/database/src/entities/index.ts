@@ -22,6 +22,7 @@ import { JournalEntryLine } from './journal-entry-line.entity';
 import { Leave } from './hr-leave.entity';
 import { OutboxEvent } from './outbox-event.entity';
 import { Payment } from './payment.entity';
+import { PaymentProviderConfig } from './payment-provider.entity';
 import { Payroll } from './hr-payroll.entity';
 import { PayrollLine } from './hr-payroll-line.entity';
 import { Product } from './product.entity';
@@ -96,6 +97,7 @@ export const entities = [
   Payroll,
   PayrollLine,
   OutboxEvent,
+  PaymentProviderConfig,
 ];
 
 export {
@@ -123,6 +125,7 @@ export {
   Leave,
   OutboxEvent,
   Payment,
+  PaymentProviderConfig,
   Payroll,
   PayrollLine,
   Product,

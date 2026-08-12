@@ -13,6 +13,7 @@ export enum ModuleName {
   PRODUCTION = 'production',
   REPORTING = 'reporting',
   AUDIT = 'audit',
+  PAYMENTS = 'payments',
 }
 
 export type PermissionAction = 'read' | 'write' | 'approve' | 'adjust' | 'delete';
@@ -77,6 +78,10 @@ export enum PaymentMethod {
   TRANSFER = 'transfer',
   OTHER = 'other',
 }
+
+export type PaymentProvider = 'stripe';
+
+export type PaymentProviderEnvironment = 'test' | 'live';
 
 export enum TaxKind {
   SALES = 'sales',

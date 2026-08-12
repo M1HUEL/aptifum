@@ -15,6 +15,7 @@ import { ExchangeRatesModule } from './modules/exchange-rates/exchange-rates.mod
 import { HrModule } from './modules/hr/hr.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { OutboxModule } from './modules/outbox/outbox.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 import { PurchasingModule } from './modules/purchasing/purchasing.module';
 import { ProductionModule } from './modules/production/production.module';
 import { RbacModule } from './modules/rbac/rbac.module';
@@ -64,6 +65,7 @@ import { UsersModule } from './modules/users/users.module';
     CrmModule,
     HrModule,
     ProductionModule,
+    PaymentsModule,
     RemindersModule,
     ReportsModule,
   ],
