@@ -1,7 +1,10 @@
 import { lazy, Suspense, type ComponentType } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './auth/auth-context';
+import { permissionForRoute } from './auth/route-permissions';
+import { RequirePermission } from './auth/require-permission';
 import { Layout } from './components/layout';
+import { ErrorBoundary } from './components/error-boundary';
 import { LoadingBlock } from './components/ui';
 
 function lazyPage<T extends Record<string, ComponentType>>(
@@ -54,6 +57,15 @@ const WarehousesCategoriesPage = lazyPage(
 );
 const SalesOrdersPage = lazyPage(() => import('./pages/sales-orders-page'), 'SalesOrdersPage');
 const SettingsPage = lazyPage(() => import('./pages/settings-page'), 'SettingsPage');
+const ForbiddenPage = lazyPage(() => import('./pages/forbidden-page'), 'ForbiddenPage');
+const NotFoundPage = lazyPage(() => import('./pages/not-found-page'), 'NotFoundPage');
+
+function GuardedRoute({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  return (
+    <RequirePermission permission={permissionForRoute(location.pathname)}>{children}</RequirePermission>
+  );
+}
 
 function ProtectedLayout() {
   const { user, initializing } = useAuth();
@@ -63,43 +75,49 @@ function ProtectedLayout() {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  return <Layout />;
+  return (
+    <Layout />
+  );
 }
 
 export default function App() {
   return (
-    <Suspense fallback={<LoadingBlock />}>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/accept-invite" element={<AcceptInvitePage />} />
-        <Route element={<ProtectedLayout />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/pos" element={<PosPage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/stock" element={<StockPage />} />
-          <Route path="/warehouses" element={<WarehousesCategoriesPage />} />
-          <Route path="/invoices" element={<InvoicesPage />} />
-          <Route path="/customers" element={<CustomersPage />} />
-          <Route path="/orders" element={<SalesOrdersPage />} />
-          <Route path="/suppliers" element={<SuppliersPage />} />
-          <Route path="/purchasing" element={<PurchaseOrdersPage />} />
-          <Route path="/accounting" element={<AccountingPage />} />
-          <Route path="/accounts" element={<ChartAccountsPage />} />
-          <Route path="/hr" element={<HrPage />} />
-          <Route path="/attendance" element={<AttendanceLeavesPage />} />
-          <Route path="/crm" element={<CrmPage />} />
-          <Route path="/production" element={<ProductionPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/users-roles" element={<UsersRolesPage />} />
-        <Route path="/audit" element={<AuditPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Route>
-      </Routes>
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingBlock />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/accept-invite" element={<AcceptInvitePage />} />
+          <Route path="/403" element={<ForbiddenPage />} />
+          <Route path="/404" element={<NotFoundPage />} />
+          <Route element={<ProtectedLayout />}>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<GuardedRoute><DashboardPage /></GuardedRoute>} />
+            <Route path="/pos" element={<GuardedRoute><PosPage /></GuardedRoute>} />
+            <Route path="/products" element={<GuardedRoute><ProductsPage /></GuardedRoute>} />
+            <Route path="/stock" element={<GuardedRoute><StockPage /></GuardedRoute>} />
+            <Route path="/warehouses" element={<GuardedRoute><WarehousesCategoriesPage /></GuardedRoute>} />
+            <Route path="/invoices" element={<GuardedRoute><InvoicesPage /></GuardedRoute>} />
+            <Route path="/customers" element={<GuardedRoute><CustomersPage /></GuardedRoute>} />
+            <Route path="/orders" element={<GuardedRoute><SalesOrdersPage /></GuardedRoute>} />
+            <Route path="/suppliers" element={<GuardedRoute><SuppliersPage /></GuardedRoute>} />
+            <Route path="/purchasing" element={<GuardedRoute><PurchaseOrdersPage /></GuardedRoute>} />
+            <Route path="/accounting" element={<GuardedRoute><AccountingPage /></GuardedRoute>} />
+            <Route path="/accounts" element={<GuardedRoute><ChartAccountsPage /></GuardedRoute>} />
+            <Route path="/hr" element={<GuardedRoute><HrPage /></GuardedRoute>} />
+            <Route path="/attendance" element={<GuardedRoute><AttendanceLeavesPage /></GuardedRoute>} />
+            <Route path="/crm" element={<GuardedRoute><CrmPage /></GuardedRoute>} />
+            <Route path="/production" element={<GuardedRoute><ProductionPage /></GuardedRoute>} />
+            <Route path="/reports" element={<GuardedRoute><ReportsPage /></GuardedRoute>} />
+            <Route path="/users-roles" element={<GuardedRoute><UsersRolesPage /></GuardedRoute>} />
+            <Route path="/audit" element={<GuardedRoute><AuditPage /></GuardedRoute>} />
+            <Route path="/settings" element={<GuardedRoute><SettingsPage /></GuardedRoute>} />
+            <Route path="/profile" element={<GuardedRoute><ProfilePage /></GuardedRoute>} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Route>
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
