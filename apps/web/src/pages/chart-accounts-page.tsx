@@ -1,11 +1,9 @@
-import { useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '../api/client';
-import type {
-  AccountNormalBalance,
-  AccountType,
-  ChartAccount,
-  Paginated,
-} from '../api/types';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { AccountNormalBalance, AccountType, ChartAccount } from '../api/types';
+import { accountFormSchema, type AccountFormValues } from '../api/schemas';
+import { useApiInvalidation, useApiMutation } from '../api/hooks';
 import {
   Badge,
   type Column,
@@ -16,17 +14,11 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
-import {
-  Button,
-  Checkbox,
-  ConfirmDialog,
-  Field,
-  Modal,
-  Select,
-  TextArea,
-  TextInput,
-} from '../components/forms';
+import { Button } from '../components/ui/button';
+import { Checkbox } from '../components/ui/checkbox';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
+import { usePagedQuery } from '../hooks/use-paged-query';
 
 const accountTypes: AccountType[] = ['asset', 'liability', 'equity', 'revenue', 'expense'];
 const normalBalances: AccountNormalBalance[] = ['debit', 'credit'];
@@ -37,17 +29,26 @@ function typeTone(type: AccountType) {
   return 'neutral';
 }
 
-interface AccountForm {
+interface CreateAccountDto {
   code: string;
   name: string;
   type: string;
   normalBalance: string;
-  parentId: string;
+  parentId?: string;
   active: boolean;
-  description: string;
+  description?: string;
 }
 
-const emptyForm: AccountForm = {
+interface UpdateAccountDto {
+  name: string;
+  type: string;
+  normalBalance: string;
+  parentId?: string;
+  active: boolean;
+  description?: string;
+}
+
+const emptyForm: AccountFormValues = {
   code: '',
   name: '',
   type: 'asset',
@@ -59,44 +60,58 @@ const emptyForm: AccountForm = {
 
 export function ChartAccountsPage() {
   const [page, setPage] = useState(1);
-  const [accounts, setAccounts] = useState<ChartAccount[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<AccountForm>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<ChartAccount | null>(null);
-  const [deleteBusy, setDeleteBusy] = useState(false);
   const toast = useToast();
+  const { invalidate } = useApiInvalidation();
 
-  const reload = async (targetPage = page) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(targetPage), limit: '50' });
-      const result = await apiFetch<Paginated<ChartAccount>>(`/api/v1/accounting/accounts?${params.toString()}`);
-      setAccounts(result.data);
-      setTotal(result.meta.total);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not load accounts.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<AccountFormValues>({
+    resolver: zodResolver(accountFormSchema),
+    defaultValues: emptyForm,
+  });
+
+  const active = watch('active');
+
+  const { data, error, loading } = usePagedQuery<ChartAccount>({
+    path: '/api/v1/accounting/accounts',
+    page,
+    limit: 50,
+  });
+
+  const accounts = data?.data ?? [];
+
+  const createMutation = useApiMutation<CreateAccountDto>('/api/v1/accounting/accounts', 'POST');
+  const updateMutation = useApiMutation<UpdateAccountDto>(
+    `/api/v1/accounting/accounts/${editingId ?? ''}`,
+    'PATCH',
+  );
+  const deleteMutation = useApiMutation<Record<string, never>, unknown>(
+    `/api/v1/accounting/accounts/${deleting?.id ?? ''}`,
+    'DELETE',
+  );
+
+  const saving = createMutation.isPending || updateMutation.isPending;
+  const deleteBusy = deleteMutation.isPending;
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(emptyForm);
+    reset(emptyForm);
     setFormError(null);
     setModalOpen(true);
   };
 
   const openEdit = (account: ChartAccount) => {
     setEditingId(account.id);
-    setForm({
+    reset({
       code: account.code,
       name: account.name,
       type: account.type,
@@ -109,73 +124,58 @@ export function ChartAccountsPage() {
     setModalOpen(true);
   };
 
-  const setField = (key: keyof AccountForm, value: string | boolean) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!form.code.trim() || !form.name.trim()) {
-      setFormError('Code and name are required.');
-      return;
-    }
-    setSaving(true);
+  const submit = handleSubmit((values) => {
     setFormError(null);
-    const payload = {
-      code: form.code.trim(),
-      name: form.name.trim(),
-      type: form.type,
-      normalBalance: form.normalBalance,
-      parentId: form.parentId || undefined,
-      active: form.active,
-      description: form.description.trim() || undefined,
-    };
-    try {
-      if (editingId) {
-        await apiFetch(`/api/v1/accounting/accounts/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: form.name.trim(),
-            type: form.type,
-            normalBalance: form.normalBalance,
-            parentId: form.parentId || undefined,
-            active: form.active,
-            description: form.description.trim() || undefined,
-          }),
-        });
-        toast.toast('Account updated.');
-      } else {
-        await apiFetch('/api/v1/accounting/accounts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        toast.toast('Account created.');
-      }
+    const onSuccess = () => {
+      toast.toast(editingId ? 'Account updated.' : 'Account created.');
       setModalOpen(false);
-      void reload();
-    } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not save account.');
-    } finally {
-      setSaving(false);
+      void invalidate(['paged', '/api/v1/accounting/accounts']);
+    };
+    const onError = (err: { message: string }) => setFormError(err.message);
+    if (editingId) {
+      updateMutation.mutate(
+        {
+          name: values.name,
+          type: values.type,
+          normalBalance: values.normalBalance,
+          parentId: values.parentId || undefined,
+          active: values.active,
+          description: values.description || undefined,
+        },
+        { onSuccess, onError },
+      );
+    } else {
+      createMutation.mutate(
+        {
+          code: values.code,
+          name: values.name,
+          type: values.type,
+          normalBalance: values.normalBalance,
+          parentId: values.parentId || undefined,
+          active: values.active,
+          description: values.description || undefined,
+        },
+        { onSuccess, onError },
+      );
     }
-  };
+  });
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!deleting) return;
-    setDeleteBusy(true);
-    try {
-      await apiFetch(`/api/v1/accounting/accounts/${deleting.id}`, { method: 'DELETE' });
-      toast.toast('Account deleted.');
-      setDeleting(null);
-      void reload();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not delete account.', 'error');
-      setDeleting(null);
-    } finally {
-      setDeleteBusy(false);
-    }
+    deleteMutation.mutate(
+      {},
+      {
+        onSuccess: () => {
+          toast.toast('Account deleted.');
+          setDeleting(null);
+          void invalidate(['paged', '/api/v1/accounting/accounts']);
+        },
+        onError: (err) => {
+          toast.toast(err.message, 'error');
+          setDeleting(null);
+        },
+      },
+    );
   };
 
   const columns: Column<ChartAccount>[] = [
@@ -195,7 +195,9 @@ export function ChartAccountsPage() {
     {
       key: 'active',
       header: 'Status',
-      render: (row) => <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>,
+      render: (row) => (
+        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>
+      ),
     },
     {
       key: 'actions',
@@ -226,115 +228,102 @@ export function ChartAccountsPage() {
       {accounts.length > 0 ? (
         <>
           <DataTable columns={columns} rows={accounts} rowKey={(row) => row.id} />
-          <Pagination page={page} limit={50} total={total} onPage={(next) => {
-            setPage(next);
-            void reload(next);
-          }} />
+          <Pagination page={data?.meta.page ?? page} limit={data?.meta.limit ?? 50} total={data?.meta.total ?? 0} onPage={setPage} />
         </>
       ) : null}
 
-      <Modal
-        open={modalOpen}
-        title={editingId ? 'Edit account' : 'New account'}
-        onClose={() => !saving && setModalOpen(false)}
-        width="lg"
-      >
-        <form onSubmit={(event) => void submit(event)}>
-          <div className="form-grid">
-            <Field label="Code" htmlFor="acc-code" required>
-              <TextInput
-                id="acc-code"
-                disabled={editingId !== null}
-                value={form.code}
-                onChange={(event) => setField('code', event.target.value)}
-              />
-            </Field>
-            <Field label="Name" htmlFor="acc-name" required>
-              <TextInput
-                id="acc-name"
-                value={form.name}
-                onChange={(event) => setField('name', event.target.value)}
-              />
-            </Field>
-            <Field label="Type" htmlFor="acc-type" required>
-              <Select
-                id="acc-type"
-                value={form.type}
-                onChange={(event) => setField('type', event.target.value)}
-              >
-                {accountTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Normal balance" htmlFor="acc-balance" required>
-              <Select
-                id="acc-balance"
-                value={form.normalBalance}
-                onChange={(event) => setField('normalBalance', event.target.value)}
-              >
-                {normalBalances.map((balance) => (
-                  <option key={balance} value={balance}>
-                    {balance}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Parent" htmlFor="acc-parent">
-              <Select
-                id="acc-parent"
-                value={form.parentId}
-                onChange={(event) => setField('parentId', event.target.value)}
-              >
-                <option value="">— None —</option>
-                {accounts
-                  .filter((account) => account.id !== editingId)
-                  .map((account) => (
-                    <option key={account.id} value={account.id}>
-                      {account.code} · {account.name}
+      <Dialog open={modalOpen} onOpenChange={(open) => !saving && setModalOpen(open)}>
+        <DialogContent>
+          <DialogHeader title={editingId ? 'Edit account' : 'New account'} />
+          <form onSubmit={(event) => void submit(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="acc-code">Code *</label>
+                <input id="acc-code" disabled={editingId !== null} {...register('code')} />
+                {errors.code ? <div className="field-error">{errors.code.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="acc-name">Name *</label>
+                <input id="acc-name" {...register('name')} />
+                {errors.name ? <div className="field-error">{errors.name.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="acc-type">Type *</label>
+                <select id="acc-type" {...register('type')}>
+                  {accountTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
                     </option>
                   ))}
-              </Select>
-            </Field>
-            <Field label="Description" htmlFor="acc-description">
-              <TextArea
-                id="acc-description"
-                rows={2}
-                value={form.description}
-                onChange={(event) => setField('description', event.target.value)}
-              />
-            </Field>
-            <Field label="Status">
-              <Checkbox
-                label="Active"
-                checked={form.active}
-                onChange={(event) => setField('active', event.target.checked)}
-              />
-            </Field>
-          </div>
-          {formError ? <div className="error-banner">{formError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={() => setModalOpen(false)} disabled={saving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create account'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="acc-balance">Normal balance *</label>
+                <select id="acc-balance" {...register('normalBalance')}>
+                  {normalBalances.map((balance) => (
+                    <option key={balance} value={balance}>
+                      {balance}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="acc-parent">Parent</label>
+                <select id="acc-parent" {...register('parentId')}>
+                  <option value="">— None —</option>
+                  {accounts
+                    .filter((account) => account.id !== editingId)
+                    .map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.code} · {account.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="acc-description">Description</label>
+                <textarea id="acc-description" rows={2} {...register('description')} />
+              </div>
+              <div className="field">
+                <label>Status</label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Checkbox
+                    id="acc-active"
+                    checked={active}
+                    onCheckedChange={(checked) => setValue('active', checked === true)}
+                  />
+                  <label htmlFor="acc-active" className="text-sm text-gray-700">
+                    Active
+                  </label>
+                </div>
+              </div>
+            </div>
+            {formError ? <div className="error-banner">{formError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={saving}>
+                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create account'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <ConfirmDialog
+      <Dialog
         open={deleting !== null}
-        title="Delete account"
-        message={`Delete account "${deleting?.code} · ${deleting?.name}"?`}
-        confirmLabel="Delete"
-        busy={deleteBusy}
-        onCancel={() => setDeleting(null)}
-        onConfirm={() => void confirmDelete()}
-      />
+        onOpenChange={(open) => !deleteBusy && !open && setDeleting(null)}
+      >
+        <DialogContent>
+          <DialogHeader
+            title="Delete account"
+            description={`Delete account "${deleting?.code} · ${deleting?.name}"?`}
+          />
+          <DialogFooter>
+            <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDelete()}>
+              {deleteBusy ? 'Working…' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

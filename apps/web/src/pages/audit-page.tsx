@@ -10,7 +10,7 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
-import { Button, Select } from '../components/forms';
+import { Button } from '../components/ui/button';
 import { usePagedQuery } from '../hooks/use-paged-query';
 
 const MODULES = [
@@ -136,7 +136,7 @@ export function AuditPage() {
       <PageHeader title="Audit log" subtitle="Record of security and write operations" />
 
       <div className="toolbar">
-        <Select
+        <select
           value={filters.module}
           onChange={(event) => setFilter('module', event.target.value)}
         >
@@ -146,8 +146,8 @@ export function AuditPage() {
               {module}
             </option>
           ))}
-        </Select>
-        <Select
+        </select>
+        <select
           value={filters.action}
           onChange={(event) => setFilter('action', event.target.value)}
         >
@@ -157,7 +157,7 @@ export function AuditPage() {
               {action}
             </option>
           ))}
-        </Select>
+        </select>
         <input
           type="date"
           value={filters.from}
@@ -169,7 +169,7 @@ export function AuditPage() {
           onChange={(event) => setFilter('to', event.target.value)}
         />
         {hasFilters ? (
-          <Button variant="ghost" onClick={resetFilters}>
+          <Button variant="ghost" size="sm" onClick={resetFilters}>
             Clear filters
           </Button>
         ) : null}

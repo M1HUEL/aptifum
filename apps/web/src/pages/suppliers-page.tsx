@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '../api/client';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { components } from '../api/schema';
 import type { Supplier } from '../api/types';
+import { supplierFormSchema, type SupplierFormValues } from '../api/schemas';
+import { useApiInvalidation, useApiMutation } from '../api/hooks';
 import {
   Badge,
   type Column,
@@ -12,33 +16,15 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
-import {
-  Button,
-  Checkbox,
-  ConfirmDialog,
-  Field,
-  Modal,
-  TextArea,
-  TextInput,
-} from '../components/forms';
+import { Button } from '../components/ui/button';
+import { Checkbox } from '../components/ui/checkbox';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 
-interface SupplierForm {
-  code: string;
-  tradeName: string;
-  legalName: string;
-  taxId: string;
-  email: string;
-  phone: string;
-  address: string;
-  currency: string;
-  paymentTerms: string;
-  creditLimit: string;
-  active: boolean;
-}
+type CreateSupplierDto = components['schemas']['CreateSupplierDto'];
 
-const emptyForm: SupplierForm = {
+const emptyForm: SupplierFormValues = {
   code: '',
   tradeName: '',
   legalName: '',
@@ -52,24 +38,81 @@ const emptyForm: SupplierForm = {
   active: true,
 };
 
+function toDto(form: SupplierFormValues): CreateSupplierDto {
+  return {
+    code: form.code.trim(),
+    tradeName: form.tradeName.trim(),
+    legalName: form.legalName.trim() || undefined,
+    taxId: form.taxId.trim() || undefined,
+    email: form.email.trim() || undefined,
+    phone: form.phone.trim() || undefined,
+    address: form.address.trim() || undefined,
+    currency: form.currency.trim().toUpperCase() || undefined,
+    paymentTerms: form.paymentTerms.trim() || undefined,
+    creditLimit: form.creditLimit === '' ? undefined : Number(form.creditLimit),
+    active: form.active,
+  };
+}
+
+function fromSupplier(supplier: Supplier): SupplierFormValues {
+  return {
+    code: supplier.code,
+    tradeName: supplier.tradeName,
+    legalName: supplier.legalName ?? '',
+    taxId: supplier.taxId ?? '',
+    email: supplier.email ?? '',
+    phone: supplier.phone ?? '',
+    address: supplier.address ?? '',
+    currency: supplier.currency ?? 'USD',
+    paymentTerms: supplier.paymentTerms ?? '',
+    creditLimit: supplier.creditLimit != null ? String(supplier.creditLimit) : '',
+    active: supplier.active,
+  };
+}
+
 export function SuppliersPage() {
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState('');
   const [input, setInput] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<SupplierForm>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<Supplier | null>(null);
-  const [deleteBusy, setDeleteBusy] = useState(false);
   const toast = useToast();
+  const { invalidate } = useApiInvalidation();
 
-  const { data, error, reload } = usePagedQuery<Supplier>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<SupplierFormValues>({
+    resolver: zodResolver(supplierFormSchema),
+    defaultValues: emptyForm,
+  });
+
+  const active = watch('active');
+
+  const { data, error } = usePagedQuery<Supplier>({
     path: '/api/v1/purchasing/suppliers',
     page,
     query,
   });
+
+  const createMutation = useApiMutation<CreateSupplierDto>('/api/v1/purchasing/suppliers', 'POST');
+  const updateMutation = useApiMutation<CreateSupplierDto>(
+    `/api/v1/purchasing/suppliers/${editingId ?? ''}`,
+    'PATCH',
+  );
+  const deleteMutation = useApiMutation<Record<string, never>, unknown>(
+    `/api/v1/purchasing/suppliers/${deleting?.id ?? ''}`,
+    'DELETE',
+  );
+
+  const saving = createMutation.isPending || updateMutation.isPending;
+  const deleteBusy = deleteMutation.isPending;
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
@@ -79,98 +122,49 @@ export function SuppliersPage() {
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(emptyForm);
+    reset(emptyForm);
     setFormError(null);
     setModalOpen(true);
   };
 
   const openEdit = (supplier: Supplier) => {
     setEditingId(supplier.id);
-    setForm({
-      code: supplier.code,
-      tradeName: supplier.tradeName,
-      legalName: supplier.legalName ?? '',
-      taxId: supplier.taxId ?? '',
-      email: supplier.email ?? '',
-      phone: supplier.phone ?? '',
-      address: supplier.address ?? '',
-      currency: supplier.currency ?? 'USD',
-      paymentTerms: supplier.paymentTerms ?? '',
-      creditLimit: supplier.creditLimit != null ? String(supplier.creditLimit) : '',
-      active: supplier.active,
-    });
+    reset(fromSupplier(supplier));
     setFormError(null);
     setModalOpen(true);
   };
 
-  const closeModal = () => {
-    if (!saving) setModalOpen(false);
-  };
-
-  const setField = (key: keyof SupplierForm, value: string | boolean) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!form.code.trim() || !form.tradeName.trim()) {
-      setFormError('Code and trade name are required.');
-      return;
-    }
-    setSaving(true);
+  const submit = handleSubmit((values) => {
     setFormError(null);
-    const body = {
-      code: form.code.trim(),
-      tradeName: form.tradeName.trim(),
-      legalName: form.legalName.trim() || undefined,
-      taxId: form.taxId.trim() || undefined,
-      email: form.email.trim() || undefined,
-      phone: form.phone.trim() || undefined,
-      address: form.address.trim() || undefined,
-      currency: form.currency.trim().toUpperCase() || undefined,
-      paymentTerms: form.paymentTerms.trim() || undefined,
-      creditLimit: form.creditLimit === '' ? undefined : Number(form.creditLimit),
-      active: form.active,
-    };
-    try {
-      if (editingId) {
-        await apiFetch(`/api/v1/purchasing/suppliers/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Supplier updated.');
-      } else {
-        await apiFetch('/api/v1/purchasing/suppliers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Supplier created.');
-      }
+    const onSuccess = () => {
+      toast.toast(editingId ? 'Supplier updated.' : 'Supplier created.');
       setModalOpen(false);
-      void reload();
-    } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not save supplier.');
-    } finally {
-      setSaving(false);
+      void invalidate(['paged', '/api/v1/purchasing/suppliers']);
+    };
+    const onError = (err: { message: string }) => setFormError(err.message);
+    if (editingId) {
+      updateMutation.mutate(toDto(values), { onSuccess, onError });
+    } else {
+      createMutation.mutate(toDto(values), { onSuccess, onError });
     }
-  };
+  });
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!deleting) return;
-    setDeleteBusy(true);
-    try {
-      await apiFetch(`/api/v1/purchasing/suppliers/${deleting.id}`, { method: 'DELETE' });
-      toast.toast('Supplier deactivated.');
-      setDeleting(null);
-      void reload();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not deactivate supplier.', 'error');
-      setDeleting(null);
-    } finally {
-      setDeleteBusy(false);
-    }
+    deleteMutation.mutate(
+      {},
+      {
+        onSuccess: () => {
+          toast.toast('Supplier deactivated.');
+          setDeleting(null);
+          void invalidate(['paged', '/api/v1/purchasing/suppliers']);
+        },
+        onError: (err) => {
+          toast.toast(err.message, 'error');
+          setDeleting(null);
+        },
+      },
+    );
   };
 
   const columns: Column<Supplier>[] = [
@@ -187,7 +181,9 @@ export function SuppliersPage() {
     {
       key: 'active',
       header: 'Status',
-      render: (row) => <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>,
+      render: (row) => (
+        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>
+      ),
     },
     {
       key: 'actions',
@@ -238,120 +234,95 @@ export function SuppliersPage() {
         </>
       ) : null}
 
-      <Modal
-        open={modalOpen}
-        title={editingId ? 'Edit supplier' : 'New supplier'}
-        onClose={closeModal}
-        width="lg"
-      >
-        <form onSubmit={(event) => void submit(event)}>
-          <div className="form-grid">
-            <Field label="Code" htmlFor="supplier-code" required>
-              <TextInput
-                id="supplier-code"
-                value={form.code}
-                onChange={(event) => setField('code', event.target.value)}
-              />
-            </Field>
-            <Field label="Trade name" htmlFor="supplier-trade" required>
-              <TextInput
-                id="supplier-trade"
-                value={form.tradeName}
-                onChange={(event) => setField('tradeName', event.target.value)}
-              />
-            </Field>
-            <Field label="Legal name" htmlFor="supplier-legal">
-              <TextInput
-                id="supplier-legal"
-                value={form.legalName}
-                onChange={(event) => setField('legalName', event.target.value)}
-              />
-            </Field>
-            <Field label="Tax ID" htmlFor="supplier-tax">
-              <TextInput
-                id="supplier-tax"
-                value={form.taxId}
-                onChange={(event) => setField('taxId', event.target.value)}
-              />
-            </Field>
-            <Field label="Email" htmlFor="supplier-email">
-              <TextInput
-                id="supplier-email"
-                type="email"
-                value={form.email}
-                onChange={(event) => setField('email', event.target.value)}
-              />
-            </Field>
-            <Field label="Phone" htmlFor="supplier-phone">
-              <TextInput
-                id="supplier-phone"
-                value={form.phone}
-                onChange={(event) => setField('phone', event.target.value)}
-              />
-            </Field>
-            <Field label="Currency" htmlFor="supplier-currency">
-              <TextInput
-                id="supplier-currency"
-                maxLength={3}
-                value={form.currency}
-                onChange={(event) => setField('currency', event.target.value)}
-              />
-            </Field>
-            <Field label="Payment terms" htmlFor="supplier-terms">
-              <TextInput
-                id="supplier-terms"
-                placeholder="e.g. net 30"
-                value={form.paymentTerms}
-                onChange={(event) => setField('paymentTerms', event.target.value)}
-              />
-            </Field>
-            <Field label="Credit limit" htmlFor="supplier-credit">
-              <TextInput
-                id="supplier-credit"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.creditLimit}
-                onChange={(event) => setField('creditLimit', event.target.value)}
-              />
-            </Field>
-            <Field label="Address" htmlFor="supplier-address">
-              <TextArea
-                id="supplier-address"
-                rows={2}
-                value={form.address}
-                onChange={(event) => setField('address', event.target.value)}
-              />
-            </Field>
-            <Field label="Status">
-              <Checkbox
-                label="Active"
-                checked={form.active}
-                onChange={(event) => setField('active', event.target.checked)}
-              />
-            </Field>
-          </div>
-          {formError ? <div className="error-banner">{formError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={closeModal} disabled={saving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create supplier'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      <Dialog open={modalOpen} onOpenChange={(open) => !saving && setModalOpen(open)}>
+        <DialogContent>
+          <DialogHeader title={editingId ? 'Edit supplier' : 'New supplier'} />
+          <form onSubmit={(event) => void submit(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="supplier-code">Code *</label>
+                <input id="supplier-code" {...register('code')} />
+                {errors.code ? <div className="field-error">{errors.code.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="supplier-trade">Trade name *</label>
+                <input id="supplier-trade" {...register('tradeName')} />
+                {errors.tradeName ? <div className="field-error">{errors.tradeName.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="supplier-legal">Legal name</label>
+                <input id="supplier-legal" {...register('legalName')} />
+              </div>
+              <div className="field">
+                <label htmlFor="supplier-tax">Tax ID</label>
+                <input id="supplier-tax" {...register('taxId')} />
+              </div>
+              <div className="field">
+                <label htmlFor="supplier-email">Email</label>
+                <input id="supplier-email" type="email" {...register('email')} />
+                {errors.email ? <div className="field-error">{errors.email.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="supplier-phone">Phone</label>
+                <input id="supplier-phone" {...register('phone')} />
+              </div>
+              <div className="field">
+                <label htmlFor="supplier-currency">Currency</label>
+                <input id="supplier-currency" maxLength={3} {...register('currency')} />
+              </div>
+              <div className="field">
+                <label htmlFor="supplier-terms">Payment terms</label>
+                <input id="supplier-terms" placeholder="e.g. net 30" {...register('paymentTerms')} />
+              </div>
+              <div className="field">
+                <label htmlFor="supplier-credit">Credit limit</label>
+                <input id="supplier-credit" type="number" min="0" step="0.01" {...register('creditLimit')} />
+                {errors.creditLimit ? <div className="field-error">{errors.creditLimit.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="supplier-address">Address</label>
+                <textarea id="supplier-address" rows={2} {...register('address')} />
+              </div>
+              <div className="field">
+                <label>Status</label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Checkbox
+                    id="supplier-active"
+                    checked={active}
+                    onCheckedChange={(checked) => setValue('active', checked === true)}
+                  />
+                  <label htmlFor="supplier-active" className="text-sm text-gray-700">
+                    Active
+                  </label>
+                </div>
+              </div>
+            </div>
+            {formError ? <div className="error-banner">{formError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={saving}>
+                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create supplier'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <ConfirmDialog
+      <Dialog
         open={deleting !== null}
-        title="Deactivate supplier"
-        message={`Deactivate "${deleting?.tradeName}"? It will be excluded from new purchase orders.`}
-        confirmLabel="Deactivate"
-        busy={deleteBusy}
-        onCancel={() => setDeleting(null)}
-        onConfirm={() => void confirmDelete()}
-      />
+        onOpenChange={(open) => !deleteBusy && !open && setDeleting(null)}
+      >
+        <DialogContent>
+          <DialogHeader
+            title="Deactivate supplier"
+            description={`Deactivate "${deleting?.tradeName}"? It will be excluded from new purchase orders.`}
+          />
+          <DialogFooter>
+            <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDelete()}>
+              {deleteBusy ? 'Working…' : 'Deactivate'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
