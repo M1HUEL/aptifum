@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
-import { apiFetch, ApiError } from '../api/client';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '../api/client';
 import type { Paginated } from '../api/types';
 
 interface PagedQueryOptions {
@@ -17,40 +18,34 @@ interface PagedQueryResult<T> {
   reload: () => Promise<void>;
 }
 
-export function usePagedQuery<T>({
-  path,
-  page,
-  limit = 20,
-  query,
-  extraParams,
-}: PagedQueryOptions): PagedQueryResult<T> {
-  const [data, setData] = useState<Paginated<T> | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const reload = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-      if (query) params.set('q', query);
-      if (extraParams) {
-        for (const [key, value] of Object.entries(extraParams)) {
-          if (value) params.set(key, value);
-        }
-      }
-      const result = await apiFetch<Paginated<T>>(`${path}?${params.toString()}`);
-      setData(result);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not load data.');
-    } finally {
-      setLoading(false);
+function serializeParams(options: PagedQueryOptions): string {
+  const params = new URLSearchParams({
+    page: String(options.page),
+    limit: String(options.limit ?? 20),
+  });
+  if (options.query) params.set('q', options.query);
+  if (options.extraParams) {
+    for (const [key, value] of Object.entries(options.extraParams)) {
+      if (value) params.set(key, value);
     }
-  }, [path, page, limit, query, extraParams]);
+  }
+  return params.toString();
+}
 
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+export function usePagedQuery<T>(options: PagedQueryOptions): PagedQueryResult<T> {
+  const { path } = options;
+  const search = useMemo(() => serializeParams(options), [options]);
 
-  return { data, error, loading, reload };
+  const result = useQuery<Paginated<T>>({
+    queryKey: ['paged', path, search],
+    queryFn: () => apiFetch<Paginated<T>>(`${path}?${search}`),
+    placeholderData: (previous) => previous,
+  });
+
+  return {
+    data: result.data ?? null,
+    error: result.isError ? result.error.message : null,
+    loading: result.isPending,
+    reload: () => result.refetch().then(() => undefined),
+  };
 }

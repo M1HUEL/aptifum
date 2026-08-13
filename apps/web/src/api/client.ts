@@ -99,6 +99,9 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   if (!res.ok) {
     throw new ApiError(res.status, await parseError(res));
   }
+  if (res.status === 204 || (res.headers.get('content-type') ?? '').includes('application/json') === false) {
+    return undefined as T;
+  }
   return (await res.json()) as T;
 }
 
