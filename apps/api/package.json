@@ -6,6 +6,7 @@
     "build": "nest build",
     "dev": "tsnd --respawn --transpile-only --files src/main.ts",
     "start": "node dist/main.js",
+    "swagger:export": "nest build && node dist/scripts/swagger-export.js",
     "lint": "eslint src test --max-warnings 0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsc -p tsconfig.build.json && vitest run",

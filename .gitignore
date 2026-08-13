@@ -32,3 +32,6 @@ Thumbs.db
 # Misc
 tmp/
 temp/
+
+# Generated API contract (produced by: pnpm --filter @aptifum/api swagger:export)
+apps/api/swagger.json
