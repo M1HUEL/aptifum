@@ -1,5 +1,8 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '../api/client';
+import { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { apiFetch } from '../api/client';
+import type { components } from '../api/schema';
 import type {
   LotStatus,
   MovementType,
@@ -11,6 +14,8 @@ import type {
   Warehouse,
   WarehouseLocation,
 } from '../api/types';
+import { stockMovementFormSchema, type StockMovementFormValues } from '../api/schemas';
+import { useApiInvalidation, useApiMutation } from '../api/hooks';
 import {
   Badge,
   type Column,
@@ -22,16 +27,12 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
-import {
-  Button,
-  Field,
-  Modal,
-  Select,
-  TextArea,
-  TextInput,
-} from '../components/forms';
+import { Button } from '../components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+
+type CreateMovementDto = components['schemas']['CreateMovementDto'];
 
 const movementTypes: MovementType[] = [
   'inbound',
@@ -251,22 +252,22 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
   return (
     <>
       <div className="toolbar">
-        <Select value={filters.movementType} onChange={(event) => setFilter('movementType', event.target.value)}>
+        <select value={filters.movementType} onChange={(event) => setFilter('movementType', event.target.value)}>
           <option value="">All types</option>
           {movementTypes.map((type) => (
             <option key={type} value={type}>
               {type}
             </option>
           ))}
-        </Select>
-        <Select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
+        </select>
+        <select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
           <option value="">All warehouses</option>
           {warehouses.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
               {warehouse.name}
             </option>
           ))}
-        </Select>
+        </select>
         <input type="date" value={filters.from} onChange={(event) => setFilter('from', event.target.value)} />
         <input type="date" value={filters.to} onChange={(event) => setFilter('to', event.target.value)} />
         {hasFilters ? (
@@ -332,20 +333,20 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
   return (
     <>
       <div className="toolbar">
-        <Select value={filters.status} onChange={(event) => setFilter('status', event.target.value)}>
+        <select value={filters.status} onChange={(event) => setFilter('status', event.target.value)}>
           <option value="">All statuses</option>
           <option value="active">Active</option>
           <option value="expiring">Expiring soon</option>
           <option value="expired">Expired</option>
-        </Select>
-        <Select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
+        </select>
+        <select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
           <option value="">All warehouses</option>
           {warehouses.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
               {warehouse.name}
             </option>
           ))}
-        </Select>
+        </select>
         {hasFilters ? (
           <Button variant="ghost" onClick={resetFilters}>
             Clear filters
@@ -368,19 +369,7 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
   );
 }
 
-interface MovementForm {
-  productId: string;
-  warehouseId: string;
-  movementType: string;
-  locationId: string;
-  quantity: string;
-  unitCost: string;
-  lotNumber: string;
-  expiryDate: string;
-  notes: string;
-}
-
-const emptyForm: MovementForm = {
+const emptyForm: StockMovementFormValues = {
   productId: '',
   warehouseId: '',
   movementType: 'adjustment',
@@ -392,18 +381,50 @@ const emptyForm: MovementForm = {
   notes: '',
 };
 
+function toDto(form: StockMovementFormValues): CreateMovementDto {
+  return {
+    movementType: form.movementType,
+    productId: form.productId,
+    warehouseId: form.warehouseId,
+    locationId: form.locationId || undefined,
+    quantity: Number(form.quantity),
+    unitCost: form.unitCost === '' ? undefined : Number(form.unitCost),
+    lotNumber: form.lotNumber.trim() || undefined,
+    expiryDate: form.expiryDate || undefined,
+    notes: form.notes.trim() || undefined,
+  };
+}
+
 export function StockPage() {
   const [tab, setTab] = useState<'stock' | 'movements' | 'lots'>('stock');
   const [refreshKey, setRefreshKey] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState<MovementForm>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [locations, setLocations] = useState<WarehouseLocation[]>([]);
   const [productStock, setProductStock] = useState<ProductStock[]>([]);
   const toast = useToast();
+  const { invalidate } = useApiInvalidation();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    getValues,
+    watch,
+    formState: { errors },
+  } = useForm<StockMovementFormValues>({
+    resolver: zodResolver(stockMovementFormSchema),
+    defaultValues: emptyForm,
+  });
+
+  const warehouseId = watch('warehouseId');
+  const productId = watch('productId');
+
+  const createMutation = useApiMutation<CreateMovementDto>('/api/v1/inventory/movements', 'POST');
+  const saving = createMutation.isPending;
 
   useEffect(() => {
     let cancelled = false;
@@ -423,34 +444,32 @@ export function StockPage() {
   }, []);
 
   useEffect(() => {
-    if (!form.warehouseId) {
+    if (!warehouseId) {
       setLocations([]);
       return;
     }
     let cancelled = false;
-    apiFetch<WarehouseLocation[]>(`/api/v1/inventory/warehouses/${form.warehouseId}/locations`)
+    apiFetch<WarehouseLocation[]>(`/api/v1/inventory/warehouses/${warehouseId}/locations`)
       .then((result) => {
         if (cancelled) return;
         setLocations(result);
-        setForm((current) =>
-          current.locationId && !result.some((location) => location.id === current.locationId)
-            ? { ...current, locationId: '' }
-            : current,
-        );
+        if (getValues('locationId') && !result.some((location) => location.id === getValues('locationId'))) {
+          setValue('locationId', '');
+        }
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [form.warehouseId]);
+  }, [warehouseId, getValues, setValue]);
 
   useEffect(() => {
-    if (!form.productId) {
+    if (!productId) {
       setProductStock([]);
       return;
     }
     let cancelled = false;
-    apiFetch<ProductStock[]>(`/api/v1/inventory/stock/products/${form.productId}`)
+    apiFetch<ProductStock[]>(`/api/v1/inventory/stock/products/${productId}`)
       .then((result) => {
         if (cancelled) return;
         setProductStock(result);
@@ -459,58 +478,30 @@ export function StockPage() {
     return () => {
       cancelled = true;
     };
-  }, [form.productId]);
+  }, [productId]);
 
-  const selectedStock = productStock.find((entry) => entry.warehouseId === form.warehouseId);
+  const selectedStock = productStock.find((entry) => entry.warehouseId === warehouseId);
 
   const openModal = () => {
-    setForm(emptyForm);
+    reset(emptyForm);
     setFormError(null);
     setModalOpen(true);
   };
 
-  const closeModal = () => {
-    if (!saving) setModalOpen(false);
-  };
-
-  const setField = (key: keyof MovementForm, value: string) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!form.productId || !form.warehouseId || form.quantity === '') {
-      setFormError('Product, warehouse and quantity are required.');
-      return;
-    }
-    setSaving(true);
+  const submit = handleSubmit((values) => {
     setFormError(null);
-    const body = {
-      movementType: form.movementType,
-      productId: form.productId,
-      warehouseId: form.warehouseId,
-      locationId: form.locationId || undefined,
-      quantity: Number(form.quantity),
-      unitCost: form.unitCost === '' ? undefined : Number(form.unitCost),
-      lotNumber: form.lotNumber.trim() || undefined,
-      expiryDate: form.expiryDate || undefined,
-      notes: form.notes.trim() || undefined,
-    };
-    try {
-      await apiFetch('/api/v1/inventory/movements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      toast.toast('Stock movement recorded.');
-      setModalOpen(false);
-      setRefreshKey((key) => key + 1);
-    } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not record movement.');
-    } finally {
-      setSaving(false);
-    }
-  };
+    createMutation.mutate(toDto(values), {
+      onSuccess: () => {
+        toast.toast('Stock movement recorded.');
+        setModalOpen(false);
+        setRefreshKey((key) => key + 1);
+        void invalidate(['paged', '/api/v1/inventory/movements']);
+        void invalidate(['paged', '/api/v1/inventory/stock']);
+        void invalidate(['paged', '/api/v1/inventory/lots']);
+      },
+      onError: (err) => setFormError(err.message),
+    });
+  });
 
   return (
     <>
@@ -542,133 +533,110 @@ export function StockPage() {
       {tab === 'movements' ? <MovementsTab key={`movements-${refreshKey}`} warehouses={warehouses} /> : null}
       {tab === 'lots' ? <LotsTab key={`lots-${refreshKey}`} warehouses={warehouses} /> : null}
 
-      <Modal open={modalOpen} title="New stock movement" onClose={closeModal} width="md">
-        <form onSubmit={(event) => void submit(event)}>
-          <div className="form-grid">
-            <Field label="Product" htmlFor="movement-product" required>
-              <Select
-                id="movement-product"
-                value={form.productId}
-                onChange={(event) => setField('productId', event.target.value)}
-              >
-                <option value="">— Select product —</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.sku} · {product.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Warehouse" htmlFor="movement-warehouse" required>
-              <Select
-                id="movement-warehouse"
-                value={form.warehouseId}
-                onChange={(event) => {
-                  setField('warehouseId', event.target.value);
-                  setField('locationId', '');
-                }}
-              >
-                <option value="">— Select warehouse —</option>
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            {locations.length > 0 ? (
-              <Field label="Location" htmlFor="movement-location">
-                <Select
-                  id="movement-location"
-                  value={form.locationId}
-                  onChange={(event) => setField('locationId', event.target.value)}
-                >
-                  <option value="">— No location —</option>
-                  {locations.map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.code} · {location.name}
+      <Dialog open={modalOpen} onOpenChange={(open) => !saving && setModalOpen(open)}>
+        <DialogContent>
+          <DialogHeader title="New stock movement" />
+          <form onSubmit={(event) => void submit(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="movement-product">Product *</label>
+                <select id="movement-product" {...register('productId')}>
+                  <option value="">— Select product —</option>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.sku} · {product.name}
                     </option>
                   ))}
-                </Select>
-              </Field>
-            ) : null}
-            <Field label="Type" htmlFor="movement-type" required>
-              <Select
-                id="movement-type"
-                value={form.movementType}
-                onChange={(event) => setField('movementType', event.target.value)}
-              >
-                {movementTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Quantity" htmlFor="movement-quantity" required>
-              <TextInput
-                id="movement-quantity"
-                type="number"
-                min="0.0001"
-                step="any"
-                value={form.quantity}
-                onChange={(event) => setField('quantity', event.target.value)}
-              />
-              {selectedStock ? (
-                <div className="muted" style={{ marginTop: 6 }}>
-                  Available: {formatNumber(selectedStock.quantity)}
-                  {selectedStock.reservedQuantity > 0
-                    ? ` (reserved ${formatNumber(selectedStock.reservedQuantity)})`
-                    : ''}
+                </select>
+                {errors.productId ? <div className="field-error">{errors.productId.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="movement-warehouse">Warehouse *</label>
+                <select
+                  id="movement-warehouse"
+                  {...register('warehouseId', {
+                    onChange: () => setValue('locationId', ''),
+                  })}
+                >
+                  <option value="">— Select warehouse —</option>
+                  {warehouses.map((warehouse) => (
+                    <option key={warehouse.id} value={warehouse.id}>
+                      {warehouse.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.warehouseId ? <div className="field-error">{errors.warehouseId.message}</div> : null}
+              </div>
+              {locations.length > 0 ? (
+                <div className="field">
+                  <label htmlFor="movement-location">Location</label>
+                  <select id="movement-location" {...register('locationId')}>
+                    <option value="">— No location —</option>
+                    {locations.map((location) => (
+                      <option key={location.id} value={location.id}>
+                        {location.code} · {location.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               ) : null}
-            </Field>
-            <Field label="Unit cost" htmlFor="movement-cost">
-              <TextInput
-                id="movement-cost"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.unitCost}
-                onChange={(event) => setField('unitCost', event.target.value)}
-              />
-            </Field>
-            <Field label="Lot number" htmlFor="movement-lot">
-              <TextInput
-                id="movement-lot"
-                value={form.lotNumber}
-                placeholder="LOT-001"
-                onChange={(event) => setField('lotNumber', event.target.value)}
-              />
-            </Field>
-            <Field label="Expiry date" htmlFor="movement-expiry">
-              <TextInput
-                id="movement-expiry"
-                type="date"
-                value={form.expiryDate}
-                onChange={(event) => setField('expiryDate', event.target.value)}
-              />
-            </Field>
-            <Field label="Notes" htmlFor="movement-notes">
-              <TextArea
-                id="movement-notes"
-                rows={2}
-                value={form.notes}
-                onChange={(event) => setField('notes', event.target.value)}
-              />
-            </Field>
-          </div>
-          {formError ? <div className="error-banner">{formError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={closeModal} disabled={saving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Recording…' : 'Record movement'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+              <div className="field">
+                <label htmlFor="movement-type">Type *</label>
+                <select id="movement-type" {...register('movementType')}>
+                  {movementTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="movement-quantity">Quantity *</label>
+                <input
+                  id="movement-quantity"
+                  type="number"
+                  min="0.0001"
+                  step="any"
+                  {...register('quantity')}
+                />
+                {selectedStock ? (
+                  <div className="muted" style={{ marginTop: 6 }}>
+                    Available: {formatNumber(selectedStock.quantity)}
+                    {selectedStock.reservedQuantity > 0
+                      ? ` (reserved ${formatNumber(selectedStock.reservedQuantity)})`
+                      : ''}
+                  </div>
+                ) : null}
+                {errors.quantity ? <div className="field-error">{errors.quantity.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="movement-cost">Unit cost</label>
+                <input id="movement-cost" type="number" min="0" step="0.01" {...register('unitCost')} />
+                {errors.unitCost ? <div className="field-error">{errors.unitCost.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="movement-lot">Lot number</label>
+                <input id="movement-lot" placeholder="LOT-001" {...register('lotNumber')} />
+                {errors.lotNumber ? <div className="field-error">{errors.lotNumber.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="movement-expiry">Expiry date</label>
+                <input id="movement-expiry" type="date" {...register('expiryDate')} />
+              </div>
+              <div className="field">
+                <label htmlFor="movement-notes">Notes</label>
+                <textarea id="movement-notes" rows={2} {...register('notes')} />
+              </div>
+            </div>
+            {formError ? <div className="error-banner">{formError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={saving}>
+                {saving ? 'Recording…' : 'Record movement'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -87,3 +87,92 @@ export const accountFormSchema = z.object({
 });
 
 export type AccountFormValues = z.infer<typeof accountFormSchema>;
+
+export const productFormSchema = z.object({
+  sku: z.string().trim().min(1, 'SKU is required').max(60, 'SKU must be at most 60 characters'),
+  name: z.string().trim().min(1, 'Name is required').max(255, 'Name must be at most 255 characters'),
+  description: z.string().trim(),
+  brand: z.string().trim().max(120, 'Brand must be at most 120 characters'),
+  unitOfMeasure: z.string().trim().max(20, 'Unit of measure must be at most 20 characters'),
+  barcode: z.string().trim().max(64, 'Barcode must be at most 64 characters'),
+  categoryId: z.string(),
+  purchasePrice: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Purchase price must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Purchase price cannot be negative'),
+  salePrice: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Sale price must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Sale price cannot be negative'),
+  enabled: z.boolean(),
+});
+
+export type ProductFormValues = z.infer<typeof productFormSchema>;
+
+export const stockMovementFormSchema = z.object({
+  productId: z.string().min(1, 'Product is required'),
+  warehouseId: z.string().min(1, 'Warehouse is required'),
+  movementType: z.enum(['inbound', 'outbound', 'adjustment', 'transfer', 'return', 'disposal']),
+  locationId: z.string(),
+  quantity: z
+    .string()
+    .refine((value) => value !== '' && !Number.isNaN(Number(value)), 'Quantity is required')
+    .refine((value) => value !== '' && Number(value) > 0, 'Quantity must be greater than zero'),
+  unitCost: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Unit cost must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Unit cost cannot be negative'),
+  lotNumber: z.string().trim().max(80, 'Lot number must be at most 80 characters'),
+  expiryDate: z.string(),
+  notes: z.string().trim(),
+});
+
+export type StockMovementFormValues = z.infer<typeof stockMovementFormSchema>;
+
+export const invoiceItemFormSchema = z.object({
+  productId: z.string().min(1, 'Product is required'),
+  quantity: z
+    .string()
+    .refine((value) => value !== '' && !Number.isNaN(Number(value)), 'Quantity is required')
+    .refine((value) => value !== '' && Number(value) > 0, 'Quantity must be greater than zero'),
+  unitPrice: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Unit price must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Unit price cannot be negative'),
+  taxRate: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Tax rate must be a number')
+    .refine(
+      (value) => value === '' || (Number(value) >= 0 && Number(value) <= 100),
+      'Tax rate must be between 0 and 100',
+    ),
+});
+
+export type InvoiceItemFormValues = z.infer<typeof invoiceItemFormSchema>;
+
+export const invoiceFormSchema = z.object({
+  customerId: z.string().trim().min(1, 'Customer is required'),
+  warehouseId: z.string(),
+  dueDate: z.string(),
+  discount: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Discount must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Discount cannot be negative'),
+  notes: z.string(),
+  items: z.array(invoiceItemFormSchema).min(1, 'Add at least one line item.'),
+});
+
+export type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
+
+export const paymentFormSchema = z.object({
+  method: z.enum(['cash', 'card', 'transfer', 'other']),
+  amount: z
+    .string()
+    .refine((value) => value !== '' && !Number.isNaN(Number(value)), 'Amount is required')
+    .refine((value) => value !== '' && Number(value) > 0, 'Amount must be greater than zero'),
+  receivedAt: z.string(),
+  reference: z.string(),
+  notes: z.string(),
+});
+
+export type PaymentFormValues = z.infer<typeof paymentFormSchema>;

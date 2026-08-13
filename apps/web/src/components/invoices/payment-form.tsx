@@ -1,27 +1,36 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '../../api/client';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { components } from '../../api/schema';
 import type { Invoice } from '../../api/types';
+import { paymentFormSchema, type PaymentFormValues } from '../../api/schemas';
+import { useApiInvalidation, useApiMutation } from '../../api/hooks';
 import { formatMoney } from '../ui';
-import { Button, Field, Modal, Select, TextArea, TextInput } from '../forms';
+import { Button } from '../ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { useToast } from '../toast';
+
+type CreatePaymentDto = components['schemas']['CreatePaymentDto'];
 
 const paymentMethods = ['cash', 'card', 'transfer', 'other'] as const;
 
-interface PaymentForm {
-  method: string;
-  amount: string;
-  receivedAt: string;
-  reference: string;
-  notes: string;
-}
-
-const emptyPayment: PaymentForm = {
+const emptyPayment: PaymentFormValues = {
   method: 'cash',
   amount: '',
   receivedAt: '',
   reference: '',
   notes: '',
 };
+
+function toDto(form: PaymentFormValues): CreatePaymentDto {
+  return {
+    method: form.method,
+    amount: Number(form.amount),
+    receivedAt: form.receivedAt || undefined,
+    reference: form.reference.trim() || undefined,
+    notes: form.notes.trim() || undefined,
+  };
+}
 
 export function PaymentFormModal({
   invoice,
@@ -32,117 +41,89 @@ export function PaymentFormModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [form, setForm] = useState<PaymentForm>(emptyPayment);
   const [formError, setFormError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   const toast = useToast();
+  const { invalidate } = useApiInvalidation();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<PaymentFormValues>({
+    resolver: zodResolver(paymentFormSchema),
+    defaultValues: emptyPayment,
+  });
+
+  const paymentMutation = useApiMutation<CreatePaymentDto>(
+    `/api/v1/sales/invoices/${invoice?.id ?? ''}/payments`,
+    'POST',
+  );
+  const busy = paymentMutation.isPending;
 
   useEffect(() => {
     if (invoice) {
-      setForm({ ...emptyPayment, amount: String(invoice.balanceDue) });
+      reset({ ...emptyPayment, amount: String(invoice.balanceDue) });
       setFormError(null);
     }
-  }, [invoice]);
+  }, [invoice, reset]);
 
-  const close = () => {
-    if (!busy) onClose();
-  };
-
-  const setField = (key: keyof PaymentForm, value: string) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
+  const submit = handleSubmit((values) => {
     if (!invoice) return;
-    setBusy(true);
     setFormError(null);
-    const body = {
-      method: form.method,
-      amount: Number(form.amount),
-      receivedAt: form.receivedAt || undefined,
-      reference: form.reference.trim() || undefined,
-      notes: form.notes.trim() || undefined,
-    };
-    try {
-      await apiFetch(`/api/v1/sales/invoices/${invoice.id}/payments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      toast.toast('Payment recorded.');
-      onSaved();
-    } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not record payment.');
-    } finally {
-      setBusy(false);
-    }
-  };
+    paymentMutation.mutate(toDto(values), {
+      onSuccess: () => {
+        toast.toast('Payment recorded.');
+        onSaved();
+        void invalidate(['paged', '/api/v1/sales/invoices']);
+      },
+      onError: (err) => setFormError(err.message),
+    });
+  });
 
   return (
-    <Modal open={invoice !== null} title={`Payment for ${invoice?.number ?? ''}`} onClose={close} width="sm">
-      <form onSubmit={(event) => void submit(event)}>
-        <Field label="Method" htmlFor="payment-method" required>
-          <Select
-            id="payment-method"
-            value={form.method}
-            onChange={(event) => setField('method', event.target.value)}
-          >
-            {paymentMethods.map((method) => (
-              <option key={method} value={method}>
-                {method}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field
-          label="Amount"
-          htmlFor="payment-amount"
-          required
-          hint={invoice ? `Balance due: ${formatMoney(invoice.balanceDue)}` : undefined}
-        >
-          <TextInput
-            id="payment-amount"
-            type="number"
-            min="0.01"
-            step="0.01"
-            value={form.amount}
-            onChange={(event) => setField('amount', event.target.value)}
-          />
-        </Field>
-        <Field label="Received at" htmlFor="payment-date">
-          <TextInput
-            id="payment-date"
-            type="date"
-            value={form.receivedAt}
-            onChange={(event) => setField('receivedAt', event.target.value)}
-          />
-        </Field>
-        <Field label="Reference" htmlFor="payment-reference">
-          <TextInput
-            id="payment-reference"
-            value={form.reference}
-            onChange={(event) => setField('reference', event.target.value)}
-          />
-        </Field>
-        <Field label="Notes" htmlFor="payment-notes">
-          <TextArea
-            id="payment-notes"
-            rows={2}
-            value={form.notes}
-            onChange={(event) => setField('notes', event.target.value)}
-          />
-        </Field>
-        {formError ? <div className="error-banner">{formError}</div> : null}
-        <div className="modal-footer">
-          <Button variant="ghost" onClick={close} disabled={busy}>
-            Cancel
-          </Button>
-          <button type="submit" className="btn btn-primary" disabled={busy}>
-            {busy ? 'Recording…' : 'Record payment'}
-          </button>
-        </div>
-      </form>
-    </Modal>
+    <Dialog open={invoice !== null} onOpenChange={(next) => !busy && !next && onClose()}>
+      <DialogContent>
+        <DialogHeader title={`Payment for ${invoice?.number ?? ''}`} />
+        <form onSubmit={(event) => void submit(event)}>
+          <div className="field">
+            <label htmlFor="payment-method">Method *</label>
+            <select id="payment-method" {...register('method')}>
+              {paymentMethods.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="payment-amount">Amount *</label>
+            {invoice ? (
+              <div className="field-hint">Balance due: {formatMoney(invoice.balanceDue)}</div>
+            ) : null}
+            <input id="payment-amount" type="number" min="0.01" step="0.01" {...register('amount')} />
+            {errors.amount ? <div className="field-error">{errors.amount.message}</div> : null}
+          </div>
+          <div className="field">
+            <label htmlFor="payment-date">Received at</label>
+            <input id="payment-date" type="date" {...register('receivedAt')} />
+          </div>
+          <div className="field">
+            <label htmlFor="payment-reference">Reference</label>
+            <input id="payment-reference" {...register('reference')} />
+          </div>
+          <div className="field">
+            <label htmlFor="payment-notes">Notes</label>
+            <textarea id="payment-notes" rows={2} {...register('notes')} />
+          </div>
+          {formError ? <div className="error-banner">{formError}</div> : null}
+          <DialogFooter>
+            <Button variant="default" type="submit" disabled={busy}>
+              {busy ? 'Recording…' : 'Record payment'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
