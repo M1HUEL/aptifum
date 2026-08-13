@@ -23,4 +23,8 @@ async function exportSwagger(): Promise<void> {
   process.exit(0);
 }
 
-void exportSwagger();
+exportSwagger().catch((error: unknown) => {
+  console.error('Failed to export OpenAPI document.');
+  console.error(error);
+  process.exit(1);
+});
