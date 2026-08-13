@@ -1,0 +1,156 @@
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import {
+  Badge,
+  Card,
+  DataTable,
+  EmptyState,
+  ErrorBanner,
+  LoadingBlock,
+  PageHeader,
+  Pagination,
+  Skeleton,
+  TableSkeleton,
+  type Column,
+} from './ui';
+
+describe('Badge', () => {
+  it('renders children with a neutral tone by default', () => {
+    render(<Badge>Active</Badge>);
+    const badge = screen.getByText('Active');
+    expect(badge.className).toContain('badge-neutral');
+  });
+
+  it('applies the given tone', () => {
+    render(<Badge tone="danger">Danger</Badge>);
+    expect(screen.getByText('Danger').className).toContain('badge-danger');
+  });
+});
+
+describe('PageHeader', () => {
+  it('renders title and subtitle', () => {
+    render(<PageHeader title="Customers" subtitle="All customers" />);
+    expect(screen.getByRole('heading', { name: 'Customers' })).toBeInTheDocument();
+    expect(screen.getByText('All customers')).toBeInTheDocument();
+  });
+
+  it('omits the subtitle when not provided', () => {
+    render(<PageHeader title="Customers" />);
+    expect(screen.getByRole('heading', { name: 'Customers' })).toBeInTheDocument();
+    expect(screen.queryByRole('paragraph')).not.toBeInTheDocument();
+  });
+});
+
+describe('Card', () => {
+  it('renders an optional title', () => {
+    render(<Card title="Revenue">content</Card>);
+    expect(screen.getByText('Revenue')).toBeInTheDocument();
+    expect(screen.getByText('content')).toBeInTheDocument();
+  });
+
+  it('renders children without a title', () => {
+    render(<Card>just content</Card>);
+    expect(screen.getByText('just content')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument();
+  });
+});
+
+describe('ErrorBanner', () => {
+  it('renders the message', () => {
+    render(<ErrorBanner message="Something went wrong" />);
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+  });
+});
+
+describe('EmptyState', () => {
+  it('renders the message', () => {
+    render(<EmptyState message="No results" />);
+    expect(screen.getByText('No results')).toBeInTheDocument();
+  });
+});
+
+describe('LoadingBlock', () => {
+  it('renders a spinner with an accessible label', () => {
+    render(<LoadingBlock />);
+    expect(screen.getByLabelText('Loading')).toBeInTheDocument();
+  });
+});
+
+describe('Skeleton', () => {
+  it('renders with the skeleton class', () => {
+    render(<Skeleton className="skeleton-header" />);
+    expect(document.querySelector('.skeleton-header')).not.toBeNull();
+  });
+});
+
+describe('TableSkeleton', () => {
+  it('renders the requested number of columns and rows', () => {
+    const { container } = render(<TableSkeleton columns={3} rows={2} />);
+    expect(container.querySelectorAll('thead th').length).toBe(3);
+    expect(container.querySelectorAll('tbody tr').length).toBe(2);
+  });
+});
+
+interface User {
+  id: number;
+  name: string;
+  active: boolean;
+}
+
+describe('DataTable', () => {
+  const columns: Column<User>[] = [
+    { key: 'name', header: 'Name' },
+    { key: 'active', header: 'Status', render: (row) => (row.active ? 'Yes' : 'No') },
+  ];
+
+  it('renders an empty state when there are no rows', () => {
+    render(<DataTable columns={columns} rows={[]} rowKey={(row) => String(row.id)} />);
+    expect(screen.getByText('No data to display.')).toBeInTheDocument();
+  });
+
+  it('renders headers and raw values', () => {
+    render(
+      <DataTable
+        columns={columns}
+        rows={[{ id: 1, name: 'Alice', active: false }]}
+        rowKey={(row) => String(row.id)}
+      />,
+    );
+    expect(screen.getByText('Name')).toBeInTheDocument();
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+  });
+
+  it('uses the render function per column', () => {
+    render(
+      <DataTable
+        columns={columns}
+        rows={[{ id: 1, name: 'Alice', active: true }]}
+        rowKey={(row) => String(row.id)}
+      />,
+    );
+    expect(screen.getByText('Yes')).toBeInTheDocument();
+  });
+});
+
+describe('Pagination', () => {
+  it('disables Previous on the first page', () => {
+    render(<Pagination page={1} limit={10} total={50} onPage={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
+    expect(screen.getByText(/Page 1 of 5/)).toBeInTheDocument();
+  });
+
+  it('disables Next on the last page', () => {
+    render(<Pagination page={5} limit={10} total={50} onPage={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+  });
+
+  it('calls onPage with the next page', async () => {
+    const onPage = vi.fn();
+    const user = userEvent.setup();
+    render(<Pagination page={2} limit={10} total={50} onPage={onPage} />);
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    expect(onPage).toHaveBeenCalledWith(3);
+  });
+});
