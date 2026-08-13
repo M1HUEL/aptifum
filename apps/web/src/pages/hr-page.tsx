@@ -1,5 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
+import type { components } from '../api/schema';
 import type {
   Department,
   Employee,
@@ -9,6 +12,13 @@ import type {
   PayrollLine,
   PayrollStatus,
 } from '../api/types';
+import {
+  employeeFormSchema,
+  payrollFormSchema,
+  type EmployeeFormValues,
+  type PayrollFormValues,
+} from '../api/schemas';
+import { useApiInvalidation, useApiMutation, useApiMutationVoid } from '../api/hooks';
 import {
   Badge,
   type BadgeTone,
@@ -21,16 +31,15 @@ import {
   LoadingBlock,
   PageHeader,
 } from '../components/ui';
-import {
-  Button,
-  Checkbox,
-  Field,
-  Modal,
-  Select,
-  TextInput,
-} from '../components/forms';
+import { Button } from '../components/ui/button';
+import { Checkbox } from '../components/ui/checkbox';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+
+type CreateEmployeeDto = components['schemas']['CreateEmployeeDto'];
+type GeneratePayrollDto = components['schemas']['GeneratePayrollDto'];
+type PayrollLineInputDto = components['schemas']['PayrollLineInputDto'];
 
 function employeeStatusTone(status: EmployeeStatus): BadgeTone {
   return status === 'active' ? 'success' : 'neutral';
@@ -42,21 +51,7 @@ function payrollStatusTone(status: PayrollStatus): BadgeTone {
   return 'neutral';
 }
 
-interface EmployeeForm {
-  employeeNo: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  departmentId: string;
-  position: string;
-  hireDate: string;
-  salary: string;
-  salaryFrequency: string;
-  status: EmployeeStatus;
-}
-
-const emptyEmployee: EmployeeForm = {
+const emptyEmployee: EmployeeFormValues = {
   employeeNo: '',
   firstName: '',
   lastName: '',
@@ -70,36 +65,91 @@ const emptyEmployee: EmployeeForm = {
   status: 'active',
 };
 
+function toDto(form: EmployeeFormValues): CreateEmployeeDto {
+  return {
+    employeeNo: form.employeeNo.trim() || undefined,
+    firstName: form.firstName.trim(),
+    lastName: form.lastName.trim(),
+    email: form.email.trim() || undefined,
+    phone: form.phone.trim() || undefined,
+    departmentId: form.departmentId || undefined,
+    position: form.position.trim() || undefined,
+    hireDate: form.hireDate,
+    salary: form.salary === '' ? undefined : Number(form.salary),
+    salaryFrequency: form.salaryFrequency.trim() || undefined,
+    status: form.status,
+  };
+}
+
+function fromEmployee(employee: Employee): EmployeeFormValues {
+  return {
+    employeeNo: employee.employeeNo,
+    firstName: employee.firstName,
+    lastName: employee.lastName,
+    email: employee.email ?? '',
+    phone: employee.phone ?? '',
+    departmentId: employee.departmentId ?? '',
+    position: employee.position ?? '',
+    hireDate: employee.hireDate,
+    salary: employee.salary ? String(employee.salary) : '',
+    salaryFrequency: employee.salaryFrequency,
+    status: employee.status,
+  };
+}
+
 export function HrPage() {
   const [tab, setTab] = useState<'employees' | 'payrolls'>('employees');
   const [departments, setDepartments] = useState<Department[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<EmployeeForm>(emptyEmployee);
   const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [payrollOpen, setPayrollOpen] = useState(false);
-  const [payrollPeriod, setPayrollPeriod] = useState(new Date().toISOString().slice(0, 7));
-  const [payrollLines, setPayrollLines] = useState<Record<string, { bonus: string; overtime: string; deductions: string }>>({});
   const [payrollError, setPayrollError] = useState<string | null>(null);
-  const [payrollBusy, setPayrollBusy] = useState(false);
   const [viewingPayroll, setViewingPayroll] = useState<Payroll | null>(null);
+  const [payrollAction, setPayrollAction] = useState<{
+    id: string;
+    action: 'post' | 'cancel';
+    message: string;
+  } | null>(null);
   const toast = useToast();
+  const { invalidate } = useApiInvalidation();
 
-  const { data, error, reload } = usePagedQuery<Employee>({
+  const { data, error } = usePagedQuery<Employee>({
     path: '/api/v1/hr/employees',
     page: 1,
   });
 
-  const {
-    data: payrolls,
-    error: payrollsError,
-    reload: reloadPayrolls,
-  } = usePagedQuery<Payroll>({
+  const { data: payrolls, error: payrollsError } = usePagedQuery<Payroll>({
     path: '/api/v1/hr/payrolls',
     page: 1,
   });
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<EmployeeFormValues>({
+    resolver: zodResolver(employeeFormSchema),
+    defaultValues: emptyEmployee,
+  });
+
+  const status = watch('status');
+
+  const payrollForm = useForm<PayrollFormValues>({
+    resolver: zodResolver(payrollFormSchema),
+    defaultValues: { period: '', lines: [] },
+  });
+
+  const {
+    register: payrollRegister,
+    handleSubmit: payrollHandleSubmit,
+    reset: resetPayroll,
+    formState: { errors: payrollErrors },
+  } = payrollForm;
 
   useEffect(() => {
     let cancelled = false;
@@ -118,158 +168,106 @@ export function HrPage() {
     };
   }, []);
 
+  const createMutation = useApiMutation<CreateEmployeeDto>('/api/v1/hr/employees', 'POST');
+  const updateMutation = useApiMutation<CreateEmployeeDto>(
+    `/api/v1/hr/employees/${editingId ?? ''}`,
+    'PATCH',
+  );
+  const generateMutation = useApiMutation<GeneratePayrollDto>('/api/v1/hr/payrolls/generate', 'POST');
+  const payrollActionMutation = useApiMutationVoid(
+    payrollAction
+      ? `/api/v1/hr/payrolls/${payrollAction.id}/${payrollAction.action}`
+      : '/api/v1/hr/payrolls',
+    'POST',
+  );
+
+  const saving = createMutation.isPending || updateMutation.isPending;
+  const payrollBusy = generateMutation.isPending;
+
+  useEffect(() => {
+    if (!payrollAction) return;
+    payrollActionMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.toast(payrollAction.message);
+        void invalidate(['paged', '/api/v1/hr/payrolls']);
+      },
+      onError: (err) => {
+        toast.toast(err.message, 'error');
+      },
+    });
+    setPayrollAction(null);
+  }, [payrollAction]);
+
   const openCreate = () => {
     setEditingId(null);
-    setForm(emptyEmployee);
+    reset(emptyEmployee);
     setFormError(null);
     setCreateOpen(true);
   };
 
   const openEdit = (employee: Employee) => {
     setEditingId(employee.id);
-    setForm({
-      employeeNo: employee.employeeNo,
-      firstName: employee.firstName,
-      lastName: employee.lastName,
-      email: employee.email ?? '',
-      phone: employee.phone ?? '',
-      departmentId: employee.departmentId ?? '',
-      position: employee.position ?? '',
-      hireDate: employee.hireDate,
-      salary: employee.salary ? String(employee.salary) : '',
-      salaryFrequency: employee.salaryFrequency,
-      status: employee.status,
-    });
+    reset(fromEmployee(employee));
     setFormError(null);
     setCreateOpen(true);
   };
 
-  const closeCreate = () => {
-    if (!saving) setCreateOpen(false);
-  };
-
-  const setField = (key: keyof EmployeeForm, value: string) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!form.firstName.trim() || !form.lastName.trim() || !form.hireDate) {
-      setFormError('First name, last name and hire date are required.');
-      return;
-    }
-    setSaving(true);
+  const submit = handleSubmit((values) => {
     setFormError(null);
-    const body = {
-      employeeNo: form.employeeNo.trim() || undefined,
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
-      email: form.email.trim() || undefined,
-      phone: form.phone.trim() || undefined,
-      departmentId: form.departmentId || undefined,
-      position: form.position.trim() || undefined,
-      hireDate: form.hireDate,
-      salary: form.salary === '' ? undefined : Number(form.salary),
-      salaryFrequency: form.salaryFrequency.trim() || undefined,
-      status: form.status,
-    };
-    try {
-      if (editingId) {
-        await apiFetch(`/api/v1/hr/employees/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Employee updated.');
-      } else {
-        await apiFetch('/api/v1/hr/employees', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Employee created.');
-      }
+    const onSuccess = () => {
+      toast.toast(editingId ? 'Employee updated.' : 'Employee created.');
       setCreateOpen(false);
-      void reload();
-    } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not save employee.');
-    } finally {
-      setSaving(false);
+      void invalidate(['paged', '/api/v1/hr/employees']);
+    };
+    const onError = (err: { message: string }) => setFormError(err.message);
+    if (editingId) {
+      updateMutation.mutate(toDto(values), { onSuccess, onError });
+    } else {
+      createMutation.mutate(toDto(values), { onSuccess, onError });
     }
-  };
+  });
 
   const openPayroll = () => {
-    setPayrollPeriod(new Date().toISOString().slice(0, 7));
-    const lines: Record<string, { bonus: string; overtime: string; deductions: string }> = {};
-    for (const employee of employees) {
-      if (employee.status === 'active') {
-        lines[employee.id] = { bonus: '', overtime: '', deductions: '' };
-      }
-    }
-    setPayrollLines(lines);
+    resetPayroll({
+      period: new Date().toISOString().slice(0, 7),
+      lines: employees
+        .filter((employee) => employee.status === 'active')
+        .map((employee) => ({ employeeId: employee.id, bonus: '', overtime: '', deductions: '' })),
+    });
     setPayrollError(null);
     setPayrollOpen(true);
   };
 
-  const closePayroll = () => {
-    if (!payrollBusy) setPayrollOpen(false);
-  };
-
-  const setPayrollLineField = (employeeId: string, key: 'bonus' | 'overtime' | 'deductions', value: string) => {
-    setPayrollLines((current) => ({
-      ...current,
-      [employeeId]: { ...current[employeeId], [key]: value },
-    }));
-  };
-
-  const submitPayroll = async (event: FormEvent) => {
-    event.preventDefault();
-    const lines = employees
-      .filter((employee) => employee.status === 'active')
-      .map((employee) => ({
-        employeeId: employee.id,
-        bonus:
-          payrollLines[employee.id]?.bonus === '' ? undefined : Number(payrollLines[employee.id]?.bonus ?? 0),
-        overtime:
-          payrollLines[employee.id]?.overtime === ''
-            ? undefined
-            : Number(payrollLines[employee.id]?.overtime ?? 0),
-        deductions:
-          payrollLines[employee.id]?.deductions === ''
-            ? undefined
-            : Number(payrollLines[employee.id]?.deductions ?? 0),
-      }));
+  const submitPayroll = payrollHandleSubmit((values) => {
+    setPayrollError(null);
+    const lines = values.lines.map((line) => {
+      const dto: PayrollLineInputDto = {
+        employeeId: line.employeeId,
+        bonus: line.bonus === '' ? undefined : Number(line.bonus),
+        overtime: line.overtime === '' ? undefined : Number(line.overtime),
+        deductions: line.deductions === '' ? undefined : Number(line.deductions),
+      };
+      return dto;
+    });
     if (lines.length === 0) {
       setPayrollError('No active employees to pay.');
       return;
     }
-    setPayrollBusy(true);
-    setPayrollError(null);
-    const body = { period: payrollPeriod, lines };
-    try {
-      await apiFetch('/api/v1/hr/payrolls/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      toast.toast('Draft payroll generated.');
-      setPayrollOpen(false);
-      reloadPayrolls();
-    } catch (err) {
-      setPayrollError(err instanceof ApiError ? err.message : 'Could not generate payroll.');
-    } finally {
-      setPayrollBusy(false);
-    }
-  };
+    generateMutation.mutate(
+      { period: values.period, lines },
+      {
+        onSuccess: () => {
+          toast.toast('Draft payroll generated.');
+          setPayrollOpen(false);
+          void invalidate(['paged', '/api/v1/hr/payrolls']);
+        },
+        onError: (err) => setPayrollError(err.message),
+      },
+    );
+  });
 
-  const runPayrollAction = async (id: string, action: 'post' | 'cancel', message: string) => {
-    try {
-      await apiFetch(`/api/v1/hr/payrolls/${id}/${action}`, { method: 'POST' });
-      toast.toast(message);
-      reloadPayrolls();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Action failed.', 'error');
-    }
+  const runPayrollAction = (id: string, action: 'post' | 'cancel', message: string) => {
+    setPayrollAction({ id, action, message });
   };
 
   const openPayrollView = async (payroll: Payroll) => {
@@ -280,6 +278,8 @@ export function HrPage() {
       toast.toast(err instanceof ApiError ? err.message : 'Could not load payroll.', 'error');
     }
   };
+
+  const activeEmployees = employees.filter((employee) => employee.status === 'active');
 
   const employeeColumns: Column<Employee>[] = [
     { key: 'employeeNo', header: 'No.' },
@@ -353,14 +353,14 @@ export function HrPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => void runPayrollAction(row.id, 'post', 'Payroll posted.')}
+                onClick={() => runPayrollAction(row.id, 'post', 'Payroll posted.')}
               >
                 Post
               </Button>
               <Button
                 variant="danger"
                 size="sm"
-                onClick={() => void runPayrollAction(row.id, 'cancel', 'Payroll cancelled.')}
+                onClick={() => runPayrollAction(row.id, 'cancel', 'Payroll cancelled.')}
               >
                 Cancel
               </Button>
@@ -432,215 +432,191 @@ export function HrPage() {
         </>
       )}
 
-      <Modal
-        open={createOpen}
-        title={editingId ? 'Edit employee' : 'New employee'}
-        onClose={closeCreate}
-        width="lg"
-      >
-        <form onSubmit={(event) => void submit(event)}>
-          <div className="form-grid">
-            <Field label="Employee no." htmlFor="emp-no">
-              <TextInput
-                id="emp-no"
-                value={form.employeeNo}
-                onChange={(event) => setField('employeeNo', event.target.value)}
-              />
-            </Field>
-            <Field label="First name" htmlFor="emp-first" required>
-              <TextInput
-                id="emp-first"
-                value={form.firstName}
-                onChange={(event) => setField('firstName', event.target.value)}
-              />
-            </Field>
-            <Field label="Last name" htmlFor="emp-last" required>
-              <TextInput
-                id="emp-last"
-                value={form.lastName}
-                onChange={(event) => setField('lastName', event.target.value)}
-              />
-            </Field>
-            <Field label="Email" htmlFor="emp-email">
-              <TextInput
-                id="emp-email"
-                type="email"
-                value={form.email}
-                onChange={(event) => setField('email', event.target.value)}
-              />
-            </Field>
-            <Field label="Phone" htmlFor="emp-phone">
-              <TextInput
-                id="emp-phone"
-                value={form.phone}
-                onChange={(event) => setField('phone', event.target.value)}
-              />
-            </Field>
-            <Field label="Department" htmlFor="emp-department">
-              <Select
-                id="emp-department"
-                value={form.departmentId}
-                onChange={(event) => setField('departmentId', event.target.value)}
-              >
-                <option value="">— None —</option>
-                {departments.map((department) => (
-                  <option key={department.id} value={department.id}>
-                    {department.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Position" htmlFor="emp-position">
-              <TextInput
-                id="emp-position"
-                value={form.position}
-                onChange={(event) => setField('position', event.target.value)}
-              />
-            </Field>
-            <Field label="Hire date" htmlFor="emp-hire" required>
-              <TextInput
-                id="emp-hire"
-                type="date"
-                value={form.hireDate}
-                onChange={(event) => setField('hireDate', event.target.value)}
-              />
-            </Field>
-            <Field label="Salary" htmlFor="emp-salary">
-              <TextInput
-                id="emp-salary"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.salary}
-                onChange={(event) => setField('salary', event.target.value)}
-              />
-            </Field>
-            <Field label="Salary frequency" htmlFor="emp-frequency">
-              <Select
-                id="emp-frequency"
-                value={form.salaryFrequency}
-                onChange={(event) => setField('salaryFrequency', event.target.value)}
-              >
-                <option value="monthly">monthly</option>
-                <option value="biweekly">biweekly</option>
-                <option value="weekly">weekly</option>
-              </Select>
-            </Field>
-            <Field label="Status">
-              <Checkbox
-                label="Active"
-                checked={form.status === 'active'}
-                onChange={(event) => setField('status', event.target.checked ? 'active' : 'inactive')}
-              />
-            </Field>
-          </div>
-          {formError ? <div className="error-banner">{formError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={closeCreate} disabled={saving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create employee'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      <Dialog open={createOpen} onOpenChange={(open) => !saving && setCreateOpen(open)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={editingId ? 'Edit employee' : 'New employee'} />
+          <form onSubmit={(event) => void submit(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="emp-no">Employee no.</label>
+                <input id="emp-no" {...register('employeeNo')} />
+                {errors.employeeNo ? <div className="field-error">{errors.employeeNo.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="emp-first">First name *</label>
+                <input id="emp-first" {...register('firstName')} />
+                {errors.firstName ? <div className="field-error">{errors.firstName.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="emp-last">Last name *</label>
+                <input id="emp-last" {...register('lastName')} />
+                {errors.lastName ? <div className="field-error">{errors.lastName.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="emp-email">Email</label>
+                <input id="emp-email" type="email" {...register('email')} />
+                {errors.email ? <div className="field-error">{errors.email.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="emp-phone">Phone</label>
+                <input id="emp-phone" {...register('phone')} />
+                {errors.phone ? <div className="field-error">{errors.phone.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="emp-department">Department</label>
+                <select id="emp-department" {...register('departmentId')}>
+                  <option value="">— None —</option>
+                  {departments.map((department) => (
+                    <option key={department.id} value={department.id}>
+                      {department.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="emp-position">Position</label>
+                <input id="emp-position" {...register('position')} />
+                {errors.position ? <div className="field-error">{errors.position.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="emp-hire">Hire date *</label>
+                <input id="emp-hire" type="date" {...register('hireDate')} />
+                {errors.hireDate ? <div className="field-error">{errors.hireDate.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="emp-salary">Salary</label>
+                <input id="emp-salary" type="number" min="0" step="0.01" {...register('salary')} />
+                {errors.salary ? <div className="field-error">{errors.salary.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="emp-frequency">Salary frequency</label>
+                <select id="emp-frequency" {...register('salaryFrequency')}>
+                  <option value="monthly">monthly</option>
+                  <option value="biweekly">biweekly</option>
+                  <option value="weekly">weekly</option>
+                </select>
+              </div>
+              <div className="field">
+                <label>Status</label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Checkbox
+                    id="emp-active"
+                    checked={status === 'active'}
+                    onCheckedChange={(checked) => setValue('status', checked === true ? 'active' : 'inactive')}
+                  />
+                  <label htmlFor="emp-active" className="text-sm text-gray-700">
+                    Active
+                  </label>
+                </div>
+              </div>
+            </div>
+            {formError ? <div className="error-banner">{formError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={saving}>
+                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create employee'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <Modal open={payrollOpen} title="Generate payroll" onClose={closePayroll} width="lg">
-        <form onSubmit={(event) => void submitPayroll(event)}>
-          <Field label="Period" htmlFor="payroll-period" required>
-            <TextInput
-              id="payroll-period"
-              type="month"
-              value={payrollPeriod}
-              onChange={(event) => setPayrollPeriod(event.target.value)}
-            />
-          </Field>
-          {employees.filter((employee) => employee.status === 'active').length === 0 ? (
-            <p className="modal-message">No active employees to include.</p>
-          ) : (
-            <div className="invoice-items">
-              {employees
-                .filter((employee) => employee.status === 'active')
-                .map((employee) => (
+      <Dialog open={payrollOpen} onOpenChange={(open) => !payrollBusy && setPayrollOpen(open)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title="Generate payroll" />
+          <form onSubmit={(event) => void submitPayroll(event)}>
+            <div className="field">
+              <label htmlFor="payroll-period">Period *</label>
+              <input id="payroll-period" type="month" {...payrollRegister('period')} />
+              {payrollErrors.period ? (
+                <div className="field-error">{payrollErrors.period.message}</div>
+              ) : null}
+            </div>
+            {activeEmployees.length === 0 ? (
+              <p className="modal-message">No active employees to include.</p>
+            ) : (
+              <div className="invoice-items">
+                {activeEmployees.map((employee, index) => (
                   <div className="invoice-item" key={employee.id}>
-                    <Field label="Employee">
-                      <TextInput
-                        value={`${employee.firstName} ${employee.lastName}`}
-                        readOnly
-                      />
-                    </Field>
-                    <Field label="Bonus" htmlFor={`pay-bonus-${employee.id}`}>
-                      <TextInput
+                    <div className="field">
+                      <label>Employee</label>
+                      <input value={`${employee.firstName} ${employee.lastName}`} readOnly />
+                    </div>
+                    <div className="field">
+                      <label htmlFor={`pay-bonus-${employee.id}`}>Bonus</label>
+                      <input
                         id={`pay-bonus-${employee.id}`}
                         type="number"
                         min="0"
                         step="0.01"
-                        value={payrollLines[employee.id]?.bonus ?? ''}
-                        onChange={(event) => setPayrollLineField(employee.id, 'bonus', event.target.value)}
+                        {...payrollRegister(`lines.${index}.bonus`)}
                       />
-                    </Field>
-                    <Field label="Overtime" htmlFor={`pay-overtime-${employee.id}`}>
-                      <TextInput
+                      {payrollErrors.lines?.[index]?.bonus ? (
+                        <div className="field-error">{payrollErrors.lines[index]?.bonus?.message}</div>
+                      ) : null}
+                    </div>
+                    <div className="field">
+                      <label htmlFor={`pay-overtime-${employee.id}`}>Overtime</label>
+                      <input
                         id={`pay-overtime-${employee.id}`}
                         type="number"
                         min="0"
                         step="0.01"
-                        value={payrollLines[employee.id]?.overtime ?? ''}
-                        onChange={(event) => setPayrollLineField(employee.id, 'overtime', event.target.value)}
+                        {...payrollRegister(`lines.${index}.overtime`)}
                       />
-                    </Field>
-                    <Field label="Deductions" htmlFor={`pay-deductions-${employee.id}`}>
-                      <TextInput
+                      {payrollErrors.lines?.[index]?.overtime ? (
+                        <div className="field-error">{payrollErrors.lines[index]?.overtime?.message}</div>
+                      ) : null}
+                    </div>
+                    <div className="field">
+                      <label htmlFor={`pay-deductions-${employee.id}`}>Deductions</label>
+                      <input
                         id={`pay-deductions-${employee.id}`}
                         type="number"
                         min="0"
                         step="0.01"
-                        value={payrollLines[employee.id]?.deductions ?? ''}
-                        onChange={(event) => setPayrollLineField(employee.id, 'deductions', event.target.value)}
+                        {...payrollRegister(`lines.${index}.deductions`)}
                       />
-                    </Field>
+                      {payrollErrors.lines?.[index]?.deductions ? (
+                        <div className="field-error">{payrollErrors.lines[index]?.deductions?.message}</div>
+                      ) : null}
+                    </div>
                     <div className="invoice-item-remove" />
                   </div>
                 ))}
-            </div>
-          )}
-          {payrollError ? <div className="error-banner">{payrollError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={closePayroll} disabled={payrollBusy}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={payrollBusy}>
-              {payrollBusy ? 'Generating…' : 'Generate draft'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      <Modal
-        open={viewingPayroll !== null}
-        title={`Payroll ${viewingPayroll?.number ?? ''}`}
-        onClose={() => setViewingPayroll(null)}
-        width="lg"
-      >
-        {viewingPayroll ? (
-          <>
-            <p className="modal-message">
-              {viewingPayroll.period} · <Badge tone={payrollStatusTone(viewingPayroll.status)}>{viewingPayroll.status}</Badge>
-            </p>
-            <DataTable
-              columns={payrollLineColumns}
-              rows={viewingPayroll.lines}
-              rowKey={(row) => row.id}
-            />
-            <div className="modal-footer">
-              <Button variant="ghost" onClick={() => setViewingPayroll(null)}>
-                Close
+              </div>
+            )}
+            {payrollError ? <div className="error-banner">{payrollError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={payrollBusy}>
+                {payrollBusy ? 'Generating…' : 'Generate draft'}
               </Button>
-            </div>
-          </>
-        ) : null}
-      </Modal>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={viewingPayroll !== null} onOpenChange={(open) => !open && setViewingPayroll(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={`Payroll ${viewingPayroll?.number ?? ''}`} />
+          {viewingPayroll ? (
+            <>
+              <p className="modal-message">
+                {viewingPayroll.period} · <Badge tone={payrollStatusTone(viewingPayroll.status)}>{viewingPayroll.status}</Badge>
+              </p>
+              <DataTable
+                columns={payrollLineColumns}
+                rows={viewingPayroll.lines}
+                rowKey={(row) => row.id}
+              />
+            </>
+          ) : null}
+          <DialogFooter>
+            <Button variant="secondary" type="button" onClick={() => setViewingPayroll(null)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

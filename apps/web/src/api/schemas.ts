@@ -176,3 +176,169 @@ export const paymentFormSchema = z.object({
 });
 
 export type PaymentFormValues = z.infer<typeof paymentFormSchema>;
+
+export const journalEntryLineFormSchema = z.object({
+  accountCode: z.string(),
+  debit: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Debit must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Debit cannot be negative'),
+  credit: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Credit must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Credit cannot be negative'),
+  description: z.string().trim().max(255, 'Memo must be at most 255 characters'),
+});
+
+export const journalEntryFormSchema = z.object({
+  entryDate: z.string().min(1, 'Entry date is required'),
+  description: z.string().trim().max(255, 'Description must be at most 255 characters'),
+  lines: z.array(journalEntryLineFormSchema),
+});
+
+export type JournalEntryLineFormValues = z.infer<typeof journalEntryLineFormSchema>;
+export type JournalEntryFormValues = z.infer<typeof journalEntryFormSchema>;
+
+export const purchaseOrderItemFormSchema = z.object({
+  productId: z.string(),
+  quantity: z
+    .string()
+    .refine((value) => value !== '' && !Number.isNaN(Number(value)), 'Quantity is required')
+    .refine((value) => value !== '' && Number(value) > 0, 'Quantity must be greater than zero'),
+  unitCost: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Unit cost must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Unit cost cannot be negative'),
+  taxRate: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Tax rate must be a number')
+    .refine(
+      (value) => value === '' || (Number(value) >= 0 && Number(value) <= 100),
+      'Tax rate must be between 0 and 100',
+    ),
+});
+
+export const purchaseOrderFormSchema = z.object({
+  supplierId: z.string().min(1, 'Supplier is required'),
+  warehouseId: z.string().min(1, 'Warehouse is required'),
+  expectedAt: z.string(),
+  discount: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Discount must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Discount cannot be negative'),
+  notes: z.string().trim().max(500, 'Notes must be at most 500 characters'),
+  items: z.array(purchaseOrderItemFormSchema).min(1, 'Add at least one line item.'),
+});
+
+export type PurchaseOrderItemFormValues = z.infer<typeof purchaseOrderItemFormSchema>;
+export type PurchaseOrderFormValues = z.infer<typeof purchaseOrderFormSchema>;
+
+export const purchaseReceiptItemFormSchema = z.object({
+  orderItemId: z.string().min(1, 'Order item is required'),
+  quantity: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Quantity must be a number'),
+});
+
+export const purchaseReceiptFormSchema = z.object({
+  notes: z.string().trim().max(500, 'Notes must be at most 500 characters'),
+  items: z.array(purchaseReceiptItemFormSchema),
+});
+
+export type PurchaseReceiptItemFormValues = z.infer<typeof purchaseReceiptItemFormSchema>;
+export type PurchaseReceiptFormValues = z.infer<typeof purchaseReceiptFormSchema>;
+
+export const salesOrderItemFormSchema = z.object({
+  productId: z.string(),
+  quantity: z
+    .string()
+    .refine((value) => value !== '' && !Number.isNaN(Number(value)), 'Quantity is required')
+    .refine((value) => value !== '' && Number(value) > 0, 'Quantity must be greater than zero'),
+  unitPrice: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Unit price must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Unit price cannot be negative'),
+  taxRate: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Tax rate must be a number')
+    .refine(
+      (value) => value === '' || (Number(value) >= 0 && Number(value) <= 100),
+      'Tax rate must be between 0 and 100',
+    ),
+  discount: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Discount must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Discount cannot be negative'),
+});
+
+export const salesOrderFormSchema = z.object({
+  kind: z.enum(['quote', 'order']),
+  customerId: z.string().min(1, 'Customer is required'),
+  warehouseId: z.string().min(1, 'Warehouse is required'),
+  issueDate: z.string(),
+  dueDate: z.string(),
+  discount: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Discount must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Discount cannot be negative'),
+  notes: z.string().trim().max(500, 'Notes must be at most 500 characters'),
+  items: z.array(salesOrderItemFormSchema).min(1, 'Add at least one line item.'),
+});
+
+export type SalesOrderItemFormValues = z.infer<typeof salesOrderItemFormSchema>;
+export type SalesOrderFormValues = z.infer<typeof salesOrderFormSchema>;
+
+export const employeeFormSchema = z.object({
+  employeeNo: z.string().trim().max(40, 'Employee no. must be at most 40 characters'),
+  firstName: z
+    .string()
+    .trim()
+    .min(1, 'First name is required')
+    .max(255, 'First name must be at most 255 characters'),
+  lastName: z
+    .string()
+    .trim()
+    .min(1, 'Last name is required')
+    .max(255, 'Last name must be at most 255 characters'),
+  email: z
+    .string()
+    .trim()
+    .max(190, 'Email must be at most 190 characters')
+    .refine((value) => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value), 'Invalid email address'),
+  phone: z.string().trim().max(40, 'Phone must be at most 40 characters'),
+  departmentId: z.string(),
+  position: z.string().trim().max(120, 'Position must be at most 120 characters'),
+  hireDate: z.string().min(1, 'Hire date is required'),
+  salary: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Salary must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Salary cannot be negative'),
+  salaryFrequency: z.string().trim().max(20, 'Salary frequency must be at most 20 characters'),
+  status: z.enum(['active', 'inactive']),
+});
+
+export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
+
+export const payrollLineInputFormSchema = z.object({
+  employeeId: z.string().min(1, 'Employee is required'),
+  bonus: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Bonus must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Bonus cannot be negative'),
+  overtime: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Overtime must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Overtime cannot be negative'),
+  deductions: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Deductions must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Deductions cannot be negative'),
+});
+
+export const payrollFormSchema = z.object({
+  period: z.string().min(1, 'Period is required'),
+  lines: z.array(payrollLineInputFormSchema),
+});
+
+export type PayrollLineInputFormValues = z.infer<typeof payrollLineInputFormSchema>;
+export type PayrollFormValues = z.infer<typeof payrollFormSchema>;

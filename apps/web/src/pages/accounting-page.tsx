@@ -1,6 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '../api/client';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { apiFetch } from '../api/client';
+import type { components } from '../api/schema';
 import type { AccountingPeriod, ChartAccount, JournalEntry, Paginated } from '../api/types';
+import { journalEntryFormSchema, type JournalEntryFormValues } from '../api/schemas';
+import { useApiInvalidation, useApiMutation, useApiMutationVoid } from '../api/hooks';
 import {
   Badge,
   type BadgeTone,
@@ -14,16 +19,13 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
-import {
-  Button,
-  ConfirmDialog,
-  Field,
-  Modal,
-  Select,
-  TextInput,
-} from '../components/forms';
+import { Button } from '../components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+
+type CreateJournalEntryDto = components['schemas']['CreateJournalEntryDto'];
+type CreateJournalEntryLineDto = components['schemas']['CreateJournalEntryLineDto'];
 
 function entryStatusTone(status: JournalEntry['status']): BadgeTone {
   if (status === 'posted') return 'success';
@@ -31,20 +33,39 @@ function entryStatusTone(status: JournalEntry['status']): BadgeTone {
   return 'neutral';
 }
 
-interface JournalLineForm {
-  accountCode: string;
-  debit: string;
-  credit: string;
-  description: string;
+const emptyLine: JournalEntryFormValues['lines'][number] = {
+  accountCode: '',
+  debit: '',
+  credit: '',
+  description: '',
+};
+
+function emptyForm(): JournalEntryFormValues {
+  return {
+    entryDate: new Date().toISOString().slice(0, 10),
+    description: '',
+    lines: [emptyLine, emptyLine],
+  };
 }
 
-interface JournalForm {
-  entryDate: string;
-  description: string;
-  lines: JournalLineForm[];
+function toDto(form: JournalEntryFormValues): CreateJournalEntryDto {
+  const lines = form.lines
+    .filter((line) => line.accountCode)
+    .map((line) => {
+      const dto: CreateJournalEntryLineDto = {
+        accountCode: line.accountCode,
+        debit: line.debit === '' ? undefined : Number(line.debit),
+        credit: line.credit === '' ? undefined : Number(line.credit),
+        description: line.description.trim() || undefined,
+      };
+      return dto;
+    });
+  return {
+    entryDate: form.entryDate,
+    description: form.description.trim() || undefined,
+    lines,
+  };
 }
-
-const emptyLine: JournalLineForm = { accountCode: '', debit: '', credit: '', description: '' };
 
 function journalColumns(openEntry: (entry: JournalEntry) => void): Column<JournalEntry>[] {
   return [
@@ -155,25 +176,44 @@ function JournalEntriesTab({ onOpenEntry }: { onOpenEntry: (entry: JournalEntry)
 
 export function AccountingPage() {
   const [tab, setTab] = useState<'entries' | 'periods'>('entries');
-  const [refreshKey, setRefreshKey] = useState(0);
   const [accounts, setAccounts] = useState<ChartAccount[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
-  const [form, setForm] = useState<JournalForm>({
-    entryDate: new Date().toISOString().slice(0, 10),
-    description: '',
-    lines: [emptyLine, emptyLine],
-  });
   const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [viewing, setViewing] = useState<JournalEntry | null>(null);
   const [closingPeriod, setClosingPeriod] = useState<AccountingPeriod | null>(null);
-  const [closeBusy, setCloseBusy] = useState(false);
   const toast = useToast();
+  const { invalidate } = useApiInvalidation();
 
-  const { data: periods, error: periodsError, reload: reloadPeriods } = usePagedQuery<AccountingPeriod>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<JournalEntryFormValues>({
+    resolver: zodResolver(journalEntryFormSchema),
+    defaultValues: emptyForm(),
+  });
+
+  const lines = watch('lines');
+
+  const { data: periods, error: periodsError } = usePagedQuery<AccountingPeriod>({
     path: '/api/v1/accounting/periods',
     page: 1,
   });
+
+  const createMutation = useApiMutation<CreateJournalEntryDto>(
+    '/api/v1/accounting/journal-entries',
+    'POST',
+  );
+  const closeMutation = useApiMutationVoid(
+    `/api/v1/accounting/periods/${closingPeriod?.id ?? ''}/close`,
+    'POST',
+  );
+
+  const saving = createMutation.isPending;
+  const closeBusy = closeMutation.isPending;
 
   useEffect(() => {
     let cancelled = false;
@@ -188,92 +228,49 @@ export function AccountingPage() {
   }, []);
 
   const openCreate = () => {
-    setForm({
-      entryDate: new Date().toISOString().slice(0, 10),
-      description: '',
-      lines: [emptyLine, emptyLine],
-    });
+    reset(emptyForm());
     setFormError(null);
     setCreateOpen(true);
   };
 
-  const closeCreate = () => {
-    if (!saving) setCreateOpen(false);
-  };
-
-  const setFormField = (key: keyof JournalForm, value: string) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const setLineField = (index: number, key: keyof JournalLineForm, value: string) => {
-    setForm((current) => ({
-      ...current,
-      lines: current.lines.map((line, i) => (i === index ? { ...line, [key]: value } : line)),
-    }));
-  };
-
   const addLine = () => {
-    setForm((current) => ({ ...current, lines: [...current.lines, emptyLine] }));
+    setValue('lines', [...lines, emptyLine]);
   };
 
   const removeLine = (index: number) => {
-    setForm((current) => ({
-      ...current,
-      lines: current.lines.filter((_, i) => i !== index),
-    }));
+    setValue('lines', lines.filter((_, i) => i !== index));
   };
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    const lines = form.lines
-      .filter((line) => line.accountCode)
-      .map((line) => ({
-        accountCode: line.accountCode,
-        debit: line.debit === '' ? undefined : Number(line.debit),
-        credit: line.credit === '' ? undefined : Number(line.credit),
-        description: line.description.trim() || undefined,
-      }));
-    if (lines.length === 0) {
+  const submit = handleSubmit((values) => {
+    setFormError(null);
+    const body = toDto(values);
+    if (body.lines.length === 0) {
       setFormError('Add at least one line.');
       return;
     }
-    setSaving(true);
-    setFormError(null);
-    const body = {
-      entryDate: form.entryDate,
-      description: form.description.trim() || undefined,
-      lines,
-    };
-    try {
-      await apiFetch('/api/v1/accounting/journal-entries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      toast.toast('Journal entry posted.');
-      setCreateOpen(false);
-      setRefreshKey((key) => key + 1);
-    } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not post journal entry.');
-    } finally {
-      setSaving(false);
-    }
-  };
+    createMutation.mutate(body, {
+      onSuccess: () => {
+        toast.toast('Journal entry posted.');
+        setCreateOpen(false);
+        void invalidate(['paged', '/api/v1/accounting/journal-entries']);
+      },
+      onError: (err) => setFormError(err.message),
+    });
+  });
 
-  const confirmClose = async () => {
+  const confirmClose = () => {
     if (!closingPeriod) return;
-    setCloseBusy(true);
-    try {
-      await apiFetch(`/api/v1/accounting/periods/${closingPeriod.id}/close`, { method: 'POST' });
-      toast.toast('Period closed.');
-      setClosingPeriod(null);
-      reloadPeriods();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not close period.', 'error');
-      setClosingPeriod(null);
-    } finally {
-      setCloseBusy(false);
-    }
+    closeMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.toast('Period closed.');
+        setClosingPeriod(null);
+        void invalidate(['paged', '/api/v1/accounting/periods']);
+      },
+      onError: (err) => {
+        toast.toast(err.message, 'error');
+        setClosingPeriod(null);
+      },
+    });
   };
 
   return (
@@ -292,7 +289,7 @@ export function AccountingPage() {
         </button>
       </div>
       {tab === 'entries' ? (
-        <JournalEntriesTab key={`entries-${refreshKey}`} onOpenEntry={setViewing} />
+        <JournalEntriesTab onOpenEntry={setViewing} />
       ) : (
         <>
           {periodsError ? <ErrorBanner message={periodsError} /> : null}
@@ -319,134 +316,142 @@ export function AccountingPage() {
         </>
       )}
 
-      <Modal open={createOpen} title="New journal entry" onClose={closeCreate} width="lg">
-        <form onSubmit={(event) => void submit(event)}>
-          <div className="form-grid">
-            <Field label="Entry date" htmlFor="je-date" required>
-              <TextInput
-                id="je-date"
-                type="date"
-                value={form.entryDate}
-                onChange={(event) => setFormField('entryDate', event.target.value)}
-              />
-            </Field>
-            <Field label="Description" htmlFor="je-description">
-              <TextInput
-                id="je-description"
-                value={form.description}
-                onChange={(event) => setFormField('description', event.target.value)}
-              />
-            </Field>
-          </div>
-          <div className="invoice-items">
-            {form.lines.map((line, index) => (
-              <div className="invoice-item" key={index}>
-                <Field label="Account" htmlFor={`je-line-account-${index}`}>
-                  <Select
-                    id={`je-line-account-${index}`}
-                    value={line.accountCode}
-                    onChange={(event) => setLineField(index, 'accountCode', event.target.value)}
-                  >
-                    <option value="">— Select account —</option>
-                    {accounts.map((account) => (
-                      <option key={account.id} value={account.code}>
-                        {account.code} · {account.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Debit" htmlFor={`je-line-debit-${index}`}>
-                  <TextInput
-                    id={`je-line-debit-${index}`}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={line.debit}
-                    onChange={(event) => setLineField(index, 'debit', event.target.value)}
-                  />
-                </Field>
-                <Field label="Credit" htmlFor={`je-line-credit-${index}`}>
-                  <TextInput
-                    id={`je-line-credit-${index}`}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={line.credit}
-                    onChange={(event) => setLineField(index, 'credit', event.target.value)}
-                  />
-                </Field>
-                <Field label="Memo" htmlFor={`je-line-memo-${index}`}>
-                  <TextInput
-                    id={`je-line-memo-${index}`}
-                    value={line.description}
-                    onChange={(event) => setLineField(index, 'description', event.target.value)}
-                  />
-                </Field>
-                <div className="invoice-item-remove">
-                  {form.lines.length > 2 ? (
-                    <Button variant="ghost" size="sm" onClick={() => removeLine(index)}>
-                      Remove
-                    </Button>
-                  ) : null}
-                </div>
+      <Dialog open={createOpen} onOpenChange={(open) => !saving && setCreateOpen(open)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title="New journal entry" />
+          <form onSubmit={(event) => void submit(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="je-date">Entry date *</label>
+                <input id="je-date" type="date" {...register('entryDate')} />
+                {errors.entryDate ? <div className="field-error">{errors.entryDate.message}</div> : null}
               </div>
-            ))}
-          </div>
-          <Button variant="ghost" size="sm" onClick={addLine}>
-            + Add line
-          </Button>
-          {formError ? <div className="error-banner">{formError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={closeCreate} disabled={saving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Posting…' : 'Post entry'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      <Modal open={viewing !== null} title={`Entry ${viewing?.number ?? ''}`} onClose={() => setViewing(null)} width="lg">
-        {viewing ? (
-          <>
-            <p className="modal-message">
-              {viewing.description ?? 'No description'} · {formatDate(viewing.entryDate)} ·{' '}
-              <Badge tone={entryStatusTone(viewing.status)}>{viewing.status}</Badge>
-            </p>
-            <DataTable
-              columns={[
-                {
-                  key: 'account',
-                  header: 'Account',
-                  render: (row) =>
-                    row.account ? `${row.account.code} · ${row.account.name}` : '—',
-                },
-                { key: 'description', header: 'Description', render: (row) => row.description ?? '—' },
-                { key: 'debit', header: 'Debit', render: (row) => (row.debit ? formatMoney(row.debit) : '—') },
-                { key: 'credit', header: 'Credit', render: (row) => (row.credit ? formatMoney(row.credit) : '—') },
-              ]}
-              rows={viewing.lines}
-              rowKey={(row) => row.id}
-            />
-            <div className="modal-footer">
-              <Button variant="ghost" onClick={() => setViewing(null)}>
-                Close
-              </Button>
+              <div className="field">
+                <label htmlFor="je-description">Description</label>
+                <input id="je-description" {...register('description')} />
+                {errors.description ? <div className="field-error">{errors.description.message}</div> : null}
+              </div>
             </div>
-          </>
-        ) : null}
-      </Modal>
+            <div className="invoice-items">
+              {lines.map((_, index) => (
+                <div className="invoice-item" key={index}>
+                  <div className="field">
+                    <label htmlFor={`je-line-account-${index}`}>Account</label>
+                    <select id={`je-line-account-${index}`} {...register(`lines.${index}.accountCode`)}>
+                      <option value="">— Select account —</option>
+                      {accounts.map((account) => (
+                        <option key={account.id} value={account.code}>
+                          {account.code} · {account.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`je-line-debit-${index}`}>Debit</label>
+                    <input
+                      id={`je-line-debit-${index}`}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      {...register(`lines.${index}.debit`)}
+                    />
+                    {errors.lines?.[index]?.debit ? (
+                      <div className="field-error">{errors.lines[index]?.debit?.message}</div>
+                    ) : null}
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`je-line-credit-${index}`}>Credit</label>
+                    <input
+                      id={`je-line-credit-${index}`}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      {...register(`lines.${index}.credit`)}
+                    />
+                    {errors.lines?.[index]?.credit ? (
+                      <div className="field-error">{errors.lines[index]?.credit?.message}</div>
+                    ) : null}
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`je-line-memo-${index}`}>Memo</label>
+                    <input id={`je-line-memo-${index}`} {...register(`lines.${index}.description`)} />
+                    {errors.lines?.[index]?.description ? (
+                      <div className="field-error">{errors.lines[index]?.description?.message}</div>
+                    ) : null}
+                  </div>
+                  <div className="invoice-item-remove">
+                    {lines.length > 2 ? (
+                      <Button variant="ghost" size="sm" type="button" onClick={() => removeLine(index)}>
+                        Remove
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button variant="ghost" size="sm" type="button" onClick={addLine}>
+              + Add line
+            </Button>
+            {formError ? <div className="error-banner">{formError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={saving}>
+                {saving ? 'Posting…' : 'Post entry'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <ConfirmDialog
+      <Dialog open={viewing !== null} onOpenChange={(open) => !open && setViewing(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={`Entry ${viewing?.number ?? ''}`} />
+          {viewing ? (
+            <>
+              <p className="modal-message">
+                {viewing.description ?? 'No description'} · {formatDate(viewing.entryDate)} ·{' '}
+                <Badge tone={entryStatusTone(viewing.status)}>{viewing.status}</Badge>
+              </p>
+              <DataTable
+                columns={[
+                  {
+                    key: 'account',
+                    header: 'Account',
+                    render: (row) =>
+                      row.account ? `${row.account.code} · ${row.account.name}` : '—',
+                  },
+                  { key: 'description', header: 'Description', render: (row) => row.description ?? '—' },
+                  { key: 'debit', header: 'Debit', render: (row) => (row.debit ? formatMoney(row.debit) : '—') },
+                  { key: 'credit', header: 'Credit', render: (row) => (row.credit ? formatMoney(row.credit) : '—') },
+                ]}
+                rows={viewing.lines}
+                rowKey={(row) => row.id}
+              />
+            </>
+          ) : null}
+          <DialogFooter>
+            <Button variant="secondary" type="button" onClick={() => setViewing(null)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
         open={closingPeriod !== null}
-        title="Close accounting period"
-        message={`Close period "${closingPeriod?.label}"? No further entries will be allowed in this period.`}
-        confirmLabel="Close period"
-        busy={closeBusy}
-        onCancel={() => setClosingPeriod(null)}
-        onConfirm={() => void confirmClose()}
-      />
+        onOpenChange={(open) => !closeBusy && !open && setClosingPeriod(null)}
+      >
+        <DialogContent>
+          <DialogHeader
+            title="Close accounting period"
+            description={`Close period "${closingPeriod?.label}"? No further entries will be allowed in this period.`}
+          />
+          <DialogFooter>
+            <Button variant="danger" type="button" disabled={closeBusy} onClick={() => void confirmClose()}>
+              {closeBusy ? 'Working…' : 'Close period'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

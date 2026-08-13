@@ -1,5 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
+import type { components } from '../api/schema';
 import type {
   Paginated,
   Product,
@@ -9,6 +12,13 @@ import type {
   Supplier,
   Warehouse,
 } from '../api/types';
+import {
+  purchaseOrderFormSchema,
+  purchaseReceiptFormSchema,
+  type PurchaseOrderFormValues,
+  type PurchaseReceiptFormValues,
+} from '../api/schemas';
+import { useApiInvalidation, useApiMutation, useApiMutationVoid } from '../api/hooks';
 import {
   Badge,
   type BadgeTone,
@@ -22,16 +32,15 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
-import {
-  Button,
-  Field,
-  Modal,
-  Select,
-  TextArea,
-  TextInput,
-} from '../components/forms';
+import { Button } from '../components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+
+type CreatePurchaseOrderDto = components['schemas']['CreatePurchaseOrderDto'];
+type CreatePurchaseOrderItemDto = components['schemas']['CreatePurchaseOrderItemDto'];
+type CreateGoodsReceiptDto = components['schemas']['CreateGoodsReceiptDto'];
+type CreateGoodsReceiptItemDto = components['schemas']['CreateGoodsReceiptItemDto'];
 
 function statusTone(status: PurchaseOrderStatus): BadgeTone {
   if (status === 'received') return 'success';
@@ -40,28 +49,48 @@ function statusTone(status: PurchaseOrderStatus): BadgeTone {
   return 'neutral';
 }
 
-interface PoItemForm {
-  productId: string;
-  quantity: string;
-  unitCost: string;
-  taxRate: string;
+const emptyItem: PurchaseOrderFormValues['items'][number] = {
+  productId: '',
+  quantity: '1',
+  unitCost: '',
+  taxRate: '',
+};
+
+const emptyForm: PurchaseOrderFormValues = {
+  supplierId: '',
+  warehouseId: '',
+  expectedAt: '',
+  discount: '',
+  notes: '',
+  items: [emptyItem],
+};
+
+function toDto(form: PurchaseOrderFormValues): CreatePurchaseOrderDto {
+  const items = form.items
+    .filter((item) => item.productId)
+    .map((item) => {
+      const dto: CreatePurchaseOrderItemDto = {
+        productId: item.productId,
+        quantity: Number(item.quantity),
+        unitCost: item.unitCost === '' ? undefined : Number(item.unitCost),
+        taxRate: item.taxRate === '' ? undefined : Number(item.taxRate),
+      };
+      return dto;
+    });
+  return {
+    supplierId: form.supplierId,
+    warehouseId: form.warehouseId,
+    expectedAt: form.expectedAt || undefined,
+    discount: form.discount === '' ? undefined : Number(form.discount),
+    notes: form.notes.trim() || undefined,
+    items,
+  };
 }
 
-interface PoForm {
-  supplierId: string;
-  warehouseId: string;
-  expectedAt: string;
-  discount: string;
-  notes: string;
-  items: PoItemForm[];
-}
-
-const emptyItem: PoItemForm = { productId: '', quantity: '1', unitCost: '', taxRate: '' };
-
-interface ReceiveItem {
-  orderItemId: string;
-  quantity: string;
-}
+const emptyReceipt: PurchaseReceiptFormValues = {
+  notes: '',
+  items: [],
+};
 
 export function PurchaseOrdersPage() {
   const [page, setPage] = useState(1);
@@ -72,29 +101,48 @@ export function PurchaseOrdersPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
-  const [form, setForm] = useState<PoForm>({
-    supplierId: '',
-    warehouseId: '',
-    expectedAt: '',
-    discount: '',
-    notes: '',
-    items: [emptyItem],
-  });
   const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [receiving, setReceiving] = useState<PurchaseOrder | null>(null);
-  const [receiveItems, setReceiveItems] = useState<ReceiveItem[]>([]);
-  const [receiveNotes, setReceiveNotes] = useState('');
   const [receiveError, setReceiveError] = useState<string | null>(null);
-  const [receiveBusy, setReceiveBusy] = useState(false);
+  const [statusAction, setStatusAction] = useState<{
+    id: string;
+    action: 'approve' | 'cancel';
+    message: string;
+  } | null>(null);
   const toast = useToast();
+  const { invalidate } = useApiInvalidation();
 
-  const { data, error, reload } = usePagedQuery<PurchaseOrder>({
+  const { data, error } = usePagedQuery<PurchaseOrder>({
     path: '/api/v1/purchasing/purchase-orders',
     page,
     query,
     extraParams: { status: statusFilter },
   });
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<PurchaseOrderFormValues>({
+    resolver: zodResolver(purchaseOrderFormSchema),
+    defaultValues: emptyForm,
+  });
+
+  const items = watch('items');
+
+  const receiveForm = useForm<PurchaseReceiptFormValues>({
+    resolver: zodResolver(purchaseReceiptFormSchema),
+    defaultValues: emptyReceipt,
+  });
+
+  const {
+    register: receiveRegister,
+    handleSubmit: receiveHandleSubmit,
+    reset: resetReceive,
+  } = receiveForm;
 
   useEffect(() => {
     let cancelled = false;
@@ -115,21 +163,42 @@ export function PurchaseOrdersPage() {
     };
   }, []);
 
-  const openCreate = () => {
-    setForm({
-      supplierId: '',
-      warehouseId: '',
-      expectedAt: '',
-      discount: '',
-      notes: '',
-      items: [emptyItem],
+  const createMutation = useApiMutation<CreatePurchaseOrderDto>(
+    '/api/v1/purchasing/purchase-orders',
+    'POST',
+  );
+  const receiveMutation = useApiMutation<CreateGoodsReceiptDto>(
+    `/api/v1/purchasing/purchase-orders/${receiving?.id ?? ''}/receipts`,
+    'POST',
+  );
+  const statusMutation = useApiMutationVoid(
+    statusAction
+      ? `/api/v1/purchasing/purchase-orders/${statusAction.id}/${statusAction.action}`
+      : '/api/v1/purchasing/purchase-orders',
+    'POST',
+  );
+
+  const saving = createMutation.isPending;
+  const receiveBusy = receiveMutation.isPending;
+
+  useEffect(() => {
+    if (!statusAction) return;
+    statusMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.toast(statusAction.message);
+        void invalidate(['paged', '/api/v1/purchasing/purchase-orders']);
+      },
+      onError: (err) => {
+        toast.toast(err.message, 'error');
+      },
     });
+    setStatusAction(null);
+  }, [statusAction]);
+
+  const openCreate = () => {
+    reset(emptyForm);
     setFormError(null);
     setCreateOpen(true);
-  };
-
-  const closeCreate = () => {
-    if (!saving) setCreateOpen(false);
   };
 
   const submitSearch = (event: FormEvent) => {
@@ -138,142 +207,81 @@ export function PurchaseOrdersPage() {
     setPage(1);
   };
 
-  const setFormField = (key: keyof PoForm, value: string) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const setItemField = (index: number, key: keyof PoItemForm, value: string) => {
-    setForm((current) => ({
-      ...current,
-      items: current.items.map((item, i) => (i === index ? { ...item, [key]: value } : item)),
-    }));
-  };
-
   const addItem = () => {
-    setForm((current) => ({ ...current, items: [...current.items, emptyItem] }));
+    setValue('items', [...items, emptyItem]);
   };
 
   const removeItem = (index: number) => {
-    setForm((current) => ({
-      ...current,
-      items: current.items.filter((_, i) => i !== index),
-    }));
+    setValue('items', items.filter((_, i) => i !== index));
   };
 
-  const submitCreate = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!form.supplierId || !form.warehouseId) {
-      setFormError('Supplier and warehouse are required.');
-      return;
-    }
-    const items = form.items
-      .filter((item) => item.productId)
-      .map((item) => ({
-        productId: item.productId,
-        quantity: Number(item.quantity),
-        unitCost: item.unitCost === '' ? undefined : Number(item.unitCost),
-        taxRate: item.taxRate === '' ? undefined : Number(item.taxRate),
-      }));
-    if (items.length === 0) {
+  const submitCreate = handleSubmit((values) => {
+    setFormError(null);
+    const body = toDto(values);
+    if (body.items.length === 0) {
       setFormError('Add at least one line item.');
       return;
     }
-    setSaving(true);
-    setFormError(null);
-    const body = {
-      supplierId: form.supplierId,
-      warehouseId: form.warehouseId,
-      expectedAt: form.expectedAt || undefined,
-      discount: form.discount === '' ? undefined : Number(form.discount),
-      notes: form.notes.trim() || undefined,
-      items,
-    };
-    try {
-      await apiFetch('/api/v1/purchasing/purchase-orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      toast.toast('Purchase order created.');
-      setCreateOpen(false);
-      void reload();
-    } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not create purchase order.');
-    } finally {
-      setSaving(false);
-    }
-  };
+    createMutation.mutate(body, {
+      onSuccess: () => {
+        toast.toast('Purchase order created.');
+        setCreateOpen(false);
+        void invalidate(['paged', '/api/v1/purchasing/purchase-orders']);
+      },
+      onError: (err) => setFormError(err.message),
+    });
+  });
 
-  const runAction = async (id: string, action: 'approve' | 'cancel', message: string) => {
-    try {
-      await apiFetch(`/api/v1/purchasing/purchase-orders/${id}/${action}`, { method: 'POST' });
-      toast.toast(message);
-      void reload();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Action failed.', 'error');
-    }
+  const runAction = (id: string, action: 'approve' | 'cancel', message: string) => {
+    setStatusAction({ id, action, message });
   };
 
   const openReceive = async (order: PurchaseOrder) => {
     setReceiveError(null);
-    setReceiveNotes('');
+    resetReceive(emptyReceipt);
     setReceiving(order);
-    setReceiveItems([]);
     try {
       const detail = await apiFetch<PurchaseOrder>(`/api/v1/purchasing/purchase-orders/${order.id}`);
-      setReceiveItems(
-        detail.items.map((item) => ({
+      resetReceive({
+        notes: '',
+        items: detail.items.map((item) => ({
           orderItemId: item.id,
           quantity: String(Math.max(0, item.quantity - item.receivedQuantity)),
         })),
-      );
+      });
       setReceiving(detail);
     } catch (err) {
       setReceiveError(err instanceof ApiError ? err.message : 'Could not load purchase order.');
     }
   };
 
-  const closeReceive = () => {
-    if (!receiveBusy) setReceiving(null);
-  };
-
-  const setReceiveItemQty = (orderItemId: string, value: string) => {
-    setReceiveItems((current) =>
-      current.map((item) => (item.orderItemId === orderItemId ? { ...item, quantity: value } : item)),
-    );
-  };
-
-  const submitReceive = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!receiving) return;
-    const items = receiveItems
+  const submitReceive = receiveHandleSubmit((values) => {
+    setReceiveError(null);
+    const itemsDto = values.items
       .filter((item) => Number(item.quantity) > 0)
-      .map((item) => ({ orderItemId: item.orderItemId, quantity: Number(item.quantity) }));
-    if (items.length === 0) {
+      .map((item) => {
+        const dto: CreateGoodsReceiptItemDto = {
+          orderItemId: item.orderItemId,
+          quantity: Number(item.quantity),
+        };
+        return dto;
+      });
+    if (itemsDto.length === 0) {
       setReceiveError('Enter at least one quantity to receive.');
       return;
     }
-    setReceiveBusy(true);
-    setReceiveError(null);
-    const body = {
-      notes: receiveNotes.trim() || undefined,
-      items,
-    };
-    try {
-      await apiFetch(`/api/v1/purchasing/purchase-orders/${receiving.id}/receipts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      toast.toast('Goods receipt recorded.');
-      setReceiving(null);
-      void reload();
-    } catch (err) {
-      setReceiveError(err instanceof ApiError ? err.message : 'Could not record receipt.');
-    } finally {
-      setReceiveBusy(false);
-    }
-  };
+    receiveMutation.mutate(
+      { notes: values.notes.trim() || undefined, items: itemsDto },
+      {
+        onSuccess: () => {
+          toast.toast('Goods receipt recorded.');
+          setReceiving(null);
+          void invalidate(['paged', '/api/v1/purchasing/purchase-orders']);
+        },
+        onError: (err) => setReceiveError(err.message),
+      },
+    );
+  });
 
   const columns: Column<PurchaseOrder>[] = [
     { key: 'number', header: 'Number' },
@@ -312,14 +320,14 @@ export function PurchaseOrdersPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => void runAction(row.id, 'approve', 'Purchase order approved.')}
+                onClick={() => runAction(row.id, 'approve', 'Purchase order approved.')}
               >
                 Approve
               </Button>
               <Button
                 variant="danger"
                 size="sm"
-                onClick={() => void runAction(row.id, 'cancel', 'Purchase order cancelled.')}
+                onClick={() => runAction(row.id, 'cancel', 'Purchase order cancelled.')}
               >
                 Cancel
               </Button>
@@ -349,7 +357,7 @@ export function PurchaseOrdersPage() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <Select
+        <select
           value={statusFilter}
           onChange={(event) => {
             setStatusFilter(event.target.value);
@@ -361,7 +369,7 @@ export function PurchaseOrdersPage() {
           <option value="approved">Approved</option>
           <option value="received">Received</option>
           <option value="cancelled">Cancelled</option>
-        </Select>
+        </select>
         <button type="submit" className="btn">
           Search
         </button>
@@ -379,197 +387,183 @@ export function PurchaseOrdersPage() {
         </>
       ) : null}
 
-      <Modal open={createOpen} title="New purchase order" onClose={closeCreate} width="lg">
-        <form onSubmit={(event) => void submitCreate(event)}>
-          <div className="form-grid">
-            <Field label="Supplier" htmlFor="po-supplier" required>
-              <Select
-                id="po-supplier"
-                value={form.supplierId}
-                onChange={(event) => setFormField('supplierId', event.target.value)}
-              >
-                <option value="">— Select supplier —</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.tradeName}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Warehouse" htmlFor="po-warehouse" required>
-              <Select
-                id="po-warehouse"
-                value={form.warehouseId}
-                onChange={(event) => setFormField('warehouseId', event.target.value)}
-              >
-                <option value="">— Select warehouse —</option>
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Expected at" htmlFor="po-expected">
-              <TextInput
-                id="po-expected"
-                type="date"
-                value={form.expectedAt}
-                onChange={(event) => setFormField('expectedAt', event.target.value)}
-              />
-            </Field>
-            <Field label="Discount" htmlFor="po-discount">
-              <TextInput
-                id="po-discount"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.discount}
-                onChange={(event) => setFormField('discount', event.target.value)}
-              />
-            </Field>
-          </div>
-          <div className="invoice-items">
-            {form.items.map((item, index) => (
-              <div className="invoice-item" key={index}>
-                <Field label="Product" htmlFor={`po-item-product-${index}`}>
-                  <Select
-                    id={`po-item-product-${index}`}
-                    value={item.productId}
-                    onChange={(event) => setItemField(index, 'productId', event.target.value)}
-                  >
-                    <option value="">— Select product —</option>
-                    {products.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.sku} · {product.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Qty" htmlFor={`po-item-qty-${index}`}>
-                  <TextInput
-                    id={`po-item-qty-${index}`}
-                    type="number"
-                    min="0.0001"
-                    step="any"
-                    value={item.quantity}
-                    onChange={(event) => setItemField(index, 'quantity', event.target.value)}
-                  />
-                </Field>
-                <Field label="Unit cost" htmlFor={`po-item-cost-${index}`}>
-                  <TextInput
-                    id={`po-item-cost-${index}`}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="purchase price"
-                    value={item.unitCost}
-                    onChange={(event) => setItemField(index, 'unitCost', event.target.value)}
-                  />
-                </Field>
-                <Field label="Tax %" htmlFor={`po-item-tax-${index}`}>
-                  <TextInput
-                    id={`po-item-tax-${index}`}
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    placeholder="e.g. 18"
-                    value={item.taxRate}
-                    onChange={(event) => setItemField(index, 'taxRate', event.target.value)}
-                  />
-                </Field>
-                <div className="invoice-item-remove">
-                  {form.items.length > 1 ? (
-                    <Button variant="ghost" size="sm" onClick={() => removeItem(index)}>
-                      Remove
-                    </Button>
-                  ) : null}
-                </div>
+      <Dialog open={createOpen} onOpenChange={(open) => !saving && setCreateOpen(open)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title="New purchase order" />
+          <form onSubmit={(event) => void submitCreate(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="po-supplier">Supplier *</label>
+                <select id="po-supplier" {...register('supplierId')}>
+                  <option value="">— Select supplier —</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.tradeName}
+                    </option>
+                  ))}
+                </select>
+                {errors.supplierId ? <div className="field-error">{errors.supplierId.message}</div> : null}
               </div>
-            ))}
-          </div>
-          <Button variant="ghost" size="sm" onClick={addItem}>
-            + Add line
-          </Button>
-          <Field label="Notes" htmlFor="po-notes">
-            <TextArea
-              id="po-notes"
-              rows={2}
-              value={form.notes}
-              onChange={(event) => setFormField('notes', event.target.value)}
-            />
-          </Field>
-          {formError ? <div className="error-banner">{formError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={closeCreate} disabled={saving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Creating…' : 'Create purchase order'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      <Modal
-        open={receiving !== null}
-        title={`Receive goods for ${receiving?.number ?? ''}`}
-        onClose={closeReceive}
-        width="lg"
-      >
-        <form onSubmit={(event) => void submitReceive(event)}>
-          {receiving ? (
-            <div className="invoice-items">
-              {(receiving.items ?? []).map((item: PurchaseOrderItem) => {
-                const maxReceive = Math.max(0, item.quantity - item.receivedQuantity);
-                return (
-                  <div className="invoice-item" key={item.id}>
-                    <Field label="Product">
-                      <TextInput value={item.description ?? item.productId} readOnly />
-                    </Field>
-                    <Field label="Ordered">
-                      <TextInput value={String(item.quantity)} readOnly />
-                    </Field>
-                    <Field label="Received">
-                      <TextInput value={String(item.receivedQuantity)} readOnly />
-                    </Field>
-                    <Field label="To receive" htmlFor={`receive-qty-${item.id}`}>
-                      <TextInput
-                        id={`receive-qty-${item.id}`}
-                        type="number"
-                        min="0"
-                        max={maxReceive}
-                        step="any"
-                        value={receiveItems.find((r) => r.orderItemId === item.id)?.quantity ?? '0'}
-                        onChange={(event) => setReceiveItemQty(item.id, event.target.value)}
-                      />
-                    </Field>
-                    <div className="invoice-item-remove" />
-                  </div>
-                );
-              })}
+              <div className="field">
+                <label htmlFor="po-warehouse">Warehouse *</label>
+                <select id="po-warehouse" {...register('warehouseId')}>
+                  <option value="">— Select warehouse —</option>
+                  {warehouses.map((warehouse) => (
+                    <option key={warehouse.id} value={warehouse.id}>
+                      {warehouse.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.warehouseId ? <div className="field-error">{errors.warehouseId.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="po-expected">Expected at</label>
+                <input id="po-expected" type="date" {...register('expectedAt')} />
+              </div>
+              <div className="field">
+                <label htmlFor="po-discount">Discount</label>
+                <input id="po-discount" type="number" min="0" step="0.01" {...register('discount')} />
+                {errors.discount ? <div className="field-error">{errors.discount.message}</div> : null}
+              </div>
             </div>
-          ) : null}
-          <Field label="Notes" htmlFor="receive-notes">
-            <TextArea
-              id="receive-notes"
-              rows={2}
-              value={receiveNotes}
-              onChange={(event) => setReceiveNotes(event.target.value)}
-            />
-          </Field>
-          {receiveError ? <div className="error-banner">{receiveError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={closeReceive} disabled={receiveBusy}>
-              Cancel
+            <div className="invoice-items">
+              {items.map((_, index) => (
+                <div className="invoice-item" key={index}>
+                  <div className="field">
+                    <label htmlFor={`po-item-product-${index}`}>Product</label>
+                    <select id={`po-item-product-${index}`} {...register(`items.${index}.productId`)}>
+                      <option value="">— Select product —</option>
+                      {products.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.sku} · {product.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`po-item-qty-${index}`}>Qty</label>
+                    <input
+                      id={`po-item-qty-${index}`}
+                      type="number"
+                      min="0.0001"
+                      step="any"
+                      {...register(`items.${index}.quantity`)}
+                    />
+                    {errors.items?.[index]?.quantity ? (
+                      <div className="field-error">{errors.items[index]?.quantity?.message}</div>
+                    ) : null}
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`po-item-cost-${index}`}>Unit cost</label>
+                    <input
+                      id={`po-item-cost-${index}`}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="purchase price"
+                      {...register(`items.${index}.unitCost`)}
+                    />
+                    {errors.items?.[index]?.unitCost ? (
+                      <div className="field-error">{errors.items[index]?.unitCost?.message}</div>
+                    ) : null}
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`po-item-tax-${index}`}>Tax %</label>
+                    <input
+                      id={`po-item-tax-${index}`}
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      placeholder="e.g. 18"
+                      {...register(`items.${index}.taxRate`)}
+                    />
+                    {errors.items?.[index]?.taxRate ? (
+                      <div className="field-error">{errors.items[index]?.taxRate?.message}</div>
+                    ) : null}
+                  </div>
+                  <div className="invoice-item-remove">
+                    {items.length > 1 ? (
+                      <Button variant="ghost" size="sm" type="button" onClick={() => removeItem(index)}>
+                        Remove
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button variant="ghost" size="sm" type="button" onClick={addItem}>
+              + Add line
             </Button>
-            <button type="submit" className="btn btn-primary" disabled={receiveBusy || !receiving}>
-              {receiveBusy ? 'Receiving…' : 'Record receipt'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+            <div className="field">
+              <label htmlFor="po-notes">Notes</label>
+              <textarea id="po-notes" rows={2} {...register('notes')} />
+            </div>
+            {formError ? <div className="error-banner">{formError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={saving}>
+                {saving ? 'Creating…' : 'Create purchase order'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={receiving !== null}
+        onOpenChange={(open) => !receiveBusy && !open && setReceiving(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={`Receive goods for ${receiving?.number ?? ''}`} />
+          <form onSubmit={(event) => void submitReceive(event)}>
+            {receiving ? (
+              <div className="invoice-items">
+                {receiving.items.map((item: PurchaseOrderItem, index) => {
+                  const maxReceive = Math.max(0, item.quantity - item.receivedQuantity);
+                  return (
+                    <div className="invoice-item" key={item.id}>
+                      <div className="field">
+                        <label>Product</label>
+                        <input value={item.description ?? item.productId} readOnly />
+                      </div>
+                      <div className="field">
+                        <label>Ordered</label>
+                        <input value={String(item.quantity)} readOnly />
+                      </div>
+                      <div className="field">
+                        <label>Received</label>
+                        <input value={String(item.receivedQuantity)} readOnly />
+                      </div>
+                      <div className="field">
+                        <label htmlFor={`receive-qty-${item.id}`}>To receive</label>
+                        <input
+                          id={`receive-qty-${item.id}`}
+                          type="number"
+                          min="0"
+                          max={maxReceive}
+                          step="any"
+                          {...receiveRegister(`items.${index}.quantity`)}
+                        />
+                      </div>
+                      <div className="invoice-item-remove" />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+            <div className="field">
+              <label htmlFor="receive-notes">Notes</label>
+              <textarea id="receive-notes" rows={2} {...receiveRegister('notes')} />
+            </div>
+            {receiveError ? <div className="error-banner">{receiveError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={receiveBusy || !receiving}>
+                {receiveBusy ? 'Receiving…' : 'Record receipt'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
