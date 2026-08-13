@@ -13,7 +13,7 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
-import { Button, Select } from '../components/forms';
+import { Button } from '../components/ui/button';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { InvoiceFormModal } from '../components/invoices/invoice-form';
@@ -131,7 +131,7 @@ export function InvoicesPage() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <Select
+        <select
           value={statusFilter}
           onChange={(event) => {
             setStatusFilter(event.target.value);
@@ -142,8 +142,8 @@ export function InvoicesPage() {
           <option value="draft">Draft</option>
           <option value="issued">Issued</option>
           <option value="cancelled">Cancelled</option>
-        </Select>
-        <Select
+        </select>
+        <select
           value={typeFilter}
           onChange={(event) => {
             setTypeFilter(event.target.value);
@@ -153,7 +153,7 @@ export function InvoicesPage() {
           <option value="">All types</option>
           <option value="invoice">Invoice</option>
           <option value="credit_note">Credit note</option>
-        </Select>
+        </select>
         <button type="submit" className="btn">
           Search
         </button>

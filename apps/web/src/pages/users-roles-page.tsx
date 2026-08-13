@@ -1,6 +1,16 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
+import type { components } from '../api/schema';
 import type { Paginated, Role, User } from '../api/types';
+import {
+  roleFormSchema,
+  userFormSchema,
+  type RoleFormValues,
+  type UserFormValues,
+} from '../api/schemas';
+import { useApiMutation, useApiMutationVoid } from '../api/hooks';
 import {
   Badge,
   type Column,
@@ -11,15 +21,9 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
-import {
-  Button,
-  Checkbox,
-  ConfirmDialog,
-  Field,
-  Modal,
-  TextArea,
-  TextInput,
-} from '../components/forms';
+import { Button } from '../components/ui/button';
+import { Checkbox } from '../components/ui/checkbox';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 
 const PERMISSION_MODULES = [
@@ -42,24 +46,71 @@ const PERMISSION_MODULES = [
 const PERMISSION_ACTIONS = ['read', 'write', 'approve', 'adjust', 'delete'] as const;
 const ALL_PERMISSIONS = '*';
 
-interface UserForm {
-  email: string;
-  name: string;
-  password: string;
-  active: boolean;
-  roleIds: string[];
-  invite: boolean;
+type CreateUserDto = components['schemas']['CreateUserDto'];
+type UpdateUserDto = components['schemas']['UpdateUserDto'];
+type InviteUserDto = components['schemas']['InviteUserDto'];
+type CreateRoleDto = components['schemas']['CreateRoleDto'];
+
+const emptyUser: UserFormValues = {
+  email: '',
+  name: '',
+  password: '',
+  active: true,
+  roleIds: [],
+  invite: false,
+};
+
+const emptyRole: RoleFormValues = { name: '', description: '', permissions: [] };
+
+function fromUser(user: User): UserFormValues {
+  return {
+    email: user.email,
+    name: user.name ?? '',
+    password: '',
+    active: user.active,
+    roleIds: user.roles.map((role) => role.id),
+    invite: false,
+  };
 }
 
-const emptyUser: UserForm = { email: '', name: '', password: '', active: true, roleIds: [], invite: false };
-
-interface RoleForm {
-  name: string;
-  description: string;
-  permissions: string[];
+function userToUpdateDto(form: UserFormValues): UpdateUserDto {
+  return {
+    name: form.name.trim() || undefined,
+    active: form.active,
+    roleIds: form.roleIds,
+    ...(form.password ? { password: form.password } : {}),
+  };
 }
 
-const emptyRole: RoleForm = { name: '', description: '', permissions: [] };
+function userToCreateDto(form: UserFormValues): CreateUserDto {
+  return {
+    email: form.email.trim(),
+    password: form.password,
+    name: form.name.trim() || undefined,
+    active: form.active,
+    roleIds: form.roleIds,
+  };
+}
+
+function userToInviteDto(form: UserFormValues): InviteUserDto {
+  return {
+    email: form.email.trim(),
+    name: form.name.trim() || undefined,
+    roleIds: form.roleIds,
+  };
+}
+
+function fromRole(role: Role): RoleFormValues {
+  return { name: role.name, description: role.description ?? '', permissions: role.permissions };
+}
+
+function roleToDto(form: RoleFormValues): CreateRoleDto {
+  return {
+    name: form.name.trim(),
+    description: form.description.trim() || undefined,
+    permissions: form.permissions,
+  };
+}
 
 export function UsersRolesPage() {
   const [tab, setTab] = useState<'users' | 'roles'>('users');
@@ -76,28 +127,52 @@ export function UsersRolesPage() {
 
   const [userOpen, setUserOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [userForm, setUserForm] = useState<UserForm>(emptyUser);
   const [userFormError, setUserFormError] = useState<string | null>(null);
-  const [userSaving, setUserSaving] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [inviteEmailSent, setInviteEmailSent] = useState(false);
 
   const [roleOpen, setRoleOpen] = useState(false);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
-  const [roleForm, setRoleForm] = useState<RoleForm>(emptyRole);
   const [roleFormError, setRoleFormError] = useState<string | null>(null);
-  const [roleSaving, setRoleSaving] = useState(false);
   const [deletingRole, setDeletingRole] = useState<Role | null>(null);
-  const [roleDeleteBusy, setRoleDeleteBusy] = useState(false);
+
+  const userForm = useForm<UserFormValues>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: emptyUser,
+  });
+  const {
+    register: registerUser,
+    handleSubmit: submitUserForm,
+    reset: resetUser,
+    setValue: setUserValue,
+    watch: watchUser,
+    formState: { errors: userErrors },
+  } = userForm;
+
+  const roleForm = useForm<RoleFormValues>({
+    resolver: zodResolver(roleFormSchema),
+    defaultValues: emptyRole,
+  });
+  const {
+    register: registerRole,
+    handleSubmit: submitRoleForm,
+    reset: resetRole,
+    setValue: setRoleValue,
+    watch: watchRole,
+    formState: { errors: roleErrors },
+  } = roleForm;
+
+  const userInvite = watchUser('invite');
+  const userActive = watchUser('active');
+  const userRoleIds = watchUser('roleIds');
+  const rolePermissions = watchRole('permissions');
 
   const loadUsers = async (page: number) => {
     setUserLoading(true);
     setUserError(null);
     try {
       const params = new URLSearchParams({ page: String(page), limit: '20' });
-      setUserData(
-        await apiFetch<Paginated<User>>(`/api/v1/users?${params.toString()}`),
-      );
+      setUserData(await apiFetch<Paginated<User>>(`/api/v1/users?${params.toString()}`));
     } catch (err) {
       setUserError(err instanceof ApiError ? err.message : 'Could not load users.');
     } finally {
@@ -125,9 +200,25 @@ export function UsersRolesPage() {
     void loadRoles();
   }, []);
 
+  const createUserMutation = useApiMutation<CreateUserDto>('/api/v1/users', 'POST');
+  const updateUserMutation = useApiMutation<UpdateUserDto>(`/api/v1/users/${editingUserId ?? ''}`, 'PATCH');
+  const inviteMutation = useApiMutation<InviteUserDto, { user: User; inviteToken: string | null }>(
+    '/api/v1/auth/invite',
+    'POST',
+  );
+
+  const createRoleMutation = useApiMutation<CreateRoleDto>('/api/v1/roles', 'POST');
+  const updateRoleMutation = useApiMutation<CreateRoleDto>(`/api/v1/roles/${editingRoleId ?? ''}`, 'PATCH');
+  const deleteRoleMutation = useApiMutationVoid(`/api/v1/roles/${deletingRole?.id ?? ''}`, 'DELETE');
+
+  const userSaving =
+    createUserMutation.isPending || updateUserMutation.isPending || inviteMutation.isPending;
+  const roleSaving = createRoleMutation.isPending || updateRoleMutation.isPending;
+  const roleDeleteBusy = deleteRoleMutation.isPending;
+
   const openCreateUser = () => {
     setEditingUserId(null);
-    setUserForm(emptyUser);
+    resetUser(emptyUser);
     setUserFormError(null);
     setInviteLink(null);
     setUserOpen(true);
@@ -135,174 +226,115 @@ export function UsersRolesPage() {
 
   const openEditUser = (user: User) => {
     setEditingUserId(user.id);
-    setUserForm({
-      email: user.email,
-      name: user.name ?? '',
-      password: '',
-      active: user.active,
-      roleIds: user.roles.map((role) => role.id),
-      invite: false,
-    });
+    resetUser(fromUser(user));
     setUserFormError(null);
     setUserOpen(true);
   };
 
   const toggleUserRole = (roleId: string) => {
-    setUserForm((current) => ({
-      ...current,
-      roleIds: current.roleIds.includes(roleId)
-        ? current.roleIds.filter((id) => id !== roleId)
-        : [...current.roleIds, roleId],
-    }));
+    setUserValue(
+      'roleIds',
+      userRoleIds.includes(roleId)
+        ? userRoleIds.filter((id) => id !== roleId)
+        : [...userRoleIds, roleId],
+    );
   };
 
-  const submitUser = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!userForm.email.trim()) {
-      setUserFormError('Email is required.');
-      return;
-    }
-    if (!editingUserId && !userForm.invite && userForm.password.length < 8) {
+  const submitUser = submitUserForm((values) => {
+    if (!editingUserId && !values.invite && values.password.length < 8) {
       setUserFormError('Password must be at least 8 characters.');
       return;
     }
-    setUserSaving(true);
     setUserFormError(null);
-    try {
-      if (editingUserId) {
-        await apiFetch(`/api/v1/users/${editingUserId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: userForm.name.trim() || undefined,
-            active: userForm.active,
-            roleIds: userForm.roleIds,
-            ...(userForm.password ? { password: userForm.password } : {}),
-          }),
-        });
-        toast.toast('User updated.');
-      } else if (userForm.invite) {
-        const result = await apiFetch<{ user: User; inviteToken: string | null }>('/api/v1/auth/invite', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: userForm.email.trim(),
-            name: userForm.name.trim() || undefined,
-            roleIds: userForm.roleIds,
-          }),
-        });
-        if (result.inviteToken) {
-          setInviteLink(
-            `${window.location.origin}/accept-invite?token=${encodeURIComponent(result.inviteToken)}`,
-          );
-        } else {
-          setInviteEmailSent(true);
-        }
+    if (editingUserId) {
+      updateUserMutation.mutate(userToUpdateDto(values), {
+        onSuccess: () => {
+          toast.toast('User updated.');
+          setUserOpen(false);
+          void loadUsers(userPage);
+        },
+        onError: (err) => setUserFormError(err.message),
+      });
+      return;
+    }
+    if (values.invite) {
+      inviteMutation.mutate(userToInviteDto(values), {
+        onSuccess: (result) => {
+          if (result.inviteToken) {
+            setInviteLink(
+              `${window.location.origin}/accept-invite?token=${encodeURIComponent(result.inviteToken)}`,
+            );
+          } else {
+            setInviteEmailSent(true);
+          }
+          setUserOpen(false);
+          void loadUsers(userPage);
+        },
+        onError: (err) => setUserFormError(err.message),
+      });
+      return;
+    }
+    createUserMutation.mutate(userToCreateDto(values), {
+      onSuccess: () => {
+        toast.toast('User created.');
         setUserOpen(false);
         void loadUsers(userPage);
-        return;
-      } else {
-        await apiFetch('/api/v1/users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: userForm.email.trim(),
-            password: userForm.password,
-            name: userForm.name.trim() || undefined,
-            active: userForm.active,
-            roleIds: userForm.roleIds,
-          }),
-        });
-        toast.toast('User created.');
-      }
-      setUserOpen(false);
-      void loadUsers(userPage);
-    } catch (err) {
-      setUserFormError(err instanceof ApiError ? err.message : 'Could not save user.');
-    } finally {
-      setUserSaving(false);
-    }
-  };
+      },
+      onError: (err) => setUserFormError(err.message),
+    });
+  });
 
   const openCreateRole = () => {
     setEditingRoleId(null);
-    setRoleForm(emptyRole);
+    resetRole(emptyRole);
     setRoleFormError(null);
     setRoleOpen(true);
   };
 
   const openEditRole = (role: Role) => {
     setEditingRoleId(role.id);
-    setRoleForm({
-      name: role.name,
-      description: role.description ?? '',
-      permissions: role.permissions,
-    });
+    resetRole(fromRole(role));
     setRoleFormError(null);
     setRoleOpen(true);
   };
 
   const togglePermission = (permission: string) => {
-    setRoleForm((current) => ({
-      ...current,
-      permissions: current.permissions.includes(permission)
-        ? current.permissions.filter((p) => p !== permission)
-        : [...current.permissions, permission],
-    }));
+    setRoleValue(
+      'permissions',
+      rolePermissions.includes(permission)
+        ? rolePermissions.filter((p) => p !== permission)
+        : [...rolePermissions, permission],
+    );
   };
 
-  const submitRole = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!roleForm.name.trim()) {
-      setRoleFormError('Name is required.');
-      return;
-    }
-    setRoleSaving(true);
+  const submitRole = submitRoleForm((values) => {
     setRoleFormError(null);
-    const payload = {
-      name: roleForm.name.trim(),
-      description: roleForm.description.trim() || undefined,
-      permissions: roleForm.permissions,
-    };
-    try {
-      if (editingRoleId) {
-        await apiFetch(`/api/v1/roles/${editingRoleId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        toast.toast('Role updated.');
-      } else {
-        await apiFetch('/api/v1/roles', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        toast.toast('Role created.');
-      }
+    const onSuccess = () => {
+      toast.toast(editingRoleId ? 'Role updated.' : 'Role created.');
       setRoleOpen(false);
       void loadRoles();
-    } catch (err) {
-      setRoleFormError(err instanceof ApiError ? err.message : 'Could not save role.');
-    } finally {
-      setRoleSaving(false);
+    };
+    const onError = (err: { message: string }) => setRoleFormError(err.message);
+    if (editingRoleId) {
+      updateRoleMutation.mutate(roleToDto(values), { onSuccess, onError });
+    } else {
+      createRoleMutation.mutate(roleToDto(values), { onSuccess, onError });
     }
-  };
+  });
 
-  const confirmDeleteRole = async () => {
+  const confirmDeleteRole = () => {
     if (!deletingRole) return;
-    setRoleDeleteBusy(true);
-    try {
-      await apiFetch(`/api/v1/roles/${deletingRole.id}`, { method: 'DELETE' });
-      toast.toast('Role deleted.');
-      setDeletingRole(null);
-      void loadRoles();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not delete role.', 'error');
-      setDeletingRole(null);
-    } finally {
-      setRoleDeleteBusy(false);
-    }
+    deleteRoleMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.toast('Role deleted.');
+        setDeletingRole(null);
+        void loadRoles();
+      },
+      onError: (err) => {
+        toast.toast(err.message, 'error');
+        setDeletingRole(null);
+      },
+    });
   };
 
   const userColumns: Column<User>[] = [
@@ -402,12 +434,12 @@ export function UsersRolesPage() {
         {PERMISSION_ACTIONS.map((action) => {
           const value = `${module}:${action}`;
           return (
-            <Checkbox
-              key={value}
-              label={action}
-              checked={roleForm.permissions.includes(value)}
-              onChange={() => togglePermission(value)}
-            />
+            <div key={value} className="flex items-center gap-1.5">
+              <Checkbox id={value} checked={rolePermissions.includes(value)} onCheckedChange={() => togglePermission(value)} />
+              <label htmlFor={value} className="text-sm text-gray-700">
+                {action}
+              </label>
+            </div>
           );
         })}
       </div>
@@ -469,201 +501,211 @@ export function UsersRolesPage() {
         </>
       )}
 
-      <Modal
-        open={userOpen}
-        title={editingUserId ? 'Edit user' : 'New user'}
-        onClose={() => !userSaving && setUserOpen(false)}
-        width="lg"
-      >
-        <form onSubmit={(event) => void submitUser(event)}>
-          <div className="form-grid">
-            <Field label="Email" htmlFor="usr-email" required>
-              <TextInput
-                id="usr-email"
-                type="email"
-                disabled={editingUserId !== null}
-                value={userForm.email}
-                onChange={(event) => setUserForm((current) => ({ ...current, email: event.target.value }))}
-              />
-            </Field>
-            <Field label="Name" htmlFor="usr-name">
-              <TextInput
-                id="usr-name"
-                value={userForm.name}
-                onChange={(event) => setUserForm((current) => ({ ...current, name: event.target.value }))}
-              />
-            </Field>
-            {!editingUserId ? (
-              <Field label="Invitation">
-                <Checkbox
-                  label="Invite by email (no password)"
-                  checked={userForm.invite}
-                  onChange={(event) =>
-                    setUserForm((current) => ({ ...current, invite: event.target.checked }))
-                  }
+      <Dialog open={userOpen} onOpenChange={(open) => !userSaving && setUserOpen(open)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={editingUserId ? 'Edit user' : 'New user'} />
+          <form onSubmit={(event) => void submitUser(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="usr-email">Email *</label>
+                <input
+                  id="usr-email"
+                  type="email"
+                  disabled={editingUserId !== null}
+                  {...registerUser('email')}
                 />
-              </Field>
-            ) : null}
-            <Field
-              label={editingUserId ? 'New password (optional)' : 'Password'}
-              htmlFor="usr-password"
-              required={!editingUserId && !userForm.invite}
-            >
-              <TextInput
-                id="usr-password"
-                type="password"
-                placeholder={editingUserId ? 'Leave blank to keep' : userForm.invite ? 'Set by invite' : ''}
-                disabled={userForm.invite}
-                value={userForm.password}
-                onChange={(event) => setUserForm((current) => ({ ...current, password: event.target.value }))}
-              />
-            </Field>
-            <Field label="Status">
-              <Checkbox
-                label="Active"
-                checked={userForm.active}
-                onChange={(event) => setUserForm((current) => ({ ...current, active: event.target.checked }))}
-              />
-            </Field>
-            <Field label="Roles" htmlFor="usr-roles">
-              {roles.length === 0 ? (
-                <div className="muted">No roles available.</div>
-              ) : (
-                <div className="permission-checks">
-                  {roles.map((role) => (
+                {userErrors.email ? <div className="field-error">{userErrors.email.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="usr-name">Name</label>
+                <input id="usr-name" {...registerUser('name')} />
+              </div>
+              {!editingUserId ? (
+                <div className="field">
+                  <label>Invitation</label>
+                  <div className="mt-1 flex items-center gap-2">
                     <Checkbox
-                      key={role.id}
-                      label={role.name}
-                      checked={userForm.roleIds.includes(role.id)}
-                      onChange={() => toggleUserRole(role.id)}
+                      id="usr-invite"
+                      checked={userInvite}
+                      onCheckedChange={(checked) => setUserValue('invite', checked === true)}
                     />
-                  ))}
+                    <label htmlFor="usr-invite" className="text-sm text-gray-700">
+                      Invite by email (no password)
+                    </label>
+                  </div>
                 </div>
-              )}
-            </Field>
-          </div>
-          {userFormError ? <div className="error-banner">{userFormError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={() => setUserOpen(false)} disabled={userSaving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={userSaving}>
-              {userSaving ? 'Saving…' : editingUserId ? 'Save changes' : 'Create user'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+              ) : null}
+              <div className="field">
+                <label htmlFor="usr-password">
+                  {editingUserId ? 'New password (optional)' : 'Password'}
+                  {!editingUserId && !userInvite ? ' *' : ''}
+                </label>
+                <input
+                  id="usr-password"
+                  type="password"
+                  placeholder={editingUserId ? 'Leave blank to keep' : userInvite ? 'Set by invite' : ''}
+                  disabled={userInvite}
+                  {...registerUser('password')}
+                />
+                {userErrors.password ? (
+                  <div className="field-error">{userErrors.password.message}</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label>Status</label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Checkbox
+                    id="usr-active"
+                    checked={userActive}
+                    onCheckedChange={(checked) => setUserValue('active', checked === true)}
+                  />
+                  <label htmlFor="usr-active" className="text-sm text-gray-700">
+                    Active
+                  </label>
+                </div>
+              </div>
+              <div className="field">
+                <label>Roles</label>
+                {roles.length === 0 ? (
+                  <div className="muted">No roles available.</div>
+                ) : (
+                  <div className="permission-checks">
+                    {roles.map((role) => (
+                      <div key={role.id} className="flex items-center gap-1.5">
+                        <Checkbox
+                          id={`usr-role-${role.id}`}
+                          checked={userRoleIds.includes(role.id)}
+                          onCheckedChange={() => toggleUserRole(role.id)}
+                        />
+                        <label htmlFor={`usr-role-${role.id}`} className="text-sm text-gray-700">
+                          {role.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            {userFormError ? <div className="error-banner">{userFormError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={userSaving}>
+                {userSaving ? 'Saving…' : editingUserId ? 'Save changes' : 'Create user'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <Modal
+      <Dialog
         open={inviteLink !== null || inviteEmailSent}
-        title="Invitation sent"
-        onClose={() => {
-          setInviteLink(null);
-          setInviteEmailSent(false);
+        onOpenChange={(open) => {
+          if (!open) {
+            setInviteLink(null);
+            setInviteEmailSent(false);
+          }
         }}
       >
-        {inviteEmailSent ? (
-          <div className="success-banner">
-            An invitation email was sent to {userForm.email.trim() || 'the user'}.
-          </div>
-        ) : (
-          <>
+        <DialogContent>
+          <DialogHeader title="Invitation sent" />
+          {inviteEmailSent ? (
             <div className="success-banner">
-              Demo mode has no email server, so share the invite link below with{' '}
-              {userForm.email || 'the user'}:
+              An invitation email was sent to {watchUser('email').trim() || 'the user'}.
             </div>
-            <TextInput readOnly value={inviteLink ?? ''} />
-          </>
-        )}
-        <div className="modal-footer">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setInviteLink(null);
-              setInviteEmailSent(false);
-            }}
-          >
-            Close
-          </Button>
-          {inviteLink ? (
-            <button
-              type="button"
-              className="btn btn-primary"
+          ) : (
+            <>
+              <div className="success-banner">
+                Demo mode has no email server, so share the invite link below with{' '}
+                {watchUser('email') || 'the user'}:
+              </div>
+              <input readOnly value={inviteLink ?? ''} />
+            </>
+          )}
+          <div className="modal-footer">
+            <Button
+              variant="ghost"
               onClick={() => {
-                if (inviteLink) {
-                  void navigator.clipboard?.writeText(inviteLink);
-                  toast.toast('Invite link copied.');
-                }
+                setInviteLink(null);
+                setInviteEmailSent(false);
               }}
             >
-              Copy link
-            </button>
-          ) : null}
-        </div>
-      </Modal>
-
-      <Modal
-        open={roleOpen}
-        title={editingRoleId ? 'Edit role' : 'New role'}
-        onClose={() => !roleSaving && setRoleOpen(false)}
-        width="lg"
-      >
-        <form onSubmit={(event) => void submitRole(event)}>
-          <div className="form-grid">
-            <Field label="Name" htmlFor="role-name" required>
-              <TextInput
-                id="role-name"
-                value={roleForm.name}
-                onChange={(event) => setRoleForm((current) => ({ ...current, name: event.target.value }))}
-              />
-            </Field>
-            <Field label="Description" htmlFor="role-description">
-              <TextArea
-                id="role-description"
-                rows={2}
-                value={roleForm.description}
-                onChange={(event) => setRoleForm((current) => ({ ...current, description: event.target.value }))}
-              />
-            </Field>
-            <Field label="Permissions">
-              <Checkbox
-                label="All permissions (*)"
-                checked={roleForm.permissions.includes(ALL_PERMISSIONS)}
-                onChange={(event) => {
-                  if (event.target.checked) {
-                    setRoleForm((current) => ({ ...current, permissions: [ALL_PERMISSIONS] }));
-                  } else {
-                    setRoleForm((current) => ({
-                      ...current,
-                      permissions: current.permissions.filter((p) => p !== ALL_PERMISSIONS),
-                    }));
+              Close
+            </Button>
+            {inviteLink ? (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  if (inviteLink) {
+                    void navigator.clipboard?.writeText(inviteLink);
+                    toast.toast('Invite link copied.');
                   }
                 }}
-              />
-              {rolePermissionRows}
-            </Field>
+              >
+                Copy link
+              </button>
+            ) : null}
           </div>
-          {roleFormError ? <div className="error-banner">{roleFormError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={() => setRoleOpen(false)} disabled={roleSaving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={roleSaving}>
-              {roleSaving ? 'Saving…' : editingRoleId ? 'Save changes' : 'Create role'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+        </DialogContent>
+      </Dialog>
 
-      <ConfirmDialog
+      <Dialog open={roleOpen} onOpenChange={(open) => !roleSaving && setRoleOpen(open)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={editingRoleId ? 'Edit role' : 'New role'} />
+          <form onSubmit={(event) => void submitRole(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="role-name">Name *</label>
+                <input id="role-name" {...registerRole('name')} />
+                {roleErrors.name ? <div className="field-error">{roleErrors.name.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="role-description">Description</label>
+                <textarea id="role-description" rows={2} {...registerRole('description')} />
+              </div>
+              <div className="field">
+                <label>Permissions</label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Checkbox
+                    id="role-permissions-all"
+                    checked={rolePermissions.includes(ALL_PERMISSIONS)}
+                    onCheckedChange={(checked) => {
+                      if (checked === true) {
+                        setRoleValue('permissions', [ALL_PERMISSIONS]);
+                      } else {
+                        setRoleValue('permissions', rolePermissions.filter((p) => p !== ALL_PERMISSIONS));
+                      }
+                    }}
+                  />
+                  <label htmlFor="role-permissions-all" className="text-sm text-gray-700">
+                    All permissions (*)
+                  </label>
+                </div>
+                {rolePermissionRows}
+              </div>
+            </div>
+            {roleFormError ? <div className="error-banner">{roleFormError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={roleSaving}>
+                {roleSaving ? 'Saving…' : editingRoleId ? 'Save changes' : 'Create role'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
         open={deletingRole !== null}
-        title="Delete role"
-        message={`Delete role "${deletingRole?.name}"?`}
-        confirmLabel="Delete"
-        busy={roleDeleteBusy}
-        onCancel={() => setDeletingRole(null)}
-        onConfirm={() => void confirmDeleteRole()}
-      />
+        onOpenChange={(open) => !roleDeleteBusy && !open && setDeletingRole(null)}
+      >
+        <DialogContent>
+          <DialogHeader title="Delete role" description={`Delete role "${deletingRole?.name}"?`} />
+          <DialogFooter>
+            <Button variant="danger" type="button" disabled={roleDeleteBusy} onClick={() => void confirmDeleteRole()}>
+              {roleDeleteBusy ? 'Working…' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

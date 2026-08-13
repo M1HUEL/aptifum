@@ -1,5 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
+import type { components } from '../api/schema';
 import type {
   Paginated,
   Product,
@@ -7,6 +10,14 @@ import type {
   ProductionOrder,
   Warehouse,
 } from '../api/types';
+import {
+  bomFormSchema,
+  productionOrderFormSchema,
+  type BomFormValues,
+  type BomLineFormValues,
+  type ProductionOrderFormValues,
+} from '../api/schemas';
+import { useApiInvalidation, useApiMutation, useApiMutationVoid } from '../api/hooks';
 import {
   Badge,
   type BadgeTone,
@@ -20,54 +31,29 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
-import {
-  Button,
-  Checkbox,
-  ConfirmDialog,
-  Field,
-  Modal,
-  Select,
-  TextArea,
-  TextInput,
-} from '../components/forms';
+import { Button } from '../components/ui/button';
+import { Checkbox } from '../components/ui/checkbox';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 
 type OrderStatus = ProductionOrder['status'];
+type CreateBomDto = components['schemas']['CreateBomDto'];
+type CreateBomLineDto = components['schemas']['BomLineInputDto'];
+type CreateProductionOrderDto = components['schemas']['CreateProductionOrderDto'];
+type PendingAction = 'start' | 'complete' | 'cancel';
 
-function statusTone(status: OrderStatus): BadgeTone {
-  if (status === 'completed') return 'success';
-  if (status === 'in_progress') return 'info';
-  if (status === 'cancelled') return 'danger';
-  return 'neutral';
-}
+const emptyBomLine: BomLineFormValues = { productId: '', quantity: '', wasteRate: '' };
 
-interface BomLineForm {
-  productId: string;
-  quantity: string;
-  wasteRate: string;
-}
+const emptyBom: BomFormValues = {
+  name: '',
+  productId: '',
+  outputQuantity: '1',
+  active: true,
+  lines: [emptyBomLine],
+};
 
-interface BomForm {
-  name: string;
-  productId: string;
-  outputQuantity: string;
-  active: boolean;
-}
-
-const emptyBom: BomForm = { name: '', productId: '', outputQuantity: '1', active: true };
-
-interface OrderForm {
-  productId: string;
-  bomId: string;
-  warehouseId: string;
-  quantity: string;
-  laborCost: string;
-  overhead: string;
-  notes: string;
-}
-
-const emptyOrder: OrderForm = {
+const emptyOrder: ProductionOrderFormValues = {
   productId: '',
   bomId: '',
   warehouseId: '',
@@ -77,7 +63,67 @@ const emptyOrder: OrderForm = {
   notes: '',
 };
 
-type PendingAction = 'start' | 'complete' | 'cancel';
+function statusTone(status: OrderStatus): BadgeTone {
+  if (status === 'completed') return 'success';
+  if (status === 'in_progress') return 'info';
+  if (status === 'cancelled') return 'danger';
+  return 'neutral';
+}
+
+function bomToDto(form: BomFormValues): CreateBomDto {
+  const lines: CreateBomLineDto[] = form.lines
+    .filter((line) => line.productId)
+    .map((line) => ({
+      productId: line.productId,
+      quantity: Number(line.quantity),
+      wasteRate: line.wasteRate === '' ? undefined : Number(line.wasteRate),
+    }));
+  return {
+    name: form.name.trim(),
+    productId: form.productId,
+    outputQuantity: form.outputQuantity === '' ? undefined : Number(form.outputQuantity),
+    active: form.active,
+    lines,
+  };
+}
+
+function fromBom(bom: ProductionBom): BomFormValues {
+  return {
+    name: bom.name,
+    productId: bom.productId,
+    outputQuantity: String(bom.outputQuantity),
+    active: bom.active,
+    lines: bom.lines.map((line) => ({
+      productId: line.productId,
+      quantity: String(line.quantity),
+      wasteRate: String(line.wasteRate),
+    })),
+  };
+}
+
+function orderToDto(form: ProductionOrderFormValues): CreateProductionOrderDto {
+  return {
+    productId: form.productId,
+    bomId: form.bomId || undefined,
+    quantity: Number(form.quantity),
+    warehouseId: form.warehouseId,
+    laborCost: form.laborCost === '' ? undefined : Number(form.laborCost),
+    overhead: form.overhead === '' ? undefined : Number(form.overhead),
+    notes: form.notes.trim() || undefined,
+  };
+}
+
+function fromOrder(order: ProductionOrder): ProductionOrderFormValues {
+  return {
+    productId: order.productId,
+    bomId: order.bomId ?? '',
+    warehouseId: order.warehouseId,
+    quantity: String(order.quantity),
+    laborCost: order.laborCost ? String(order.laborCost) : '',
+    overhead: order.overhead ? String(order.overhead) : '',
+    notes: order.notes ?? '',
+  };
+}
 
 export function ProductionPage() {
   const [tab, setTab] = useState<'boms' | 'orders'>('boms');
@@ -85,17 +131,16 @@ export function ProductionPage() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [bomsForSelect, setBomsForSelect] = useState<ProductionBom[]>([]);
   const toast = useToast();
+  const { invalidate } = useApiInvalidation();
 
   const {
     data: boms,
     error: bomsError,
-    reload: reloadBoms,
   } = usePagedQuery<ProductionBom>({ path: '/api/v1/production/boms', page: 1, limit: 50 });
 
   const {
     data: orders,
     error: ordersError,
-    reload: reloadOrders,
   } = usePagedQuery<ProductionOrder>({ path: '/api/v1/production/orders', page: 1, limit: 50 });
 
   useEffect(() => {
@@ -119,213 +164,169 @@ export function ProductionPage() {
 
   const [bomOpen, setBomOpen] = useState(false);
   const [editingBomId, setEditingBomId] = useState<string | null>(null);
-  const [bomForm, setBomForm] = useState<BomForm>(emptyBom);
-  const [bomLines, setBomLines] = useState<BomLineForm[]>([]);
   const [bomError, setBomError] = useState<string | null>(null);
-  const [bomSaving, setBomSaving] = useState(false);
   const [deletingBom, setDeletingBom] = useState<ProductionBom | null>(null);
-  const [deleteBomBusy, setDeleteBomBusy] = useState(false);
 
   const [orderOpen, setOrderOpen] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
-  const [orderForm, setOrderForm] = useState<OrderForm>(emptyOrder);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [orderSaving, setOrderSaving] = useState(false);
   const [viewing, setViewing] = useState<ProductionOrder | null>(null);
   const [viewBusy, setViewBusy] = useState(false);
   const [action, setAction] = useState<{ kind: PendingAction; order: ProductionOrder } | null>(null);
-  const [actionBusy, setActionBusy] = useState(false);
+
+  const bomForm = useForm<BomFormValues>({
+    resolver: zodResolver(bomFormSchema),
+    defaultValues: emptyBom,
+  });
+  const {
+    register: registerBom,
+    handleSubmit: submitBomForm,
+    reset: resetBom,
+    setValue: setBomValue,
+    watch: watchBom,
+    formState: { errors: bomErrors },
+  } = bomForm;
+
+  const orderForm = useForm<ProductionOrderFormValues>({
+    resolver: zodResolver(productionOrderFormSchema),
+    defaultValues: emptyOrder,
+  });
+  const {
+    register: registerOrder,
+    handleSubmit: submitOrderForm,
+    reset: resetOrder,
+    setValue: setOrderValue,
+    watch: watchOrder,
+    formState: { errors: orderErrors },
+  } = orderForm;
+
+  const bomLines = watchBom('lines');
+  const bomActive = watchBom('active');
+  const orderProductId = watchOrder('productId');
+
+  const createBomMutation = useApiMutation<CreateBomDto>('/api/v1/production/boms', 'POST');
+  const updateBomMutation = useApiMutation<CreateBomDto>(
+    `/api/v1/production/boms/${editingBomId ?? ''}`,
+    'PATCH',
+  );
+  const deleteBomMutation = useApiMutationVoid(`/api/v1/production/boms/${deletingBom?.id ?? ''}`, 'DELETE');
+
+  const createOrderMutation = useApiMutation<CreateProductionOrderDto>('/api/v1/production/orders', 'POST');
+  const updateOrderMutation = useApiMutation<CreateProductionOrderDto>(
+    `/api/v1/production/orders/${editingOrderId ?? ''}`,
+    'PATCH',
+  );
+  const actionMutation = useApiMutationVoid(
+    action ? `/api/v1/production/orders/${action.order.id}/${action.kind}` : '/api/v1/production/orders',
+    'POST',
+  );
+
+  const bomSaving = createBomMutation.isPending || updateBomMutation.isPending;
+  const deleteBomBusy = deleteBomMutation.isPending;
+  const orderSaving = createOrderMutation.isPending || updateOrderMutation.isPending;
+  const actionBusy = actionMutation.isPending;
 
   const openBomCreate = () => {
     setEditingBomId(null);
-    setBomForm(emptyBom);
-    setBomLines([{ productId: '', quantity: '', wasteRate: '' }]);
+    resetBom(emptyBom);
     setBomError(null);
     setBomOpen(true);
   };
 
-  const openBomEdit = async (bom: ProductionBom) => {
+  const openBomEdit = (bom: ProductionBom) => {
     setEditingBomId(bom.id);
-    setBomForm({
-      name: bom.name,
-      productId: bom.productId,
-      outputQuantity: String(bom.outputQuantity),
-      active: bom.active,
-    });
     setBomError(null);
+    resetBom({ ...fromBom(bom), lines: [] });
     setBomOpen(true);
-    try {
-      const detail = await apiFetch<ProductionBom>(`/api/v1/production/boms/${bom.id}`);
-      setBomLines(
-        detail.lines.map((line) => ({
-          productId: line.productId,
-          quantity: String(line.quantity),
-          wasteRate: String(line.wasteRate),
-        })),
-      );
-    } catch {
-      setBomLines([]);
-    }
+    void apiFetch<ProductionBom>(`/api/v1/production/boms/${bom.id}`)
+      .then((detail) => {
+        setBomValue(
+          'lines',
+          detail.lines.map((line) => ({
+            productId: line.productId,
+            quantity: String(line.quantity),
+            wasteRate: String(line.wasteRate),
+          })),
+        );
+      })
+      .catch(() => setBomValue('lines', []));
   };
 
-  const closeBom = () => {
-    if (!bomSaving) setBomOpen(false);
-  };
-
-  const setBomField = (key: keyof BomForm, value: string | boolean) => {
-    setBomForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const setBomLine = (index: number, key: keyof BomLineForm, value: string) => {
-    setBomLines((current) => current.map((line, i) => (i === index ? { ...line, [key]: value } : line)));
+  const setBomLine = (index: number, key: keyof BomLineFormValues, value: string) => {
+    setBomValue('lines', bomLines.map((line, i) => (i === index ? { ...line, [key]: value } : line)));
   };
 
   const addBomLine = () => {
-    setBomLines((current) => [...current, { productId: '', quantity: '', wasteRate: '' }]);
+    setBomValue('lines', [...bomLines, { ...emptyBomLine }]);
   };
 
   const removeBomLine = (index: number) => {
-    setBomLines((current) => current.filter((_, i) => i !== index));
+    setBomValue('lines', bomLines.filter((_, i) => i !== index));
   };
 
-  const submitBom = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!bomForm.name.trim() || !bomForm.productId) {
-      setBomError('Name and finished product are required.');
-      return;
-    }
-    const lines = bomLines
-      .filter((line) => line.productId)
-      .map((line) => ({
-        productId: line.productId,
-        quantity: Number(line.quantity),
-        wasteRate: line.wasteRate === '' ? undefined : Number(line.wasteRate),
-      }));
-    if (lines.length === 0) {
+  const submitBom = submitBomForm((values) => {
+    const body = bomToDto(values);
+    if (body.lines.length === 0) {
       setBomError('Add at least one component product.');
       return;
     }
-    setBomSaving(true);
     setBomError(null);
-    const body = {
-      name: bomForm.name.trim(),
-      productId: bomForm.productId,
-      outputQuantity: bomForm.outputQuantity === '' ? undefined : Number(bomForm.outputQuantity),
-      active: bomForm.active,
-      lines,
-    };
-    try {
-      if (editingBomId) {
-        await apiFetch(`/api/v1/production/boms/${editingBomId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('BOM updated.');
-      } else {
-        await apiFetch('/api/v1/production/boms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('BOM created.');
-      }
+    const onSuccess = () => {
+      toast.toast(editingBomId ? 'BOM updated.' : 'BOM created.');
       setBomOpen(false);
-      reloadBoms();
-    } catch (err) {
-      setBomError(err instanceof ApiError ? err.message : 'Could not save BOM.');
-    } finally {
-      setBomSaving(false);
+      void invalidate(['paged', '/api/v1/production/boms']);
+    };
+    const onError = (err: { message: string }) => setBomError(err.message);
+    if (editingBomId) {
+      updateBomMutation.mutate(body, { onSuccess, onError });
+    } else {
+      createBomMutation.mutate(body, { onSuccess, onError });
     }
-  };
+  });
 
-  const confirmDeleteBom = async () => {
+  const confirmDeleteBom = () => {
     if (!deletingBom) return;
-    setDeleteBomBusy(true);
-    try {
-      await apiFetch(`/api/v1/production/boms/${deletingBom.id}`, { method: 'DELETE' });
-      toast.toast('BOM deleted.');
-      setDeletingBom(null);
-      reloadBoms();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not delete BOM.', 'error');
-      setDeletingBom(null);
-    } finally {
-      setDeleteBomBusy(false);
-    }
+    deleteBomMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.toast('BOM deleted.');
+        setDeletingBom(null);
+        void invalidate(['paged', '/api/v1/production/boms']);
+      },
+      onError: (err) => {
+        toast.toast(err.message, 'error');
+        setDeletingBom(null);
+      },
+    });
   };
 
   const openOrderCreate = () => {
     setEditingOrderId(null);
-    setOrderForm(emptyOrder);
+    resetOrder(emptyOrder);
     setOrderError(null);
     setOrderOpen(true);
   };
 
   const openOrderEdit = (order: ProductionOrder) => {
     setEditingOrderId(order.id);
-    setOrderForm({
-      productId: order.productId,
-      bomId: order.bomId ?? '',
-      warehouseId: order.warehouseId,
-      quantity: String(order.quantity),
-      laborCost: order.laborCost ? String(order.laborCost) : '',
-      overhead: order.overhead ? String(order.overhead) : '',
-      notes: order.notes ?? '',
-    });
+    resetOrder(fromOrder(order));
     setOrderError(null);
     setOrderOpen(true);
   };
 
-  const closeOrder = () => {
-    if (!orderSaving) setOrderOpen(false);
-  };
-
-  const setOrderField = (key: keyof OrderForm, value: string) => {
-    setOrderForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const submitOrder = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!orderForm.productId || !orderForm.warehouseId || orderForm.quantity === '') {
-      setOrderError('Product, warehouse and quantity are required.');
-      return;
-    }
-    setOrderSaving(true);
+  const submitOrder = submitOrderForm((values) => {
     setOrderError(null);
-    const body = {
-      productId: orderForm.productId,
-      bomId: orderForm.bomId || undefined,
-      quantity: Number(orderForm.quantity),
-      warehouseId: orderForm.warehouseId,
-      laborCost: orderForm.laborCost === '' ? undefined : Number(orderForm.laborCost),
-      overhead: orderForm.overhead === '' ? undefined : Number(orderForm.overhead),
-      notes: orderForm.notes.trim() || undefined,
-    };
-    try {
-      if (editingOrderId) {
-        await apiFetch(`/api/v1/production/orders/${editingOrderId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Production order updated.');
-      } else {
-        await apiFetch('/api/v1/production/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Production order created.');
-      }
+    const onSuccess = () => {
+      toast.toast(editingOrderId ? 'Production order updated.' : 'Production order created.');
       setOrderOpen(false);
-      reloadOrders();
-    } catch (err) {
-      setOrderError(err instanceof ApiError ? err.message : 'Could not save production order.');
-    } finally {
-      setOrderSaving(false);
+      void invalidate(['paged', '/api/v1/production/orders']);
+    };
+    const onError = (err: { message: string }) => setOrderError(err.message);
+    if (editingOrderId) {
+      updateOrderMutation.mutate(orderToDto(values), { onSuccess, onError });
+    } else {
+      createOrderMutation.mutate(orderToDto(values), { onSuccess, onError });
     }
-  };
+  });
 
   const viewOrder = async (order: ProductionOrder) => {
     setViewBusy(true);
@@ -339,26 +340,24 @@ export function ProductionPage() {
     }
   };
 
-  const runAction = async () => {
+  const runAction = () => {
     if (!action) return;
-    setActionBusy(true);
-    const { kind, order } = action;
     const messages: Record<PendingAction, string> = {
       start: 'Production order started.',
       complete: 'Production order completed.',
       cancel: 'Production order cancelled.',
     };
-    try {
-      await apiFetch(`/api/v1/production/orders/${order.id}/${kind}`, { method: 'POST' });
-      toast.toast(messages[kind]);
-      setAction(null);
-      reloadOrders();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Action failed.', 'error');
-      setAction(null);
-    } finally {
-      setActionBusy(false);
-    }
+    actionMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.toast(messages[action.kind]);
+        setAction(null);
+        void invalidate(['paged', '/api/v1/production/orders']);
+      },
+      onError: (err) => {
+        toast.toast(err.message, 'error');
+        setAction(null);
+      },
+    });
   };
 
   const actionLabels: Record<PendingAction, { title: string; message: string; confirm: string }> = {
@@ -403,7 +402,7 @@ export function ProductionPage() {
       header: 'Actions',
       render: (row) => (
         <div className="table-actions">
-          <Button variant="ghost" size="sm" onClick={() => void openBomEdit(row)}>
+          <Button variant="ghost" size="sm" onClick={() => openBomEdit(row)}>
             Edit
           </Button>
           <Button variant="danger" size="sm" onClick={() => setDeletingBom(row)}>
@@ -460,7 +459,7 @@ export function ProductionPage() {
   ];
 
   const bomOptionsForProduct = bomsForSelect.filter(
-    (bom) => bom.productId === orderForm.productId,
+    (bom) => bom.productId === orderProductId,
   );
 
   return (
@@ -520,56 +519,132 @@ export function ProductionPage() {
         </>
       )}
 
-      <Modal open={bomOpen} title={editingBomId ? 'Edit BOM' : 'New BOM'} onClose={closeBom} width="lg">
-        <form onSubmit={(event) => void submitBom(event)}>
-          <div className="form-grid">
-            <Field label="Name" htmlFor="bom-name" required>
-              <TextInput
-                id="bom-name"
-                value={bomForm.name}
-                onChange={(event) => setBomField('name', event.target.value)}
-              />
-            </Field>
-            <Field label="Finished product" htmlFor="bom-product" required>
-              <Select
-                id="bom-product"
-                value={bomForm.productId}
-                onChange={(event) => setBomField('productId', event.target.value)}
-              >
-                <option value="">— Select product —</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.sku} · {product.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Output quantity" htmlFor="bom-output">
-              <TextInput
-                id="bom-output"
-                type="number"
-                min="0.0001"
-                step="0.0001"
-                value={bomForm.outputQuantity}
-                onChange={(event) => setBomField('outputQuantity', event.target.value)}
-              />
-            </Field>
-            <div className="form-check">
-              <Checkbox
-                label="Active"
-                checked={bomForm.active}
-                onChange={(event) => setBomField('active', event.target.checked)}
-              />
+      <Dialog open={bomOpen} onOpenChange={(open) => !bomSaving && setBomOpen(open)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={editingBomId ? 'Edit BOM' : 'New BOM'} />
+          <form onSubmit={(event) => void submitBom(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="bom-name">Name *</label>
+                <input id="bom-name" {...registerBom('name')} />
+                {bomErrors.name ? <div className="field-error">{bomErrors.name.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="bom-product">Finished product *</label>
+                <select id="bom-product" {...registerBom('productId')}>
+                  <option value="">— Select product —</option>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.sku} · {product.name}
+                    </option>
+                  ))}
+                </select>
+                {bomErrors.productId ? (
+                  <div className="field-error">{bomErrors.productId.message}</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="bom-output">Output quantity</label>
+                <input
+                  id="bom-output"
+                  type="number"
+                  min="0.0001"
+                  step="0.0001"
+                  {...registerBom('outputQuantity')}
+                />
+                {bomErrors.outputQuantity ? (
+                  <div className="field-error">{bomErrors.outputQuantity.message}</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label>Status</label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Checkbox
+                    id="bom-active"
+                    checked={bomActive}
+                    onCheckedChange={(checked) => setBomValue('active', checked === true)}
+                  />
+                  <label htmlFor="bom-active" className="text-sm text-gray-700">
+                    Active
+                  </label>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="section-title">Component lines</div>
-          {bomLines.map((line, index) => (
-            <div className="form-grid form-grid-3" key={index}>
-              <Field label="Component" htmlFor={`bomline-${index}-product`}>
-                <Select
-                  id={`bomline-${index}-product`}
-                  value={line.productId}
-                  onChange={(event) => setBomLine(index, 'productId', event.target.value)}
+            <div className="section-title">Component lines</div>
+            {bomLines.map((line, index) => (
+              <div className="form-grid form-grid-3" key={index}>
+                <div className="field">
+                  <label htmlFor={`bomline-${index}-product`}>Component</label>
+                  <select
+                    id={`bomline-${index}-product`}
+                    value={line.productId}
+                    onChange={(event) => setBomLine(index, 'productId', event.target.value)}
+                  >
+                    <option value="">— Select product —</option>
+                    {products.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.sku} · {product.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor={`bomline-${index}-qty`}>Quantity</label>
+                  <input
+                    id={`bomline-${index}-qty`}
+                    type="number"
+                    min="0.0001"
+                    step="0.0001"
+                    value={line.quantity}
+                    onChange={(event) => setBomLine(index, 'quantity', event.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor={`bomline-${index}-waste`}>Waste rate (%)</label>
+                  <div className="inline-with-remove">
+                    <input
+                      id={`bomline-${index}-waste`}
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={line.wasteRate}
+                      onChange={(event) => setBomLine(index, 'wasteRate', event.target.value)}
+                    />
+                    <Button variant="ghost" size="sm" type="button" onClick={() => removeBomLine(index)}>
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <Button variant="ghost" size="sm" type="button" onClick={addBomLine}>
+              + Add line
+            </Button>
+            {bomError ? <div className="error-banner">{bomError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={bomSaving}>
+                {bomSaving ? 'Saving…' : editingBomId ? 'Save changes' : 'Create BOM'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={orderOpen} onOpenChange={(open) => !orderSaving && setOrderOpen(open)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={editingOrderId ? 'Edit production order' : 'New production order'} />
+          <form onSubmit={(event) => void submitOrder(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="order-product">Product *</label>
+                <select
+                  id="order-product"
+                  {...registerOrder('productId')}
+                  onChange={(event) => {
+                    void registerOrder('productId').onChange(event);
+                    setOrderValue('bomId', '');
+                  }}
                 >
                   <option value="">— Select product —</option>
                   {products.map((product) => (
@@ -577,264 +652,205 @@ export function ProductionPage() {
                       {product.sku} · {product.name}
                     </option>
                   ))}
-                </Select>
-              </Field>
-              <Field label="Quantity" htmlFor={`bomline-${index}-qty`}>
-                <TextInput
-                  id={`bomline-${index}-qty`}
+                </select>
+                {orderErrors.productId ? (
+                  <div className="field-error">{orderErrors.productId.message}</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="order-bom">BOM</label>
+                <select id="order-bom" {...registerOrder('bomId')} disabled={!orderProductId}>
+                  <option value="">— None (no BOM) —</option>
+                  {bomOptionsForProduct.map((bom) => (
+                    <option key={bom.id} value={bom.id}>
+                      {bom.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="order-warehouse">Warehouse *</label>
+                <select id="order-warehouse" {...registerOrder('warehouseId')}>
+                  <option value="">— Select warehouse —</option>
+                  {warehouses.map((warehouse) => (
+                    <option key={warehouse.id} value={warehouse.id}>
+                      {warehouse.code} · {warehouse.name}
+                    </option>
+                  ))}
+                </select>
+                {orderErrors.warehouseId ? (
+                  <div className="field-error">{orderErrors.warehouseId.message}</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="order-quantity">Quantity *</label>
+                <input
+                  id="order-quantity"
                   type="number"
                   min="0.0001"
                   step="0.0001"
-                  value={line.quantity}
-                  onChange={(event) => setBomLine(index, 'quantity', event.target.value)}
+                  {...registerOrder('quantity')}
                 />
-              </Field>
-              <Field label="Waste rate (%)" htmlFor={`bomline-${index}-waste`}>
-                <div className="inline-with-remove">
-                  <TextInput
-                    id={`bomline-${index}-waste`}
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={line.wasteRate}
-                    onChange={(event) => setBomLine(index, 'wasteRate', event.target.value)}
-                  />
-                  <Button variant="ghost" size="sm" onClick={() => removeBomLine(index)}>
-                    Remove
-                  </Button>
-                </div>
-              </Field>
-            </div>
-          ))}
-          <Button variant="ghost" size="sm" onClick={addBomLine}>
-            + Add line
-          </Button>
-          {bomError ? <div className="error-banner">{bomError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={closeBom} disabled={bomSaving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={bomSaving}>
-              {bomSaving ? 'Saving…' : editingBomId ? 'Save changes' : 'Create BOM'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      <Modal
-        open={orderOpen}
-        title={editingOrderId ? 'Edit production order' : 'New production order'}
-        onClose={closeOrder}
-        width="lg"
-      >
-        <form onSubmit={(event) => void submitOrder(event)}>
-          <div className="form-grid">
-            <Field label="Product" htmlFor="order-product" required>
-              <Select
-                id="order-product"
-                value={orderForm.productId}
-                onChange={(event) => {
-                  setOrderField('productId', event.target.value);
-                  setOrderField('bomId', '');
-                }}
-              >
-                <option value="">— Select product —</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.sku} · {product.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="BOM" htmlFor="order-bom">
-              <Select
-                id="order-bom"
-                value={orderForm.bomId}
-                onChange={(event) => setOrderField('bomId', event.target.value)}
-                disabled={!orderForm.productId}
-              >
-                <option value="">— None (no BOM) —</option>
-                {bomOptionsForProduct.map((bom) => (
-                  <option key={bom.id} value={bom.id}>
-                    {bom.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Warehouse" htmlFor="order-warehouse" required>
-              <Select
-                id="order-warehouse"
-                value={orderForm.warehouseId}
-                onChange={(event) => setOrderField('warehouseId', event.target.value)}
-              >
-                <option value="">— Select warehouse —</option>
-                {warehouses.map((warehouse) => (
-                  <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.code} · {warehouse.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Quantity" htmlFor="order-quantity" required>
-              <TextInput
-                id="order-quantity"
-                type="number"
-                min="0.0001"
-                step="0.0001"
-                value={orderForm.quantity}
-                onChange={(event) => setOrderField('quantity', event.target.value)}
-              />
-            </Field>
-            <Field label="Labor cost" htmlFor="order-labor">
-              <TextInput
-                id="order-labor"
-                type="number"
-                min="0"
-                step="0.01"
-                value={orderForm.laborCost}
-                onChange={(event) => setOrderField('laborCost', event.target.value)}
-              />
-            </Field>
-            <Field label="Overhead" htmlFor="order-overhead">
-              <TextInput
-                id="order-overhead"
-                type="number"
-                min="0"
-                step="0.01"
-                value={orderForm.overhead}
-                onChange={(event) => setOrderField('overhead', event.target.value)}
-              />
-            </Field>
-            <Field label="Notes" htmlFor="order-notes">
-              <TextArea
-                id="order-notes"
-                rows={3}
-                value={orderForm.notes}
-                onChange={(event) => setOrderField('notes', event.target.value)}
-              />
-            </Field>
-          </div>
-          {orderError ? <div className="error-banner">{orderError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={closeOrder} disabled={orderSaving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={orderSaving}>
-              {orderSaving ? 'Saving…' : editingOrderId ? 'Save changes' : 'Create order'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      <Modal open={viewing !== null} title={`Order ${viewing?.number ?? ''}`} onClose={() => setViewing(null)} width="lg">
-        {viewing ? (
-          <>
-            <div className="detail-grid">
-              <div>
-                <span className="detail-label">Product</span>
-                <span className="detail-value">
-                  {viewing.product.sku} · {viewing.product.name}
-                </span>
+                {orderErrors.quantity ? (
+                  <div className="field-error">{orderErrors.quantity.message}</div>
+                ) : null}
               </div>
-              <div>
-                <span className="detail-label">BOM</span>
-                <span className="detail-value">{viewing.bom?.name ?? '—'}</span>
+              <div className="field">
+                <label htmlFor="order-labor">Labor cost</label>
+                <input id="order-labor" type="number" min="0" step="0.01" {...registerOrder('laborCost')} />
+                {orderErrors.laborCost ? (
+                  <div className="field-error">{orderErrors.laborCost.message}</div>
+                ) : null}
               </div>
-              <div>
-                <span className="detail-label">Warehouse</span>
-                <span className="detail-value">
-                  {viewing.warehouse ? `${viewing.warehouse.code} · ${viewing.warehouse.name}` : '—'}
-                </span>
+              <div className="field">
+                <label htmlFor="order-overhead">Overhead</label>
+                <input id="order-overhead" type="number" min="0" step="0.01" {...registerOrder('overhead')} />
+                {orderErrors.overhead ? (
+                  <div className="field-error">{orderErrors.overhead.message}</div>
+                ) : null}
               </div>
-              <div>
-                <span className="detail-label">Quantity</span>
-                <span className="detail-value">{formatNumber(viewing.quantity)}</span>
-              </div>
-              <div>
-                <span className="detail-label">Status</span>
-                <span className="detail-value">
-                  <Badge tone={statusTone(viewing.status)}>{viewing.status}</Badge>
-                </span>
-              </div>
-              <div>
-                <span className="detail-label">Material cost</span>
-                <span className="detail-value">{formatMoney(viewing.materialCost)}</span>
-              </div>
-              <div>
-                <span className="detail-label">Labor + overhead</span>
-                <span className="detail-value">{formatMoney(viewing.laborCost + viewing.overhead)}</span>
-              </div>
-              <div>
-                <span className="detail-label">Total cost</span>
-                <span className="detail-value">{formatMoney(viewing.totalCost)}</span>
+              <div className="field field-wide">
+                <label htmlFor="order-notes">Notes</label>
+                <textarea id="order-notes" rows={3} {...registerOrder('notes')} />
               </div>
             </div>
-            {viewing.notes ? (
-              <p className="detail-notes">
-                <span className="detail-label">Notes</span>
-                {viewing.notes}
-              </p>
-            ) : null}
-            {viewing.lines.length > 0 ? (
-              <>
-                <div className="section-title">Consumed materials</div>
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th className="num">Planned</th>
-                      <th className="num">Consumed</th>
-                      <th className="num">Unit cost</th>
-                      <th className="num">Line cost</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {viewing.lines.map((line) => (
-                      <tr key={line.id}>
-                        <td>
-                          {line.product.sku} · {line.product.name}
-                        </td>
-                        <td className="num">{formatNumber(line.plannedQuantity)}</td>
-                        <td className="num">{formatNumber(line.consumedQuantity)}</td>
-                        <td className="num">{formatMoney(line.unitCost)}</td>
-                        <td className="num">{formatMoney(line.lineCost)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </>
-            ) : null}
-            <div className="modal-footer">
-              <Button variant="ghost" onClick={() => setViewing(null)}>
-                Close
+            {orderError ? <div className="error-banner">{orderError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={orderSaving}>
+                {orderSaving ? 'Saving…' : editingOrderId ? 'Save changes' : 'Create order'}
               </Button>
-            </div>
-          </>
-        ) : (
-          <LoadingBlock />
-        )}
-      </Modal>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <ConfirmDialog
+      <Dialog open={viewing !== null} onOpenChange={(open) => !open && setViewing(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={`Order ${viewing?.number ?? ''}`} />
+          {viewing ? (
+            <>
+              <div className="detail-grid">
+                <div>
+                  <span className="detail-label">Product</span>
+                  <span className="detail-value">
+                    {viewing.product.sku} · {viewing.product.name}
+                  </span>
+                </div>
+                <div>
+                  <span className="detail-label">BOM</span>
+                  <span className="detail-value">{viewing.bom?.name ?? '—'}</span>
+                </div>
+                <div>
+                  <span className="detail-label">Warehouse</span>
+                  <span className="detail-value">
+                    {viewing.warehouse ? `${viewing.warehouse.code} · ${viewing.warehouse.name}` : '—'}
+                  </span>
+                </div>
+                <div>
+                  <span className="detail-label">Quantity</span>
+                  <span className="detail-value">{formatNumber(viewing.quantity)}</span>
+                </div>
+                <div>
+                  <span className="detail-label">Status</span>
+                  <span className="detail-value">
+                    <Badge tone={statusTone(viewing.status)}>{viewing.status}</Badge>
+                  </span>
+                </div>
+                <div>
+                  <span className="detail-label">Material cost</span>
+                  <span className="detail-value">{formatMoney(viewing.materialCost)}</span>
+                </div>
+                <div>
+                  <span className="detail-label">Labor + overhead</span>
+                  <span className="detail-value">{formatMoney(viewing.laborCost + viewing.overhead)}</span>
+                </div>
+                <div>
+                  <span className="detail-label">Total cost</span>
+                  <span className="detail-value">{formatMoney(viewing.totalCost)}</span>
+                </div>
+              </div>
+              {viewing.notes ? (
+                <p className="detail-notes">
+                  <span className="detail-label">Notes</span>
+                  {viewing.notes}
+                </p>
+              ) : null}
+              {viewing.lines.length > 0 ? (
+                <>
+                  <div className="section-title">Consumed materials</div>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th className="num">Planned</th>
+                        <th className="num">Consumed</th>
+                        <th className="num">Unit cost</th>
+                        <th className="num">Line cost</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {viewing.lines.map((line) => (
+                        <tr key={line.id}>
+                          <td>
+                            {line.product.sku} · {line.product.name}
+                          </td>
+                          <td className="num">{formatNumber(line.plannedQuantity)}</td>
+                          <td className="num">{formatNumber(line.consumedQuantity)}</td>
+                          <td className="num">{formatMoney(line.unitCost)}</td>
+                          <td className="num">{formatMoney(line.lineCost)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              ) : null}
+              <div className="modal-footer">
+                <Button variant="ghost" onClick={() => setViewing(null)}>
+                  Close
+                </Button>
+              </div>
+            </>
+          ) : (
+            <LoadingBlock />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
         open={action !== null}
-        title={action ? actionLabels[action.kind].title : ''}
-        message={action ? actionLabels[action.kind].message : ''}
-        confirmLabel={action ? actionLabels[action.kind].confirm : 'Confirm'}
-        busy={actionBusy}
-        onCancel={() => setAction(null)}
-        onConfirm={() => void runAction()}
-      />
+        onOpenChange={(open) => !actionBusy && !open && setAction(null)}
+      >
+        <DialogContent>
+          <DialogHeader
+            title={action ? actionLabels[action.kind].title : ''}
+            description={action ? actionLabels[action.kind].message : ''}
+          />
+          <DialogFooter>
+            <Button
+              variant={action?.kind === 'cancel' ? 'danger' : 'default'}
+              type="button"
+              disabled={actionBusy}
+              onClick={() => void runAction()}
+            >
+              {actionBusy ? 'Working…' : action ? actionLabels[action.kind].confirm : 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <ConfirmDialog
+      <Dialog
         open={deletingBom !== null}
-        title="Delete BOM"
-        message={`Delete BOM "${deletingBom?.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
-        busy={deleteBomBusy}
-        onCancel={() => setDeletingBom(null)}
-        onConfirm={() => void confirmDeleteBom()}
-      />
+        onOpenChange={(open) => !deleteBomBusy && !open && setDeletingBom(null)}
+      >
+        <DialogContent>
+          <DialogHeader title="Delete BOM" description={`Delete BOM "${deletingBom?.name}"? This cannot be undone.`} />
+          <DialogFooter>
+            <Button variant="danger" type="button" disabled={deleteBomBusy} onClick={() => void confirmDeleteBom()}>
+              {deleteBomBusy ? 'Working…' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

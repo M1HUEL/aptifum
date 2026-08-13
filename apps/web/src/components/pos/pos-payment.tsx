@@ -1,6 +1,7 @@
 import { type FormEvent } from 'react';
 import { formatMoney } from '../ui';
-import { Button, Field, Modal, Select, TextInput } from '../forms';
+import { Button } from '../ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { FUNCTIONAL_CURRENCY } from './pos-ticket';
 
 const paymentMethods = ['cash', 'card', 'transfer', 'other'] as const;
@@ -40,67 +41,71 @@ export function PosPaymentModal({
   onClose: () => void;
 }) {
   return (
-    <Modal open={invoice !== null} title={`Payment for ${invoice?.number ?? ''}`} onClose={onClose} width="sm">
-      <form onSubmit={onSubmit}>
-        <Field label="Method" htmlFor="payment-method" required>
-          <Select
-            id="payment-method"
-            value={form.method}
-            onChange={(event) => onFormChange('method', event.target.value)}
-          >
-            {paymentMethods.map((method) => (
-              <option key={method} value={method}>
-                {method}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field
-          label="Amount"
-          htmlFor="payment-amount"
-          required
-          hint={
-            invoice
-              ? `Total due: ${formatMoney(invoice.total, invoice.currency)}${
+    <Dialog open={invoice !== null} onOpenChange={(isOpen) => !busy && !isOpen && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader title={`Payment for ${invoice?.number ?? ''}`} />
+        <form onSubmit={onSubmit}>
+          <div className="field">
+            <label htmlFor="payment-method">
+              Method<span className="field-required"> *</span>
+            </label>
+            <select
+              id="payment-method"
+              value={form.method}
+              onChange={(event) => onFormChange('method', event.target.value)}
+            >
+              {paymentMethods.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="payment-amount">
+              Amount<span className="field-required"> *</span>
+            </label>
+            <input
+              id="payment-amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={form.amount}
+              onChange={(event) => onFormChange('amount', event.target.value)}
+            />
+            {invoice ? (
+              <div className="field-hint">
+                {`Total due: ${formatMoney(invoice.total, invoice.currency)}${
                   invoice.currency !== FUNCTIONAL_CURRENCY ? ` · rate ${invoice.exchangeRate}` : ''
-                }`
-              : undefined
-          }
-        >
-          <TextInput
-            id="payment-amount"
-            type="number"
-            min="0.01"
-            step="0.01"
-            value={form.amount}
-            onChange={(event) => onFormChange('amount', event.target.value)}
-          />
-        </Field>
-        <Field label="Received at" htmlFor="payment-date">
-          <TextInput
-            id="payment-date"
-            type="date"
-            value={form.receivedAt}
-            onChange={(event) => onFormChange('receivedAt', event.target.value)}
-          />
-        </Field>
-        <Field label="Reference" htmlFor="payment-reference">
-          <TextInput
-            id="payment-reference"
-            value={form.reference}
-            onChange={(event) => onFormChange('reference', event.target.value)}
-          />
-        </Field>
-        {error ? <div className="error-banner">{error}</div> : null}
-        <div className="modal-footer">
-          <Button variant="ghost" onClick={onClose} disabled={busy}>
-            Cancel
-          </Button>
-          <button type="submit" className="btn btn-primary" disabled={busy}>
-            {busy ? 'Recording…' : 'Record payment'}
-          </button>
-        </div>
-      </form>
-    </Modal>
+                }`}
+              </div>
+            ) : null}
+          </div>
+          <div className="field">
+            <label htmlFor="payment-date">Received at</label>
+            <input
+              id="payment-date"
+              type="date"
+              value={form.receivedAt}
+              onChange={(event) => onFormChange('receivedAt', event.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="payment-reference">Reference</label>
+            <input
+              id="payment-reference"
+              value={form.reference}
+              onChange={(event) => onFormChange('reference', event.target.value)}
+            />
+          </div>
+          {error ? <div className="error-banner">{error}</div> : null}
+          <DialogFooter>
+            <Button variant="default" type="submit" disabled={busy}>
+              {busy ? 'Recording…' : 'Record payment'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -342,3 +342,190 @@ export const payrollFormSchema = z.object({
 
 export type PayrollLineInputFormValues = z.infer<typeof payrollLineInputFormSchema>;
 export type PayrollFormValues = z.infer<typeof payrollFormSchema>;
+
+export const warehouseFormSchema = z.object({
+  code: z.string().trim().min(1, 'Code is required').max(60, 'Code must be at most 60 characters'),
+  name: z.string().trim().min(1, 'Name is required').max(255, 'Name must be at most 255 characters'),
+  address: z.string().trim().max(255, 'Address must be at most 255 characters'),
+  active: z.boolean(),
+});
+
+export type WarehouseFormValues = z.infer<typeof warehouseFormSchema>;
+
+export const locationFormSchema = z.object({
+  code: z.string().trim().min(1, 'Code is required').max(60, 'Code must be at most 60 characters'),
+  name: z.string().trim().min(1, 'Name is required').max(255, 'Name must be at most 255 characters'),
+  active: z.boolean(),
+});
+
+export type LocationFormValues = z.infer<typeof locationFormSchema>;
+
+export const categoryFormSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(255, 'Name must be at most 255 characters'),
+  parentId: z.string(),
+  active: z.boolean(),
+});
+
+export type CategoryFormValues = z.infer<typeof categoryFormSchema>;
+
+export const userFormSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email is required')
+    .refine((value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value), 'Invalid email address'),
+  name: z.string().trim().max(255, 'Name must be at most 255 characters'),
+  password: z
+    .string()
+    .refine((value) => value === '' || value.length >= 8, 'Password must be at least 8 characters'),
+  active: z.boolean(),
+  roleIds: z.array(z.string()),
+  invite: z.boolean(),
+});
+
+export type UserFormValues = z.infer<typeof userFormSchema>;
+
+export const roleFormSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(60, 'Name must be at most 60 characters'),
+  description: z.string().trim().max(255, 'Description must be at most 255 characters'),
+  permissions: z.array(z.string()),
+});
+
+export type RoleFormValues = z.infer<typeof roleFormSchema>;
+
+export const bomLineFormSchema = z.object({
+  productId: z.string(),
+  quantity: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Quantity must be a number'),
+  wasteRate: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Waste rate must be a number'),
+});
+
+export type BomLineFormValues = z.infer<typeof bomLineFormSchema>;
+
+export const bomFormSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(255, 'Name must be at most 255 characters'),
+  productId: z.string().min(1, 'Finished product is required'),
+  outputQuantity: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Output quantity must be a number'),
+  active: z.boolean(),
+  lines: z.array(bomLineFormSchema),
+});
+
+export type BomFormValues = z.infer<typeof bomFormSchema>;
+
+export const productionOrderFormSchema = z.object({
+  productId: z.string().min(1, 'Product is required'),
+  bomId: z.string(),
+  warehouseId: z.string().min(1, 'Warehouse is required'),
+  quantity: z
+    .string()
+    .refine((value) => value !== '' && !Number.isNaN(Number(value)), 'Quantity is required')
+    .refine((value) => value !== '' && Number(value) > 0, 'Quantity must be greater than zero'),
+  laborCost: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Labor cost must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Labor cost cannot be negative'),
+  overhead: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Overhead must be a number')
+    .refine((value) => value === '' || Number(value) >= 0, 'Overhead cannot be negative'),
+  notes: z.string().trim().max(500, 'Notes must be at most 500 characters'),
+});
+
+export type ProductionOrderFormValues = z.infer<typeof productionOrderFormSchema>;
+
+export const clockFormSchema = z.object({
+  employeeId: z.string().min(1, 'Select an employee.'),
+  action: z.enum(['in', 'out']),
+  at: z.string(),
+});
+
+export type ClockFormValues = z.infer<typeof clockFormSchema>;
+
+export const attendanceFormSchema = z.object({
+  employeeId: z.string().min(1, 'Employee is required'),
+  workDate: z.string().min(1, 'Work date is required'),
+  clockInAt: z.string(),
+  clockOutAt: z.string(),
+  status: z.enum(['present', 'late', 'absent', 'leave']),
+  notes: z.string().trim().max(500, 'Notes must be at most 500 characters'),
+});
+
+export type AttendanceFormValues = z.infer<typeof attendanceFormSchema>;
+
+export const leaveFormSchema = z.object({
+  employeeId: z.string().min(1, 'Employee is required'),
+  leaveType: z.enum(['vacation', 'sick', 'personal', 'other']),
+  startDate: z.string().min(1, 'Start date is required'),
+  endDate: z.string().min(1, 'End date is required'),
+  days: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Days must be a number')
+    .refine((value) => value === '' || Number(value) >= 1, 'Days must be at least 1'),
+  reason: z.string().trim().max(500, 'Reason must be at most 500 characters'),
+});
+
+export type LeaveFormValues = z.infer<typeof leaveFormSchema>;
+
+export const activityFormSchema = z.object({
+  activityType: z.enum(['call', 'meeting', 'task', 'note']),
+  subject: z.string().trim().min(1, 'Subject is required.'),
+  description: z.string(),
+  dueAt: z.string(),
+  completedAt: z.string(),
+  referenceType: z.string(),
+  referenceId: z.string(),
+});
+
+export type ActivityFormValues = z.infer<typeof activityFormSchema>;
+
+export const contactFormSchema = z.object({
+  fullName: z.string().trim().min(1, 'Full name is required.'),
+  customerId: z.string(),
+  title: z.string(),
+  email: z.string(),
+  phone: z.string(),
+  mobile: z.string(),
+  address: z.string(),
+  notes: z.string(),
+  active: z.boolean(),
+});
+
+export type ContactFormValues = z.infer<typeof contactFormSchema>;
+
+export const leadFormSchema = z.object({
+  source: z.string(),
+  companyName: z.string(),
+  contactName: z.string().trim().min(1, 'Contact name is required.'),
+  email: z.string(),
+  phone: z.string(),
+  status: z.enum(['new', 'contacted', 'qualified', 'disqualified', 'converted']),
+  estimatedAmount: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Estimated amount must be a number'),
+  currency: z.string().trim().max(3, 'Currency must be at most 3 characters'),
+  notes: z.string(),
+});
+
+export type LeadFormValues = z.infer<typeof leadFormSchema>;
+
+export const opportunityFormSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required.'),
+  customerId: z.string(),
+  stage: z.enum(['prospecting', 'qualification', 'proposal', 'negotiation', 'won', 'lost']),
+  amount: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Amount must be a number'),
+  currency: z.string().trim().max(3, 'Currency must be at most 3 characters'),
+  probability: z
+    .string()
+    .refine((value) => value === '' || !Number.isNaN(Number(value)), 'Probability must be a number'),
+  expectedCloseDate: z.string(),
+  notes: z.string(),
+});
+
+export type OpportunityFormValues = z.infer<typeof opportunityFormSchema>;

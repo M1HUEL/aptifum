@@ -1,6 +1,10 @@
-import { useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '../../api/client';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { components } from '../../api/schema';
 import type { Lead } from '../../api/types';
+import { leadFormSchema, type LeadFormValues } from '../../api/schemas';
+import { useApiMutation, useApiMutationVoid } from '../../api/hooks';
 import {
   Badge,
   type Column,
@@ -12,24 +16,16 @@ import {
   PageHeader,
   Pagination,
 } from '../ui';
-import { Button, ConfirmDialog, Field, Modal, Select, TextArea, TextInput } from '../forms';
+import { Button } from '../ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { useToast } from '../toast';
 import { usePagedQuery } from '../../hooks/use-paged-query';
 import { leadStatusTone, leadStatuses } from './crm-helpers';
 
-interface LeadForm {
-  source: string;
-  companyName: string;
-  contactName: string;
-  email: string;
-  phone: string;
-  status: string;
-  estimatedAmount: string;
-  currency: string;
-  notes: string;
-}
+type CreateLeadDto = components['schemas']['CreateLeadDto'];
+type UpdateLeadDto = components['schemas']['UpdateLeadDto'];
 
-const emptyLead: LeadForm = {
+const emptyLead: LeadFormValues = {
   source: '',
   companyName: '',
   contactName: '',
@@ -41,132 +37,128 @@ const emptyLead: LeadForm = {
   notes: '',
 };
 
+function toLeadForm(lead: Lead): LeadFormValues {
+  return {
+    source: lead.source ?? '',
+    companyName: lead.companyName ?? '',
+    contactName: lead.contactName,
+    email: lead.email ?? '',
+    phone: lead.phone ?? '',
+    status: lead.status,
+    estimatedAmount: lead.estimatedAmount ? String(lead.estimatedAmount) : '',
+    currency: lead.currency,
+    notes: lead.notes ?? '',
+  };
+}
+
+function leadToDto(form: LeadFormValues): CreateLeadDto {
+  return {
+    source: form.source.trim() || undefined,
+    companyName: form.companyName.trim() || undefined,
+    contactName: form.contactName.trim(),
+    email: form.email.trim() || undefined,
+    phone: form.phone.trim() || undefined,
+    status: form.status,
+    estimatedAmount: form.estimatedAmount === '' ? undefined : Number(form.estimatedAmount),
+    currency: form.currency.trim().toUpperCase() || undefined,
+    notes: form.notes.trim() || undefined,
+  };
+}
+
 export function LeadPanel() {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<LeadForm>(emptyLead);
   const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [converting, setConverting] = useState<Lead | null>(null);
   const [customerCode, setCustomerCode] = useState('');
-  const [convertBusy, setConvertBusy] = useState(false);
   const [deleting, setDeleting] = useState<Lead | null>(null);
-  const [deleteBusy, setDeleteBusy] = useState(false);
   const toast = useToast();
 
   const { data, error, reload } = usePagedQuery<Lead>({ path: '/api/v1/crm/leads', page: 1, limit: 50 });
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<LeadFormValues>({
+    resolver: zodResolver(leadFormSchema),
+    defaultValues: emptyLead,
+  });
+
+  const createMutation = useApiMutation<CreateLeadDto>('/api/v1/crm/leads', 'POST');
+  const updateMutation = useApiMutation<UpdateLeadDto>(`/api/v1/crm/leads/${editingId ?? ''}`, 'PATCH');
+  const convertMutation = useApiMutation<{ customerCode?: string }>(
+    `/api/v1/crm/leads/${converting?.id ?? ''}/convert`,
+    'POST',
+  );
+  const deleteMutation = useApiMutationVoid(`/api/v1/crm/leads/${deleting?.id ?? ''}`, 'DELETE');
+
+  const saving = createMutation.isPending || updateMutation.isPending;
+  const convertBusy = convertMutation.isPending;
+  const deletingBusy = deleteMutation.isPending;
+
   const openCreate = () => {
     setEditingId(null);
-    setForm(emptyLead);
+    reset(emptyLead);
     setFormError(null);
     setOpen(true);
   };
 
   const openEdit = (lead: Lead) => {
     setEditingId(lead.id);
-    setForm({
-      source: lead.source ?? '',
-      companyName: lead.companyName ?? '',
-      contactName: lead.contactName,
-      email: lead.email ?? '',
-      phone: lead.phone ?? '',
-      status: lead.status,
-      estimatedAmount: lead.estimatedAmount ? String(lead.estimatedAmount) : '',
-      currency: lead.currency,
-      notes: lead.notes ?? '',
-    });
+    reset(toLeadForm(lead));
     setFormError(null);
     setOpen(true);
   };
 
-  const close = () => {
-    if (!saving) setOpen(false);
-  };
-
-  const setField = (key: keyof LeadForm, value: string) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!form.contactName.trim()) {
-      setFormError('Contact name is required.');
-      return;
-    }
-    setSaving(true);
+  const submit = handleSubmit((values) => {
     setFormError(null);
-    const body = {
-      source: form.source.trim() || undefined,
-      companyName: form.companyName.trim() || undefined,
-      contactName: form.contactName.trim(),
-      email: form.email.trim() || undefined,
-      phone: form.phone.trim() || undefined,
-      status: form.status,
-      estimatedAmount: form.estimatedAmount === '' ? undefined : Number(form.estimatedAmount),
-      currency: form.currency.trim().toUpperCase() || undefined,
-      notes: form.notes.trim() || undefined,
-    };
-    try {
-      if (editingId) {
-        await apiFetch(`/api/v1/crm/leads/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Lead updated.');
-      } else {
-        await apiFetch('/api/v1/crm/leads', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Lead created.');
-      }
+    const onSuccess = () => {
+      toast.toast(editingId ? 'Lead updated.' : 'Lead created.');
       setOpen(false);
       void reload();
-    } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not save lead.');
-    } finally {
-      setSaving(false);
+    };
+    const onError = (err: { message: string }) => setFormError(err.message);
+    if (editingId) {
+      updateMutation.mutate(leadToDto(values), { onSuccess, onError });
+    } else {
+      createMutation.mutate(leadToDto(values), { onSuccess, onError });
     }
-  };
+  });
 
-  const confirmConvert = async () => {
+  const confirmConvert = () => {
     if (!converting) return;
-    setConvertBusy(true);
-    try {
-      await apiFetch(`/api/v1/crm/leads/${converting.id}/convert`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerCode: customerCode.trim() || undefined }),
-      });
-      toast.toast('Lead converted to customer.');
-      setConverting(null);
-      setCustomerCode('');
-      void reload();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not convert lead.', 'error');
-      setConverting(null);
-    } finally {
-      setConvertBusy(false);
-    }
+    convertMutation.mutate(
+      { customerCode: customerCode.trim() || undefined },
+      {
+        onSuccess: () => {
+          toast.toast('Lead converted to customer.');
+          setConverting(null);
+          setCustomerCode('');
+          void reload();
+        },
+        onError: (err) => {
+          toast.toast(err.message, 'error');
+          setConverting(null);
+        },
+      },
+    );
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!deleting) return;
-    setDeleteBusy(true);
-    try {
-      await apiFetch(`/api/v1/crm/leads/${deleting.id}`, { method: 'DELETE' });
-      toast.toast('Lead deleted.');
-      setDeleting(null);
-      void reload();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not delete.', 'error');
-      setDeleting(null);
-    } finally {
-      setDeleteBusy(false);
-    }
+    deleteMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.toast('Lead deleted.');
+        setDeleting(null);
+        void reload();
+      },
+      onError: (err) => {
+        toast.toast(err.message, 'error');
+        setDeleting(null);
+      },
+    });
   };
 
   const columns: Column<Lead>[] = [
@@ -217,133 +209,101 @@ export function LeadPanel() {
         </>
       ) : null}
 
-      <Modal open={open} title={editingId ? 'Edit lead' : 'New lead'} onClose={close} width="lg">
-        <form onSubmit={(event) => void submit(event)}>
-          <div className="form-grid">
-            <Field label="Contact name" htmlFor="lead-contact" required>
-              <TextInput
-                id="lead-contact"
-                value={form.contactName}
-                onChange={(event) => setField('contactName', event.target.value)}
-              />
-            </Field>
-            <Field label="Company" htmlFor="lead-company">
-              <TextInput
-                id="lead-company"
-                value={form.companyName}
-                onChange={(event) => setField('companyName', event.target.value)}
-              />
-            </Field>
-            <Field label="Email" htmlFor="lead-email">
-              <TextInput
-                id="lead-email"
-                type="email"
-                value={form.email}
-                onChange={(event) => setField('email', event.target.value)}
-              />
-            </Field>
-            <Field label="Phone" htmlFor="lead-phone">
-              <TextInput
-                id="lead-phone"
-                value={form.phone}
-                onChange={(event) => setField('phone', event.target.value)}
-              />
-            </Field>
-            <Field label="Source" htmlFor="lead-source">
-              <TextInput
-                id="lead-source"
-                value={form.source}
-                onChange={(event) => setField('source', event.target.value)}
-              />
-            </Field>
-            <Field label="Status" htmlFor="lead-status">
-              <Select
-                id="lead-status"
-                value={form.status}
-                onChange={(event) => setField('status', event.target.value)}
-              >
-                {leadStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Estimated amount" htmlFor="lead-amount">
-              <TextInput
-                id="lead-amount"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.estimatedAmount}
-                onChange={(event) => setField('estimatedAmount', event.target.value)}
-              />
-            </Field>
-            <Field label="Currency" htmlFor="lead-currency">
-              <TextInput
-                id="lead-currency"
-                maxLength={3}
-                value={form.currency}
-                onChange={(event) => setField('currency', event.target.value)}
-              />
-            </Field>
-            <Field label="Notes" htmlFor="lead-notes">
-              <TextArea
-                id="lead-notes"
-                rows={3}
-                value={form.notes}
-                onChange={(event) => setField('notes', event.target.value)}
-              />
-            </Field>
+      <Dialog open={open} onOpenChange={(isOpen) => !saving && setOpen(isOpen)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={editingId ? 'Edit lead' : 'New lead'} />
+          <form onSubmit={(event) => void submit(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="lead-contact">
+                  Contact name<span className="field-required"> *</span>
+                </label>
+                <input id="lead-contact" {...register('contactName')} />
+                {errors.contactName ? (
+                  <div className="field-error">{errors.contactName.message}</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="lead-company">Company</label>
+                <input id="lead-company" {...register('companyName')} />
+              </div>
+              <div className="field">
+                <label htmlFor="lead-email">Email</label>
+                <input id="lead-email" type="email" {...register('email')} />
+              </div>
+              <div className="field">
+                <label htmlFor="lead-phone">Phone</label>
+                <input id="lead-phone" {...register('phone')} />
+              </div>
+              <div className="field">
+                <label htmlFor="lead-source">Source</label>
+                <input id="lead-source" {...register('source')} />
+              </div>
+              <div className="field">
+                <label htmlFor="lead-status">Status</label>
+                <select id="lead-status" {...register('status')}>
+                  {leadStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="lead-amount">Estimated amount</label>
+                <input id="lead-amount" type="number" min="0" step="0.01" {...register('estimatedAmount')} />
+              </div>
+              <div className="field">
+                <label htmlFor="lead-currency">Currency</label>
+                <input id="lead-currency" maxLength={3} {...register('currency')} />
+              </div>
+              <div className="field">
+                <label htmlFor="lead-notes">Notes</label>
+                <textarea id="lead-notes" rows={3} {...register('notes')} />
+              </div>
+            </div>
+            {formError ? <div className="error-banner">{formError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={saving}>
+                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create lead'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={converting !== null} onOpenChange={(isOpen) => !convertBusy && !isOpen && setConverting(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader title={`Convert lead ${converting?.number ?? ''}`} />
+          <p className="modal-message">
+            Create a customer account for “{converting?.contactName}”. A customer code is generated automatically
+            unless you provide one.
+          </p>
+          <div className="field">
+            <label htmlFor="convert-code">Customer code</label>
+            <input id="convert-code" value={customerCode} onChange={(event) => setCustomerCode(event.target.value)} />
           </div>
-          {formError ? <div className="error-banner">{formError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={close} disabled={saving}>
-              Cancel
+          <DialogFooter>
+            <Button variant="default" type="button" disabled={convertBusy} onClick={() => void confirmConvert()}>
+              {convertBusy ? 'Converting…' : 'Convert to customer'}
             </Button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create lead'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Modal
-        open={converting !== null}
-        title={`Convert lead ${converting?.number ?? ''}`}
-        onClose={() => setConverting(null)}
-        width="sm"
-      >
-        <p className="modal-message">
-          Create a customer account for “{converting?.contactName}”. A customer code is generated
-          automatically unless you provide one.
-        </p>
-        <Field label="Customer code" htmlFor="convert-code">
-          <TextInput
-            id="convert-code"
-            value={customerCode}
-            onChange={(event) => setCustomerCode(event.target.value)}
+      <Dialog open={deleting !== null} onOpenChange={(isOpen) => !deletingBusy && !isOpen && setDeleting(null)}>
+        <DialogContent>
+          <DialogHeader
+            title="Delete lead"
+            description={`Delete lead for "${deleting?.contactName}"? This cannot be undone.`}
           />
-        </Field>
-        <div className="modal-footer">
-          <Button variant="ghost" onClick={() => setConverting(null)} disabled={convertBusy}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={() => void confirmConvert()} disabled={convertBusy}>
-            {convertBusy ? 'Converting…' : 'Convert to customer'}
-          </Button>
-        </div>
-      </Modal>
-
-      <ConfirmDialog
-        open={deleting !== null}
-        title="Delete lead"
-        message={`Delete lead for "${deleting?.contactName}"? This cannot be undone.`}
-        confirmLabel="Delete"
-        busy={deleteBusy}
-        onCancel={() => setDeleting(null)}
-        onConfirm={() => void confirmDelete()}
-      />
+          <DialogFooter>
+            <Button variant="danger" type="button" disabled={deletingBusy} onClick={() => void confirmDelete()}>
+              {deletingBusy ? 'Working…' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

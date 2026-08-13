@@ -1,6 +1,10 @@
-import { useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '../../api/client';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { components } from '../../api/schema';
 import type { CrmActivity } from '../../api/types';
+import { activityFormSchema, type ActivityFormValues } from '../../api/schemas';
+import { useApiMutation, useApiMutationVoid } from '../../api/hooks';
 import {
   Badge,
   type Column,
@@ -11,22 +15,16 @@ import {
   PageHeader,
   Pagination,
 } from '../ui';
-import { Button, ConfirmDialog, Field, Modal, Select, TextArea, TextInput } from '../forms';
+import { Button } from '../ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { useToast } from '../toast';
 import { usePagedQuery } from '../../hooks/use-paged-query';
 import { activityTypes, toLocalInput } from './crm-helpers';
 
-interface ActivityForm {
-  activityType: string;
-  subject: string;
-  description: string;
-  dueAt: string;
-  completedAt: string;
-  referenceType: string;
-  referenceId: string;
-}
+type CreateActivityDto = components['schemas']['CreateActivityDto'];
+type UpdateActivityDto = components['schemas']['UpdateActivityDto'];
 
-const emptyActivity: ActivityForm = {
+const emptyActivity: ActivityFormValues = {
   activityType: 'task',
   subject: '',
   description: '',
@@ -36,13 +34,36 @@ const emptyActivity: ActivityForm = {
   referenceId: '',
 };
 
+function toActivityForm(activity: CrmActivity): ActivityFormValues {
+  return {
+    activityType: activity.activityType,
+    subject: activity.subject,
+    description: activity.description ?? '',
+    dueAt: toLocalInput(activity.dueAt),
+    completedAt: toLocalInput(activity.completedAt),
+    referenceType: activity.referenceType ?? '',
+    referenceId: activity.referenceId ?? '',
+  };
+}
+
+function activityToDto(form: ActivityFormValues): CreateActivityDto {
+  return {
+    activityType: form.activityType,
+    subject: form.subject.trim(),
+    description: form.description.trim() || undefined,
+    dueAt: form.dueAt ? new Date(form.dueAt).toISOString() : undefined,
+    completedAt: form.completedAt ? new Date(form.completedAt).toISOString() : undefined,
+    referenceType: form.referenceType.trim() || undefined,
+    referenceId: form.referenceId.trim() || undefined,
+  };
+}
+
 export function ActivityPanel() {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<ActivityForm>(emptyActivity);
   const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<CrmActivity | null>(null);
+  const [completeTarget, setCompleteTarget] = useState<CrmActivity | null>(null);
   const toast = useToast();
 
   const { data, error, reload } = usePagedQuery<CrmActivity>({
@@ -51,103 +72,89 @@ export function ActivityPanel() {
     limit: 50,
   });
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ActivityFormValues>({
+    resolver: zodResolver(activityFormSchema),
+    defaultValues: emptyActivity,
+  });
+
+  const createMutation = useApiMutation<CreateActivityDto>('/api/v1/crm/activities', 'POST');
+  const updateMutation = useApiMutation<UpdateActivityDto>(
+    `/api/v1/crm/activities/${editingId ?? ''}`,
+    'PATCH',
+  );
+  const deleteMutation = useApiMutationVoid(`/api/v1/crm/activities/${deleting?.id ?? ''}`, 'DELETE');
+  const completeMutation = useApiMutation<{ completedAt: string }>(
+    `/api/v1/crm/activities/${completeTarget?.id ?? ''}`,
+    'PATCH',
+  );
+
+  const saving = createMutation.isPending || updateMutation.isPending;
+  const deletingBusy = deleteMutation.isPending;
+
+  useEffect(() => {
+    if (!completeTarget) return;
+    completeMutation.mutate(
+      { completedAt: new Date().toISOString() },
+      {
+        onSuccess: () => {
+          toast.toast('Activity completed.');
+          void reload();
+        },
+        onError: (err) => {
+          toast.toast(err.message, 'error');
+        },
+      },
+    );
+    setCompleteTarget(null);
+  }, [completeTarget]);
+
   const openCreate = () => {
     setEditingId(null);
-    setForm(emptyActivity);
+    reset(emptyActivity);
     setFormError(null);
     setOpen(true);
   };
 
   const openEdit = (activity: CrmActivity) => {
     setEditingId(activity.id);
-    setForm({
-      activityType: activity.activityType,
-      subject: activity.subject,
-      description: activity.description ?? '',
-      dueAt: toLocalInput(activity.dueAt),
-      completedAt: toLocalInput(activity.completedAt),
-      referenceType: activity.referenceType ?? '',
-      referenceId: activity.referenceId ?? '',
-    });
+    reset(toActivityForm(activity));
     setFormError(null);
     setOpen(true);
   };
 
-  const close = () => {
-    if (!saving) setOpen(false);
-  };
-
-  const setField = (key: keyof ActivityForm, value: string) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!form.subject.trim()) {
-      setFormError('Subject is required.');
-      return;
-    }
-    setSaving(true);
+  const submit = handleSubmit((values) => {
     setFormError(null);
-    const body = {
-      activityType: form.activityType,
-      subject: form.subject.trim(),
-      description: form.description.trim() || undefined,
-      dueAt: form.dueAt ? new Date(form.dueAt).toISOString() : undefined,
-      completedAt: form.completedAt ? new Date(form.completedAt).toISOString() : undefined,
-      referenceType: form.referenceType.trim() || undefined,
-      referenceId: form.referenceId.trim() || undefined,
-    };
-    try {
-      if (editingId) {
-        await apiFetch(`/api/v1/crm/activities/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Activity updated.');
-      } else {
-        await apiFetch('/api/v1/crm/activities', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Activity created.');
-      }
+    const onSuccess = () => {
+      toast.toast(editingId ? 'Activity updated.' : 'Activity created.');
       setOpen(false);
       void reload();
-    } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not save activity.');
-    } finally {
-      setSaving(false);
+    };
+    const onError = (err: { message: string }) => setFormError(err.message);
+    if (editingId) {
+      updateMutation.mutate(activityToDto(values), { onSuccess, onError });
+    } else {
+      createMutation.mutate(activityToDto(values), { onSuccess, onError });
     }
-  };
+  });
 
-  const markComplete = async (activity: CrmActivity) => {
-    try {
-      await apiFetch(`/api/v1/crm/activities/${activity.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ completedAt: new Date().toISOString() }),
-      });
-      toast.toast('Activity completed.');
-      void reload();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not complete activity.', 'error');
-    }
-  };
-
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!deleting) return;
-    try {
-      await apiFetch(`/api/v1/crm/activities/${deleting.id}`, { method: 'DELETE' });
-      toast.toast('Activity deleted.');
-      setDeleting(null);
-      void reload();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not delete activity.', 'error');
-      setDeleting(null);
-    }
+    deleteMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.toast('Activity deleted.');
+        setDeleting(null);
+        void reload();
+      },
+      onError: (err) => {
+        toast.toast(err.message, 'error');
+        setDeleting(null);
+      },
+    });
   };
 
   const columns: Column<CrmActivity>[] = [
@@ -178,7 +185,7 @@ export function ActivityPanel() {
       render: (row) => (
         <div className="table-actions">
           {!row.completedAt ? (
-            <Button variant="ghost" size="sm" onClick={() => void markComplete(row)}>
+            <Button variant="ghost" size="sm" onClick={() => setCompleteTarget(row)}>
               Complete
             </Button>
           ) : null}
@@ -213,89 +220,71 @@ export function ActivityPanel() {
         </>
       ) : null}
 
-      <Modal open={open} title={editingId ? 'Edit activity' : 'New activity'} onClose={close} width="lg">
-        <form onSubmit={(event) => void submit(event)}>
-          <div className="form-grid">
-            <Field label="Type" htmlFor="activity-type" required>
-              <Select
-                id="activity-type"
-                value={form.activityType}
-                onChange={(event) => setField('activityType', event.target.value)}
-              >
-                {activityTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Subject" htmlFor="activity-subject" required>
-              <TextInput
-                id="activity-subject"
-                value={form.subject}
-                onChange={(event) => setField('subject', event.target.value)}
-              />
-            </Field>
-            <Field label="Due at" htmlFor="activity-due">
-              <TextInput
-                id="activity-due"
-                type="datetime-local"
-                value={form.dueAt}
-                onChange={(event) => setField('dueAt', event.target.value)}
-              />
-            </Field>
-            <Field label="Completed at" htmlFor="activity-completed">
-              <TextInput
-                id="activity-completed"
-                type="datetime-local"
-                value={form.completedAt}
-                onChange={(event) => setField('completedAt', event.target.value)}
-              />
-            </Field>
-            <Field label="Reference type" htmlFor="activity-ref-type">
-              <TextInput
-                id="activity-ref-type"
-                placeholder="e.g. lead, opportunity"
-                value={form.referenceType}
-                onChange={(event) => setField('referenceType', event.target.value)}
-              />
-            </Field>
-            <Field label="Reference id" htmlFor="activity-ref-id">
-              <TextInput
-                id="activity-ref-id"
-                value={form.referenceId}
-                onChange={(event) => setField('referenceId', event.target.value)}
-              />
-            </Field>
-          </div>
-          <Field label="Description" htmlFor="activity-description">
-            <TextArea
-              id="activity-description"
-              rows={3}
-              value={form.description}
-              onChange={(event) => setField('description', event.target.value)}
-            />
-          </Field>
-          {formError ? <div className="error-banner">{formError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={close} disabled={saving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create activity'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      <Dialog open={open} onOpenChange={(isOpen) => !saving && setOpen(isOpen)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={editingId ? 'Edit activity' : 'New activity'} />
+          <form onSubmit={(event) => void submit(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="activity-type">
+                  Type<span className="field-required"> *</span>
+                </label>
+                <select id="activity-type" {...register('activityType')}>
+                  {activityTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="activity-subject">
+                  Subject<span className="field-required"> *</span>
+                </label>
+                <input id="activity-subject" {...register('subject')} />
+                {errors.subject ? <div className="field-error">{errors.subject.message}</div> : null}
+              </div>
+              <div className="field">
+                <label htmlFor="activity-due">Due at</label>
+                <input id="activity-due" type="datetime-local" {...register('dueAt')} />
+              </div>
+              <div className="field">
+                <label htmlFor="activity-completed">Completed at</label>
+                <input id="activity-completed" type="datetime-local" {...register('completedAt')} />
+              </div>
+              <div className="field">
+                <label htmlFor="activity-ref-type">Reference type</label>
+                <input id="activity-ref-type" placeholder="e.g. lead, opportunity" {...register('referenceType')} />
+              </div>
+              <div className="field">
+                <label htmlFor="activity-ref-id">Reference id</label>
+                <input id="activity-ref-id" {...register('referenceId')} />
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="activity-description">Description</label>
+              <textarea id="activity-description" rows={3} {...register('description')} />
+            </div>
+            {formError ? <div className="error-banner">{formError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={saving}>
+                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create activity'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <ConfirmDialog
-        open={deleting !== null}
-        title="Delete activity"
-        message={`Delete activity "${deleting?.subject}"?`}
-        confirmLabel="Delete"
-        onCancel={() => setDeleting(null)}
-        onConfirm={() => void confirmDelete()}
-      />
+      <Dialog open={deleting !== null} onOpenChange={(isOpen) => !deletingBusy && !isOpen && setDeleting(null)}>
+        <DialogContent>
+          <DialogHeader title="Delete activity" description={`Delete activity "${deleting?.subject}"?`} />
+          <DialogFooter>
+            <Button variant="danger" type="button" disabled={deletingBusy} onClick={() => void confirmDelete()}>
+              {deletingBusy ? 'Working…' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

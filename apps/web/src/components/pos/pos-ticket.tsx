@@ -1,6 +1,5 @@
 import type { Customer } from '../../api/types';
 import { EmptyState, formatMoney } from '../ui';
-import { Field, Select, TextInput } from '../forms';
 
 export interface PosLine {
   productId: string;
@@ -62,29 +61,32 @@ export function PosTicket({
   return (
     <div className="card pos-ticket">
       <h3 className="card-title">Ticket</h3>
-      <Field label="Customer" htmlFor="pos-customer">
-        <Select id="pos-customer" value={customerId} onChange={(event) => onCustomerChange(event.target.value)}>
+      <div className="field">
+        <label htmlFor="pos-customer">Customer</label>
+        <select id="pos-customer" value={customerId} onChange={(event) => onCustomerChange(event.target.value)}>
           <option value="">Walk-in customer</option>
           {customers.map((customer) => (
             <option key={customer.id} value={customer.id}>
               {customer.tradeName}
             </option>
           ))}
-        </Select>
-      </Field>
+        </select>
+      </div>
       <div className="pos-currency-row">
-        <Field label="Sale currency" htmlFor="pos-currency">
-          <Select id="pos-currency" value={saleCurrency} onChange={(event) => onCurrencyChange(event.target.value)}>
+        <div className="field">
+          <label htmlFor="pos-currency">Sale currency</label>
+          <select id="pos-currency" value={saleCurrency} onChange={(event) => onCurrencyChange(event.target.value)}>
             {SALE_CURRENCIES.map((currency) => (
               <option key={currency} value={currency}>
                 {currency}
               </option>
             ))}
-          </Select>
-        </Field>
+          </select>
+        </div>
         {saleCurrency !== FUNCTIONAL_CURRENCY ? (
-          <Field label={`Exchange rate (1 ${FUNCTIONAL_CURRENCY} = ? ${saleCurrency})`} htmlFor="pos-rate">
-            <TextInput
+          <div className="field">
+            <label htmlFor="pos-rate">Exchange rate (1 {FUNCTIONAL_CURRENCY} = ? {saleCurrency})</label>
+            <input
               id="pos-rate"
               type="number"
               min="0.000001"
@@ -92,7 +94,7 @@ export function PosTicket({
               value={saleRate}
               onChange={(event) => onRateChange(event.target.value)}
             />
-          </Field>
+          </div>
         ) : null}
       </div>
       <div className="pos-lines">
@@ -149,8 +151,9 @@ export function PosTicket({
           ))
         )}
       </div>
-      <Field label="Discount" htmlFor="pos-discount">
-        <TextInput
+      <div className="field">
+        <label htmlFor="pos-discount">Discount</label>
+        <input
           id="pos-discount"
           type="number"
           min="0"
@@ -158,7 +161,7 @@ export function PosTicket({
           value={discount}
           onChange={(event) => onDiscountChange(event.target.value)}
         />
-      </Field>
+      </div>
       <div className="pos-totals">
         <div className="pos-total-row">
           <span>Subtotal</span>

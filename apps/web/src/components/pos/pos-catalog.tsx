@@ -1,7 +1,6 @@
 import { type FormEvent } from 'react';
 import type { Paginated, PosProduct, Warehouse } from '../../api/types';
 import { Badge, EmptyState, ErrorBanner, formatMoney, LoadingBlock, Pagination } from '../ui';
-import { Select } from '../forms';
 
 export function PosCatalog({
   warehouses,
@@ -31,7 +30,7 @@ export function PosCatalog({
   return (
     <div className="pos-catalog">
       <div className="toolbar">
-        <Select
+        <select
           id="pos-warehouse"
           value={warehouseId}
           onChange={(event) => onWarehouseChange(event.target.value)}
@@ -42,7 +41,7 @@ export function PosCatalog({
               {warehouse.name}
             </option>
           ))}
-        </Select>
+        </select>
       </div>
       <form className="search-form" onSubmit={onSubmitSearch}>
         <input

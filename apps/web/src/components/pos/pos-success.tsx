@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatMoney } from '../ui';
-import { Button } from '../forms';
+import { Button } from '../ui/button';
 
 export interface CompletedSale {
   id: string;

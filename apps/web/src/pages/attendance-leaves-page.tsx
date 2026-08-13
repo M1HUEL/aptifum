@@ -1,5 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
+import type { components } from '../api/schema';
 import type {
   AttendanceRecord,
   AttendanceStatus,
@@ -8,6 +11,15 @@ import type {
   LeaveStatus,
   Paginated,
 } from '../api/types';
+import {
+  attendanceFormSchema,
+  clockFormSchema,
+  leaveFormSchema,
+  type AttendanceFormValues,
+  type ClockFormValues,
+  type LeaveFormValues,
+} from '../api/schemas';
+import { useApiMutation, useApiMutationVoid } from '../api/hooks';
 import {
   Badge,
   type BadgeTone,
@@ -20,21 +32,19 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
-import {
-  Button,
-  ConfirmDialog,
-  Field,
-  Modal,
-  Select,
-  TextArea,
-  TextInput,
-} from '../components/forms';
+import { Button } from '../components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { usePermission } from '../auth/auth-context';
 import { useToast } from '../components/toast';
 
 const leaveTypes = ['vacation', 'sick', 'personal', 'other'] as const;
 const leaveStatuses = ['pending', 'approved', 'rejected', 'cancelled'] as const;
 const attendanceStatuses = ['present', 'late', 'absent', 'leave'] as const;
+
+type ClockAttendanceDto = components['schemas']['ClockAttendanceDto'];
+type CreateAttendanceDto = components['schemas']['CreateAttendanceDto'];
+type UpdateAttendanceDto = components['schemas']['UpdateAttendanceDto'];
+type CreateLeaveDto = components['schemas']['CreateLeaveDto'];
 
 function attendanceTone(status: AttendanceStatus): BadgeTone {
   if (status === 'late') return 'warning';
@@ -55,24 +65,9 @@ function employeeName(employee: Employee | null | undefined): string {
   return `${employee.firstName} ${employee.lastName}`.trim();
 }
 
-interface ClockForm {
-  employeeId: string;
-  action: 'in' | 'out';
-  at: string;
-}
+const emptyClock: ClockFormValues = { employeeId: '', action: 'in', at: '' };
 
-const emptyClock: ClockForm = { employeeId: '', action: 'in', at: '' };
-
-interface AttendanceForm {
-  employeeId: string;
-  workDate: string;
-  clockInAt: string;
-  clockOutAt: string;
-  status: string;
-  notes: string;
-}
-
-const emptyAttendance: AttendanceForm = {
+const emptyAttendance: AttendanceFormValues = {
   employeeId: '',
   workDate: '',
   clockInAt: '',
@@ -81,16 +76,7 @@ const emptyAttendance: AttendanceForm = {
   notes: '',
 };
 
-interface LeaveForm {
-  employeeId: string;
-  leaveType: string;
-  startDate: string;
-  endDate: string;
-  days: string;
-  reason: string;
-}
-
-const emptyLeave: LeaveForm = {
+const emptyLeave: LeaveFormValues = {
   employeeId: '',
   leaveType: 'vacation',
   startDate: '',
@@ -105,6 +91,59 @@ function toLocalInput(iso: string | null): string {
   if (Number.isNaN(date.getTime())) return '';
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function attendanceToDto(form: AttendanceFormValues): CreateAttendanceDto {
+  return {
+    employeeId: form.employeeId,
+    workDate: form.workDate,
+    clockInAt: form.clockInAt ? new Date(form.clockInAt).toISOString() : undefined,
+    clockOutAt: form.clockOutAt ? new Date(form.clockOutAt).toISOString() : undefined,
+    status: form.status,
+    notes: form.notes.trim() || undefined,
+  };
+}
+
+function attendanceToUpdateDto(form: AttendanceFormValues): UpdateAttendanceDto {
+  return {
+    clockInAt: form.clockInAt ? new Date(form.clockInAt).toISOString() : undefined,
+    clockOutAt: form.clockOutAt ? new Date(form.clockOutAt).toISOString() : undefined,
+    status: form.status,
+    notes: form.notes.trim() || undefined,
+  };
+}
+
+function fromAttendance(record: AttendanceRecord): AttendanceFormValues {
+  return {
+    employeeId: record.employeeId,
+    workDate: record.workDate,
+    clockInAt: toLocalInput(record.clockInAt),
+    clockOutAt: toLocalInput(record.clockOutAt),
+    status: record.status,
+    notes: record.notes ?? '',
+  };
+}
+
+function leaveToDto(form: LeaveFormValues): CreateLeaveDto {
+  return {
+    employeeId: form.employeeId,
+    leaveType: form.leaveType,
+    startDate: form.startDate,
+    endDate: form.endDate,
+    days: form.days === '' ? undefined : Number(form.days),
+    reason: form.reason.trim() || undefined,
+  };
+}
+
+function fromLeave(leave: Leave): LeaveFormValues {
+  return {
+    employeeId: leave.employeeId,
+    leaveType: leave.leaveType,
+    startDate: leave.startDate,
+    endDate: leave.endDate,
+    days: leave.days ? String(leave.days) : '',
+    reason: leave.reason ?? '',
+  };
 }
 
 export function AttendanceLeavesPage() {
@@ -128,24 +167,54 @@ export function AttendanceLeavesPage() {
   const [leaveFilterInput, setLeaveFilterInput] = useState({ employeeId: '', status: '', leaveType: '' });
 
   const [clockOpen, setClockOpen] = useState(false);
-  const [clockForm, setClockForm] = useState<ClockForm>(emptyClock);
   const [clockError, setClockError] = useState<string | null>(null);
-  const [clockBusy, setClockBusy] = useState(false);
 
   const [attOpen, setAttOpen] = useState(false);
   const [editingAttId, setEditingAttId] = useState<string | null>(null);
-  const [attForm, setAttForm] = useState<AttendanceForm>(emptyAttendance);
   const [attFormError, setAttFormError] = useState<string | null>(null);
-  const [attSaving, setAttSaving] = useState(false);
   const [deletingAtt, setDeletingAtt] = useState<AttendanceRecord | null>(null);
-  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [editingLeaveId, setEditingLeaveId] = useState<string | null>(null);
-  const [leaveForm, setLeaveForm] = useState<LeaveForm>(emptyLeave);
   const [leaveFormError, setLeaveFormError] = useState<string | null>(null);
-  const [leaveSaving, setLeaveSaving] = useState(false);
   const [deletingLeave, setDeletingLeave] = useState<Leave | null>(null);
+  const [leaveActionTarget, setLeaveActionTarget] = useState<{
+    leave: Leave;
+    action: 'approve' | 'reject';
+  } | null>(null);
+
+  const clockForm = useForm<ClockFormValues>({
+    resolver: zodResolver(clockFormSchema),
+    defaultValues: emptyClock,
+  });
+  const {
+    register: registerClock,
+    handleSubmit: submitClockForm,
+    reset: resetClock,
+    formState: { errors: clockErrors },
+  } = clockForm;
+
+  const attForm = useForm<AttendanceFormValues>({
+    resolver: zodResolver(attendanceFormSchema),
+    defaultValues: emptyAttendance,
+  });
+  const {
+    register: registerAtt,
+    handleSubmit: submitAttForm,
+    reset: resetAtt,
+    formState: { errors: attErrors },
+  } = attForm;
+
+  const leaveForm = useForm<LeaveFormValues>({
+    resolver: zodResolver(leaveFormSchema),
+    defaultValues: emptyLeave,
+  });
+  const {
+    register: registerLeave,
+    handleSubmit: submitLeaveForm,
+    reset: resetLeave,
+    formState: { errors: leaveErrors },
+  } = leaveForm;
 
   const loadAttendance = async (page: number, filters: typeof attFilters) => {
     setAttLoading(true);
@@ -200,6 +269,43 @@ export function AttendanceLeavesPage() {
     void loadLeaves(leavePage, leaveFilters);
   }, [leavePage, leaveFilters]);
 
+  const clockMutation = useApiMutation<ClockAttendanceDto>('/api/v1/hr/attendance/clock', 'POST');
+  const createAttMutation = useApiMutation<CreateAttendanceDto>('/api/v1/hr/attendance', 'POST');
+  const updateAttMutation = useApiMutation<UpdateAttendanceDto>(
+    `/api/v1/hr/attendance/${editingAttId ?? ''}`,
+    'PATCH',
+  );
+  const deleteAttMutation = useApiMutationVoid(`/api/v1/hr/attendance/${deletingAtt?.id ?? ''}`, 'DELETE');
+
+  const createLeaveMutation = useApiMutation<CreateLeaveDto>('/api/v1/hr/leaves', 'POST');
+  const updateLeaveMutation = useApiMutation<CreateLeaveDto>(`/api/v1/hr/leaves/${editingLeaveId ?? ''}`, 'PATCH');
+  const deleteLeaveMutation = useApiMutationVoid(`/api/v1/hr/leaves/${deletingLeave?.id ?? ''}`, 'DELETE');
+  const leaveActionMutation = useApiMutationVoid(
+    leaveActionTarget
+      ? `/api/v1/hr/leaves/${leaveActionTarget.leave.id}/${leaveActionTarget.action}`
+      : '/api/v1/hr/leaves',
+    'POST',
+  );
+
+  const clockBusy = clockMutation.isPending;
+  const attSaving = createAttMutation.isPending || updateAttMutation.isPending;
+  const deleteBusy = deleteAttMutation.isPending;
+  const leaveSaving = createLeaveMutation.isPending || updateLeaveMutation.isPending;
+
+  useEffect(() => {
+    if (!leaveActionTarget) return;
+    leaveActionMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.toast(leaveActionTarget.action === 'approve' ? 'Leave approved.' : 'Leave rejected.');
+        void loadLeaves(leavePage, leaveFilters);
+      },
+      onError: (err) => {
+        toast.toast(err.message, 'error');
+      },
+    });
+    setLeaveActionTarget(null);
+  }, [leaveActionTarget]);
+
   const submitAttFilters = (event: FormEvent) => {
     event.preventDefault();
     setAttFilters(attFilterInput);
@@ -213,200 +319,112 @@ export function AttendanceLeavesPage() {
   };
 
   const openClock = () => {
-    setClockForm(emptyClock);
+    resetClock(emptyClock);
     setClockError(null);
     setClockOpen(true);
   };
 
-  const submitClock = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!clockForm.employeeId) {
-      setClockError('Select an employee.');
-      return;
-    }
-    setClockBusy(true);
+  const submitClock = submitClockForm((values) => {
     setClockError(null);
-    try {
-      await apiFetch('/api/v1/hr/attendance/clock', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          employeeId: clockForm.employeeId,
-          action: clockForm.action,
-          at: clockForm.at || undefined,
-        }),
-      });
-      toast.toast(clockForm.action === 'in' ? 'Clock in recorded.' : 'Clock out recorded.');
-      setClockOpen(false);
-      void loadAttendance(attPage, attFilters);
-    } catch (err) {
-      setClockError(err instanceof ApiError ? err.message : 'Could not record clock.');
-    } finally {
-      setClockBusy(false);
-    }
-  };
+    clockMutation.mutate(
+      {
+        employeeId: values.employeeId,
+        action: values.action,
+        at: values.at || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.toast(values.action === 'in' ? 'Clock in recorded.' : 'Clock out recorded.');
+          setClockOpen(false);
+          void loadAttendance(attPage, attFilters);
+        },
+        onError: (err) => setClockError(err.message),
+      },
+    );
+  });
 
   const openAttendance = (record?: AttendanceRecord) => {
     if (record) {
       setEditingAttId(record.id);
-      setAttForm({
-        employeeId: record.employeeId,
-        workDate: record.workDate,
-        clockInAt: toLocalInput(record.clockInAt),
-        clockOutAt: toLocalInput(record.clockOutAt),
-        status: record.status,
-        notes: record.notes ?? '',
-      });
+      resetAtt(fromAttendance(record));
     } else {
       setEditingAttId(null);
-      setAttForm(emptyAttendance);
+      resetAtt(emptyAttendance);
     }
     setAttFormError(null);
     setAttOpen(true);
   };
 
-  const submitAttendance = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!attForm.employeeId || !attForm.workDate) {
-      setAttFormError('Employee and work date are required.');
-      return;
-    }
-    setAttSaving(true);
+  const submitAttendance = submitAttForm((values) => {
     setAttFormError(null);
-    try {
-      if (editingAttId) {
-        await apiFetch(`/api/v1/hr/attendance/${editingAttId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            clockInAt: attForm.clockInAt ? new Date(attForm.clockInAt).toISOString() : undefined,
-            clockOutAt: attForm.clockOutAt ? new Date(attForm.clockOutAt).toISOString() : undefined,
-            status: attForm.status,
-            notes: attForm.notes.trim() || undefined,
-          }),
-        });
-        toast.toast('Attendance updated.');
-      } else {
-        await apiFetch('/api/v1/hr/attendance', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            employeeId: attForm.employeeId,
-            workDate: attForm.workDate,
-            clockInAt: attForm.clockInAt ? new Date(attForm.clockInAt).toISOString() : undefined,
-            clockOutAt: attForm.clockOutAt ? new Date(attForm.clockOutAt).toISOString() : undefined,
-            status: attForm.status,
-            notes: attForm.notes.trim() || undefined,
-          }),
-        });
-        toast.toast('Attendance created.');
-      }
+    const onSuccess = () => {
+      toast.toast(editingAttId ? 'Attendance updated.' : 'Attendance created.');
       setAttOpen(false);
       void loadAttendance(attPage, attFilters);
-    } catch (err) {
-      setAttFormError(err instanceof ApiError ? err.message : 'Could not save attendance.');
-    } finally {
-      setAttSaving(false);
+    };
+    const onError = (err: { message: string }) => setAttFormError(err.message);
+    if (editingAttId) {
+      updateAttMutation.mutate(attendanceToUpdateDto(values), { onSuccess, onError });
+    } else {
+      createAttMutation.mutate(attendanceToDto(values), { onSuccess, onError });
     }
-  };
+  });
 
-  const confirmDeleteAtt = async () => {
+  const confirmDeleteAtt = () => {
     if (!deletingAtt) return;
-    setDeleteBusy(true);
-    try {
-      await apiFetch(`/api/v1/hr/attendance/${deletingAtt.id}`, { method: 'DELETE' });
-      toast.toast('Attendance deleted.');
-      setDeletingAtt(null);
-      void loadAttendance(attPage, attFilters);
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not delete attendance.', 'error');
-      setDeletingAtt(null);
-    } finally {
-      setDeleteBusy(false);
-    }
+    deleteAttMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.toast('Attendance deleted.');
+        setDeletingAtt(null);
+        void loadAttendance(attPage, attFilters);
+      },
+      onError: (err) => {
+        toast.toast(err.message, 'error');
+        setDeletingAtt(null);
+      },
+    });
   };
 
   const openLeave = (leave?: Leave) => {
     if (leave) {
       setEditingLeaveId(leave.id);
-      setLeaveForm({
-        employeeId: leave.employeeId,
-        leaveType: leave.leaveType,
-        startDate: leave.startDate,
-        endDate: leave.endDate,
-        days: leave.days ? String(leave.days) : '',
-        reason: leave.reason ?? '',
-      });
+      resetLeave(fromLeave(leave));
     } else {
       setEditingLeaveId(null);
-      setLeaveForm(emptyLeave);
+      resetLeave(emptyLeave);
     }
     setLeaveFormError(null);
     setLeaveOpen(true);
   };
 
-  const submitLeave = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!leaveForm.employeeId || !leaveForm.startDate || !leaveForm.endDate) {
-      setLeaveFormError('Employee, start date and end date are required.');
-      return;
-    }
-    setLeaveSaving(true);
+  const submitLeave = submitLeaveForm((values) => {
     setLeaveFormError(null);
-    const body = {
-      employeeId: leaveForm.employeeId,
-      leaveType: leaveForm.leaveType,
-      startDate: leaveForm.startDate,
-      endDate: leaveForm.endDate,
-      days: leaveForm.days === '' ? undefined : Number(leaveForm.days),
-      reason: leaveForm.reason.trim() || undefined,
-    };
-    try {
-      if (editingLeaveId) {
-        await apiFetch(`/api/v1/hr/leaves/${editingLeaveId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Leave updated.');
-      } else {
-        await apiFetch('/api/v1/hr/leaves', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Leave created.');
-      }
+    const onSuccess = () => {
+      toast.toast(editingLeaveId ? 'Leave updated.' : 'Leave created.');
       setLeaveOpen(false);
       void loadLeaves(leavePage, leaveFilters);
-    } catch (err) {
-      setLeaveFormError(err instanceof ApiError ? err.message : 'Could not save leave.');
-    } finally {
-      setLeaveSaving(false);
+    };
+    const onError = (err: { message: string }) => setLeaveFormError(err.message);
+    if (editingLeaveId) {
+      updateLeaveMutation.mutate(leaveToDto(values), { onSuccess, onError });
+    } else {
+      createLeaveMutation.mutate(leaveToDto(values), { onSuccess, onError });
     }
-  };
+  });
 
-  const leaveAction = async (leave: Leave, action: 'approve' | 'reject') => {
-    try {
-      await apiFetch(`/api/v1/hr/leaves/${leave.id}/${action}`, { method: 'POST' });
-      toast.toast(action === 'approve' ? 'Leave approved.' : 'Leave rejected.');
-      void loadLeaves(leavePage, leaveFilters);
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Action failed.', 'error');
-    }
-  };
-
-  const confirmDeleteLeave = async () => {
+  const confirmDeleteLeave = () => {
     if (!deletingLeave) return;
-    try {
-      await apiFetch(`/api/v1/hr/leaves/${deletingLeave.id}`, { method: 'DELETE' });
-      toast.toast('Leave deleted.');
-      setDeletingLeave(null);
-      void loadLeaves(leavePage, leaveFilters);
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not delete leave.', 'error');
-      setDeletingLeave(null);
-    }
+    deleteLeaveMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.toast('Leave deleted.');
+        setDeletingLeave(null);
+        void loadLeaves(leavePage, leaveFilters);
+      },
+      onError: (err) => {
+        toast.toast(err.message, 'error');
+        setDeletingLeave(null);
+      },
+    });
   };
 
   const attendanceColumns: Column<AttendanceRecord>[] = [
@@ -469,10 +487,10 @@ export function AttendanceLeavesPage() {
             <>
               {can('hr:approve') ? (
                 <>
-                  <Button variant="ghost" size="sm" onClick={() => void leaveAction(row, 'approve')}>
+                  <Button variant="ghost" size="sm" onClick={() => setLeaveActionTarget({ leave: row, action: 'approve' })}>
                     Approve
                   </Button>
-                  <Button variant="danger" size="sm" onClick={() => void leaveAction(row, 'reject')}>
+                  <Button variant="danger" size="sm" onClick={() => setLeaveActionTarget({ leave: row, action: 'reject' })}>
                     Reject
                   </Button>
                 </>
@@ -522,7 +540,7 @@ export function AttendanceLeavesPage() {
         <>
           {attError ? <ErrorBanner message={attError} /> : null}
           <form className="search-form" onSubmit={(event) => void submitAttFilters(event)}>
-            <Select
+            <select
               value={attFilterInput.employeeId}
               onChange={(event) => setAttFilterInput((current) => ({ ...current, employeeId: event.target.value }))}
             >
@@ -532,18 +550,18 @@ export function AttendanceLeavesPage() {
                   {employeeName(employee)}
                 </option>
               ))}
-            </Select>
-            <TextInput
+            </select>
+            <input
               type="date"
               value={attFilterInput.from}
               onChange={(event) => setAttFilterInput((current) => ({ ...current, from: event.target.value }))}
             />
-            <TextInput
+            <input
               type="date"
               value={attFilterInput.to}
               onChange={(event) => setAttFilterInput((current) => ({ ...current, to: event.target.value }))}
             />
-            <Select
+            <select
               value={attFilterInput.status}
               onChange={(event) => setAttFilterInput((current) => ({ ...current, status: event.target.value }))}
             >
@@ -553,7 +571,7 @@ export function AttendanceLeavesPage() {
                   {status}
                 </option>
               ))}
-            </Select>
+            </select>
             <button type="submit" className="btn">
               Search
             </button>
@@ -574,7 +592,7 @@ export function AttendanceLeavesPage() {
         <>
           {leaveError ? <ErrorBanner message={leaveError} /> : null}
           <form className="search-form" onSubmit={(event) => void submitLeaveFilters(event)}>
-            <Select
+            <select
               value={leaveFilterInput.employeeId}
               onChange={(event) => setLeaveFilterInput((current) => ({ ...current, employeeId: event.target.value }))}
             >
@@ -584,8 +602,8 @@ export function AttendanceLeavesPage() {
                   {employeeName(employee)}
                 </option>
               ))}
-            </Select>
-            <Select
+            </select>
+            <select
               value={leaveFilterInput.status}
               onChange={(event) => setLeaveFilterInput((current) => ({ ...current, status: event.target.value }))}
             >
@@ -595,8 +613,8 @@ export function AttendanceLeavesPage() {
                   {status}
                 </option>
               ))}
-            </Select>
-            <Select
+            </select>
+            <select
               value={leaveFilterInput.leaveType}
               onChange={(event) => setLeaveFilterInput((current) => ({ ...current, leaveType: event.target.value }))}
             >
@@ -606,7 +624,7 @@ export function AttendanceLeavesPage() {
                   {type}
                 </option>
               ))}
-            </Select>
+            </select>
             <button type="submit" className="btn">
               Search
             </button>
@@ -625,232 +643,196 @@ export function AttendanceLeavesPage() {
         </>
       )}
 
-      <Modal open={clockOpen} title="Clock in / out" onClose={() => setClockOpen(false)}>
-        <form onSubmit={(event) => void submitClock(event)}>
-          <Field label="Employee" htmlFor="clock-employee" required>
-            <Select
-              id="clock-employee"
-              value={clockForm.employeeId}
-              onChange={(event) => setClockForm((current) => ({ ...current, employeeId: event.target.value }))}
-            >
-              <option value="">— Select employee —</option>
-              {employees.map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employeeName(employee)}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Action" htmlFor="clock-action" required>
-            <Select
-              id="clock-action"
-              value={clockForm.action}
-              onChange={(event) => setClockForm((current) => ({ ...current, action: event.target.value as 'in' | 'out' }))}
-            >
-              <option value="in">Clock in</option>
-              <option value="out">Clock out</option>
-            </Select>
-          </Field>
-          <Field label="At" htmlFor="clock-at">
-            <TextInput
-              id="clock-at"
-              type="datetime-local"
-              value={clockForm.at}
-              onChange={(event) => setClockForm((current) => ({ ...current, at: event.target.value }))}
-            />
-          </Field>
-          {clockError ? <div className="error-banner">{clockError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={() => setClockOpen(false)} disabled={clockBusy}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={clockBusy}>
-              {clockBusy ? 'Recording…' : 'Record'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      <Modal
-        open={attOpen}
-        title={editingAttId ? 'Edit attendance' : 'New attendance'}
-        onClose={() => !attSaving && setAttOpen(false)}
-        width="lg"
-      >
-        <form onSubmit={(event) => void submitAttendance(event)}>
-          <div className="form-grid">
-            <Field label="Employee" htmlFor="att-employee" required>
-              <Select
-                id="att-employee"
-                value={attForm.employeeId}
-                onChange={(event) => setAttForm((current) => ({ ...current, employeeId: event.target.value }))}
-              >
+      <Dialog open={clockOpen} onOpenChange={(open) => !clockBusy && setClockOpen(open)}>
+        <DialogContent>
+          <DialogHeader title="Clock in / out" />
+          <form onSubmit={(event) => void submitClock(event)}>
+            <div className="field">
+              <label htmlFor="clock-employee">Employee *</label>
+              <select id="clock-employee" {...registerClock('employeeId')}>
                 <option value="">— Select employee —</option>
                 {employees.map((employee) => (
                   <option key={employee.id} value={employee.id}>
                     {employeeName(employee)}
                   </option>
                 ))}
-              </Select>
-            </Field>
-            <Field label="Work date" htmlFor="att-date" required>
-              <TextInput
-                id="att-date"
-                type="date"
-                value={attForm.workDate}
-                onChange={(event) => setAttForm((current) => ({ ...current, workDate: event.target.value }))}
-              />
-            </Field>
-            <Field label="Clock in" htmlFor="att-in">
-              <TextInput
-                id="att-in"
-                type="datetime-local"
-                value={attForm.clockInAt}
-                onChange={(event) => setAttForm((current) => ({ ...current, clockInAt: event.target.value }))}
-              />
-            </Field>
-            <Field label="Clock out" htmlFor="att-out">
-              <TextInput
-                id="att-out"
-                type="datetime-local"
-                value={attForm.clockOutAt}
-                onChange={(event) => setAttForm((current) => ({ ...current, clockOutAt: event.target.value }))}
-              />
-            </Field>
-            <Field label="Status" htmlFor="att-status">
-              <Select
-                id="att-status"
-                value={attForm.status}
-                onChange={(event) => setAttForm((current) => ({ ...current, status: event.target.value }))}
-              >
-                {attendanceStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-          </div>
-          <Field label="Notes" htmlFor="att-notes">
-            <TextArea
-              id="att-notes"
-              rows={2}
-              value={attForm.notes}
-              onChange={(event) => setAttForm((current) => ({ ...current, notes: event.target.value }))}
-            />
-          </Field>
-          {attFormError ? <div className="error-banner">{attFormError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={() => setAttOpen(false)} disabled={attSaving}>
-              Cancel
+              </select>
+              {clockErrors.employeeId ? (
+                <div className="field-error">{clockErrors.employeeId.message}</div>
+              ) : null}
+            </div>
+            <div className="field">
+              <label htmlFor="clock-action">Action *</label>
+              <select id="clock-action" {...registerClock('action')}>
+                <option value="in">Clock in</option>
+                <option value="out">Clock out</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="clock-at">At</label>
+              <input id="clock-at" type="datetime-local" {...registerClock('at')} />
+            </div>
+            {clockError ? <div className="error-banner">{clockError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={clockBusy}>
+                {clockBusy ? 'Recording…' : 'Record'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={attOpen} onOpenChange={(open) => !attSaving && setAttOpen(open)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={editingAttId ? 'Edit attendance' : 'New attendance'} />
+          <form onSubmit={(event) => void submitAttendance(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="att-employee">Employee *</label>
+                <select id="att-employee" {...registerAtt('employeeId')}>
+                  <option value="">— Select employee —</option>
+                  {employees.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employeeName(employee)}
+                    </option>
+                  ))}
+                </select>
+                {attErrors.employeeId ? (
+                  <div className="field-error">{attErrors.employeeId.message}</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="att-date">Work date *</label>
+                <input id="att-date" type="date" {...registerAtt('workDate')} />
+                {attErrors.workDate ? (
+                  <div className="field-error">{attErrors.workDate.message}</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="att-in">Clock in</label>
+                <input id="att-in" type="datetime-local" {...registerAtt('clockInAt')} />
+              </div>
+              <div className="field">
+                <label htmlFor="att-out">Clock out</label>
+                <input id="att-out" type="datetime-local" {...registerAtt('clockOutAt')} />
+              </div>
+              <div className="field">
+                <label htmlFor="att-status">Status</label>
+                <select id="att-status" {...registerAtt('status')}>
+                  {attendanceStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="att-notes">Notes</label>
+              <textarea id="att-notes" rows={2} {...registerAtt('notes')} />
+            </div>
+            {attFormError ? <div className="error-banner">{attFormError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={attSaving}>
+                {attSaving ? 'Saving…' : editingAttId ? 'Save changes' : 'Create attendance'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={leaveOpen} onOpenChange={(open) => !leaveSaving && setLeaveOpen(open)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader title={editingLeaveId ? 'Edit leave' : 'New leave'} />
+          <form onSubmit={(event) => void submitLeave(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="leave-employee">Employee *</label>
+                <select id="leave-employee" {...registerLeave('employeeId')}>
+                  <option value="">— Select employee —</option>
+                  {employees.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employeeName(employee)}
+                    </option>
+                  ))}
+                </select>
+                {leaveErrors.employeeId ? (
+                  <div className="field-error">{leaveErrors.employeeId.message}</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="leave-type">Type *</label>
+                <select id="leave-type" {...registerLeave('leaveType')}>
+                  {leaveTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="leave-start">Start date *</label>
+                <input id="leave-start" type="date" {...registerLeave('startDate')} />
+                {leaveErrors.startDate ? (
+                  <div className="field-error">{leaveErrors.startDate.message}</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="leave-end">End date *</label>
+                <input id="leave-end" type="date" {...registerLeave('endDate')} />
+                {leaveErrors.endDate ? (
+                  <div className="field-error">{leaveErrors.endDate.message}</div>
+                ) : null}
+              </div>
+              <div className="field">
+                <label htmlFor="leave-days">Days</label>
+                <input id="leave-days" type="number" min="1" max="365" {...registerLeave('days')} />
+                {leaveErrors.days ? (
+                  <div className="field-error">{leaveErrors.days.message}</div>
+                ) : null}
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="leave-reason">Reason</label>
+              <textarea id="leave-reason" rows={2} {...registerLeave('reason')} />
+            </div>
+            {leaveFormError ? <div className="error-banner">{leaveFormError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={leaveSaving}>
+                {leaveSaving ? 'Saving…' : editingLeaveId ? 'Save changes' : 'Create leave'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deletingAtt !== null} onOpenChange={(open) => !deleteBusy && !open && setDeletingAtt(null)}>
+        <DialogContent>
+          <DialogHeader
+            title="Delete attendance"
+            description={`Delete attendance for ${deletingAtt ? employeeName(deletingAtt.employee) : ''}?`}
+          />
+          <DialogFooter>
+            <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDeleteAtt()}>
+              {deleteBusy ? 'Working…' : 'Delete'}
             </Button>
-            <button type="submit" className="btn btn-primary" disabled={attSaving}>
-              {attSaving ? 'Saving…' : editingAttId ? 'Save changes' : 'Create attendance'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Modal
-        open={leaveOpen}
-        title={editingLeaveId ? 'Edit leave' : 'New leave'}
-        onClose={() => !leaveSaving && setLeaveOpen(false)}
-        width="lg"
-      >
-        <form onSubmit={(event) => void submitLeave(event)}>
-          <div className="form-grid">
-            <Field label="Employee" htmlFor="leave-employee" required>
-              <Select
-                id="leave-employee"
-                value={leaveForm.employeeId}
-                onChange={(event) => setLeaveForm((current) => ({ ...current, employeeId: event.target.value }))}
-              >
-                <option value="">— Select employee —</option>
-                {employees.map((employee) => (
-                  <option key={employee.id} value={employee.id}>
-                    {employeeName(employee)}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Type" htmlFor="leave-type" required>
-              <Select
-                id="leave-type"
-                value={leaveForm.leaveType}
-                onChange={(event) => setLeaveForm((current) => ({ ...current, leaveType: event.target.value }))}
-              >
-                {leaveTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Start date" htmlFor="leave-start" required>
-              <TextInput
-                id="leave-start"
-                type="date"
-                value={leaveForm.startDate}
-                onChange={(event) => setLeaveForm((current) => ({ ...current, startDate: event.target.value }))}
-              />
-            </Field>
-            <Field label="End date" htmlFor="leave-end" required>
-              <TextInput
-                id="leave-end"
-                type="date"
-                value={leaveForm.endDate}
-                onChange={(event) => setLeaveForm((current) => ({ ...current, endDate: event.target.value }))}
-              />
-            </Field>
-            <Field label="Days" htmlFor="leave-days">
-              <TextInput
-                id="leave-days"
-                type="number"
-                min="1"
-                max="365"
-                value={leaveForm.days}
-                onChange={(event) => setLeaveForm((current) => ({ ...current, days: event.target.value }))}
-              />
-            </Field>
-          </div>
-          <Field label="Reason" htmlFor="leave-reason">
-            <TextArea
-              id="leave-reason"
-              rows={2}
-              value={leaveForm.reason}
-              onChange={(event) => setLeaveForm((current) => ({ ...current, reason: event.target.value }))}
-            />
-          </Field>
-          {leaveFormError ? <div className="error-banner">{leaveFormError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={() => setLeaveOpen(false)} disabled={leaveSaving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={leaveSaving}>
-              {leaveSaving ? 'Saving…' : editingLeaveId ? 'Save changes' : 'Create leave'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      <ConfirmDialog
-        open={deletingAtt !== null}
-        title="Delete attendance"
-        message={`Delete attendance for ${deletingAtt ? employeeName(deletingAtt.employee) : ''}?`}
-        confirmLabel="Delete"
-        busy={deleteBusy}
-        onCancel={() => setDeletingAtt(null)}
-        onConfirm={() => void confirmDeleteAtt()}
-      />
-
-      <ConfirmDialog
+      <Dialog
         open={deletingLeave !== null}
-        title="Delete leave"
-        message={`Delete this ${deletingLeave?.leaveType} leave?`}
-        confirmLabel="Delete"
-        onCancel={() => setDeletingLeave(null)}
-        onConfirm={() => void confirmDeleteLeave()}
-      />
+        onOpenChange={(open) => !open && setDeletingLeave(null)}
+      >
+        <DialogContent>
+          <DialogHeader title="Delete leave" description={`Delete this ${deletingLeave?.leaveType} leave?`} />
+          <DialogFooter>
+            <Button variant="danger" type="button" onClick={() => void confirmDeleteLeave()}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
