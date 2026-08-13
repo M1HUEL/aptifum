@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch } from '../api/client';
@@ -42,6 +43,12 @@ const movementTypes: MovementType[] = [
   'return',
   'disposal',
 ];
+
+type StockTab = 'stock' | 'movements' | 'lots';
+
+function parseTab(raw: string | null): StockTab {
+  return raw === 'movements' || raw === 'lots' ? raw : 'stock';
+}
 
 function movementTone(type: MovementType): 'success' | 'danger' | 'info' {
   if (type === 'inbound' || type === 'return') return 'success';
@@ -396,7 +403,8 @@ function toDto(form: StockMovementFormValues): CreateMovementDto {
 }
 
 export function StockPage() {
-  const [tab, setTab] = useState<'stock' | 'movements' | 'lots'>('stock');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tab, setTab] = useState<StockTab>(() => parseTab(searchParams.get('tab')));
   const [refreshKey, setRefreshKey] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -406,6 +414,17 @@ export function StockPage() {
   const [productStock, setProductStock] = useState<ProductStock[]>([]);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
+
+  useEffect(() => {
+    setTab(parseTab(searchParams.get('tab')));
+  }, [searchParams]);
+
+  const changeTab = (next: StockTab) => {
+    setTab(next);
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', next);
+    setSearchParams(params);
+  };
 
   const {
     register,
@@ -511,20 +530,20 @@ export function StockPage() {
         action={<Button onClick={openModal}>New movement</Button>}
       />
       <div className="tabs">
-        <button type="button" className={tab === 'stock' ? 'tab tab-active' : 'tab'} onClick={() => setTab('stock')}>
+        <button type="button" className={tab === 'stock' ? 'tab tab-active' : 'tab'} onClick={() => changeTab('stock')}>
           Stock levels
         </button>
         <button
           type="button"
           className={tab === 'movements' ? 'tab tab-active' : 'tab'}
-          onClick={() => setTab('movements')}
+          onClick={() => changeTab('movements')}
         >
           Movements
         </button>
         <button
           type="button"
           className={tab === 'lots' ? 'tab tab-active' : 'tab'}
-          onClick={() => setTab('lots')}
+          onClick={() => changeTab('lots')}
         >
           Lots
         </button>

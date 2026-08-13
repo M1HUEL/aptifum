@@ -455,6 +455,27 @@ select:focus {
   }
 }
 
+.skeleton {
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #eef0f4 25%, var(--border) 37%, #eef0f4 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+.skeleton-header {
+  height: 10px;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
 .empty-state {
   text-align: center;
   color: var(--text-muted);

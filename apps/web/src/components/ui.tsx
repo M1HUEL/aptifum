@@ -65,6 +65,39 @@ export function LoadingBlock() {
   );
 }
 
+export function Skeleton({ className }: { className?: string }) {
+  return <div className={className ? `skeleton ${className}` : 'skeleton'} aria-hidden="true" />;
+}
+
+export function TableSkeleton({ columns, rows = 5 }: { columns: number; rows?: number }) {
+  return (
+    <div className="table-wrap">
+      <table className="data-table">
+        <thead>
+          <tr>
+            {Array.from({ length: columns }, (_, index) => (
+              <th key={index}>
+                <Skeleton className="skeleton-header" />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }, (_, rowIndex) => (
+            <tr key={rowIndex}>
+              {Array.from({ length: columns }, (_, colIndex) => (
+                <td key={colIndex}>
+                  <Skeleton />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function ErrorBanner({ message }: { message: string }) {
   return <div className="error-banner">{message}</div>;
 }

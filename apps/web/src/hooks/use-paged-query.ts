@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../api/client';
 import type { Paginated } from '../api/types';
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 interface PagedQueryOptions {
   path: string;
@@ -36,9 +38,27 @@ export function usePagedQuery<T>(options: PagedQueryOptions): PagedQueryResult<T
   const { path } = options;
   const search = useMemo(() => serializeParams(options), [options]);
 
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const debounceRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (debounceRef.current !== null) {
+      window.clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = window.setTimeout(() => {
+      setDebouncedSearch(search);
+      debounceRef.current = null;
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current !== null) {
+        window.clearTimeout(debounceRef.current);
+      }
+    };
+  }, [search]);
+
   const result = useQuery<Paginated<T>>({
-    queryKey: ['paged', path, search],
-    queryFn: () => apiFetch<Paginated<T>>(`${path}?${search}`),
+    queryKey: ['paged', path, debouncedSearch],
+    queryFn: () => apiFetch<Paginated<T>>(`${path}?${debouncedSearch}`),
     placeholderData: (previous) => previous,
   });
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { apiFetch } from '../api/client';
 import type { Customer, Paginated } from '../api/types';
 import { LeadPanel } from '../components/crm/lead-panel';
@@ -16,10 +17,26 @@ const TABS: Array<{ key: CrmTab; label: string; permission: string }> = [
   { key: 'activities', label: 'Activities', permission: 'crm:read' },
 ];
 
+function parseTab(raw: string | null): CrmTab {
+  return TABS.some((item) => item.key === raw) ? (raw as CrmTab) : 'leads';
+}
+
 export function CrmPage() {
-  const [tab, setTab] = useState<CrmTab>('leads');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tab, setTab] = useState<CrmTab>(() => parseTab(searchParams.get('tab')));
   const [customers, setCustomers] = useState<Customer[]>([]);
   const can = usePermission();
+
+  useEffect(() => {
+    setTab(parseTab(searchParams.get('tab')));
+  }, [searchParams]);
+
+  const changeTab = (next: CrmTab) => {
+    setTab(next);
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', next);
+    setSearchParams(params);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -43,7 +60,7 @@ export function CrmPage() {
             key={item.key}
             type="button"
             className={tab === item.key ? 'tab tab-active' : 'tab'}
-            onClick={() => setTab(item.key)}
+            onClick={() => changeTab(item.key)}
           >
             {item.label}
           </button>

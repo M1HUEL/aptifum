@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as core from '@aptifum/core';
@@ -9,9 +10,9 @@ import {
   EmptyState,
   ErrorBanner,
   formatMoney,
-  LoadingBlock,
   PageHeader,
   Pagination,
+  TableSkeleton,
 } from '../components/ui';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -75,10 +76,17 @@ function fromCustomer(customer: Customer): CustomerFormValues {
   };
 }
 
+function parsePageNumber(raw: string | null): number {
+  if (!raw) return 1;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
+}
+
 export function CustomersPage() {
-  const [page, setPage] = useState(1);
-  const [query, setQuery] = useState('');
-  const [input, setInput] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [page, setPage] = useState(() => parsePageNumber(searchParams.get('page')));
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
+  const [input, setInput] = useState(() => searchParams.get('q') ?? '');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -104,6 +112,13 @@ export function CustomersPage() {
     query,
   });
 
+  useEffect(() => {
+    const urlQuery = searchParams.get('q') ?? '';
+    setInput(urlQuery);
+    setQuery(urlQuery);
+    setPage(parsePageNumber(searchParams.get('page')));
+  }, [searchParams]);
+
   const taxExempt = watch('taxExempt');
   const active = watch('active');
 
@@ -116,8 +131,21 @@ export function CustomersPage() {
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
-    setQuery(input.trim());
+    const nextQuery = input.trim();
+    setQuery(nextQuery);
     setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (nextQuery) params.set('q', nextQuery);
+    else params.delete('q');
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(next));
+    setSearchParams(params);
   };
 
   const openCreate = () => {
@@ -218,7 +246,7 @@ export function CustomersPage() {
           Search
         </button>
       </form>
-      {!data && !error ? <LoadingBlock /> : null}
+      {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
@@ -247,7 +275,7 @@ export function CustomersPage() {
               </table>
             </div>
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} />
         </>
       ) : null}
 

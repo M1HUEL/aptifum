@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { apiFetch, ApiError, downloadFile } from '../api/client';
 import type { Customer, Invoice, Paginated, Product, Warehouse } from '../api/types';
 import {
@@ -20,12 +21,19 @@ import { InvoiceFormModal } from '../components/invoices/invoice-form';
 import { PaymentFormModal } from '../components/invoices/payment-form';
 import { InvoiceDetailsModal } from '../components/invoices/invoice-details';
 
+function parsePageNumber(raw: string | null): number {
+  if (!raw) return 1;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
+}
+
 export function InvoicesPage() {
-  const [page, setPage] = useState(1);
-  const [query, setQuery] = useState('');
-  const [input, setInput] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [page, setPage] = useState(() => parsePageNumber(searchParams.get('page')));
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
+  const [input, setInput] = useState(() => searchParams.get('q') ?? '');
+  const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') ?? '');
+  const [typeFilter, setTypeFilter] = useState(() => searchParams.get('type') ?? '');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -40,6 +48,15 @@ export function InvoicesPage() {
     query,
     extraParams: { status: statusFilter, type: typeFilter },
   });
+
+  useEffect(() => {
+    const urlQuery = searchParams.get('q') ?? '';
+    setInput(urlQuery);
+    setQuery(urlQuery);
+    setStatusFilter(searchParams.get('status') ?? '');
+    setTypeFilter(searchParams.get('type') ?? '');
+    setPage(parsePageNumber(searchParams.get('page')));
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,8 +79,41 @@ export function InvoicesPage() {
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
-    setQuery(input.trim());
+    const nextQuery = input.trim();
+    setQuery(nextQuery);
     setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (nextQuery) params.set('q', nextQuery);
+    else params.delete('q');
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(next));
+    setSearchParams(params);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (value) params.set('status', value);
+    else params.delete('status');
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
+  const handleTypeChange = (value: string) => {
+    setTypeFilter(value);
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (value) params.set('type', value);
+    else params.delete('type');
+    params.set('page', '1');
+    setSearchParams(params);
   };
 
   const downloadPdf = async (row: Invoice) => {
@@ -131,25 +181,13 @@ export function InvoicesPage() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <select
-          value={statusFilter}
-          onChange={(event) => {
-            setStatusFilter(event.target.value);
-            setPage(1);
-          }}
-        >
+        <select value={statusFilter} onChange={(event) => handleStatusChange(event.target.value)}>
           <option value="">All statuses</option>
           <option value="draft">Draft</option>
           <option value="issued">Issued</option>
           <option value="cancelled">Cancelled</option>
         </select>
-        <select
-          value={typeFilter}
-          onChange={(event) => {
-            setTypeFilter(event.target.value);
-            setPage(1);
-          }}
-        >
+        <select value={typeFilter} onChange={(event) => handleTypeChange(event.target.value)}>
           <option value="">All types</option>
           <option value="invoice">Invoice</option>
           <option value="credit_note">Credit note</option>
@@ -167,7 +205,7 @@ export function InvoicesPage() {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} />
         </>
       ) : null}
 
