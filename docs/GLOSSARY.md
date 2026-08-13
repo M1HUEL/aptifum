@@ -37,7 +37,7 @@
 | **Inbound** | Stock-in movement (receipt, purchase, initial stock). |
 | **Outbound** | Stock-out movement (sale). |
 | **Adjustment** | Authorized change to correct or set stock (`inventory:adjust`); the only movement allowed to fix discrepancies. |
-| **Transfer** | Movement between warehouses; not yet implemented (service rejects it). |
+| **Transfer** | Movement between warehouses: `transferStock` (pessimistic locks on both warehouses, preserves origin average cost, weighted-avg into destination, records a `transfer` movement per side) via `POST /inventory/transfers`. |
 | **Return** | Stock reintegration, e.g. from a credit note. |
 | **Disposal** | Stock-out for damaged/expired goods. |
 | **Reserved quantity** | Stock committed to confirmed orders (`reserved_quantity`); reserved when an order is confirmed, released on cancel, consumed by the outbound movement when invoiced. Available stock = `quantity - reserved_quantity`. |
@@ -46,7 +46,7 @@
 
 | Term | Definition |
 |------|------------|
-| **Customer** | Buyer of goods (`customers`): trade/legal name, tax id, contacts, currency, credit limit, price category. MX customers also carry `uso_cfdi` and `regimen_fiscal` (CFDI §5). |
+| **Customer** | Buyer of goods (`customers`): trade/legal name, tax id, contacts, currency, credit limit, price category. MX customers also carry `uso_cfdi` and `regimen_fiscal` (CFDI §5); US customers carry `state` + `tax_exempt` for sales tax (§6). |
 | **Quote** | Non-binding sales document (`sales_orders` with `kind = quote`); convertible to an order. |
 | **Sales order** | Confirmed customer commitment (`sales_orders` with `kind = order`); statuses `draft → confirmed → invoiced`, or `cancelled`. |
 | **SalesOrderKind** | Enum: `quote`, `order`. |
@@ -68,7 +68,7 @@
 | **Functional currency** | The tenant's reporting currency (`tenants.default_currency`, default `USD`). All automatically posted journal entries are expressed in it. |
 | **Exchange rate** | Per-tenant rate for a `(base, quote)` currency pair on a given date (`exchange_rates`), unique per `(tenant, base, quote, date)`. Stored as `rate = units of quote per 1 unit of base`. |
 | **FX conversion** | Documents issued in a currency other than the functional one store `exchange_rate = functional → document currency` and their automatic entries post converted amounts (AR/sales/VAT, AP/cash). Inventory valuation (COGS/stock) is kept in functional currency and is not converted. |
-| **FX gain / FX loss** | Reserved accounts `4200 Foreign exchange gain` / `6100 Foreign exchange loss` in the seeded chart of accounts. Not yet posted automatically (no revaluation/settlement). |
+| **FX gain / FX loss** | Reserved accounts `4200 Foreign exchange gain` / `6100 Foreign exchange loss` in the seeded chart of accounts. Posted by the revaluation and settlement-FX flows (SPEC §11 #3): `POST /accounting/revaluations` revalues open balances; payments realize the FX difference vs the booked rate. |
 
 ## 4. Payments (online card)
 
@@ -101,9 +101,20 @@
 | **ClaveProdServ / ClaveUnidad** | SAT product key and unit key (`SAT_PRODUCT_KEYS`, `SAT_UNITS`); the unit maps from the product's unit via `satUnitForKey` (e.g. piece → `H87`, kg → `KGM`, service → `E48`). |
 | **CfdiCertificate** | Per-tenant self-signed certificate (`cfdi_certificates`, kinds `emisor`/`pac`) generated with `selfsigned` (async WebCrypto); serial normalized to 20 hex digits, PEMs stored in the DB. |
 
-## 6. References
+## 6. US sales tax
 
-- Model and relationships: `docs/SPEC.md` §13, §22, §23.
+| Term | Definition |
+|------|------------|
+| **US sales tax** | A consumption tax on retail sales that a US seller collects from the buyer based on the seller's **nexus** in the buyer's state. Each sale line's `tax_rate` defaults to the resolved rate when the tenant country is `US`. |
+| **Nexus** | A seller's obligation to collect sales tax in a state (physical/economic presence). Configured per tenant as `tenants.config.usSalesTax.nexusStates`; sales to states outside nexus resolve to a `0` rate. |
+| **Sales tax rate** | Fraction applied per line (`tax_rate`, `numeric(6,4)`). Base state-level rates come from `US_STATES` in `packages/core`; a tenant can override any nexus state via `config.usSalesTax.rates`. |
+| **Tax exempt** | A customer flagged `customers.tax_exempt` (create/update via the API, checkbox in the web form) is never charged sales tax — the resolver returns `0`. |
+| **Tax resolver** | `resolveUsSalesTaxRate` (`packages/core`) + `UsSalesTaxService.resolveRate` (`apps/api/src/modules/tax/`): `customerState` + `tax_exempt` + nexus config → line `tax_rate`. An explicit per-line rate always wins. |
+| **US_STATES** | Catalog of 50 states + DC with `{ name, baseRate }` (fraction), served to the client by `GET /tax/us-sales-tax/states`. |
+
+## 7. References
+
+- Model and relationships: `docs/SPEC.md` §13, §22, §23, §24.
 - Enums: `packages/core/src/index.ts`.
 - Entities: `packages/database/src/entities/`.
 - Stock logic: `packages/database/src/services/stock.ts`.

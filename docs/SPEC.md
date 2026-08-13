@@ -15,7 +15,7 @@ The goal is to manage the full commercial and financial lifecycle of a business:
 2. **Accounting as the financial source of truth**: every economic transaction (sale, purchase, inventory movement) automatically generates its accounting entries.
 3. **Full audit trail**: every data mutation is recorded (who, what, when, before/after).
 4. **Inventory integrity**: stock only changes through validated movements; concurrency is handled with optimistic locking.
-5. **Single stack, single language**: TypeScript end to end (backend, shared libraries, future frontend).
+5. **Single stack, single language**: TypeScript end to end (backend, shared libraries, React frontend).
 
 ---
 
@@ -65,7 +65,7 @@ aptifum/
 │   │           ├── payments/         # Online card payments (Stripe), webhooks
 │   │           ├── production/       # BOMs/recipes, production orders
 │   │           └── reporting/        # Reports, exports
-│   └── web/                          # (Future) Frontend dashboard
+│   └── web/                          # React dashboard
 ├── packages/
 │   ├── core/                         # Shared types, enums, DTOs, constants
 │   ├── config/                       # Env validation (zod) and configuration
@@ -122,10 +122,10 @@ aptifum/
 - **Concurrency:** versioning (optimistic lock) on `product_stock`; movements inside a DB transaction.
 
 ### 6.2 Sales and Billing
-- **Customers:** tax data, contacts, credit limit, assigned category/pricing.
+- **Customers:** tax data (RFC/EIN by country), contacts, credit limit, assigned category/pricing, US billing `state` + `tax_exempt` flag (drives automatic US sales tax, §24).
 - **Quotes:** valid for X days, convertible to order.
 - **Orders (sales orders):** optional stock reservation, discounts, shipping, status (draft → confirmed → invoiced).
-- **Billing:** per-tenant automatic document series and numbering, taxes (VAT), line/global discounts, credit/debit notes, returns (stock reintegration).
+- **Billing:** per-tenant automatic document series and numbering, taxes (VAT), line/global discounts, credit/debit notes, returns (stock reintegration). For US tenants, line tax rates default to the **resolved sales tax rate** from the customer's state and the tenant's nexus configuration (§24).
 - **Collections / Accounts receivable:** payment recording (cash, card, transfer), partials, due dates, customer statement.
 - **Idempotency:** financial operations accept an `Idempotency-Key` to prevent double entries.
 - **Emits events:** `sale.invoiced`, `payment.received`, `credit_note.issued`.
@@ -141,7 +141,7 @@ aptifum/
 - **Entries (journal):** double entry, open/closed accounting period, balance validation (debits = credits).
 - **Automatic entries:** generated from sales/credit invoices, collections, payments, inventory movements (valuation), payroll, production.
 - **Accounting close:** period closing, general ledger, journal, trial balance, balance sheet, income statement reports.
-- **Currency:** default functional currency per tenant; exchange rates implemented so foreign-currency documents post in the functional currency. Revaluation of open balances is deferred (see §11 #3 and §16.7).
+- **Currency:** default functional currency per tenant; exchange rates implemented so foreign-currency documents post in the functional currency. Revaluation of open foreign-currency balances and settlement FX are shipped (see §11 #3 and §16.7).
 
 ### 6.5 Human Resources
 - **Employees:** file, department, position, salary, bank, tax data.
@@ -244,9 +244,9 @@ The following decisions were settled and now constrain the product (see §6 and 
 
 | # | Decision | Resolution |
 |---|----------|------------|
-| 1 | Country-specific tax rules | **US + Mexico.** Tenants carry a `country` (`US`/`MX`) with seeded tax presets: US → `Sales Tax` 8% (sales), MX → `IVA` 16% (sales). Tax IDs follow the local format (US EIN 9 digits, MX RFC 12–13 chars). **MX CFDI 4.0 e-invoicing shipped (2026-08, §23):** self-contained XML + digital seal + demo TFD (self-signed per-tenant certificates, no real PAC). Real PAC timbrado and US *sales tax* per state/nexus remain **F4**. |
+| 1 | Country-specific tax rules | **US + Mexico.** Tenants carry a `country` (`US`/`MX`) with seeded tax presets: US → `Sales Tax` 8% (sales), MX → `IVA` 16% (sales). Tax IDs follow the local format (US EIN 9 digits, MX RFC 12–13 chars). **MX CFDI 4.0 e-invoicing shipped (2026-08, §23):** self-contained XML + digital seal + demo TFD (self-signed per-tenant certificates, no real PAC). **US sales tax per state/nexus shipped (2026-08, §24):** automatic rate resolution from customer state + tenant nexus config. Real PAC timbrado remains **F4**. |
 | 2 | Physical POS / offline sales | **Web-only** — a web POS/cashier (catalog, ticket, payment collection) is **shipped** on the dashboard; no offline/desktop client. |
-| 3 | Multi-currency | **Single functional currency per tenant** (`default_currency`). Exchange rates are **implemented** (per-tenant `exchange_rates`, foreign-currency invoices/payments/supplier bills post in the functional currency, see §16.7). Revaluation of open balances and automatic FX gain/loss entries remain **F4**. |
+| 3 | Multi-currency | **Single functional currency per tenant** (`default_currency`). Exchange rates are **implemented** (per-tenant `exchange_rates`, foreign-currency invoices/payments/supplier bills post in the functional currency, see §16.7). **Revaluation + settlement FX shipped (2026-08):** `POST /accounting/revaluations` revalues open foreign-currency balances (idempotent re-runs, automatic reversal of prior revaluations) and payments realize the FX difference vs the booked rate. |
 | 4 | Notifications | **Email notifications shipped** for invoice/credit-note issuance, payments and goods receipts, delivered by the transactional outbox dispatcher (see §8). **Due-date/approval reminders shipped (2026-08)**: a daily cron emits `reminder.*` outbox events (overdue AR/AP, purchase orders pending approval ≥ 2 days) delivered to customers and permissioned tenant users. SMS deferred to **F4**. |
 | 5 | Languages | **English only** (single language). UI and API strings are English; no i18n layer for now. |
 | 6 | Team | **Single developer.** Conventions stay simple; lightweight CI. |
@@ -281,6 +281,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] Web POS / cashier: catalog, ticket, and payment collection on the dashboard (F4, §11 #2).
 - [x] F4 Online card payments (Stripe): per-tenant `payment_providers` config with masked secrets, `POST /payments/invoices/:id/checkout` → Stripe Checkout Session, and `POST /webhooks/stripe` signature-verified webhook that records card payments idempotently — defined in §22.
 - [x] MX/US tax compliance backend (CFDI 4.0): RFC/EIN validation on customers by tenant country, `cfdi_documents` + `cfdi_certificates`, self-contained CFDI 4.0 XML with SAT-compliant cadena original + RSA-SHA256 seal + demo TFD 1.1 (self-signed per-tenant emisor/PAC certificates), outbox consumer auto-generates on `invoice.issued`, `/tax/...` settings/catalogs/cancel/xml endpoints — defined in §23. Web: CFDI UUID + XML download in the invoice detail modal.
+- [x] F4 US sales tax nexus (§24): per-tenant config in `tenants.config.usSalesTax` (`nexusStates` + optional per-state rate overrides over the `US_STATES` defaults, seeded `['CA','TX']`), `customers.state` / `customers.tax_exempt`, and automatic line `tax_rate` resolution on invoice/order creation (explicit per-line rate wins); `/tax/us-sales-tax` read/update + `/tax/us-sales-tax/states` catalog. Web: Settings page (`/settings`) for nexus/rates and customer form state/tax-exempt fields.
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -316,7 +317,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 
 | Table | Columns (besides base + tenant) | Notes / indexes |
 |-------|--------------------------------|-----------------|
-| `customers` | `code`, `trade_name`, `legal_name`, `tax_id`, `email`, `phone`, `address`, `currency`, `credit_limit`, `price_category`, `uso_cfdi` (nullable, MX), `regimen_fiscal` (nullable, MX), `active`, `version` | index `(tenant_id, code)`, `(tenant_id, tax_id)` |
+| `customers` | `code`, `trade_name`, `legal_name`, `tax_id`, `email`, `phone`, `address`, `currency`, `credit_limit`, `price_category`, `uso_cfdi` (nullable, MX), `regimen_fiscal` (nullable, MX), `state` (nullable, US), `tax_exempt` (default false), `active`, `version` | index `(tenant_id, code)`, `(tenant_id, tax_id)` |
 | `taxes` | `name`, `rate` `numeric(6,4)`, `kind` (enum: sales/purchase), `active` | country-agnostic; tenant configures |
 | `document_series` | `kind` (enum: quote/order/invoice/credit_note), `prefix`, `next_number` (bigint), `active` | per-tenant automatic numbering; atomic increment (row lock/serializable) |
 | `sales_orders` | `number` (unique per tenant), `kind` (enum: quote/order), `status` (enum: draft/confirmed/invoiced/cancelled), `customer_id`, `warehouse_id`, `issue_date`, `due_date`, `currency`, `subtotal`, `discount`, `tax`, `total`, `notes`, `version` | quotes and orders share this table; index `(tenant_id, number)`, `(tenant_id, customer_id, issue_date)` |
@@ -369,7 +370,7 @@ document_series → invoices / sales_orders (numbering)
 4. [x] Create the **domain glossary** (`docs/GLOSSARY.md`).
 5. [x] Web frontend (React dashboard) and CSV/Excel/PDF exports (see §6.8, §21).
 6. [x] MX/US tax compliance backend (CFDI 4.0 demo timbrado + EIN/RFC validation, see §23).
-7. [ ] Next phases (see §10): F4 platform extensions (integrations, real PAC timbrado, US sales tax nexus, revaluation).
+7. [ ] Next phases (see §10): F4 platform extensions (integrations/bank feeds, real PAC timbrado).
 
 ---
 
@@ -456,7 +457,7 @@ Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `version` opti
 
 COGS is taken from `product_stock.average_cost` before the outbound movement. Auto-posted entries use `reference_type` `invoice` / `credit_note` / `payment` / `purchase_receipt` / `supplier_payment` / `supplier_bill` / `payroll` / `production_order` and `reference_id` of the source document. A closed period rejects any new posting (409).
 
-**Multi-currency:** every auto-posted entry is denominated in the tenant's **functional currency** (`tenants.default_currency`, default `USD`). For documents in another currency the AR/sales/VAT and AP/cash amounts are converted at the document's stored `exchange_rate` (`round2(amount × rate)`); inventory movements, COGS and stock costs are already in functional currency and are never converted. Missing exchange rate for a pair on the document date → 400. FX gain/loss accounts (`4200`/`6100`) are seeded but not posted automatically (revaluation deferred).
+**Multi-currency:** every auto-posted entry is denominated in the tenant's **functional currency** (`tenants.default_currency`, default `USD`). For documents in another currency the AR/sales/VAT and AP/cash amounts are converted at the document's stored `exchange_rate` (`round2(amount × rate)`); inventory movements, COGS and stock costs are already in functional currency and are never converted. Missing exchange rate for a pair on the document date → 400. FX gain/loss accounts (`4200`/`6100`) are posted by the revaluation and settlement-FX flows (§11 #3).
 
 ### 16.5 Key flows
 
@@ -733,10 +734,46 @@ Same as §13.0 (TenantBaseEntity, UUID PK, enums in `packages/core`). The featur
 - `GET /tax/cfdi/:id`, `GET /tax/cfdi/:id/xml` — document and XML download (`application/xml`, `Content-Disposition: attachment; filename="<UUID>.xml"`) (`tax:read`).
 - `PUT /tax/cfdi/:id/cancel` — demo cancel: sets `status = cancelled` + `cancelled_at` (no PAC cancellation) (`tax:write`).
 - `GET /tax/catalogs` — `{ regimes, usos, paymentForms, paymentMethods, productKeys }` (`tax:read`).
+- `GET /tax/us-sales-tax`, `PUT /tax/us-sales-tax`, `GET /tax/us-sales-tax/states` — US sales tax nexus config + state catalog (see §24) (`tax:read`/`tax:write`).
 
 ### 23.5 Customer validation
 
 `customers.service.ts` validates/normalizes `tax_id` by tenant country on create/update: MX → `validateRfc` + `normalizeRfc`, US → `validateEin` (dashes stripped), others → trim. Customer create/update DTOs accept `uso_cfdi` / `regimen_fiscal` constrained to `USO_CFDI` / `FISCAL_REGIMES` keys (`@IsIn`). Web: the invoice detail modal shows the CFDI UUID, status, total and a "Download XML" button (`GET /tax/cfdi/invoices/:invoiceId` + `GET /tax/cfdi/:id/xml`).
+
+---
+
+## 24. US sales tax (nexus)
+
+### 24.1 Conventions
+
+US-only feature for tenants with `country = 'US'`. Sales tax is applied per sale line: each line's `tax_rate` defaults to the **resolved rate** for the customer's billing state, governed by the tenant's nexus configuration. Non-US tenants, states without nexus, unknown states, and tax-exempt customers all resolve to `0`. An explicit per-line `taxRate` on the request always wins over the resolved default.
+
+### 24.2 Configuration and data model
+
+| Item | Type | Notes |
+|------|------|-------|
+| `tenants.config.usSalesTax` | jsonb | `{ nexusStates: string[], rates: Record<string, number> }`; seeded `{ nexusStates: ['CA','TX'], rates: {} }` for US tenants. |
+| `customers.state` | varchar(2) nullable | US state code of the billing address. |
+| `customers.tax_exempt` | boolean, default false | Exempt customers are never charged sales tax. |
+| `US_STATES` (in `packages/core`) | `Record<string, { name, rate }>` | 50 states + DC with base state-level sales tax rates (fraction); `config.rates` overrides win over these defaults. |
+
+### 24.3 Resolution rule
+
+`UsSalesTaxService.resolveRate(tenantId, customerState, taxExempt)` (`apps/api/src/modules/tax/us-sales-tax.service.ts`):
+
+- `0` when there is no tenant context, the tenant country is not `US`, the customer is `tax_exempt`, or `customerState` is missing;
+- `0` when the state is not in `nexusStates` or is unknown;
+- otherwise `config.rates[state] ?? US_STATES[state].rate`.
+
+Resolution happens during invoice/order creation (`invoices.service.ts`, `orders.service.ts`): line `tax_rate = item.taxRate ?? resolved`, and `tax_amount`/totals are computed from it as usual (§8, §16.4). The web POS posts through the same invoice endpoint, so POS lines without an explicit rate are auto-taxed the same way.
+
+### 24.4 API surface (`/tax/...`, module permission `TAX` with `read`/`write`)
+
+- `GET /tax/us-sales-tax` — `{ nexusStates, rates, country }` (`tax:read`).
+- `PUT /tax/us-sales-tax` — body `{ nexusStates?, rates? }`; unknown state → `400`; rate outside 0–0.5 → `400`; only nexus-state rate overrides persist (`tax:write`).
+- `GET /tax/us-sales-tax/states` — `US_STATES` catalog `code → { name, rate }` (`tax:read`).
+
+Web: Settings page (`/settings`, nav gated on `tax:read`) edits nexus checkboxes and per-state rate overrides; the customer form captures `state` (US state dropdown) and `tax_exempt`.
 
 ---
 
