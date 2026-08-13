@@ -6,6 +6,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import * as ToastPrimitive from '@radix-ui/react-toast';
+import { cn } from '../lib/cn';
 
 type ToastTone = 'success' | 'error' | 'info';
 
@@ -23,6 +25,12 @@ const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
 let nextId = 1;
 
+const toneStyles: Record<ToastTone, string> = {
+  success: 'border-green-300 bg-green-50 text-green-900',
+  error: 'border-red-300 bg-red-50 text-red-900',
+  info: 'border-blue-300 bg-blue-50 text-blue-900',
+};
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -39,13 +47,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="toast-stack" aria-live="polite">
+      <ToastPrimitive.Provider swipeDirection="right">
         {toasts.map((item) => (
-          <div key={item.id} className={`toast toast-${item.tone}`}>
-            {item.message}
-          </div>
+          <ToastPrimitive.Root
+            key={item.id}
+            className={cn(
+              'pointer-events-auto rounded-md border p-3 text-sm shadow-lg data-[swipe=end]:opacity-0 data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)]',
+              toneStyles[item.tone],
+            )}
+          >
+            <ToastPrimitive.Title>{item.message}</ToastPrimitive.Title>
+          </ToastPrimitive.Root>
         ))}
-      </div>
+        <ToastPrimitive.Viewport className="fixed bottom-4 right-4 z-[100] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2 outline-none" />
+      </ToastPrimitive.Provider>
     </ToastContext.Provider>
   );
 }
