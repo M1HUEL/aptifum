@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { apiFetch, ApiError } from '../api/client';
-import { useAuth } from '../auth/AuthContext';
+import { useAuth } from '../auth/auth-context';
 import { Badge, ErrorBanner, PageHeader } from '../components/ui';
 import { Button, Field, TextInput } from '../components/forms';
 import { useToast } from '../components/toast';

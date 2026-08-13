@@ -23,7 +23,7 @@ import {
   TextInput,
 } from '../components/forms';
 import { useToast } from '../components/toast';
-import { usePagedQuery } from '../hooks/usePagedQuery';
+import { usePagedQuery } from '../hooks/use-paged-query';
 
 function entryStatusTone(status: JournalEntry['status']): BadgeTone {
   if (status === 'posted') return 'success';

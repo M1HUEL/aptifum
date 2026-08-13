@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { useAuth, usePermission } from '../auth/AuthContext';
+import { useAuth, usePermission } from '../auth/auth-context';
 
 const NAV_ITEMS: Array<{ to: string; label: string; permission?: string }> = [
   { to: '/dashboard', label: 'Dashboard', permission: 'reporting:read' },

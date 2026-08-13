@@ -30,7 +30,7 @@ import {
   TextInput,
 } from '../components/forms';
 import { useToast } from '../components/toast';
-import { usePagedQuery } from '../hooks/usePagedQuery';
+import { usePagedQuery } from '../hooks/use-paged-query';
 
 function employeeStatusTone(status: EmployeeStatus): BadgeTone {
   return status === 'active' ? 'success' : 'neutral';

@@ -29,7 +29,7 @@ import {
   TextArea,
   TextInput,
 } from '../components/forms';
-import { usePermission } from '../auth/AuthContext';
+import { usePermission } from '../auth/auth-context';
 import { useToast } from '../components/toast';
 
 const leaveTypes = ['vacation', 'sick', 'personal', 'other'] as const;

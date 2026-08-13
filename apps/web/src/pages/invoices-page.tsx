@@ -22,7 +22,7 @@ import {
   TextInput,
 } from '../components/forms';
 import { useToast } from '../components/toast';
-import { usePagedQuery } from '../hooks/usePagedQuery';
+import { usePagedQuery } from '../hooks/use-paged-query';
 
 const paymentMethods = ['cash', 'card', 'transfer', 'other'] as const;
 

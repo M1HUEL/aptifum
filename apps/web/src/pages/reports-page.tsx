@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch, ApiError, downloadFile } from '../api/client';
-import { usePermission } from '../auth/AuthContext';
+import { usePermission } from '../auth/auth-context';
 import {
   type Column,
   DataTable,

@@ -33,7 +33,7 @@ import {
   TextInput,
 } from '../components/forms';
 import { useToast } from '../components/toast';
-import { usePagedQuery } from '../hooks/usePagedQuery';
+import { usePagedQuery } from '../hooks/use-paged-query';
 
 const leadStatuses = ['new', 'contacted', 'qualified', 'disqualified', 'converted'] as const;
 const stages = ['prospecting', 'qualification', 'proposal', 'negotiation', 'won', 'lost'] as const;

@@ -11,7 +11,7 @@ import {
   Pagination,
 } from '../components/ui';
 import { Button, Select } from '../components/forms';
-import { usePagedQuery } from '../hooks/usePagedQuery';
+import { usePagedQuery } from '../hooks/use-paged-query';
 
 const MODULES = [
   'auth',
