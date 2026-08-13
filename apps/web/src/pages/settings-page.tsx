@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
-import { apiFetch, ApiError } from '../api/client';
 import { ErrorBanner, LoadingBlock, PageHeader } from '../components/ui';
-import { Button, Checkbox, TextInput } from '../components/forms';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Checkbox } from '../components/ui/checkbox';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { useApiMutation, useApiQuery } from '../api/hooks';
 import { useToast } from '../components/toast';
 
 interface UsSalesTaxConfig {
@@ -17,36 +20,34 @@ interface UsStateInfo {
 
 type StatesCatalog = Record<string, UsStateInfo>;
 
+interface UpdateUsSalesTaxDto {
+  nexusStates: string[];
+  rates: Record<string, number>;
+}
+
 export function SettingsPage() {
   const toast = useToast();
-  const [catalog, setCatalog] = useState<StatesCatalog>({});
   const [nexus, setNexus] = useState<Set<string>>(new Set());
   const [overrides, setOverrides] = useState<Record<string, string>>({});
-  const [country, setCountry] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+
+  const configQuery = useApiQuery<UsSalesTaxConfig>(['tax', 'us-sales-tax'], '/api/v1/tax/us-sales-tax');
+  const statesQuery = useApiQuery<StatesCatalog>(['tax', 'us-sales-tax', 'states'], '/api/v1/tax/us-sales-tax/states');
+
+  const catalog = statesQuery.data ?? {};
+  const country = configQuery.data?.country ?? null;
 
   useEffect(() => {
-    Promise.all([
-      apiFetch<UsSalesTaxConfig>('/api/v1/tax/us-sales-tax'),
-      apiFetch<StatesCatalog>('/api/v1/tax/us-sales-tax/states'),
-    ])
-      .then(([config, states]) => {
-        setCatalog(states);
-        setCountry(config.country);
-        setNexus(new Set(config.nexusStates));
-        const percentOverrides: Record<string, string> = {};
-        for (const [code, rate] of Object.entries(config.rates)) {
-          percentOverrides[code] = String(rate * 100);
-        }
-        setOverrides(percentOverrides);
-      })
-      .catch((err: unknown) => {
-        setError(err instanceof ApiError ? err.message : 'Could not load settings.');
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    if (!configQuery.data) return;
+    setNexus(new Set(configQuery.data.nexusStates));
+    const percentOverrides: Record<string, string> = {};
+    for (const [code, rate] of Object.entries(configQuery.data.rates)) {
+      percentOverrides[code] = String(rate * 100);
+    }
+    setOverrides(percentOverrides);
+  }, [configQuery.data]);
+
+  const saveMutation = useApiMutation<UpdateUsSalesTaxDto, unknown>('/api/v1/tax/us-sales-tax', 'PUT');
 
   const toggleNexus = (code: string) => {
     setNexus((current) => {
@@ -79,90 +80,90 @@ export function SettingsPage() {
       }
     }
     setError(null);
-    setSaving(true);
-    try {
-      await apiFetch('/api/v1/tax/us-sales-tax', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nexusStates, rates }),
-      });
-      toast.toast('US sales tax settings saved.');
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not save settings.');
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate(
+      { nexusStates, rates },
+      {
+        onSuccess: () => {
+          toast.toast('US sales tax settings saved.');
+          configQuery.refetch();
+        },
+        onError: (err) => setError(err.message),
+      },
+    );
   };
+
+  const loading = configQuery.isPending || statesQuery.isPending;
+  const loadError = configQuery.error?.message ?? statesQuery.error?.message ?? error;
 
   return (
     <>
       <PageHeader title="Settings" subtitle="Company and tax configuration" />
-      {error ? <ErrorBanner message={error} /> : null}
+      {loadError ? <ErrorBanner message={loadError} /> : null}
       {loading ? <LoadingBlock /> : null}
       {!loading ? (
         <section className="card">
           <h2>US sales tax</h2>
           {country && country !== 'US' ? (
             <p className="muted">
-              Sales tax is only calculated automatically for US-based tenants. Your country is set
-              to <strong>{country}</strong>.
+              Sales tax is only calculated automatically for US-based tenants. Your country is set to{' '}
+              <strong>{country}</strong>.
             </p>
           ) : null}
           <p className="muted">
-            Mark the states where you have sales tax nexus. Sales to customers in those states will
-            be taxed at the default state rate unless you override it below.
+            Mark the states where you have sales tax nexus. Sales to customers in those states will be taxed
+            at the default state rate unless you override it below.
           </p>
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Nexus</th>
-                  <th>State</th>
-                  <th className="num">Default rate</th>
-                  <th>Override (%)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(catalog)
-                  .sort(([a], [b]) => a.localeCompare(b))
-                  .map(([code, info]) => (
-                    <tr key={code}>
-                      <td>
-                        <Checkbox
-                          label=""
-                          aria-label={`Nexus in ${code}`}
-                          checked={nexus.has(code)}
-                          onChange={() => toggleNexus(code)}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nexus</TableHead>
+                <TableHead>State</TableHead>
+                <TableHead className="text-right">Default rate</TableHead>
+                <TableHead>Override (%)</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Object.entries(catalog)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([code, info]) => (
+                  <TableRow key={code}>
+                    <TableCell>
+                      <Checkbox
+                        aria-label={`Nexus in ${code}`}
+                        checked={nexus.has(code)}
+                        onCheckedChange={() => toggleNexus(code)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {code} — {info.name}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge tone="info">{formatPercent(info.rate)}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {nexus.has(code) ? (
+                        <input
+                          className="h-9 w-24 rounded-md border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                          aria-label={`Override rate for ${code}`}
+                          type="number"
+                          min="0"
+                          max="50"
+                          step="0.01"
+                          placeholder={String(info.rate * 100)}
+                          value={overrides[code] ?? ''}
+                          onChange={(event) => setOverride(code, event.target.value)}
                         />
-                      </td>
-                      <td>
-                        {code} — {info.name}
-                      </td>
-                      <td className="num">{formatPercent(info.rate)}</td>
-                      <td>
-                        {nexus.has(code) ? (
-                          <TextInput
-                            aria-label={`Override rate for ${code}`}
-                            type="number"
-                            min="0"
-                            max="50"
-                            step="0.01"
-                            placeholder={String(info.rate * 100)}
-                            value={overrides[code] ?? ''}
-                            onChange={(event) => setOverride(code, event.target.value)}
-                          />
-                        ) : (
-                          <span className="muted">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-          <div style={{ marginTop: '1rem' }}>
-            <Button onClick={() => void save()} disabled={saving}>
-              {saving ? 'Saving…' : 'Save settings'}
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+          <div className="mt-4">
+            <Button onClick={() => void save()} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? 'Saving…' : 'Save settings'}
             </Button>
           </div>
         </section>

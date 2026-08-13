@@ -1,11 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { apiFetch, ApiError } from '../api/client';
-import type { Customer } from '../api/types';
 import * as core from '@aptifum/core';
+import type { components } from '../api/schema';
+import type { Customer } from '../api/types';
 import {
-  Badge,
-  type Column,
-  DataTable,
   EmptyState,
   ErrorBanner,
   formatMoney,
@@ -13,18 +10,15 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
-import {
-  Button,
-  Checkbox,
-  ConfirmDialog,
-  Field,
-  Modal,
-  Select,
-  TextArea,
-  TextInput,
-} from '../components/forms';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Checkbox } from '../components/ui/checkbox';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { useApiInvalidation, useApiMutation } from '../api/hooks';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+
+type CreateCustomerDto = components['schemas']['CreateCustomerDto'];
 
 interface CustomerForm {
   code: string;
@@ -58,6 +52,24 @@ const emptyForm: CustomerForm = {
   active: true,
 };
 
+function toDto(form: CustomerForm): CreateCustomerDto {
+  return {
+    code: form.code.trim(),
+    tradeName: form.tradeName.trim(),
+    legalName: form.legalName.trim() || undefined,
+    taxId: form.taxId.trim() || undefined,
+    email: form.email.trim() || undefined,
+    phone: form.phone.trim() || undefined,
+    address: form.address.trim() || undefined,
+    currency: form.currency.trim().toUpperCase() || undefined,
+    creditLimit: form.creditLimit === '' ? undefined : Number(form.creditLimit),
+    priceCategory: form.priceCategory.trim() || undefined,
+    state: (form.state as CreateCustomerDto['state']) || undefined,
+    taxExempt: form.taxExempt,
+    active: form.active,
+  };
+}
+
 export function CustomersPage() {
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState('');
@@ -66,16 +78,22 @@ export function CustomersPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CustomerForm>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<Customer | null>(null);
-  const [deleteBusy, setDeleteBusy] = useState(false);
   const toast = useToast();
+  const { invalidate } = useApiInvalidation();
 
-  const { data, error, reload } = usePagedQuery<Customer>({
+  const { data, error } = usePagedQuery<Customer>({
     path: '/api/v1/sales/customers',
     page,
     query,
   });
+
+  const createMutation = useApiMutation<CreateCustomerDto>('/api/v1/sales/customers', 'POST');
+  const updateMutation = useApiMutation<CreateCustomerDto>(`/api/v1/sales/customers/${editingId ?? ''}`, 'PATCH');
+  const deleteMutation = useApiMutation<Record<string, never>, unknown>(`/api/v1/sales/customers/${deleting?.id ?? ''}`, 'DELETE');
+
+  const saving = createMutation.isPending || updateMutation.isPending;
+  const deleteBusy = deleteMutation.isPending;
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
@@ -111,97 +129,66 @@ export function CustomersPage() {
     setModalOpen(true);
   };
 
-  const closeModal = () => {
-    if (!saving) setModalOpen(false);
-  };
-
   const setField = (key: keyof CustomerForm, value: string | boolean) => {
     setForm((current) => ({ ...current, [key]: value }));
   };
 
-  const submit = async (event: FormEvent) => {
+  const submit = (event: FormEvent) => {
     event.preventDefault();
     if (!form.code.trim() || !form.tradeName.trim()) {
       setFormError('Code and trade name are required.');
       return;
     }
-    setSaving(true);
     setFormError(null);
-    const body = {
-      code: form.code.trim(),
-      tradeName: form.tradeName.trim(),
-      legalName: form.legalName.trim() || undefined,
-      taxId: form.taxId.trim() || undefined,
-      email: form.email.trim() || undefined,
-      phone: form.phone.trim() || undefined,
-      address: form.address.trim() || undefined,
-      currency: form.currency.trim().toUpperCase() || undefined,
-      creditLimit: form.creditLimit === '' ? undefined : Number(form.creditLimit),
-      priceCategory: form.priceCategory.trim() || undefined,
-      state: form.state.trim() || undefined,
-      taxExempt: form.taxExempt,
-      active: form.active,
-    };
-    try {
-      if (editingId) {
-        await apiFetch(`/api/v1/sales/customers/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Customer updated.');
-      } else {
-        await apiFetch('/api/v1/sales/customers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        toast.toast('Customer created.');
-      }
+    const body = toDto(form);
+    const onSuccess = () => {
+      toast.toast(editingId ? 'Customer updated.' : 'Customer created.');
       setModalOpen(false);
-      void reload();
-    } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not save customer.');
-    } finally {
-      setSaving(false);
+      void invalidate(['paged', '/api/v1/sales/customers']);
+    };
+    const onError = (err: { message: string }) => setFormError(err.message);
+    if (editingId) {
+      updateMutation.mutate(body, { onSuccess, onError });
+    } else {
+      createMutation.mutate(body, { onSuccess, onError });
     }
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!deleting) return;
-    setDeleteBusy(true);
-    try {
-      await apiFetch(`/api/v1/sales/customers/${deleting.id}`, { method: 'DELETE' });
-      toast.toast('Customer deactivated.');
-      setDeleting(null);
-      void reload();
-    } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not deactivate customer.', 'error');
-      setDeleting(null);
-    } finally {
-      setDeleteBusy(false);
-    }
+    deleteMutation.mutate(
+      {},
+      {
+        onSuccess: () => {
+          toast.toast('Customer deactivated.');
+          setDeleting(null);
+          void invalidate(['paged', '/api/v1/sales/customers']);
+        },
+        onError: (err) => {
+          toast.toast(err.message, 'error');
+          setDeleting(null);
+        },
+      },
+    );
   };
 
-  const columns: Column<Customer>[] = [
+  const columns = [
     { key: 'code', header: 'Code' },
     { key: 'tradeName', header: 'Trade name' },
-    { key: 'taxId', header: 'Tax ID', render: (row) => row.taxId ?? '—' },
-    { key: 'email', header: 'Email', render: (row) => row.email ?? '—' },
-    {
-      key: 'creditLimit',
-      header: 'Credit limit',
-      render: (row) => formatMoney(row.creditLimit),
-    },
+    { key: 'taxId', header: 'Tax ID', render: (row: Customer) => row.taxId ?? '—' },
+    { key: 'email', header: 'Email', render: (row: Customer) => row.email ?? '—' },
+    { key: 'creditLimit', header: 'Credit limit', render: (row: Customer) => formatMoney(row.creditLimit) },
     {
       key: 'active',
       header: 'Status',
-      render: (row) => <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>,
+      render: (row: Customer) => (
+        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>
+      ),
     },
     {
       key: 'actions',
       header: 'Actions',
-      render: (row) => (
+      render: (row: Customer) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
             Edit
@@ -241,147 +228,129 @@ export function CustomersPage() {
           {data.data.length === 0 ? (
             <EmptyState message="No customers found." />
           ) : (
-            <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    {columns.map((col) => (
+                      <th key={col.key}>{col.header}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.data.map((row) => (
+                    <tr key={row.id}>
+                      {columns.map((col) => (
+                        <td key={col.key}>
+                          {col.render ? col.render(row) : String((row as unknown as Record<string, unknown>)[col.key] ?? '')}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
         </>
       ) : null}
 
-      <Modal
-        open={modalOpen}
-        title={editingId ? 'Edit customer' : 'New customer'}
-        onClose={closeModal}
-        width="lg"
-      >
-        <form onSubmit={(event) => void submit(event)}>
-          <div className="form-grid">
-            <Field label="Code" htmlFor="customer-code" required>
-              <TextInput
-                id="customer-code"
-                value={form.code}
-                onChange={(event) => setField('code', event.target.value)}
-              />
-            </Field>
-            <Field label="Trade name" htmlFor="customer-trade" required>
-              <TextInput
-                id="customer-trade"
-                value={form.tradeName}
-                onChange={(event) => setField('tradeName', event.target.value)}
-              />
-            </Field>
-            <Field label="Legal name" htmlFor="customer-legal">
-              <TextInput
-                id="customer-legal"
-                value={form.legalName}
-                onChange={(event) => setField('legalName', event.target.value)}
-              />
-            </Field>
-            <Field label="Tax ID" htmlFor="customer-tax">
-              <TextInput
-                id="customer-tax"
-                value={form.taxId}
-                onChange={(event) => setField('taxId', event.target.value)}
-              />
-            </Field>
-            <Field label="Email" htmlFor="customer-email">
-              <TextInput
-                id="customer-email"
-                type="email"
-                value={form.email}
-                onChange={(event) => setField('email', event.target.value)}
-              />
-            </Field>
-            <Field label="Phone" htmlFor="customer-phone">
-              <TextInput
-                id="customer-phone"
-                value={form.phone}
-                onChange={(event) => setField('phone', event.target.value)}
-              />
-            </Field>
-            <Field label="Currency" htmlFor="customer-currency">
-              <TextInput
-                id="customer-currency"
-                maxLength={3}
-                value={form.currency}
-                onChange={(event) => setField('currency', event.target.value)}
-              />
-            </Field>
-            <Field label="Credit limit" htmlFor="customer-credit">
-              <TextInput
-                id="customer-credit"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.creditLimit}
-                onChange={(event) => setField('creditLimit', event.target.value)}
-              />
-            </Field>
-            <Field label="Price category" htmlFor="customer-price">
-              <TextInput
-                id="customer-price"
-                placeholder="e.g. retail, wholesale"
-                value={form.priceCategory}
-                onChange={(event) => setField('priceCategory', event.target.value)}
-              />
-            </Field>
-            <Field label="Address" htmlFor="customer-address">
-              <TextArea
-                id="customer-address"
-                rows={2}
-                value={form.address}
-                onChange={(event) => setField('address', event.target.value)}
-              />
-            </Field>
-            <Field label="State (US)" htmlFor="customer-state" hint="Used to apply US sales tax automatically.">
-              <Select
-                id="customer-state"
-                value={form.state}
-                onChange={(event) => setField('state', event.target.value)}
-              >
-                <option value="">No state</option>
-                {Object.entries(core.US_STATES).map(([code, info]) => (
-                  <option key={code} value={code}>
-                    {code} — {info.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Tax status">
-              <Checkbox
-                label="Tax exempt"
-                checked={form.taxExempt}
-                onChange={(event) => setField('taxExempt', event.target.checked)}
-              />
-            </Field>
-            <Field label="Status">
-              <Checkbox
-                label="Active"
-                checked={form.active}
-                onChange={(event) => setField('active', event.target.checked)}
-              />
-            </Field>
-          </div>
-          {formError ? <div className="error-banner">{formError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={closeModal} disabled={saving}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create customer'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      <Dialog open={modalOpen} onOpenChange={(open) => !saving && setModalOpen(open)}>
+        <DialogContent>
+          <DialogHeader title={editingId ? 'Edit customer' : 'New customer'} />
+          <form onSubmit={(event) => void submit(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="customer-code">Code *</label>
+                <input id="customer-code" value={form.code} onChange={(event) => setField('code', event.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="customer-trade">Trade name *</label>
+                <input id="customer-trade" value={form.tradeName} onChange={(event) => setField('tradeName', event.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="customer-legal">Legal name</label>
+                <input id="customer-legal" value={form.legalName} onChange={(event) => setField('legalName', event.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="customer-tax">Tax ID</label>
+                <input id="customer-tax" value={form.taxId} onChange={(event) => setField('taxId', event.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="customer-email">Email</label>
+                <input id="customer-email" type="email" value={form.email} onChange={(event) => setField('email', event.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="customer-phone">Phone</label>
+                <input id="customer-phone" value={form.phone} onChange={(event) => setField('phone', event.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="customer-currency">Currency</label>
+                <input id="customer-currency" maxLength={3} value={form.currency} onChange={(event) => setField('currency', event.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="customer-credit">Credit limit</label>
+                <input id="customer-credit" type="number" min="0" step="0.01" value={form.creditLimit} onChange={(event) => setField('creditLimit', event.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="customer-price">Price category</label>
+                <input id="customer-price" placeholder="e.g. retail, wholesale" value={form.priceCategory} onChange={(event) => setField('priceCategory', event.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="customer-address">Address</label>
+                <textarea id="customer-address" rows={2} value={form.address} onChange={(event) => setField('address', event.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="customer-state">State (US)</label>
+                <div className="field-hint">Used to apply US sales tax automatically.</div>
+                <select id="customer-state" value={form.state} onChange={(event) => setField('state', event.target.value)}>
+                  <option value="">No state</option>
+                  {Object.entries(core.US_STATES).map(([code, info]) => (
+                    <option key={code} value={code}>
+                      {code} — {info.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label>Tax status</label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Checkbox id="customer-tax-exempt" checked={form.taxExempt} onCheckedChange={(checked) => setField('taxExempt', checked === true)} />
+                  <label htmlFor="customer-tax-exempt" className="text-sm text-gray-700">
+                    Tax exempt
+                  </label>
+                </div>
+              </div>
+              <div className="field">
+                <label>Status</label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Checkbox id="customer-active" checked={form.active} onCheckedChange={(checked) => setField('active', checked === true)} />
+                  <label htmlFor="customer-active" className="text-sm text-gray-700">
+                    Active
+                  </label>
+                </div>
+              </div>
+            </div>
+            {formError ? <div className="error-banner">{formError}</div> : null}
+            <DialogFooter>
+              <Button variant="default" type="submit" disabled={saving}>
+                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create customer'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <ConfirmDialog
-        open={deleting !== null}
-        title="Deactivate customer"
-        message={`Deactivate "${deleting?.tradeName}"? It will be excluded from new invoices.`}
-        confirmLabel="Deactivate"
-        busy={deleteBusy}
-        onCancel={() => setDeleting(null)}
-        onConfirm={() => void confirmDelete()}
-      />
+      <Dialog open={deleting !== null} onOpenChange={(open) => !deleteBusy && !open && setDeleting(null)}>
+        <DialogContent>
+          <DialogHeader title="Deactivate customer" description={`Deactivate "${deleting?.tradeName}"? It will be excluded from new invoices.`} />
+          <DialogFooter>
+            <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDelete()}>
+              {deleteBusy ? 'Working…' : 'Deactivate'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
