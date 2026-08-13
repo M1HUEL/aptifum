@@ -1,7 +1,10 @@
 import { useState, type FormEvent } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import * as core from '@aptifum/core';
 import type { components } from '../api/schema';
 import type { Customer } from '../api/types';
+import { customerFormSchema, type CustomerFormValues } from '../api/schemas';
 import {
   EmptyState,
   ErrorBanner,
@@ -20,23 +23,7 @@ import { usePagedQuery } from '../hooks/use-paged-query';
 
 type CreateCustomerDto = components['schemas']['CreateCustomerDto'];
 
-interface CustomerForm {
-  code: string;
-  tradeName: string;
-  legalName: string;
-  taxId: string;
-  email: string;
-  phone: string;
-  address: string;
-  currency: string;
-  creditLimit: string;
-  priceCategory: string;
-  state: string;
-  taxExempt: boolean;
-  active: boolean;
-}
-
-const emptyForm: CustomerForm = {
+const emptyForm: CustomerFormValues = {
   code: '',
   tradeName: '',
   legalName: '',
@@ -52,7 +39,7 @@ const emptyForm: CustomerForm = {
   active: true,
 };
 
-function toDto(form: CustomerForm): CreateCustomerDto {
+function toDto(form: CustomerFormValues): CreateCustomerDto {
   return {
     code: form.code.trim(),
     tradeName: form.tradeName.trim(),
@@ -70,23 +57,55 @@ function toDto(form: CustomerForm): CreateCustomerDto {
   };
 }
 
+function fromCustomer(customer: Customer): CustomerFormValues {
+  return {
+    code: customer.code,
+    tradeName: customer.tradeName,
+    legalName: customer.legalName ?? '',
+    taxId: customer.taxId ?? '',
+    email: customer.email ?? '',
+    phone: customer.phone ?? '',
+    address: customer.address ?? '',
+    currency: customer.currency ?? 'USD',
+    creditLimit: customer.creditLimit ? String(customer.creditLimit) : '',
+    priceCategory: customer.priceCategory ?? '',
+    state: customer.state ?? '',
+    taxExempt: customer.taxExempt,
+    active: customer.active,
+  };
+}
+
 export function CustomersPage() {
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState('');
   const [input, setInput] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<CustomerForm>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Customer | null>(null);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<CustomerFormValues>({
+    resolver: zodResolver(customerFormSchema),
+    defaultValues: emptyForm,
+  });
 
   const { data, error } = usePagedQuery<Customer>({
     path: '/api/v1/sales/customers',
     page,
     query,
   });
+
+  const taxExempt = watch('taxExempt');
+  const active = watch('active');
 
   const createMutation = useApiMutation<CreateCustomerDto>('/api/v1/sales/customers', 'POST');
   const updateMutation = useApiMutation<CreateCustomerDto>(`/api/v1/sales/customers/${editingId ?? ''}`, 'PATCH');
@@ -103,44 +122,21 @@ export function CustomersPage() {
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(emptyForm);
+    reset(emptyForm);
     setFormError(null);
     setModalOpen(true);
   };
 
   const openEdit = (customer: Customer) => {
     setEditingId(customer.id);
-    setForm({
-      code: customer.code,
-      tradeName: customer.tradeName,
-      legalName: customer.legalName ?? '',
-      taxId: customer.taxId ?? '',
-      email: customer.email ?? '',
-      phone: customer.phone ?? '',
-      address: customer.address ?? '',
-      currency: customer.currency ?? 'USD',
-      creditLimit: customer.creditLimit ? String(customer.creditLimit) : '',
-      priceCategory: customer.priceCategory ?? '',
-      state: customer.state ?? '',
-      taxExempt: customer.taxExempt,
-      active: customer.active,
-    });
+    reset(fromCustomer(customer));
     setFormError(null);
     setModalOpen(true);
   };
 
-  const setField = (key: keyof CustomerForm, value: string | boolean) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    if (!form.code.trim() || !form.tradeName.trim()) {
-      setFormError('Code and trade name are required.');
-      return;
-    }
+  const submit = handleSubmit((values) => {
     setFormError(null);
-    const body = toDto(form);
+    const body = toDto(values);
     const onSuccess = () => {
       toast.toast(editingId ? 'Customer updated.' : 'Customer created.');
       setModalOpen(false);
@@ -152,7 +148,7 @@ export function CustomersPage() {
     } else {
       createMutation.mutate(body, { onSuccess, onError });
     }
-  };
+  });
 
   const confirmDelete = () => {
     if (!deleting) return;
@@ -262,48 +258,52 @@ export function CustomersPage() {
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="customer-code">Code *</label>
-                <input id="customer-code" value={form.code} onChange={(event) => setField('code', event.target.value)} />
+                <input id="customer-code" {...register('code')} />
+                {errors.code ? <div className="field-error">{errors.code.message}</div> : null}
               </div>
               <div className="field">
                 <label htmlFor="customer-trade">Trade name *</label>
-                <input id="customer-trade" value={form.tradeName} onChange={(event) => setField('tradeName', event.target.value)} />
+                <input id="customer-trade" {...register('tradeName')} />
+                {errors.tradeName ? <div className="field-error">{errors.tradeName.message}</div> : null}
               </div>
               <div className="field">
                 <label htmlFor="customer-legal">Legal name</label>
-                <input id="customer-legal" value={form.legalName} onChange={(event) => setField('legalName', event.target.value)} />
+                <input id="customer-legal" {...register('legalName')} />
               </div>
               <div className="field">
                 <label htmlFor="customer-tax">Tax ID</label>
-                <input id="customer-tax" value={form.taxId} onChange={(event) => setField('taxId', event.target.value)} />
+                <input id="customer-tax" {...register('taxId')} />
               </div>
               <div className="field">
                 <label htmlFor="customer-email">Email</label>
-                <input id="customer-email" type="email" value={form.email} onChange={(event) => setField('email', event.target.value)} />
+                <input id="customer-email" type="email" {...register('email')} />
+                {errors.email ? <div className="field-error">{errors.email.message}</div> : null}
               </div>
               <div className="field">
                 <label htmlFor="customer-phone">Phone</label>
-                <input id="customer-phone" value={form.phone} onChange={(event) => setField('phone', event.target.value)} />
+                <input id="customer-phone" {...register('phone')} />
               </div>
               <div className="field">
                 <label htmlFor="customer-currency">Currency</label>
-                <input id="customer-currency" maxLength={3} value={form.currency} onChange={(event) => setField('currency', event.target.value)} />
+                <input id="customer-currency" maxLength={3} {...register('currency')} />
               </div>
               <div className="field">
                 <label htmlFor="customer-credit">Credit limit</label>
-                <input id="customer-credit" type="number" min="0" step="0.01" value={form.creditLimit} onChange={(event) => setField('creditLimit', event.target.value)} />
+                <input id="customer-credit" type="number" min="0" step="0.01" {...register('creditLimit')} />
+                {errors.creditLimit ? <div className="field-error">{errors.creditLimit.message}</div> : null}
               </div>
               <div className="field">
                 <label htmlFor="customer-price">Price category</label>
-                <input id="customer-price" placeholder="e.g. retail, wholesale" value={form.priceCategory} onChange={(event) => setField('priceCategory', event.target.value)} />
+                <input id="customer-price" placeholder="e.g. retail, wholesale" {...register('priceCategory')} />
               </div>
               <div className="field">
                 <label htmlFor="customer-address">Address</label>
-                <textarea id="customer-address" rows={2} value={form.address} onChange={(event) => setField('address', event.target.value)} />
+                <textarea id="customer-address" rows={2} {...register('address')} />
               </div>
               <div className="field">
                 <label htmlFor="customer-state">State (US)</label>
                 <div className="field-hint">Used to apply US sales tax automatically.</div>
-                <select id="customer-state" value={form.state} onChange={(event) => setField('state', event.target.value)}>
+                <select id="customer-state" {...register('state')}>
                   <option value="">No state</option>
                   {Object.entries(core.US_STATES).map(([code, info]) => (
                     <option key={code} value={code}>
@@ -315,7 +315,7 @@ export function CustomersPage() {
               <div className="field">
                 <label>Tax status</label>
                 <div className="mt-1 flex items-center gap-2">
-                  <Checkbox id="customer-tax-exempt" checked={form.taxExempt} onCheckedChange={(checked) => setField('taxExempt', checked === true)} />
+                  <Checkbox id="customer-tax-exempt" checked={taxExempt} onCheckedChange={(checked) => setValue('taxExempt', checked === true)} />
                   <label htmlFor="customer-tax-exempt" className="text-sm text-gray-700">
                     Tax exempt
                   </label>
@@ -324,7 +324,7 @@ export function CustomersPage() {
               <div className="field">
                 <label>Status</label>
                 <div className="mt-1 flex items-center gap-2">
-                  <Checkbox id="customer-active" checked={form.active} onCheckedChange={(checked) => setField('active', checked === true)} />
+                  <Checkbox id="customer-active" checked={active} onCheckedChange={(checked) => setValue('active', checked === true)} />
                   <label htmlFor="customer-active" className="text-sm text-gray-700">
                     Active
                   </label>
