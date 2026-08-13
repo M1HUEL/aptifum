@@ -1,63 +1,21 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import { apiFetch, ApiError, downloadFile } from '../api/client';
 import type { Customer, Paginated, PosProduct, Warehouse } from '../api/types';
-import {
-  Badge,
-  EmptyState,
-  ErrorBanner,
-  formatMoney,
-  LoadingBlock,
-  PageHeader,
-  Pagination,
-} from '../components/ui';
-import { Button, Field, Modal, Select, TextInput } from '../components/forms';
+import { PageHeader } from '../components/ui';
 import { useToast } from '../components/toast';
-
-const paymentMethods = ['cash', 'card', 'transfer', 'other'] as const;
-
-const FUNCTIONAL_CURRENCY = 'USD';
-const SALE_CURRENCIES = ['USD', 'EUR', 'MXN', 'CAD', 'GBP'] as const;
+import { PosCatalog } from '../components/pos/pos-catalog';
+import {
+  FUNCTIONAL_CURRENCY,
+  PosTicket,
+  type PosLine,
+  type PosTotals,
+} from '../components/pos/pos-ticket';
+import { PosPaymentModal, type InvoiceLike, type PaymentForm } from '../components/pos/pos-payment';
+import { PosSuccess, type CompletedSale } from '../components/pos/pos-success';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
 const todayStr = (): string => new Date().toISOString().slice(0, 10);
-
-interface PosLine {
-  productId: string;
-  variantId: string | null;
-  sku: string;
-  name: string;
-  quantity: string;
-  unitPrice: string;
-  taxRate: string;
-}
-
-interface InvoiceLike {
-  id: string;
-  number: string;
-  total: number;
-  balanceDue: number;
-  paidAmount: number;
-  currency: string;
-  exchangeRate: number;
-}
-
-interface PaymentForm {
-  method: string;
-  amount: string;
-  receivedAt: string;
-  reference: string;
-}
-
-interface CompletedSale {
-  id: string;
-  number: string;
-  total: number;
-  paidAmount: number;
-  balanceDue: number;
-  currency: string;
-}
 
 export function PosPage() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -171,21 +129,16 @@ export function PosPage() {
   };
 
   const setLineField = (index: number, key: keyof PosLine, value: string) => {
-    setTicket((current) =>
-      current.map((line, i) => (i === index ? { ...line, [key]: value } : line)),
-    );
+    setTicket((current) => current.map((line, i) => (i === index ? { ...line, [key]: value } : line)));
   };
 
   const removeLine = (index: number) => {
     setTicket((current) => current.filter((_, i) => i !== index));
   };
 
-  const totals = useMemo(() => {
+  const totals: PosTotals = useMemo(() => {
     const subtotal = round2(
-      ticket.reduce(
-        (sum, line) => sum + Number(line.quantity) * Number(line.unitPrice || 0),
-        0,
-      ),
+      ticket.reduce((sum, line) => sum + Number(line.quantity) * Number(line.unitPrice || 0), 0),
     );
     const tax = round2(
       ticket.reduce(
@@ -273,6 +226,10 @@ export function PosPage() {
     }
   };
 
+  const setPaymentField = (key: keyof PaymentForm, value: string) => {
+    setPaymentForm((current) => ({ ...current, [key]: value }));
+  };
+
   const submitPayment = async (event: FormEvent) => {
     event.preventDefault();
     if (!pendingInvoice) return;
@@ -290,14 +247,9 @@ export function PosPage() {
           body: JSON.stringify({
             method: paymentForm.method,
             amount: Number(paymentForm.amount),
-            currency:
-              pendingInvoice.currency !== FUNCTIONAL_CURRENCY
-                ? pendingInvoice.currency
-                : undefined,
+            currency: pendingInvoice.currency !== FUNCTIONAL_CURRENCY ? pendingInvoice.currency : undefined,
             exchangeRate:
-              pendingInvoice.currency !== FUNCTIONAL_CURRENCY
-                ? pendingInvoice.exchangeRate
-                : undefined,
+              pendingInvoice.currency !== FUNCTIONAL_CURRENCY ? pendingInvoice.exchangeRate : undefined,
             receivedAt: paymentForm.receivedAt || undefined,
             reference: paymentForm.reference.trim() || undefined,
           }),
@@ -349,339 +301,58 @@ export function PosPage() {
         subtitle="Sell products and collect payment at the counter"
       />
       <div className="pos-layout">
-        <div className="pos-catalog">
-          <div className="toolbar">
-            <Select
-              id="pos-warehouse"
-              value={warehouseId}
-              onChange={(event) => {
-                setWarehouseId(event.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">— Select warehouse —</option>
-              {warehouses.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
-            <input
-              type="search"
-              placeholder="Search name, SKU or barcode…"
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-            />
-            <button type="submit" className="btn">
-              Search
-            </button>
-          </form>
-          {catalogError ? <ErrorBanner message={catalogError} /> : null}
-          {catalogLoading ? <LoadingBlock /> : null}
-          {!catalogLoading && posProducts && posProducts.data.length === 0 ? (
-            <EmptyState message="No products found for this warehouse." />
-          ) : null}
-          {!catalogLoading && posProducts && posProducts.data.length > 0 ? (
-            <>
-              <div className="pos-grid">
-                {posProducts.data.map((product) => (
-                  <button
-                    key={product.id}
-                    type="button"
-                    className="pos-product"
-                    disabled={product.availableStock <= 0}
-                    onClick={() => addProduct(product)}
-                  >
-                    <span className="pos-product-name">{product.name}</span>
-                    <span className="pos-product-sku">{product.sku}</span>
-                    <span className="pos-product-price">{formatMoney(product.salePrice)}</span>
-                    <Badge tone={product.availableStock > 0 ? 'success' : 'neutral'}>
-                      {product.availableStock > 0
-                        ? `${product.availableStock} in stock`
-                        : 'Out of stock'}
-                    </Badge>
-                  </button>
-                ))}
-              </div>
-              <Pagination
-                page={posProducts.meta.page}
-                limit={posProducts.meta.limit}
-                total={posProducts.meta.total}
-                onPage={setPage}
-              />
-            </>
-          ) : null}
-        </div>
-
+        <PosCatalog
+          warehouses={warehouses}
+          warehouseId={warehouseId}
+          onWarehouseChange={(value) => {
+            setWarehouseId(value);
+            setPage(1);
+          }}
+          input={input}
+          onInputChange={setInput}
+          onSubmitSearch={submitSearch}
+          catalog={posProducts}
+          loading={catalogLoading}
+          error={catalogError}
+          onAddProduct={addProduct}
+          onPage={setPage}
+        />
         <div className="pos-ticket-col">
           {completed ? (
-            <div className="card pos-success">
-              <div className="success-banner">Sale completed.</div>
-              <h3 className="card-title">Invoice {completed.number}</h3>
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <div className="detail-label">Total</div>
-                  <div className="detail-value num">
-                    {formatMoney(completed.total, completed.currency)}
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Paid</div>
-                  <div className="detail-value num">
-                    {formatMoney(completed.paidAmount, completed.currency)}
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Balance due</div>
-                  <div className="detail-value num">
-                    {completed.balanceDue > 0
-                      ? formatMoney(completed.balanceDue, completed.currency)
-                      : '—'}
-                  </div>
-                </div>
-              </div>
-              <div className="pos-success-actions">
-                <Button variant="ghost" onClick={() => void downloadPdf(completed)}>
-                  Download PDF
-                </Button>
-                <Link to="/invoices" className="btn">
-                  View invoices
-                </Link>
-                <Button onClick={resetSale}>New sale</Button>
-              </div>
-            </div>
+            <PosSuccess sale={completed} onDownloadPdf={(sale) => void downloadPdf(sale)} onReset={resetSale} />
           ) : (
-            <div className="card pos-ticket">
-              <h3 className="card-title">Ticket</h3>
-              <Field label="Customer" htmlFor="pos-customer">
-                <Select
-                  id="pos-customer"
-                  value={customerId}
-                  onChange={(event) => setCustomerId(event.target.value)}
-                >
-                  <option value="">Walk-in customer</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.tradeName}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <div className="pos-currency-row">
-                <Field label="Sale currency" htmlFor="pos-currency">
-                  <Select
-                    id="pos-currency"
-                    value={saleCurrency}
-                    onChange={(event) => changeSaleCurrency(event.target.value)}
-                  >
-                    {SALE_CURRENCIES.map((currency) => (
-                      <option key={currency} value={currency}>
-                        {currency}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                {saleCurrency !== FUNCTIONAL_CURRENCY ? (
-                  <Field
-                    label={`Exchange rate (1 ${FUNCTIONAL_CURRENCY} = ? ${saleCurrency})`}
-                    htmlFor="pos-rate"
-                  >
-                    <TextInput
-                      id="pos-rate"
-                      type="number"
-                      min="0.000001"
-                      step="0.000001"
-                      value={saleRate}
-                      onChange={(event) => setSaleRate(event.target.value)}
-                    />
-                  </Field>
-                ) : null}
-              </div>
-              <div className="pos-lines">
-                {ticket.length === 0 ? (
-                  <EmptyState message="Tap a product to add it to the ticket." />
-                ) : (
-                  ticket.map((line, index) => (
-                    <div
-                      className="pos-line"
-                      key={`${line.productId}:${line.variantId ?? ''}`}
-                    >
-                      <div className="pos-line-info">
-                        <div className="pos-line-name">{line.name}</div>
-                        <div className="pos-line-meta">{line.sku}</div>
-                      </div>
-                      <input
-                        className="pos-qty"
-                        type="number"
-                        min="0.0001"
-                        step="any"
-                        aria-label={`Quantity for ${line.name}`}
-                        value={line.quantity}
-                        onChange={(event) => setLineField(index, 'quantity', event.target.value)}
-                      />
-                      <input
-                        className="pos-price"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        aria-label={`Unit price for ${line.name}`}
-                        value={line.unitPrice}
-                        onChange={(event) => setLineField(index, 'unitPrice', event.target.value)}
-                      />
-                      <input
-                        className="pos-tax"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        placeholder="%"
-                        aria-label={`Tax for ${line.name}`}
-                        value={line.taxRate}
-                        onChange={(event) => setLineField(index, 'taxRate', event.target.value)}
-                      />
-                      <span className="pos-line-total num">
-                        {formatMoney(
-                          Number(line.quantity) * Number(line.unitPrice || 0),
-                          saleCurrency,
-                        )}
-                      </span>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-ghost pos-line-remove"
-                        aria-label={`Remove ${line.name}`}
-                        onClick={() => removeLine(index)}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-              <Field label="Discount" htmlFor="pos-discount">
-                <TextInput
-                  id="pos-discount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={discount}
-                  onChange={(event) => setDiscount(event.target.value)}
-                />
-              </Field>
-              <div className="pos-totals">
-                <div className="pos-total-row">
-                  <span>Subtotal</span>
-                  <span className="num">{formatMoney(totals.subtotal, saleCurrency)}</span>
-                </div>
-                <div className="pos-total-row">
-                  <span>Discount</span>
-                  <span className="num">−{formatMoney(totals.discount, saleCurrency)}</span>
-                </div>
-                <div className="pos-total-row">
-                  <span>Tax</span>
-                  <span className="num">{formatMoney(totals.tax, saleCurrency)}</span>
-                </div>
-                <div className="pos-total-row pos-total-grand">
-                  <span>Total</span>
-                  <span className="num">{formatMoney(totals.total, saleCurrency)}</span>
-                </div>
-              </div>
-              {!warehouseId ? (
-                <div className="error-banner">Select a warehouse to start selling.</div>
-              ) : null}
-              {checkoutError ? <div className="error-banner">{checkoutError}</div> : null}
-              <button
-                type="button"
-                className="btn btn-primary btn-block pos-charge"
-                disabled={charging || ticket.length === 0 || !warehouseId}
-                onClick={() => void submitCharge()}
-              >
-                {charging
-                  ? 'Charging…'
-                  : `Charge ${formatMoney(totals.total, saleCurrency)}`}
-              </button>
-            </div>
+            <PosTicket
+              customers={customers}
+              customerId={customerId}
+              onCustomerChange={setCustomerId}
+              saleCurrency={saleCurrency}
+              onCurrencyChange={changeSaleCurrency}
+              saleRate={saleRate}
+              onRateChange={setSaleRate}
+              ticket={ticket}
+              onLineFieldChange={setLineField}
+              onRemoveLine={removeLine}
+              discount={discount}
+              onDiscountChange={setDiscount}
+              totals={totals}
+              warehouseId={warehouseId}
+              checkoutError={checkoutError}
+              charging={charging}
+              onSubmitCharge={() => void submitCharge()}
+            />
           )}
         </div>
       </div>
 
-      <Modal
-        open={pendingInvoice !== null}
-        title={`Payment for ${pendingInvoice?.number ?? ''}`}
+      <PosPaymentModal
+        invoice={pendingInvoice}
+        form={paymentForm}
+        onFormChange={setPaymentField}
+        error={paymentError}
+        busy={paymentBusy}
+        onSubmit={(event) => void submitPayment(event)}
         onClose={() => setPendingInvoice(null)}
-        width="sm"
-      >
-        <form onSubmit={(event) => void submitPayment(event)}>
-          <Field label="Method" htmlFor="payment-method" required>
-            <Select
-              id="payment-method"
-              value={paymentForm.method}
-              onChange={(event) =>
-                setPaymentForm((current) => ({ ...current, method: event.target.value }))
-              }
-            >
-              {paymentMethods.map((method) => (
-                <option key={method} value={method}>
-                  {method}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field
-            label="Amount"
-            htmlFor="payment-amount"
-            required
-            hint={
-              pendingInvoice
-                ? `Total due: ${formatMoney(
-                    pendingInvoice.total,
-                    pendingInvoice.currency,
-                  )}${pendingInvoice.currency !== FUNCTIONAL_CURRENCY ? ` · rate ${pendingInvoice.exchangeRate}` : ''}`
-                : undefined
-            }
-          >
-            <TextInput
-              id="payment-amount"
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={paymentForm.amount}
-              onChange={(event) =>
-                setPaymentForm((current) => ({ ...current, amount: event.target.value }))
-              }
-            />
-          </Field>
-          <Field label="Received at" htmlFor="payment-date">
-            <TextInput
-              id="payment-date"
-              type="date"
-              value={paymentForm.receivedAt}
-              onChange={(event) =>
-                setPaymentForm((current) => ({ ...current, receivedAt: event.target.value }))
-              }
-            />
-          </Field>
-          <Field label="Reference" htmlFor="payment-reference">
-            <TextInput
-              id="payment-reference"
-              value={paymentForm.reference}
-              onChange={(event) =>
-                setPaymentForm((current) => ({ ...current, reference: event.target.value }))
-              }
-            />
-          </Field>
-          {paymentError ? <div className="error-banner">{paymentError}</div> : null}
-          <div className="modal-footer">
-            <Button variant="ghost" onClick={() => setPendingInvoice(null)} disabled={paymentBusy}>
-              Cancel
-            </Button>
-            <button type="submit" className="btn btn-primary" disabled={paymentBusy}>
-              {paymentBusy ? 'Recording…' : 'Record payment'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      />
     </>
   );
 }
