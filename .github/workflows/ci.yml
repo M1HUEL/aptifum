@@ -58,5 +58,13 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Test
+      - name: Test API
         run: pnpm --filter @aptifum/api test
+
+      - name: Test Web
+        run: pnpm --filter @aptifum/web test
+
+      - name: Check OpenAPI drift
+        run: |
+          pnpm --filter @aptifum/web gen:api
+          git diff --exit-code apps/web/src/api/schema.ts
