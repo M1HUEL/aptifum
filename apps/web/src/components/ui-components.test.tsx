@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import i18n from '../i18n';
 import {
@@ -12,6 +12,7 @@ import {
   PageHeader,
   Pagination,
   Skeleton,
+  StatusSelect,
   TableSkeleton,
   type Column,
 } from './ui';
@@ -165,5 +166,29 @@ describe('Pagination', () => {
     render(<Pagination page={1} limit={20} total={137} onPage={vi.fn()} onLimit={onLimit} />);
     await user.selectOptions(screen.getByLabelText('Rows per page'), '50');
     expect(onLimit).toHaveBeenCalledWith(50);
+  });
+});
+
+describe('StatusSelect', () => {
+  const options = [
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+  ];
+
+  it('renders all options', () => {
+    render(<StatusSelect value="active" onChange={vi.fn()} options={options} ariaLabel="Status" />);
+    const select = screen.getByLabelText('Status');
+    expect(select).toBeInTheDocument();
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'Active',
+      'Inactive',
+    ]);
+  });
+
+  it('calls onChange when the selection changes', () => {
+    const onChange = vi.fn();
+    render(<StatusSelect value="active" onChange={onChange} options={options} />);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'inactive' } });
+    expect(onChange).toHaveBeenCalledWith('inactive');
   });
 });
