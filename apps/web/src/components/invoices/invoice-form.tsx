@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { components } from '../../api/schema';
@@ -62,6 +63,7 @@ export function InvoiceFormModal({
   products: Product[];
   warehouses: Warehouse[];
 }) {
+  const { t } = useTranslation();
   const [formError, setFormError] = useState<string | null>(null);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
@@ -102,7 +104,7 @@ export function InvoiceFormModal({
     setFormError(null);
     createMutation.mutate(toDto(values), {
       onSuccess: () => {
-        toast.toast('Invoice issued.');
+        toast.toast(t('invoices.invoiceIssued'));
         onSaved();
         void invalidate(['paged', '/api/v1/sales/invoices']);
       },
@@ -113,13 +115,15 @@ export function InvoiceFormModal({
   return (
     <Dialog open={open} onOpenChange={(next) => !saving && !next && onClose()}>
       <DialogContent className="max-w-2xl">
-        <DialogHeader title="Issue invoice" />
+        <DialogHeader title={t('invoices.issueInvoice')} />
         <form onSubmit={(event) => void submit(event)}>
           <div className="form-grid">
             <div className="field">
-              <label htmlFor="invoice-customer">Customer *</label>
+              <label htmlFor="invoice-customer">
+                {t('fields.customer')} <span className="field-required">*</span>
+              </label>
               <select id="invoice-customer" {...register('customerId')}>
-                <option value="">— Select customer —</option>
+                <option value="">{t('invoices.selectCustomer')}</option>
                 {customers.map((customer) => (
                   <option key={customer.id} value={customer.id}>
                     {customer.tradeName}
@@ -129,9 +133,9 @@ export function InvoiceFormModal({
               {errors.customerId ? <div className="field-error">{errors.customerId.message}</div> : null}
             </div>
             <div className="field">
-              <label htmlFor="invoice-warehouse">Warehouse</label>
+              <label htmlFor="invoice-warehouse">{t('fields.warehouse')}</label>
               <select id="invoice-warehouse" {...register('warehouseId')}>
-                <option value="">— Default —</option>
+                <option value="">{t('invoices.defaultWarehouse')}</option>
                 {warehouses.map((warehouse) => (
                   <option key={warehouse.id} value={warehouse.id}>
                     {warehouse.name}
@@ -140,11 +144,11 @@ export function InvoiceFormModal({
               </select>
             </div>
             <div className="field">
-              <label htmlFor="invoice-due">Due date</label>
+              <label htmlFor="invoice-due">{t('fields.dueDate')}</label>
               <input id="invoice-due" type="date" {...register('dueDate')} />
             </div>
             <div className="field">
-              <label htmlFor="invoice-discount">Discount</label>
+              <label htmlFor="invoice-discount">{t('fields.discount')}</label>
               <input id="invoice-discount" type="number" min="0" step="0.01" {...register('discount')} />
               {errors.discount ? <div className="field-error">{errors.discount.message}</div> : null}
             </div>
@@ -153,9 +157,9 @@ export function InvoiceFormModal({
             {items.map((_, index) => (
               <div className="invoice-item" key={index}>
                 <div className="field">
-                  <label htmlFor={`invoice-item-product-${index}`}>Product</label>
+                  <label htmlFor={`invoice-item-product-${index}`}>{t('fields.product')}</label>
                   <select id={`invoice-item-product-${index}`} {...register(`items.${index}.productId`)}>
-                    <option value="">— Select product —</option>
+                    <option value="">{t('invoices.selectProduct')}</option>
                     {products.map((product) => (
                       <option key={product.id} value={product.id}>
                         {product.sku} · {product.name}
@@ -167,7 +171,7 @@ export function InvoiceFormModal({
                   ) : null}
                 </div>
                 <div className="field">
-                  <label htmlFor={`invoice-item-qty-${index}`}>Qty</label>
+                  <label htmlFor={`invoice-item-qty-${index}`}>{t('fields.qty')}</label>
                   <input
                     id={`invoice-item-qty-${index}`}
                     type="number"
@@ -180,13 +184,13 @@ export function InvoiceFormModal({
                   ) : null}
                 </div>
                 <div className="field">
-                  <label htmlFor={`invoice-item-price-${index}`}>Unit price</label>
+                  <label htmlFor={`invoice-item-price-${index}`}>{t('fields.unitPrice')}</label>
                   <input
                     id={`invoice-item-price-${index}`}
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="product price"
+                    placeholder={t('invoices.unitPricePlaceholder')}
                     {...register(`items.${index}.unitPrice`)}
                   />
                   {errors.items?.[index]?.unitPrice ? (
@@ -194,14 +198,14 @@ export function InvoiceFormModal({
                   ) : null}
                 </div>
                 <div className="field">
-                  <label htmlFor={`invoice-item-tax-${index}`}>Tax %</label>
+                  <label htmlFor={`invoice-item-tax-${index}`}>{t('invoices.taxPercent')}</label>
                   <input
                     id={`invoice-item-tax-${index}`}
                     type="number"
                     min="0"
                     max="100"
                     step="0.01"
-                    placeholder="e.g. 18"
+                    placeholder={t('invoices.taxPlaceholder')}
                     {...register(`items.${index}.taxRate`)}
                   />
                   {errors.items?.[index]?.taxRate ? (
@@ -211,7 +215,7 @@ export function InvoiceFormModal({
                 <div className="invoice-item-remove">
                   {items.length > 1 ? (
                     <Button variant="ghost" size="sm" type="button" onClick={() => removeItem(index)}>
-                      Remove
+                      {t('common.remove')}
                     </Button>
                   ) : null}
                 </div>
@@ -219,16 +223,16 @@ export function InvoiceFormModal({
             ))}
           </div>
           <Button variant="ghost" size="sm" type="button" onClick={addItem}>
-            + Add line
+            {t('common.addLine')}
           </Button>
           <div className="field">
-            <label htmlFor="invoice-notes">Notes</label>
+            <label htmlFor="invoice-notes">{t('fields.notes')}</label>
             <textarea id="invoice-notes" rows={2} {...register('notes')} />
           </div>
           {formError ? <div className="error-banner">{formError}</div> : null}
           <DialogFooter>
             <Button variant="default" type="submit" disabled={saving}>
-              {saving ? 'Issuing…' : 'Issue invoice'}
+              {saving ? t('invoices.issuing') : t('invoices.issueInvoice')}
             </Button>
           </DialogFooter>
         </form>

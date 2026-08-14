@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Area,
   AreaChart,
@@ -27,19 +28,19 @@ import {
 } from '../components/ui';
 
 const groupOptions = [
-  { value: 'day', label: 'Day' },
-  { value: 'month', label: 'Month' },
-  { value: 'quarter', label: 'Quarter' },
-  { value: 'year', label: 'Year' },
+  { value: 'day', labelKey: 'dashboard.groups.day' },
+  { value: 'month', labelKey: 'dashboard.groups.month' },
+  { value: 'quarter', labelKey: 'dashboard.groups.quarter' },
+  { value: 'year', labelKey: 'dashboard.groups.year' },
 ];
 
 const rangeOptions = [
-  { value: '7d', label: 'Last 7 days' },
-  { value: '30d', label: 'Last 30 days' },
-  { value: '90d', label: 'Last 90 days' },
-  { value: 'month', label: 'This month' },
-  { value: 'year', label: 'This year' },
-  { value: 'all', label: 'All time' },
+  { value: '7d', labelKey: 'dashboard.ranges.7d' },
+  { value: '30d', labelKey: 'dashboard.ranges.30d' },
+  { value: '90d', labelKey: 'dashboard.ranges.90d' },
+  { value: 'month', labelKey: 'dashboard.ranges.month' },
+  { value: 'year', labelKey: 'dashboard.ranges.year' },
+  { value: 'all', labelKey: 'dashboard.ranges.all' },
 ];
 
 function rangeFor(preset: string): { from: string; to: string } {
@@ -67,14 +68,6 @@ function rangeFor(preset: string): { from: string; to: string } {
       break;
   }
   return { from: start.toISOString().slice(0, 10), to: toStr };
-}
-
-function errorMessage(err: unknown, fallback: string): string {
-  if (err instanceof ApiError && err.status === 403) {
-    return 'Your role does not have permission to view reports.';
-  }
-  if (err instanceof ApiError) return err.message;
-  return fallback;
 }
 
 function StatusRow({
@@ -108,12 +101,13 @@ function AlertSection({
   emptyText: string;
   children: ReactNode;
 }) {
+  const { t } = useTranslation();
   return (
     <div>
       <div className="alert-head">
         <strong>{title}</strong>
         <Link className="alert-link" to={linkTo}>
-          {count > 0 ? `View all (${count})` : emptyText}
+          {count > 0 ? t('dashboard.viewAll', { count }) : emptyText}
         </Link>
       </div>
       {count > 0 ? <div className="status-list">{children}</div> : <p className="alert-empty">{emptyText}</p>}
@@ -122,6 +116,7 @@ function AlertSection({
 }
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const [groupBy, setGroupBy] = useState('month');
   const [preset, setPreset] = useState('month');
   const [warehouseId, setWarehouseId] = useState('');
@@ -160,26 +155,32 @@ export function DashboardPage() {
   const summary = summaryQuery.data;
   const topProducts = topProductsQuery.data?.data.slice(0, 8) ?? [];
   const alerts = alertsQuery.data;
-  const error = reportQuery.error ? errorMessage(reportQuery.error, 'Could not load the dashboard.') : null;
+  const error = reportQuery.error
+    ? reportQuery.error instanceof ApiError && reportQuery.error.status === 403
+      ? t('dashboard.noReportsPermission')
+      : reportQuery.error instanceof ApiError
+        ? reportQuery.error.message
+        : t('dashboard.couldNotLoad')
+    : null;
 
-  const rangeLabel = rangeOptions.find((option) => option.value === preset)?.label ?? preset;
+  const rangeLabel = t(`dashboard.ranges.${preset}`);
 
   return (
     <>
       <PageHeader
-        title="Dashboard"
+        title={t('nav.dashboard')}
         subtitle={`${rangeLabel} · ${formatDate(from)} → ${formatDate(to)}`}
       />
       <div className="toolbar">
         <select value={preset} onChange={(event) => setPreset(event.target.value)}>
           {rangeOptions.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {t(option.labelKey)}
             </option>
           ))}
         </select>
         <select value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)}>
-          <option value="">All warehouses</option>
+          <option value="">{t('dashboard.allWarehouses')}</option>
           {(warehousesQuery.data?.data ?? []).map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
               {warehouse.name}
@@ -192,35 +193,35 @@ export function DashboardPage() {
       {report ? (
         <>
           <div className="stat-grid">
-            <StatCard label="Revenue (period)" value={formatMoney(report.salesRange)} />
-            <StatCard label="Net income (period)" value={formatMoney(report.netIncomeRange)} />
-            <StatCard label="Invoices (period)" value={String(report.rangeInvoices)} />
-            <StatCard label="Sales today" value={formatMoney(report.salesToday)} />
-            <StatCard label="Sales this month" value={formatMoney(report.salesMonth)} />
-            <StatCard label="Net income (month)" value={formatMoney(report.netIncomeMonth)} />
+            <StatCard label={t('dashboard.stat.revenuePeriod')} value={formatMoney(report.salesRange)} />
+            <StatCard label={t('dashboard.stat.netIncomePeriod')} value={formatMoney(report.netIncomeRange)} />
+            <StatCard label={t('dashboard.stat.invoicesPeriod')} value={String(report.rangeInvoices)} />
+            <StatCard label={t('dashboard.stat.salesToday')} value={formatMoney(report.salesToday)} />
+            <StatCard label={t('dashboard.stat.salesThisMonth')} value={formatMoney(report.salesMonth)} />
+            <StatCard label={t('dashboard.stat.netIncomeMonth')} value={formatMoney(report.netIncomeMonth)} />
           </div>
           <div className="stat-grid">
-            <StatCard label="Invoices (month)" value={String(report.monthInvoices)} />
-            <StatCard label="Receivables" value={formatMoney(report.receivables)} />
-            <StatCard label="Payables" value={formatMoney(report.payables)} />
-            <StatCard label="Inventory value" value={formatMoney(report.inventoryValue)} />
-            <StatCard label="Low stock products" value={String(report.lowStockProducts)} />
-            <StatCard label="Open purchase orders" value={String(report.openPurchaseOrders)} />
+            <StatCard label={t('dashboard.stat.invoicesMonth')} value={String(report.monthInvoices)} />
+            <StatCard label={t('dashboard.stat.receivables')} value={formatMoney(report.receivables)} />
+            <StatCard label={t('dashboard.stat.payables')} value={formatMoney(report.payables)} />
+            <StatCard label={t('dashboard.stat.inventoryValue')} value={formatMoney(report.inventoryValue)} />
+            <StatCard label={t('dashboard.stat.lowStockProducts')} value={String(report.lowStockProducts)} />
+            <StatCard label={t('dashboard.stat.openPurchaseOrders')} value={String(report.openPurchaseOrders)} />
           </div>
           <div className="stat-grid">
-            <StatCard label="Production in progress" value={String(report.productionInProgress)} />
+            <StatCard label={t('dashboard.stat.productionInProgress')} value={String(report.productionInProgress)} />
           </div>
         </>
       ) : null}
 
       {alerts ? (
-        <Card title="Alerts">
+        <Card title={t('dashboard.alerts')}>
           <div className="alert-grid">
             <AlertSection
-              title="Low stock"
+              title={t('dashboard.lowStock')}
               count={alerts.summary.lowStock}
               linkTo="/stock"
-              emptyText="All products above reorder level."
+              emptyText={t('dashboard.lowStockOk')}
             >
               {alerts.lowStock.map((product) => (
                 <div className="status-row" key={product.productId}>
@@ -235,10 +236,10 @@ export function DashboardPage() {
               ))}
             </AlertSection>
             <AlertSection
-              title="Overdue receivables"
+              title={t('dashboard.overdueReceivables')}
               count={alerts.summary.overdueReceivables}
               linkTo="/invoices"
-              emptyText="No overdue invoices."
+              emptyText={t('dashboard.noOverdueInvoices')}
             >
               {alerts.overdueReceivables.map((invoice) => (
                 <div className="status-row" key={invoice.invoiceId}>
@@ -251,10 +252,10 @@ export function DashboardPage() {
               ))}
             </AlertSection>
             <AlertSection
-              title="Overdue payables"
+              title={t('dashboard.overduePayables')}
               count={alerts.summary.overduePayables}
               linkTo="/purchasing"
-              emptyText="No overdue payables."
+              emptyText={t('dashboard.noOverduePayables')}
             >
               {alerts.overduePayables.map((receipt) => (
                 <div className="status-row" key={receipt.receiptId}>
@@ -271,12 +272,12 @@ export function DashboardPage() {
       ) : null}
 
       <div className="chart-grid">
-        <Card title="Sales trend">
+        <Card title={t('dashboard.salesTrend')}>
           <div className="chart-controls">
             <select value={groupBy} onChange={(event) => setGroupBy(event.target.value)}>
               {groupOptions.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {t(option.labelKey)}
                 </option>
               ))}
             </select>
@@ -293,7 +294,7 @@ export function DashboardPage() {
                   <Area
                     type="monotone"
                     dataKey="revenue"
-                    name="Revenue"
+                    name={t('dashboard.revenue')}
                     stroke="var(--primary)"
                     fill="var(--primary)"
                     fillOpacity={0.15}
@@ -301,7 +302,7 @@ export function DashboardPage() {
                   <Area
                     type="monotone"
                     dataKey="total"
-                    name="Total"
+                    name={t('dashboard.total')}
                     stroke="var(--success)"
                     fill="var(--success)"
                     fillOpacity={0.1}
@@ -312,9 +313,9 @@ export function DashboardPage() {
           ) : null}
         </Card>
 
-        <Card title="Top products by revenue">
+        <Card title={t('dashboard.topProducts')}>
           {topProducts.length === 0 ? (
-            <p className="modal-message">No sales data for this period.</p>
+            <p className="modal-message">{t('dashboard.noSalesData')}</p>
           ) : (
             <div className="chart-box">
               <ResponsiveContainer width="100%" height={260}>
@@ -332,8 +333,8 @@ export function DashboardPage() {
                   />
                   <Tooltip formatter={(value) => formatMoney(Number(value))} />
                   <Legend />
-                  <Bar dataKey="revenue" name="Revenue" fill="var(--primary)" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="grossProfit" name="Gross profit" fill="var(--success)" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="revenue" name={t('dashboard.revenue')} fill="var(--primary)" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="grossProfit" name={t('dashboard.grossProfit')} fill="var(--success)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -342,11 +343,11 @@ export function DashboardPage() {
       </div>
 
       {report ? (
-        <Card title="Operational health">
+        <Card title={t('dashboard.operationalHealth')}>
           <div className="status-list">
-            <StatusRow label="Open purchase orders" count={report.openPurchaseOrders} />
-            <StatusRow label="Production orders in progress" count={report.productionInProgress} />
-            <StatusRow label="Low stock products" count={report.lowStockProducts} warnThreshold={1} />
+            <StatusRow label={t('dashboard.stat.openPurchaseOrders')} count={report.openPurchaseOrders} />
+            <StatusRow label={t('dashboard.productionOrdersInProgress')} count={report.productionInProgress} />
+            <StatusRow label={t('dashboard.stat.lowStockProducts')} count={report.lowStockProducts} warnThreshold={1} />
           </div>
         </Card>
       ) : null}

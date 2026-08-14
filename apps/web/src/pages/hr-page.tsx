@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
@@ -98,6 +99,7 @@ function fromEmployee(employee: Employee): EmployeeFormValues {
 }
 
 export function HrPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'employees' | 'payrolls'>('employees');
   const [departments, setDepartments] = useState<Department[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -110,7 +112,7 @@ export function HrPage() {
   const [payrollAction, setPayrollAction] = useState<{
     id: string;
     action: 'post' | 'cancel';
-    message: string;
+    messageKey: 'hr.payrollPosted' | 'hr.payrollCancelled';
   } | null>(null);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
@@ -188,7 +190,7 @@ export function HrPage() {
     if (!payrollAction) return;
     payrollActionMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast(payrollAction.message);
+        toast.toast(t(payrollAction.messageKey));
         void invalidate(['paged', '/api/v1/hr/payrolls']);
       },
       onError: (err) => {
@@ -215,7 +217,7 @@ export function HrPage() {
   const submit = handleSubmit((values) => {
     setFormError(null);
     const onSuccess = () => {
-      toast.toast(editingId ? 'Employee updated.' : 'Employee created.');
+      toast.toast(editingId ? t('hr.employeeUpdated') : t('hr.employeeCreated'));
       setCreateOpen(false);
       void invalidate(['paged', '/api/v1/hr/employees']);
     };
@@ -250,14 +252,14 @@ export function HrPage() {
       return dto;
     });
     if (lines.length === 0) {
-      setPayrollError('No active employees to pay.');
+      setPayrollError(t('hr.noActiveEmployeesToPay'));
       return;
     }
     generateMutation.mutate(
       { period: values.period, lines },
       {
         onSuccess: () => {
-          toast.toast('Draft payroll generated.');
+          toast.toast(t('hr.draftPayrollGenerated'));
           setPayrollOpen(false);
           void invalidate(['paged', '/api/v1/hr/payrolls']);
         },
@@ -266,8 +268,8 @@ export function HrPage() {
     );
   });
 
-  const runPayrollAction = (id: string, action: 'post' | 'cancel', message: string) => {
-    setPayrollAction({ id, action, message });
+  const runPayrollAction = (id: string, action: 'post' | 'cancel', messageKey: 'hr.payrollPosted' | 'hr.payrollCancelled') => {
+    setPayrollAction({ id, action, messageKey });
   };
 
   const openPayrollView = async (payroll: Payroll) => {
@@ -275,42 +277,42 @@ export function HrPage() {
       const detail = await apiFetch<Payroll>(`/api/v1/hr/payrolls/${payroll.id}`);
       setViewingPayroll(detail);
     } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not load payroll.', 'error');
+      toast.toast(err instanceof ApiError ? err.message : t('errors.couldNotLoadPayroll'), 'error');
     }
   };
 
   const activeEmployees = employees.filter((employee) => employee.status === 'active');
 
   const employeeColumns: Column<Employee>[] = [
-    { key: 'employeeNo', header: 'No.' },
+    { key: 'employeeNo', header: t('tables.shortNo') },
     {
       key: 'name',
-      header: 'Name',
+      header: t('fields.name'),
       render: (row) => `${row.firstName} ${row.lastName}`,
     },
-    { key: 'position', header: 'Position', render: (row) => row.position ?? '—' },
+    { key: 'position', header: t('fields.position'), render: (row) => row.position ?? '—' },
     {
       key: 'department',
-      header: 'Department',
+      header: t('fields.department'),
       render: (row) => row.department?.name ?? '—',
     },
     {
       key: 'hireDate',
-      header: 'Hire date',
+      header: t('fields.hireDate'),
       render: (row) => formatDate(row.hireDate),
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => <Badge tone={employeeStatusTone(row.status)}>{row.status}</Badge>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
         </div>
       ),
@@ -318,51 +320,51 @@ export function HrPage() {
   ];
 
   const payrollColumns: Column<Payroll>[] = [
-    { key: 'number', header: 'Number' },
-    { key: 'period', header: 'Period' },
+    { key: 'number', header: t('tables.number') },
+    { key: 'period', header: t('tables.period') },
     {
       key: 'status',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => <Badge tone={payrollStatusTone(row.status)}>{row.status}</Badge>,
     },
     {
       key: 'totalGross',
-      header: 'Gross',
+      header: t('tables.gross'),
       render: (row) => formatMoney(row.totalGross),
     },
     {
       key: 'totalDeductions',
-      header: 'Deductions',
+      header: t('fields.deductions'),
       render: (row) => formatMoney(row.totalDeductions),
     },
     {
       key: 'totalNet',
-      header: 'Net',
+      header: t('tables.net'),
       render: (row) => formatMoney(row.totalNet),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => void openPayrollView(row)}>
-            View
+            {t('common.view')}
           </Button>
           {row.status === 'draft' ? (
             <>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => runPayrollAction(row.id, 'post', 'Payroll posted.')}
+                onClick={() => runPayrollAction(row.id, 'post', 'hr.payrollPosted')}
               >
-                Post
+                {t('hr.post')}
               </Button>
               <Button
                 variant="danger"
                 size="sm"
-                onClick={() => runPayrollAction(row.id, 'cancel', 'Payroll cancelled.')}
+                onClick={() => runPayrollAction(row.id, 'cancel', 'hr.payrollCancelled')}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
             </>
           ) : null}
@@ -374,36 +376,36 @@ export function HrPage() {
   const payrollLineColumns: Column<PayrollLine>[] = [
     {
       key: 'employee',
-      header: 'Employee',
+      header: t('fields.employee'),
       render: (row) =>
         row.employee ? `${row.employee.firstName} ${row.employee.lastName}` : '—',
     },
-    { key: 'gross', header: 'Gross', render: (row) => formatMoney(row.gross) },
-    { key: 'bonus', header: 'Bonus', render: (row) => formatMoney(row.bonus) },
-    { key: 'overtime', header: 'Overtime', render: (row) => formatMoney(row.overtime) },
-    { key: 'deductions', header: 'Deductions', render: (row) => formatMoney(row.deductions) },
-    { key: 'net', header: 'Net', render: (row) => formatMoney(row.net) },
+    { key: 'gross', header: t('tables.gross'), render: (row) => formatMoney(row.gross) },
+    { key: 'bonus', header: t('fields.bonus'), render: (row) => formatMoney(row.bonus) },
+    { key: 'overtime', header: t('fields.overtime'), render: (row) => formatMoney(row.overtime) },
+    { key: 'deductions', header: t('fields.deductions'), render: (row) => formatMoney(row.deductions) },
+    { key: 'net', header: t('tables.net'), render: (row) => formatMoney(row.net) },
   ];
 
   return (
     <>
       <PageHeader
-        title="Human resources"
-        subtitle="Employees and payroll"
+        title={t('hr.title')}
+        subtitle={t('hr.subtitle')}
         action={
           tab === 'employees' ? (
-            <Button onClick={openCreate}>New employee</Button>
+            <Button onClick={openCreate}>{t('hr.newEmployee')}</Button>
           ) : (
-            <Button onClick={openPayroll}>Generate payroll</Button>
+            <Button onClick={openPayroll}>{t('hr.generatePayroll')}</Button>
           )
         }
       />
       <div className="tabs">
         <button type="button" className={tab === 'employees' ? 'tab tab-active' : 'tab'} onClick={() => setTab('employees')}>
-          Employees
+          {t('hr.employees')}
         </button>
         <button type="button" className={tab === 'payrolls' ? 'tab tab-active' : 'tab'} onClick={() => setTab('payrolls')}>
-          Payrolls
+          {t('hr.payrolls')}
         </button>
       </div>
       {tab === 'employees' ? (
@@ -412,7 +414,7 @@ export function HrPage() {
           {!data && !error ? <LoadingBlock /> : null}
           {data ? (
             data.data.length === 0 ? (
-              <EmptyState message="No employees." />
+              <EmptyState message={t('hr.noEmployees')} />
             ) : (
               <DataTable columns={employeeColumns} rows={data.data} rowKey={(row) => row.id} />
             )
@@ -424,7 +426,7 @@ export function HrPage() {
           {!payrolls && !payrollsError ? <LoadingBlock /> : null}
           {payrolls ? (
             payrolls.data.length === 0 ? (
-              <EmptyState message="No payrolls yet." />
+              <EmptyState message={t('hr.noPayrollsYet')} />
             ) : (
               <DataTable columns={payrollColumns} rows={payrolls.data} rowKey={(row) => row.id} />
             )
@@ -434,38 +436,38 @@ export function HrPage() {
 
       <Dialog open={createOpen} onOpenChange={(open) => !saving && setCreateOpen(open)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={editingId ? 'Edit employee' : 'New employee'} />
+          <DialogHeader title={editingId ? t('hr.editEmployee') : t('hr.newEmployeeTitle')} />
           <form onSubmit={(event) => void submit(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="emp-no">Employee no.</label>
+                <label htmlFor="emp-no">{t('fields.employeeNo')}</label>
                 <input id="emp-no" {...register('employeeNo')} />
                 {errors.employeeNo ? <div className="field-error">{errors.employeeNo.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="emp-first">First name *</label>
+                <label htmlFor="emp-first">{t('fields.firstName')} *</label>
                 <input id="emp-first" {...register('firstName')} />
                 {errors.firstName ? <div className="field-error">{errors.firstName.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="emp-last">Last name *</label>
+                <label htmlFor="emp-last">{t('fields.lastName')} *</label>
                 <input id="emp-last" {...register('lastName')} />
                 {errors.lastName ? <div className="field-error">{errors.lastName.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="emp-email">Email</label>
+                <label htmlFor="emp-email">{t('fields.email')}</label>
                 <input id="emp-email" type="email" {...register('email')} />
                 {errors.email ? <div className="field-error">{errors.email.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="emp-phone">Phone</label>
+                <label htmlFor="emp-phone">{t('fields.phone')}</label>
                 <input id="emp-phone" {...register('phone')} />
                 {errors.phone ? <div className="field-error">{errors.phone.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="emp-department">Department</label>
+                <label htmlFor="emp-department">{t('fields.department')}</label>
                 <select id="emp-department" {...register('departmentId')}>
-                  <option value="">— None —</option>
+                  <option value="">{t('hr.none')}</option>
                   {departments.map((department) => (
                     <option key={department.id} value={department.id}>
                       {department.name}
@@ -474,30 +476,30 @@ export function HrPage() {
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="emp-position">Position</label>
+                <label htmlFor="emp-position">{t('fields.position')}</label>
                 <input id="emp-position" {...register('position')} />
                 {errors.position ? <div className="field-error">{errors.position.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="emp-hire">Hire date *</label>
+                <label htmlFor="emp-hire">{t('fields.hireDate')} *</label>
                 <input id="emp-hire" type="date" {...register('hireDate')} />
                 {errors.hireDate ? <div className="field-error">{errors.hireDate.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="emp-salary">Salary</label>
+                <label htmlFor="emp-salary">{t('fields.salary')}</label>
                 <input id="emp-salary" type="number" min="0" step="0.01" {...register('salary')} />
                 {errors.salary ? <div className="field-error">{errors.salary.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="emp-frequency">Salary frequency</label>
+                <label htmlFor="emp-frequency">{t('fields.salaryFrequency')}</label>
                 <select id="emp-frequency" {...register('salaryFrequency')}>
-                  <option value="monthly">monthly</option>
-                  <option value="biweekly">biweekly</option>
-                  <option value="weekly">weekly</option>
+                  <option value="monthly">{t('hr.monthly')}</option>
+                  <option value="biweekly">{t('hr.biweekly')}</option>
+                  <option value="weekly">{t('hr.weekly')}</option>
                 </select>
               </div>
               <div className="field">
-                <label>Status</label>
+                <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
                     id="emp-active"
@@ -505,7 +507,7 @@ export function HrPage() {
                     onCheckedChange={(checked) => setValue('status', checked === true ? 'active' : 'inactive')}
                   />
                   <label htmlFor="emp-active" className="text-sm text-gray-700">
-                    Active
+                    {t('common.active')}
                   </label>
                 </div>
               </div>
@@ -513,7 +515,7 @@ export function HrPage() {
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create employee'}
+                {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('hr.createEmployee')}
               </Button>
             </DialogFooter>
           </form>
@@ -522,27 +524,27 @@ export function HrPage() {
 
       <Dialog open={payrollOpen} onOpenChange={(open) => !payrollBusy && setPayrollOpen(open)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title="Generate payroll" />
+          <DialogHeader title={t('hr.generatePayrollTitle')} />
           <form onSubmit={(event) => void submitPayroll(event)}>
             <div className="field">
-              <label htmlFor="payroll-period">Period *</label>
+              <label htmlFor="payroll-period">{t('fields.period')} *</label>
               <input id="payroll-period" type="month" {...payrollRegister('period')} />
               {payrollErrors.period ? (
                 <div className="field-error">{payrollErrors.period.message}</div>
               ) : null}
             </div>
             {activeEmployees.length === 0 ? (
-              <p className="modal-message">No active employees to include.</p>
+              <p className="modal-message">{t('hr.noActiveEmployeesToInclude')}</p>
             ) : (
               <div className="invoice-items">
                 {activeEmployees.map((employee, index) => (
                   <div className="invoice-item" key={employee.id}>
                     <div className="field">
-                      <label>Employee</label>
+                      <label>{t('fields.employee')}</label>
                       <input value={`${employee.firstName} ${employee.lastName}`} readOnly />
                     </div>
                     <div className="field">
-                      <label htmlFor={`pay-bonus-${employee.id}`}>Bonus</label>
+                      <label htmlFor={`pay-bonus-${employee.id}`}>{t('fields.bonus')}</label>
                       <input
                         id={`pay-bonus-${employee.id}`}
                         type="number"
@@ -555,7 +557,7 @@ export function HrPage() {
                       ) : null}
                     </div>
                     <div className="field">
-                      <label htmlFor={`pay-overtime-${employee.id}`}>Overtime</label>
+                      <label htmlFor={`pay-overtime-${employee.id}`}>{t('fields.overtime')}</label>
                       <input
                         id={`pay-overtime-${employee.id}`}
                         type="number"
@@ -568,7 +570,7 @@ export function HrPage() {
                       ) : null}
                     </div>
                     <div className="field">
-                      <label htmlFor={`pay-deductions-${employee.id}`}>Deductions</label>
+                      <label htmlFor={`pay-deductions-${employee.id}`}>{t('fields.deductions')}</label>
                       <input
                         id={`pay-deductions-${employee.id}`}
                         type="number"
@@ -588,7 +590,7 @@ export function HrPage() {
             {payrollError ? <div className="error-banner">{payrollError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={payrollBusy}>
-                {payrollBusy ? 'Generating…' : 'Generate draft'}
+                {payrollBusy ? t('hr.generating') : t('hr.generateDraft')}
               </Button>
             </DialogFooter>
           </form>
@@ -597,7 +599,7 @@ export function HrPage() {
 
       <Dialog open={viewingPayroll !== null} onOpenChange={(open) => !open && setViewingPayroll(null)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={`Payroll ${viewingPayroll?.number ?? ''}`} />
+          <DialogHeader title={t('hr.payroll', { number: viewingPayroll?.number ?? '' })} />
           {viewingPayroll ? (
             <>
               <p className="modal-message">
@@ -612,7 +614,7 @@ export function HrPage() {
           ) : null}
           <DialogFooter>
             <Button variant="secondary" type="button" onClick={() => setViewingPayroll(null)}>
-              Close
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

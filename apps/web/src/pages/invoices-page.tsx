@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError, downloadFile } from '../api/client';
 import type { Customer, Invoice, Paginated, Product, Warehouse } from '../api/types';
 import {
@@ -28,6 +29,7 @@ function parsePageNumber(raw: string | null): number {
 }
 
 export function InvoicesPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(() => parsePageNumber(searchParams.get('page')));
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
@@ -120,46 +122,46 @@ export function InvoicesPage() {
     try {
       await downloadFile(`/api/v1/sales/invoices/${row.id}/pdf`, `invoice-${row.number}.pdf`);
     } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not download PDF.', 'error');
+      toast.toast(err instanceof ApiError ? err.message : t('errors.couldNotDownloadPdf'), 'error');
     }
   };
 
   const columns: Column<Invoice>[] = [
-    { key: 'number', header: 'Number' },
+    { key: 'number', header: t('tables.number') },
     {
       key: 'type',
-      header: 'Type',
+      header: t('tables.type'),
       render: (row) => (
         <Badge tone={row.type === 'invoice' ? 'info' : 'warning'}>{row.type.replace('_', ' ')}</Badge>
       ),
     },
-    { key: 'customer', header: 'Customer', render: (row) => row.customer.tradeName },
-    { key: 'issueDate', header: 'Issue date', render: (row) => formatDate(row.issueDate) },
+    { key: 'customer', header: t('tables.customer'), render: (row) => row.customer.tradeName },
+    { key: 'issueDate', header: t('tables.issueDate'), render: (row) => formatDate(row.issueDate) },
     {
       key: 'status',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => (
         <Badge tone={row.status === 'issued' ? 'success' : row.status === 'draft' ? 'neutral' : 'danger'}>
           {row.status}
         </Badge>
       ),
     },
-    { key: 'total', header: 'Total', render: (row) => formatMoney(row.total) },
-    { key: 'balanceDue', header: 'Balance', render: (row) => formatMoney(row.balanceDue) },
+    { key: 'total', header: t('tables.total'), render: (row) => formatMoney(row.total) },
+    { key: 'balanceDue', header: t('tables.balance'), render: (row) => formatMoney(row.balanceDue) },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => setViewing(row)}>
-            View
+            {t('common.view')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => void downloadPdf(row)}>
-            PDF
+            {t('common.pdf')}
           </Button>
           {row.status === 'issued' && row.balanceDue > 0 ? (
             <Button variant="ghost" size="sm" onClick={() => setPayingInvoice(row)}>
-              Payment
+              {t('common.payment')}
             </Button>
           ) : null}
         </div>
@@ -170,30 +172,30 @@ export function InvoicesPage() {
   return (
     <>
       <PageHeader
-        title="Invoices"
-        subtitle="Invoices and credit notes"
-        action={<Button onClick={() => setInvoiceOpen(true)}>New invoice</Button>}
+        title={t('invoices.title')}
+        subtitle={t('invoices.subtitle')}
+        action={<Button onClick={() => setInvoiceOpen(true)}>{t('invoices.newInvoice')}</Button>}
       />
       <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
         <input
           type="search"
-          placeholder="Search by number…"
+          placeholder={t('invoices.searchByNumber')}
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
         <select value={statusFilter} onChange={(event) => handleStatusChange(event.target.value)}>
-          <option value="">All statuses</option>
-          <option value="draft">Draft</option>
-          <option value="issued">Issued</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="">{t('invoices.allStatuses')}</option>
+          <option value="draft">{t('invoices.draft')}</option>
+          <option value="issued">{t('invoices.issued')}</option>
+          <option value="cancelled">{t('invoices.cancelled')}</option>
         </select>
         <select value={typeFilter} onChange={(event) => handleTypeChange(event.target.value)}>
-          <option value="">All types</option>
-          <option value="invoice">Invoice</option>
-          <option value="credit_note">Credit note</option>
+          <option value="">{t('invoices.allTypes')}</option>
+          <option value="invoice">{t('invoices.invoice')}</option>
+          <option value="credit_note">{t('invoices.creditNote')}</option>
         </select>
         <button type="submit" className="btn">
-          Search
+          {t('common.search')}
         </button>
       </form>
       {error ? <ErrorBanner message={error} /> : null}
@@ -201,7 +203,7 @@ export function InvoicesPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No invoices." />
+            <EmptyState message={t('invoices.noInvoices')} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError, downloadFile } from '../../api/client';
 import type { CfdiDocument, Invoice } from '../../api/types';
 import { Badge, ErrorBanner, formatDate, formatMoney, LoadingBlock } from '../ui';
@@ -7,6 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog'
 import { useToast } from '../toast';
 
 export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | null; onClose: () => void }) {
+  const { t } = useTranslation();
   const [detail, setDetail] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,7 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
     setCfdiLoading(true);
     void apiFetch<Invoice>(`/api/v1/sales/invoices/${invoice.id}`)
       .then(setDetail)
-      .catch((err: unknown) => setError(err instanceof ApiError ? err.message : 'Could not load invoice.'))
+      .catch((err: unknown) => setError(err instanceof ApiError ? err.message : t('invoices.couldNotLoad')))
       .finally(() => setLoading(false));
     void apiFetch<CfdiDocument>(`/api/v1/tax/cfdi/invoices/${invoice.id}`)
       .then(setCfdi)
@@ -35,7 +37,7 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
     try {
       await downloadFile(`/api/v1/sales/invoices/${row.id}/pdf`, `invoice-${row.number}.pdf`);
     } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not download PDF.', 'error');
+      toast.toast(err instanceof ApiError ? err.message : t('reports.couldNotDownloadPdf'), 'error');
     }
   };
 
@@ -43,7 +45,7 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
     try {
       await downloadFile(`/api/v1/tax/cfdi/${cfdiDoc.id}/xml`, `${cfdiDoc.uuid}.xml`);
     } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not download CFDI.', 'error');
+      toast.toast(err instanceof ApiError ? err.message : t('invoices.couldNotDownloadCfdi'), 'error');
     }
   };
 
@@ -53,7 +55,7 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
     <Dialog open={viewing !== null} onOpenChange={(next) => !next && onClose()}>
       <DialogContent className="max-w-2xl">
         <DialogHeader
-          title={`${viewing ? viewing.type.replace('_', ' ') : 'Invoice'} ${viewing?.number ?? ''}`}
+          title={`${t(viewing?.type === 'credit_note' ? 'invoices.creditNote' : 'invoices.invoice')} ${viewing?.number ?? ''}`}
         />
         {loading ? <LoadingBlock /> : null}
         {error ? <ErrorBanner message={error} /> : null}
@@ -61,7 +63,7 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
           <div>
             <div className="detail-grid">
               <div className="detail-item">
-                <div className="detail-label">Status</div>
+                <div className="detail-label">{t('common.status')}</div>
                 <div className="detail-value">
                   <Badge
                     tone={viewing.status === 'issued' ? 'success' : viewing.status === 'draft' ? 'neutral' : 'danger'}
@@ -71,39 +73,39 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
                 </div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">Customer</div>
+                <div className="detail-label">{t('fields.customer')}</div>
                 <div className="detail-value">{viewing.customer?.tradeName ?? '—'}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">Issue date</div>
+                <div className="detail-label">{t('tables.issueDate')}</div>
                 <div className="detail-value">{formatDate(viewing.issueDate)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">Due date</div>
+                <div className="detail-label">{t('fields.dueDate')}</div>
                 <div className="detail-value">{viewing.dueDate ? formatDate(viewing.dueDate) : '—'}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">Subtotal</div>
+                <div className="detail-label">{t('fields.subtotal')}</div>
                 <div className="detail-value num">{formatMoney(viewing.subtotal)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">Discount</div>
+                <div className="detail-label">{t('fields.discount')}</div>
                 <div className="detail-value num">{formatMoney(viewing.discount)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">Tax</div>
+                <div className="detail-label">{t('fields.tax')}</div>
                 <div className="detail-value num">{formatMoney(viewing.tax)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">Total</div>
+                <div className="detail-label">{t('tables.total')}</div>
                 <div className="detail-value num">{formatMoney(viewing.total)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">Paid</div>
+                <div className="detail-label">{t('invoices.paid')}</div>
                 <div className="detail-value num">{formatMoney(viewing.paidAmount)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">Balance due</div>
+                <div className="detail-label">{t('invoices.balanceDue')}</div>
                 <div className="detail-value num">{formatMoney(viewing.balanceDue)}</div>
               </div>
             </div>
@@ -111,11 +113,11 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Product</th>
-                    <th className="num">Qty</th>
-                    <th className="num">Unit price</th>
-                    <th className="num">Tax</th>
-                    <th className="num">Line total</th>
+                    <th>{t('fields.product')}</th>
+                    <th className="num">{t('fields.qty')}</th>
+                    <th className="num">{t('fields.unitPrice')}</th>
+                    <th className="num">{t('fields.tax')}</th>
+                    <th className="num">{t('invoices.lineTotal')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -133,15 +135,15 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
             </div>
             {(viewing.payments ?? []).length > 0 ? (
               <>
-                <h4 className="detail-section-title">Payments</h4>
+                <h4 className="detail-section-title">{t('invoices.payments')}</h4>
                 <div className="data-table-wrap">
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Date</th>
-                        <th>Method</th>
-                        <th className="num">Amount</th>
-                        <th>Reference</th>
+                        <th>{t('tables.date')}</th>
+                        <th>{t('invoices.method')}</th>
+                        <th className="num">{t('fields.amount')}</th>
+                        <th>{t('invoices.reference')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -160,13 +162,13 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
             ) : null}
             {viewing.notes ? <div className="detail-notes">{viewing.notes}</div> : null}
             <div className="detail-section-title-row">
-              <h4 className="detail-section-title">CFDI</h4>
+              <h4 className="detail-section-title">{t('invoices.cfdi')}</h4>
               <Button variant="ghost" size="sm" onClick={() => void downloadPdf(viewing)}>
-                PDF
+                {t('common.pdf')}
               </Button>
               {!cfdiLoading && cfdi ? (
                 <Button variant="ghost" size="sm" onClick={() => void downloadCfd(cfdi)}>
-                  Download XML
+                  {t('invoices.downloadXml')}
                 </Button>
               ) : null}
             </div>
@@ -174,11 +176,11 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
             {!cfdiLoading && cfdi ? (
               <div className="detail-grid">
                 <div className="detail-item">
-                  <div className="detail-label">UUID</div>
+                  <div className="detail-label">{t('invoices.uuid')}</div>
                   <div className="detail-value">{cfdi.uuid}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Status</div>
+                  <div className="detail-label">{t('common.status')}</div>
                   <div className="detail-value">
                     <Badge
                       tone={cfdi.status === 'stamped' ? 'success' : cfdi.status === 'pending' ? 'neutral' : 'danger'}
@@ -188,21 +190,21 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
                   </div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Total</div>
+                  <div className="detail-label">{t('tables.total')}</div>
                   <div className="detail-value num">{formatMoney(cfdi.total)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Stamped</div>
+                  <div className="detail-label">{t('invoices.stamped')}</div>
                   <div className="detail-value">{cfdi.stampedAt ? formatDate(cfdi.stampedAt) : '—'}</div>
                 </div>
               </div>
             ) : null}
-            {!cfdiLoading && !cfdi ? <p className="detail-notes">No CFDI generated for this invoice.</p> : null}
+            {!cfdiLoading && !cfdi ? <p className="detail-notes">{t('invoices.noCfdi')}</p> : null}
           </div>
         ) : null}
         <DialogFooter>
           <Button variant="secondary" type="button" onClick={onClose}>
-            Close
+            {t('common.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

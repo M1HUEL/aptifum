@@ -1,4 +1,5 @@
 import { type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatMoney } from '../ui';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
@@ -40,14 +41,15 @@ export function PosPaymentModal({
   onSubmit: (event: FormEvent) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={invoice !== null} onOpenChange={(isOpen) => !busy && !isOpen && onClose()}>
       <DialogContent className="max-w-sm">
-        <DialogHeader title={`Payment for ${invoice?.number ?? ''}`} />
+        <DialogHeader title={t('invoices.paymentFor', { number: invoice?.number })} />
         <form onSubmit={onSubmit}>
           <div className="field">
             <label htmlFor="payment-method">
-              Method<span className="field-required"> *</span>
+              {t('invoices.method')}<span className="field-required"> *</span>
             </label>
             <select
               id="payment-method"
@@ -63,7 +65,7 @@ export function PosPaymentModal({
           </div>
           <div className="field">
             <label htmlFor="payment-amount">
-              Amount<span className="field-required"> *</span>
+              {t('fields.amount')}<span className="field-required"> *</span>
             </label>
             <input
               id="payment-amount"
@@ -75,14 +77,13 @@ export function PosPaymentModal({
             />
             {invoice ? (
               <div className="field-hint">
-                {`Total due: ${formatMoney(invoice.total, invoice.currency)}${
-                  invoice.currency !== FUNCTIONAL_CURRENCY ? ` · rate ${invoice.exchangeRate}` : ''
-                }`}
+                {t('pos.totalDue', { amount: formatMoney(invoice.total, invoice.currency) })}
+                {invoice.currency !== FUNCTIONAL_CURRENCY ? t('pos.rateSuffix', { rate: invoice.exchangeRate }) : ''}
               </div>
             ) : null}
           </div>
           <div className="field">
-            <label htmlFor="payment-date">Received at</label>
+            <label htmlFor="payment-date">{t('invoices.receivedAt')}</label>
             <input
               id="payment-date"
               type="date"
@@ -91,7 +92,7 @@ export function PosPaymentModal({
             />
           </div>
           <div className="field">
-            <label htmlFor="payment-reference">Reference</label>
+            <label htmlFor="payment-reference">{t('invoices.reference')}</label>
             <input
               id="payment-reference"
               value={form.reference}
@@ -101,7 +102,7 @@ export function PosPaymentModal({
           {error ? <div className="error-banner">{error}</div> : null}
           <DialogFooter>
             <Button variant="default" type="submit" disabled={busy}>
-              {busy ? 'Recording…' : 'Record payment'}
+              {busy ? t('invoices.recording') : t('invoices.recordPayment')}
             </Button>
           </DialogFooter>
         </form>

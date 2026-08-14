@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ErrorBanner, LoadingBlock, PageHeader } from '../components/ui';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -26,6 +27,7 @@ interface UpdateUsSalesTaxDto {
 }
 
 export function SettingsPage() {
+  const { t } = useTranslation();
   const toast = useToast();
   const [nexus, setNexus] = useState<Set<string>>(new Set());
   const [overrides, setOverrides] = useState<Record<string, string>>({});
@@ -73,7 +75,7 @@ export function SettingsPage() {
       if (raw) {
         const percent = Number(raw);
         if (!Number.isFinite(percent) || percent < 0 || percent > 50) {
-          setError(`Invalid rate for ${code}: expected a percentage between 0 and 50.`);
+          setError(t('settings.invalidRate', { code }));
           return;
         }
         rates[code] = Math.round(percent * 100) / 10000;
@@ -84,7 +86,7 @@ export function SettingsPage() {
       { nexusStates, rates },
       {
         onSuccess: () => {
-          toast.toast('US sales tax settings saved.');
+          toast.toast(t('settings.saved'));
           configQuery.refetch();
         },
         onError: (err) => setError(err.message),
@@ -97,29 +99,27 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" subtitle="Company and tax configuration" />
+      <PageHeader title={t('settings.title')} subtitle={t('settings.subtitle')} />
       {loadError ? <ErrorBanner message={loadError} /> : null}
       {loading ? <LoadingBlock /> : null}
       {!loading ? (
         <section className="card">
-          <h2>US sales tax</h2>
+          <h2>{t('settings.usSalesTax')}</h2>
           {country && country !== 'US' ? (
             <p className="muted">
-              Sales tax is only calculated automatically for US-based tenants. Your country is set to{' '}
-              <strong>{country}</strong>.
+              {t('settings.usOnlyNoteStart')}
+              <strong>{country}</strong>
+              {t('settings.usOnlyNoteEnd')}
             </p>
           ) : null}
-          <p className="muted">
-            Mark the states where you have sales tax nexus. Sales to customers in those states will be taxed
-            at the default state rate unless you override it below.
-          </p>
+          <p className="muted">{t('settings.nexusInstructions')}</p>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nexus</TableHead>
-                <TableHead>State</TableHead>
-                <TableHead className="text-right">Default rate</TableHead>
-                <TableHead>Override (%)</TableHead>
+                <TableHead>{t('settings.nexus')}</TableHead>
+                <TableHead>{t('settings.state')}</TableHead>
+                <TableHead className="text-right">{t('settings.defaultRate')}</TableHead>
+                <TableHead>{t('settings.overridePercent')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -129,7 +129,7 @@ export function SettingsPage() {
                   <TableRow key={code}>
                     <TableCell>
                       <Checkbox
-                        aria-label={`Nexus in ${code}`}
+                        aria-label={t('settings.nexusInCode', { code })}
                         checked={nexus.has(code)}
                         onCheckedChange={() => toggleNexus(code)}
                       />
@@ -144,7 +144,7 @@ export function SettingsPage() {
                       {nexus.has(code) ? (
                         <input
                           className="h-9 w-24 rounded-md border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                          aria-label={`Override rate for ${code}`}
+                          aria-label={t('settings.overrideRateFor', { code })}
                           type="number"
                           min="0"
                           max="50"
@@ -163,7 +163,7 @@ export function SettingsPage() {
           </Table>
           <div className="mt-4">
             <Button onClick={() => void save()} disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? 'Saving…' : 'Save settings'}
+              {saveMutation.isPending ? t('common.saving') : t('settings.saveSettings')}
             </Button>
           </div>
         </section>

@@ -1,5 +1,6 @@
 import { forwardRef, type ComponentPropsWithoutRef, type ElementRef, type ReactNode } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/cn';
 import { Button } from './button';
 
@@ -43,10 +44,11 @@ function DialogHeader({ title, description }: { title: string; description?: str
 }
 
 function DialogFooter({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   return (
     <div className="mt-6 flex justify-end gap-2">
       <DialogPrimitive.Close asChild>
-        <Button variant="secondary">Cancel</Button>
+        <Button variant="secondary">{t('common.cancel')}</Button>
       </DialogPrimitive.Close>
       {children}
     </div>

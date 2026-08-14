@@ -1,4 +1,5 @@
 import { type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Paginated, PosProduct, Warehouse } from '../../api/types';
 import { Badge, EmptyState, ErrorBanner, formatMoney, LoadingBlock, Pagination } from '../ui';
 
@@ -27,6 +28,7 @@ export function PosCatalog({
   onAddProduct: (product: PosProduct) => void;
   onPage: (page: number) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="pos-catalog">
       <div className="toolbar">
@@ -35,7 +37,7 @@ export function PosCatalog({
           value={warehouseId}
           onChange={(event) => onWarehouseChange(event.target.value)}
         >
-          <option value="">— Select warehouse —</option>
+          <option value="">{t('pos.selectWarehouse')}</option>
           {warehouses.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
               {warehouse.name}
@@ -46,18 +48,18 @@ export function PosCatalog({
       <form className="search-form" onSubmit={onSubmitSearch}>
         <input
           type="search"
-          placeholder="Search name, SKU or barcode…"
+          placeholder={t('pos.searchPlaceholder')}
           value={input}
           onChange={(event) => onInputChange(event.target.value)}
         />
         <button type="submit" className="btn">
-          Search
+          {t('common.search')}
         </button>
       </form>
       {error ? <ErrorBanner message={error} /> : null}
       {loading ? <LoadingBlock /> : null}
       {!loading && catalog && catalog.data.length === 0 ? (
-        <EmptyState message="No products found for this warehouse." />
+        <EmptyState message={t('pos.noProducts')} />
       ) : null}
       {!loading && catalog && catalog.data.length > 0 ? (
         <>
@@ -74,7 +76,9 @@ export function PosCatalog({
                 <span className="pos-product-sku">{product.sku}</span>
                 <span className="pos-product-price">{formatMoney(product.salePrice)}</span>
                 <Badge tone={product.availableStock > 0 ? 'success' : 'neutral'}>
-                  {product.availableStock > 0 ? `${product.availableStock} in stock` : 'Out of stock'}
+                  {product.availableStock > 0
+                    ? t('pos.inStock', { count: product.availableStock })
+                    : t('pos.outOfStock')}
                 </Badge>
               </button>
             ))}

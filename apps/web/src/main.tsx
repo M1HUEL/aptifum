@@ -6,6 +6,7 @@ import App from './app';
 import { AuthProvider } from './auth/auth-context';
 import { ToastProvider } from './components/toast';
 import { queryClient } from './lib/query-client';
+import './i18n';
 import './index.css';
 
 const rootElement = document.getElementById('root');

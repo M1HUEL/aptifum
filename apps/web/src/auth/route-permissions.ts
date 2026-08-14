@@ -1,31 +1,31 @@
 export interface RouteGuard {
   to: string;
-  label: string;
+  labelKey: string;
   permission?: string;
 }
 
 export const ROUTE_GUARDS: RouteGuard[] = [
-  { to: '/dashboard', label: 'Dashboard', permission: 'reporting:read' },
-  { to: '/pos', label: 'POS', permission: 'invoicing:read' },
-  { to: '/products', label: 'Products', permission: 'inventory:read' },
-  { to: '/stock', label: 'Stock', permission: 'inventory:read' },
-  { to: '/warehouses', label: 'Warehouses', permission: 'inventory:read' },
-  { to: '/invoices', label: 'Invoices', permission: 'invoicing:read' },
-  { to: '/customers', label: 'Customers', permission: 'sales:read' },
-  { to: '/orders', label: 'Sales orders', permission: 'sales:read' },
-  { to: '/purchasing', label: 'Purchasing', permission: 'purchasing:read' },
-  { to: '/suppliers', label: 'Suppliers', permission: 'purchasing:read' },
-  { to: '/accounting', label: 'Accounting', permission: 'accounting:read' },
-  { to: '/accounts', label: 'Chart of accounts', permission: 'accounting:read' },
-  { to: '/hr', label: 'HR', permission: 'hr:read' },
-  { to: '/attendance', label: 'Attendance', permission: 'hr:read' },
-  { to: '/crm', label: 'CRM', permission: 'crm:read' },
-  { to: '/production', label: 'Production', permission: 'production:read' },
-  { to: '/reports', label: 'Reports', permission: 'reporting:read' },
-  { to: '/users-roles', label: 'Users & roles', permission: 'users:read' },
-  { to: '/audit', label: 'Audit', permission: 'audit:read' },
-  { to: '/settings', label: 'Settings', permission: 'tax:read' },
-  { to: '/profile', label: 'My profile' },
+  { to: '/dashboard', labelKey: 'nav.dashboard', permission: 'reporting:read' },
+  { to: '/pos', labelKey: 'nav.pos', permission: 'invoicing:read' },
+  { to: '/products', labelKey: 'nav.products', permission: 'inventory:read' },
+  { to: '/stock', labelKey: 'nav.stock', permission: 'inventory:read' },
+  { to: '/warehouses', labelKey: 'nav.warehouses', permission: 'inventory:read' },
+  { to: '/invoices', labelKey: 'nav.invoices', permission: 'invoicing:read' },
+  { to: '/customers', labelKey: 'nav.customers', permission: 'sales:read' },
+  { to: '/orders', labelKey: 'nav.salesOrders', permission: 'sales:read' },
+  { to: '/purchasing', labelKey: 'nav.purchasing', permission: 'purchasing:read' },
+  { to: '/suppliers', labelKey: 'nav.suppliers', permission: 'purchasing:read' },
+  { to: '/accounting', labelKey: 'nav.accounting', permission: 'accounting:read' },
+  { to: '/accounts', labelKey: 'nav.chartOfAccounts', permission: 'accounting:read' },
+  { to: '/hr', labelKey: 'nav.hr', permission: 'hr:read' },
+  { to: '/attendance', labelKey: 'nav.attendance', permission: 'hr:read' },
+  { to: '/crm', labelKey: 'nav.crm', permission: 'crm:read' },
+  { to: '/production', labelKey: 'nav.production', permission: 'production:read' },
+  { to: '/reports', labelKey: 'nav.reports', permission: 'reporting:read' },
+  { to: '/users-roles', labelKey: 'nav.usersRoles', permission: 'users:read' },
+  { to: '/audit', labelKey: 'nav.audit', permission: 'audit:read' },
+  { to: '/settings', labelKey: 'nav.settings', permission: 'tax:read' },
+  { to: '/profile', labelKey: 'nav.profile' },
 ];
 
 export function permissionForRoute(pathname: string): string | undefined {

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function formatMoney(value: number, currency = 'USD'): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
@@ -54,7 +55,8 @@ export function PageHeader({
 }
 
 export function Spinner() {
-  return <div className="spinner" aria-label="Loading" />;
+  const { t } = useTranslation();
+  return <div className="spinner" aria-label={t('common.loading')} />;
 }
 
 export function LoadingBlock() {
@@ -127,8 +129,9 @@ export function DataTable<T>({
   rows: T[];
   rowKey: (row: T) => string;
 }) {
+  const { t } = useTranslation();
   if (rows.length === 0) {
-    return <EmptyState message="No data to display." />;
+    return <EmptyState message={t('common.noData')} />;
   }
   return (
     <div className="table-wrap">
@@ -169,6 +172,7 @@ export function Pagination({
   total: number;
   onPage: (page: number) => void;
 }) {
+  const { t } = useTranslation();
   const totalPages = Math.max(1, Math.ceil(total / limit));
   return (
     <div className="pagination">
@@ -177,17 +181,17 @@ export function Pagination({
         disabled={page <= 1}
         onClick={() => onPage(page - 1)}
       >
-        Previous
+        {t('common.previous')}
       </button>
       <span>
-        Page {page} of {totalPages} · {total} rows
+        {t('common.pageOfRows', { page, totalPages, total })}
       </span>
       <button
         type="button"
         disabled={page >= totalPages}
         onClick={() => onPage(page + 1)}
       >
-        Next
+        {t('common.next')}
       </button>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
@@ -147,6 +148,7 @@ function fromLeave(leave: Leave): LeaveFormValues {
 }
 
 export function AttendanceLeavesPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'attendance' | 'leaves'>('attendance');
   const can = usePermission();
   const toast = useToast();
@@ -227,7 +229,7 @@ export function AttendanceLeavesPage() {
       if (filters.status) params.set('status', filters.status);
       setAttData(await apiFetch<Paginated<AttendanceRecord>>(`/api/v1/hr/attendance?${params.toString()}`));
     } catch (err) {
-      setAttError(err instanceof ApiError ? err.message : 'Could not load attendance.');
+      setAttError(err instanceof ApiError ? err.message : t('hr.couldNotLoadAttendance'));
     } finally {
       setAttLoading(false);
     }
@@ -243,7 +245,7 @@ export function AttendanceLeavesPage() {
       if (filters.leaveType) params.set('leaveType', filters.leaveType);
       setLeaveData(await apiFetch<Paginated<Leave>>(`/api/v1/hr/leaves?${params.toString()}`));
     } catch (err) {
-      setLeaveError(err instanceof ApiError ? err.message : 'Could not load leaves.');
+      setLeaveError(err instanceof ApiError ? err.message : t('hr.couldNotLoadLeaves'));
     } finally {
       setLeaveLoading(false);
     }
@@ -296,7 +298,9 @@ export function AttendanceLeavesPage() {
     if (!leaveActionTarget) return;
     leaveActionMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast(leaveActionTarget.action === 'approve' ? 'Leave approved.' : 'Leave rejected.');
+        toast.toast(
+          leaveActionTarget.action === 'approve' ? t('hr.leaveApproved') : t('hr.leaveRejected'),
+        );
         void loadLeaves(leavePage, leaveFilters);
       },
       onError: (err) => {
@@ -334,7 +338,7 @@ export function AttendanceLeavesPage() {
       },
       {
         onSuccess: () => {
-          toast.toast(values.action === 'in' ? 'Clock in recorded.' : 'Clock out recorded.');
+          toast.toast(values.action === 'in' ? t('hr.clockInRecorded') : t('hr.clockOutRecorded'));
           setClockOpen(false);
           void loadAttendance(attPage, attFilters);
         },
@@ -358,7 +362,7 @@ export function AttendanceLeavesPage() {
   const submitAttendance = submitAttForm((values) => {
     setAttFormError(null);
     const onSuccess = () => {
-      toast.toast(editingAttId ? 'Attendance updated.' : 'Attendance created.');
+      toast.toast(editingAttId ? t('hr.attendanceUpdated') : t('hr.attendanceCreated'));
       setAttOpen(false);
       void loadAttendance(attPage, attFilters);
     };
@@ -374,7 +378,7 @@ export function AttendanceLeavesPage() {
     if (!deletingAtt) return;
     deleteAttMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast('Attendance deleted.');
+        toast.toast(t('hr.attendanceDeleted'));
         setDeletingAtt(null);
         void loadAttendance(attPage, attFilters);
       },
@@ -400,7 +404,7 @@ export function AttendanceLeavesPage() {
   const submitLeave = submitLeaveForm((values) => {
     setLeaveFormError(null);
     const onSuccess = () => {
-      toast.toast(editingLeaveId ? 'Leave updated.' : 'Leave created.');
+      toast.toast(editingLeaveId ? t('hr.leaveUpdated') : t('hr.leaveCreated'));
       setLeaveOpen(false);
       void loadLeaves(leavePage, leaveFilters);
     };
@@ -416,7 +420,7 @@ export function AttendanceLeavesPage() {
     if (!deletingLeave) return;
     deleteLeaveMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast('Leave deleted.');
+        toast.toast(t('hr.leaveDeleted'));
         setDeletingLeave(null);
         void loadLeaves(leavePage, leaveFilters);
       },
@@ -430,40 +434,40 @@ export function AttendanceLeavesPage() {
   const attendanceColumns: Column<AttendanceRecord>[] = [
     {
       key: 'employee',
-      header: 'Employee',
+      header: t('fields.employee'),
       render: (row) => employeeName(row.employee),
     },
-    { key: 'workDate', header: 'Work date', render: (row) => formatDate(row.workDate) },
+    { key: 'workDate', header: t('fields.workDate'), render: (row) => formatDate(row.workDate) },
     {
       key: 'clockInAt',
-      header: 'Clock in',
+      header: t('hr.clockIn'),
       render: (row) => (row.clockInAt ? new Date(row.clockInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'),
     },
     {
       key: 'clockOutAt',
-      header: 'Clock out',
+      header: t('hr.clockOut'),
       render: (row) => (row.clockOutAt ? new Date(row.clockOutAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'),
     },
     {
       key: 'workedMinutes',
-      header: 'Worked',
-      render: (row) => (row.workedMinutes ? `${row.workedMinutes} min` : '—'),
+      header: t('hr.worked'),
+      render: (row) => (row.workedMinutes ? t('hr.workedMinutes', { minutes: row.workedMinutes }) : '—'),
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => <Badge tone={attendanceTone(row.status)}>{row.status}</Badge>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => openAttendance(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           <Button variant="danger" size="sm" onClick={() => setDeletingAtt(row)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       ),
@@ -471,16 +475,16 @@ export function AttendanceLeavesPage() {
   ];
 
   const leaveColumns: Column<Leave>[] = [
-    { key: 'employee', header: 'Employee', render: (row) => employeeName(row.employee) },
-    { key: 'leaveType', header: 'Type', render: (row) => row.leaveType },
-    { key: 'startDate', header: 'Start', render: (row) => formatDate(row.startDate) },
-    { key: 'endDate', header: 'End', render: (row) => formatDate(row.endDate) },
-    { key: 'days', header: 'Days', render: (row) => row.days },
-    { key: 'status', header: 'Status', render: (row) => <Badge tone={leaveTone(row.status)}>{row.status}</Badge> },
-    { key: 'reason', header: 'Reason', render: (row) => row.reason ?? '—' },
+    { key: 'employee', header: t('fields.employee'), render: (row) => employeeName(row.employee) },
+    { key: 'leaveType', header: t('tables.type'), render: (row) => row.leaveType },
+    { key: 'startDate', header: t('hr.start'), render: (row) => formatDate(row.startDate) },
+    { key: 'endDate', header: t('hr.end'), render: (row) => formatDate(row.endDate) },
+    { key: 'days', header: t('fields.days'), render: (row) => row.days },
+    { key: 'status', header: t('common.status'), render: (row) => <Badge tone={leaveTone(row.status)}>{row.status}</Badge> },
+    { key: 'reason', header: t('fields.reason'), render: (row) => row.reason ?? '—' },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           {row.status === 'pending' ? (
@@ -488,18 +492,18 @@ export function AttendanceLeavesPage() {
               {can('hr:approve') ? (
                 <>
                   <Button variant="ghost" size="sm" onClick={() => setLeaveActionTarget({ leave: row, action: 'approve' })}>
-                    Approve
+                    {t('hr.approve')}
                   </Button>
                   <Button variant="danger" size="sm" onClick={() => setLeaveActionTarget({ leave: row, action: 'reject' })}>
-                    Reject
+                    {t('hr.reject')}
                   </Button>
                 </>
               ) : null}
               <Button variant="ghost" size="sm" onClick={() => openLeave(row)}>
-                Edit
+                {t('common.edit')}
               </Button>
               <Button variant="danger" size="sm" onClick={() => setDeletingLeave(row)}>
-                Delete
+                {t('common.delete')}
               </Button>
             </>
           ) : null}
@@ -511,28 +515,28 @@ export function AttendanceLeavesPage() {
   return (
     <>
       <PageHeader
-        title="Attendance & leaves"
-        subtitle="HR time tracking"
+        title={t('hr.attendanceTitle')}
+        subtitle={t('hr.attendanceSubtitle')}
         action={
           tab === 'attendance' ? (
             <div className="table-actions">
               <Button variant="ghost" onClick={openClock}>
-                Clock in / out
+                {t('hr.clockInOut')}
               </Button>
-              <Button onClick={() => openAttendance()}>New attendance</Button>
+              <Button onClick={() => openAttendance()}>{t('hr.newAttendance')}</Button>
             </div>
           ) : (
-            <Button onClick={() => openLeave()}>New leave</Button>
+            <Button onClick={() => openLeave()}>{t('hr.newLeave')}</Button>
           )
         }
       />
 
       <div className="tabs">
         <button type="button" className={tab === 'attendance' ? 'tab tab-active' : 'tab'} onClick={() => setTab('attendance')}>
-          Attendance
+          {t('hr.attendanceTab')}
         </button>
         <button type="button" className={tab === 'leaves' ? 'tab tab-active' : 'tab'} onClick={() => setTab('leaves')}>
-          Leaves
+          {t('hr.leavesTab')}
         </button>
       </div>
 
@@ -544,7 +548,7 @@ export function AttendanceLeavesPage() {
               value={attFilterInput.employeeId}
               onChange={(event) => setAttFilterInput((current) => ({ ...current, employeeId: event.target.value }))}
             >
-              <option value="">All employees</option>
+              <option value="">{t('hr.allEmployees')}</option>
               {employees.map((employee) => (
                 <option key={employee.id} value={employee.id}>
                   {employeeName(employee)}
@@ -565,7 +569,7 @@ export function AttendanceLeavesPage() {
               value={attFilterInput.status}
               onChange={(event) => setAttFilterInput((current) => ({ ...current, status: event.target.value }))}
             >
-              <option value="">All statuses</option>
+              <option value="">{t('hr.allStatuses')}</option>
               {attendanceStatuses.map((status) => (
                 <option key={status} value={status}>
                   {status}
@@ -573,14 +577,14 @@ export function AttendanceLeavesPage() {
               ))}
             </select>
             <button type="submit" className="btn">
-              Search
+              {t('common.search')}
             </button>
           </form>
           {attLoading && !attData ? <LoadingBlock /> : null}
           {attData ? (
             <>
               {attData.data.length === 0 ? (
-                <EmptyState message="No attendance records." />
+                <EmptyState message={t('hr.noAttendanceRecords')} />
               ) : (
                 <DataTable columns={attendanceColumns} rows={attData.data} rowKey={(row) => row.id} />
               )}
@@ -596,7 +600,7 @@ export function AttendanceLeavesPage() {
               value={leaveFilterInput.employeeId}
               onChange={(event) => setLeaveFilterInput((current) => ({ ...current, employeeId: event.target.value }))}
             >
-              <option value="">All employees</option>
+              <option value="">{t('hr.allEmployees')}</option>
               {employees.map((employee) => (
                 <option key={employee.id} value={employee.id}>
                   {employeeName(employee)}
@@ -607,7 +611,7 @@ export function AttendanceLeavesPage() {
               value={leaveFilterInput.status}
               onChange={(event) => setLeaveFilterInput((current) => ({ ...current, status: event.target.value }))}
             >
-              <option value="">All statuses</option>
+              <option value="">{t('hr.allStatuses')}</option>
               {leaveStatuses.map((status) => (
                 <option key={status} value={status}>
                   {status}
@@ -618,7 +622,7 @@ export function AttendanceLeavesPage() {
               value={leaveFilterInput.leaveType}
               onChange={(event) => setLeaveFilterInput((current) => ({ ...current, leaveType: event.target.value }))}
             >
-              <option value="">All types</option>
+              <option value="">{t('hr.allTypes')}</option>
               {leaveTypes.map((type) => (
                 <option key={type} value={type}>
                   {type}
@@ -626,14 +630,14 @@ export function AttendanceLeavesPage() {
               ))}
             </select>
             <button type="submit" className="btn">
-              Search
+              {t('common.search')}
             </button>
           </form>
           {leaveLoading && !leaveData ? <LoadingBlock /> : null}
           {leaveData ? (
             <>
               {leaveData.data.length === 0 ? (
-                <EmptyState message="No leaves." />
+                <EmptyState message={t('hr.noLeaves')} />
               ) : (
                 <DataTable columns={leaveColumns} rows={leaveData.data} rowKey={(row) => row.id} />
               )}
@@ -645,12 +649,14 @@ export function AttendanceLeavesPage() {
 
       <Dialog open={clockOpen} onOpenChange={(open) => !clockBusy && setClockOpen(open)}>
         <DialogContent>
-          <DialogHeader title="Clock in / out" />
+          <DialogHeader title={t('hr.clockInOut')} />
           <form onSubmit={(event) => void submitClock(event)}>
             <div className="field">
-              <label htmlFor="clock-employee">Employee *</label>
+              <label htmlFor="clock-employee">
+                {t('fields.employee')}<span className="field-required"> *</span>
+              </label>
               <select id="clock-employee" {...registerClock('employeeId')}>
-                <option value="">— Select employee —</option>
+                <option value="">{t('hr.selectEmployee')}</option>
                 {employees.map((employee) => (
                   <option key={employee.id} value={employee.id}>
                     {employeeName(employee)}
@@ -662,20 +668,22 @@ export function AttendanceLeavesPage() {
               ) : null}
             </div>
             <div className="field">
-              <label htmlFor="clock-action">Action *</label>
+              <label htmlFor="clock-action">
+                {t('hr.action')}<span className="field-required"> *</span>
+              </label>
               <select id="clock-action" {...registerClock('action')}>
-                <option value="in">Clock in</option>
-                <option value="out">Clock out</option>
+                <option value="in">{t('hr.clockIn')}</option>
+                <option value="out">{t('hr.clockOut')}</option>
               </select>
             </div>
             <div className="field">
-              <label htmlFor="clock-at">At</label>
+              <label htmlFor="clock-at">{t('hr.at')}</label>
               <input id="clock-at" type="datetime-local" {...registerClock('at')} />
             </div>
             {clockError ? <div className="error-banner">{clockError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={clockBusy}>
-                {clockBusy ? 'Recording…' : 'Record'}
+                {clockBusy ? t('hr.recording') : t('hr.record')}
               </Button>
             </DialogFooter>
           </form>
@@ -684,13 +692,15 @@ export function AttendanceLeavesPage() {
 
       <Dialog open={attOpen} onOpenChange={(open) => !attSaving && setAttOpen(open)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={editingAttId ? 'Edit attendance' : 'New attendance'} />
+          <DialogHeader title={editingAttId ? t('hr.editAttendance') : t('hr.createAttendance')} />
           <form onSubmit={(event) => void submitAttendance(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="att-employee">Employee *</label>
+                <label htmlFor="att-employee">
+                  {t('fields.employee')}<span className="field-required"> *</span>
+                </label>
                 <select id="att-employee" {...registerAtt('employeeId')}>
-                  <option value="">— Select employee —</option>
+                  <option value="">{t('hr.selectEmployee')}</option>
                   {employees.map((employee) => (
                     <option key={employee.id} value={employee.id}>
                       {employeeName(employee)}
@@ -702,22 +712,24 @@ export function AttendanceLeavesPage() {
                 ) : null}
               </div>
               <div className="field">
-                <label htmlFor="att-date">Work date *</label>
+                <label htmlFor="att-date">
+                  {t('fields.workDate')}<span className="field-required"> *</span>
+                </label>
                 <input id="att-date" type="date" {...registerAtt('workDate')} />
                 {attErrors.workDate ? (
                   <div className="field-error">{attErrors.workDate.message}</div>
                 ) : null}
               </div>
               <div className="field">
-                <label htmlFor="att-in">Clock in</label>
+                <label htmlFor="att-in">{t('hr.clockIn')}</label>
                 <input id="att-in" type="datetime-local" {...registerAtt('clockInAt')} />
               </div>
               <div className="field">
-                <label htmlFor="att-out">Clock out</label>
+                <label htmlFor="att-out">{t('hr.clockOut')}</label>
                 <input id="att-out" type="datetime-local" {...registerAtt('clockOutAt')} />
               </div>
               <div className="field">
-                <label htmlFor="att-status">Status</label>
+                <label htmlFor="att-status">{t('common.status')}</label>
                 <select id="att-status" {...registerAtt('status')}>
                   {attendanceStatuses.map((status) => (
                     <option key={status} value={status}>
@@ -728,13 +740,13 @@ export function AttendanceLeavesPage() {
               </div>
             </div>
             <div className="field">
-              <label htmlFor="att-notes">Notes</label>
+              <label htmlFor="att-notes">{t('fields.notes')}</label>
               <textarea id="att-notes" rows={2} {...registerAtt('notes')} />
             </div>
             {attFormError ? <div className="error-banner">{attFormError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={attSaving}>
-                {attSaving ? 'Saving…' : editingAttId ? 'Save changes' : 'Create attendance'}
+                {attSaving ? t('common.saving') : editingAttId ? t('common.saveChanges') : t('hr.createAttendance')}
               </Button>
             </DialogFooter>
           </form>
@@ -743,13 +755,15 @@ export function AttendanceLeavesPage() {
 
       <Dialog open={leaveOpen} onOpenChange={(open) => !leaveSaving && setLeaveOpen(open)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={editingLeaveId ? 'Edit leave' : 'New leave'} />
+          <DialogHeader title={editingLeaveId ? t('hr.editLeave') : t('hr.createLeave')} />
           <form onSubmit={(event) => void submitLeave(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="leave-employee">Employee *</label>
+                <label htmlFor="leave-employee">
+                  {t('fields.employee')}<span className="field-required"> *</span>
+                </label>
                 <select id="leave-employee" {...registerLeave('employeeId')}>
-                  <option value="">— Select employee —</option>
+                  <option value="">{t('hr.selectEmployee')}</option>
                   {employees.map((employee) => (
                     <option key={employee.id} value={employee.id}>
                       {employeeName(employee)}
@@ -761,7 +775,9 @@ export function AttendanceLeavesPage() {
                 ) : null}
               </div>
               <div className="field">
-                <label htmlFor="leave-type">Type *</label>
+                <label htmlFor="leave-type">
+                  {t('tables.type')}<span className="field-required"> *</span>
+                </label>
                 <select id="leave-type" {...registerLeave('leaveType')}>
                   {leaveTypes.map((type) => (
                     <option key={type} value={type}>
@@ -771,21 +787,25 @@ export function AttendanceLeavesPage() {
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="leave-start">Start date *</label>
+                <label htmlFor="leave-start">
+                  {t('fields.startDate')}<span className="field-required"> *</span>
+                </label>
                 <input id="leave-start" type="date" {...registerLeave('startDate')} />
                 {leaveErrors.startDate ? (
                   <div className="field-error">{leaveErrors.startDate.message}</div>
                 ) : null}
               </div>
               <div className="field">
-                <label htmlFor="leave-end">End date *</label>
+                <label htmlFor="leave-end">
+                  {t('fields.endDate')}<span className="field-required"> *</span>
+                </label>
                 <input id="leave-end" type="date" {...registerLeave('endDate')} />
                 {leaveErrors.endDate ? (
                   <div className="field-error">{leaveErrors.endDate.message}</div>
                 ) : null}
               </div>
               <div className="field">
-                <label htmlFor="leave-days">Days</label>
+                <label htmlFor="leave-days">{t('fields.days')}</label>
                 <input id="leave-days" type="number" min="1" max="365" {...registerLeave('days')} />
                 {leaveErrors.days ? (
                   <div className="field-error">{leaveErrors.days.message}</div>
@@ -793,13 +813,13 @@ export function AttendanceLeavesPage() {
               </div>
             </div>
             <div className="field">
-              <label htmlFor="leave-reason">Reason</label>
+              <label htmlFor="leave-reason">{t('fields.reason')}</label>
               <textarea id="leave-reason" rows={2} {...registerLeave('reason')} />
             </div>
             {leaveFormError ? <div className="error-banner">{leaveFormError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={leaveSaving}>
-                {leaveSaving ? 'Saving…' : editingLeaveId ? 'Save changes' : 'Create leave'}
+                {leaveSaving ? t('common.saving') : editingLeaveId ? t('common.saveChanges') : t('hr.createLeave')}
               </Button>
             </DialogFooter>
           </form>
@@ -809,12 +829,14 @@ export function AttendanceLeavesPage() {
       <Dialog open={deletingAtt !== null} onOpenChange={(open) => !deleteBusy && !open && setDeletingAtt(null)}>
         <DialogContent>
           <DialogHeader
-            title="Delete attendance"
-            description={`Delete attendance for ${deletingAtt ? employeeName(deletingAtt.employee) : ''}?`}
+            title={t('hr.deleteAttendanceTitle')}
+            description={t('hr.deleteAttendanceMessage', {
+              name: deletingAtt ? employeeName(deletingAtt.employee) : '',
+            })}
           />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDeleteAtt()}>
-              {deleteBusy ? 'Working…' : 'Delete'}
+              {deleteBusy ? t('common.working') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -825,10 +847,13 @@ export function AttendanceLeavesPage() {
         onOpenChange={(open) => !open && setDeletingLeave(null)}
       >
         <DialogContent>
-          <DialogHeader title="Delete leave" description={`Delete this ${deletingLeave?.leaveType} leave?`} />
+          <DialogHeader
+            title={t('hr.deleteLeaveTitle')}
+            description={t('hr.deleteLeaveMessage', { type: deletingLeave?.leaveType })}
+          />
           <DialogFooter>
             <Button variant="danger" type="button" onClick={() => void confirmDeleteLeave()}>
-              Delete
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

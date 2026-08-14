@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
 import type { components } from '../api/schema';
@@ -113,6 +114,7 @@ function roleToDto(form: RoleFormValues): CreateRoleDto {
 }
 
 export function UsersRolesPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'users' | 'roles'>('users');
   const toast = useToast();
 
@@ -174,7 +176,7 @@ export function UsersRolesPage() {
       const params = new URLSearchParams({ page: String(page), limit: '20' });
       setUserData(await apiFetch<Paginated<User>>(`/api/v1/users?${params.toString()}`));
     } catch (err) {
-      setUserError(err instanceof ApiError ? err.message : 'Could not load users.');
+      setUserError(err instanceof ApiError ? err.message : t('usersRoles.couldNotLoadUsers'));
     } finally {
       setUserLoading(false);
     }
@@ -186,7 +188,7 @@ export function UsersRolesPage() {
     try {
       setRoles(await apiFetch<Role[]>('/api/v1/roles'));
     } catch (err) {
-      setRolesError(err instanceof ApiError ? err.message : 'Could not load roles.');
+      setRolesError(err instanceof ApiError ? err.message : t('usersRoles.couldNotLoadRoles'));
     } finally {
       setRolesLoading(false);
     }
@@ -242,14 +244,14 @@ export function UsersRolesPage() {
 
   const submitUser = submitUserForm((values) => {
     if (!editingUserId && !values.invite && values.password.length < 8) {
-      setUserFormError('Password must be at least 8 characters.');
+      setUserFormError(t('usersRoles.passwordMin'));
       return;
     }
     setUserFormError(null);
     if (editingUserId) {
       updateUserMutation.mutate(userToUpdateDto(values), {
         onSuccess: () => {
-          toast.toast('User updated.');
+          toast.toast(t('usersRoles.userUpdated'));
           setUserOpen(false);
           void loadUsers(userPage);
         },
@@ -276,7 +278,7 @@ export function UsersRolesPage() {
     }
     createUserMutation.mutate(userToCreateDto(values), {
       onSuccess: () => {
-        toast.toast('User created.');
+        toast.toast(t('usersRoles.userCreated'));
         setUserOpen(false);
         void loadUsers(userPage);
       },
@@ -310,7 +312,7 @@ export function UsersRolesPage() {
   const submitRole = submitRoleForm((values) => {
     setRoleFormError(null);
     const onSuccess = () => {
-      toast.toast(editingRoleId ? 'Role updated.' : 'Role created.');
+      toast.toast(editingRoleId ? t('usersRoles.roleUpdated') : t('usersRoles.roleCreated'));
       setRoleOpen(false);
       void loadRoles();
     };
@@ -326,7 +328,7 @@ export function UsersRolesPage() {
     if (!deletingRole) return;
     deleteRoleMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast('Role deleted.');
+        toast.toast(t('usersRoles.roleDeleted'));
         setDeletingRole(null);
         void loadRoles();
       },
@@ -338,14 +340,14 @@ export function UsersRolesPage() {
   };
 
   const userColumns: Column<User>[] = [
-    { key: 'email', header: 'Email' },
-    { key: 'name', header: 'Name', render: (row) => row.name ?? '—' },
+    { key: 'email', header: t('fields.email') },
+    { key: 'name', header: t('fields.name'), render: (row) => row.name ?? '—' },
     {
       key: 'roles',
-      header: 'Roles',
+      header: t('usersRoles.roles'),
       render: (row) =>
         row.roles.length === 0 ? (
-          <span className="muted">None</span>
+          <span className="muted">{t('common.none')}</span>
         ) : (
           <div className="badge-group">
             {row.roles.map((role) => (
@@ -358,25 +360,25 @@ export function UsersRolesPage() {
     },
     {
       key: 'active',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => (
         <Badge tone={row.active ? 'success' : 'neutral'}>
-          {row.active ? 'Active' : 'Inactive'}
+          {row.active ? t('common.active') : t('common.inactive')}
         </Badge>
       ),
     },
     {
       key: 'createdAt',
-      header: 'Created',
+      header: t('usersRoles.created'),
       render: (row) => new Date(row.createdAt).toLocaleDateString(),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => openEditUser(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
         </div>
       ),
@@ -384,35 +386,35 @@ export function UsersRolesPage() {
   ];
 
   const roleColumns: Column<Role>[] = [
-    { key: 'name', header: 'Name' },
-    { key: 'description', header: 'Description', render: (row) => row.description ?? '—' },
+    { key: 'name', header: t('fields.name') },
+    { key: 'description', header: t('fields.description'), render: (row) => row.description ?? '—' },
     {
       key: 'permissions',
-      header: 'Permissions',
+      header: t('usersRoles.permissions'),
       render: (row) => {
-        if (row.permissions.length === 0) return <span className="muted">None</span>;
+        if (row.permissions.length === 0) return <span className="muted">{t('common.none')}</span>;
         if (row.permissions.includes(ALL_PERMISSIONS)) {
-          return <Badge tone="info">All permissions (*)</Badge>;
+          return <Badge tone="info">{t('usersRoles.allPermissions')}</Badge>;
         }
         return <span className="muted">{row.permissions.join(', ')}</span>;
       },
     },
     {
       key: 'isSystem',
-      header: 'Type',
+      header: t('tables.type'),
       render: (row) => (
         <Badge tone={row.isSystem ? 'info' : 'success'}>
-          {row.isSystem ? 'System' : 'Custom'}
+          {row.isSystem ? t('usersRoles.system') : t('usersRoles.custom')}
         </Badge>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => openEditRole(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           <Button
             variant="danger"
@@ -420,7 +422,7 @@ export function UsersRolesPage() {
             disabled={row.isSystem}
             onClick={() => setDeletingRole(row)}
           >
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       ),
@@ -449,23 +451,23 @@ export function UsersRolesPage() {
   return (
     <>
       <PageHeader
-        title="Users & roles"
-        subtitle="Manage users and roles"
+        title={t('usersRoles.title')}
+        subtitle={t('usersRoles.subtitle')}
         action={
           tab === 'users' ? (
-            <Button onClick={openCreateUser}>New user</Button>
+            <Button onClick={openCreateUser}>{t('usersRoles.newUser')}</Button>
           ) : (
-            <Button onClick={openCreateRole}>New role</Button>
+            <Button onClick={openCreateRole}>{t('usersRoles.newRole')}</Button>
           )
         }
       />
 
       <div className="tabs">
         <button type="button" className={tab === 'users' ? 'tab tab-active' : 'tab'} onClick={() => setTab('users')}>
-          Users
+          {t('usersRoles.users')}
         </button>
         <button type="button" className={tab === 'roles' ? 'tab tab-active' : 'tab'} onClick={() => setTab('roles')}>
-          Roles
+          {t('usersRoles.roles')}
         </button>
       </div>
 
@@ -476,7 +478,7 @@ export function UsersRolesPage() {
           {userData ? (
             <>
               {userData.data.length === 0 ? (
-                <EmptyState message="No users." />
+                <EmptyState message={t('usersRoles.noUsers')} />
               ) : (
                 <DataTable columns={userColumns} rows={userData.data} rowKey={(row) => row.id} />
               )}
@@ -494,7 +496,7 @@ export function UsersRolesPage() {
           {rolesError ? <ErrorBanner message={rolesError} /> : null}
           {rolesLoading && roles.length === 0 ? <LoadingBlock /> : null}
           {!rolesLoading && roles.length === 0 && !rolesError ? (
-            <EmptyState message="No roles." />
+            <EmptyState message={t('usersRoles.noRoles')} />
           ) : (
             <DataTable columns={roleColumns} rows={roles} rowKey={(row) => row.id} />
           )}
@@ -503,11 +505,11 @@ export function UsersRolesPage() {
 
       <Dialog open={userOpen} onOpenChange={(open) => !userSaving && setUserOpen(open)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={editingUserId ? 'Edit user' : 'New user'} />
+          <DialogHeader title={editingUserId ? t('usersRoles.editUser') : t('usersRoles.newUser')} />
           <form onSubmit={(event) => void submitUser(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="usr-email">Email *</label>
+                <label htmlFor="usr-email">{t('fields.email')} *</label>
                 <input
                   id="usr-email"
                   type="email"
@@ -517,12 +519,12 @@ export function UsersRolesPage() {
                 {userErrors.email ? <div className="field-error">{userErrors.email.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="usr-name">Name</label>
+                <label htmlFor="usr-name">{t('fields.name')}</label>
                 <input id="usr-name" {...registerUser('name')} />
               </div>
               {!editingUserId ? (
                 <div className="field">
-                  <label>Invitation</label>
+                  <label>{t('usersRoles.invitation')}</label>
                   <div className="mt-1 flex items-center gap-2">
                     <Checkbox
                       id="usr-invite"
@@ -530,20 +532,20 @@ export function UsersRolesPage() {
                       onCheckedChange={(checked) => setUserValue('invite', checked === true)}
                     />
                     <label htmlFor="usr-invite" className="text-sm text-gray-700">
-                      Invite by email (no password)
+                      {t('usersRoles.inviteByEmail')}
                     </label>
                   </div>
                 </div>
               ) : null}
               <div className="field">
                 <label htmlFor="usr-password">
-                  {editingUserId ? 'New password (optional)' : 'Password'}
+                  {editingUserId ? t('usersRoles.newPasswordOptional') : t('usersRoles.password')}
                   {!editingUserId && !userInvite ? ' *' : ''}
                 </label>
                 <input
                   id="usr-password"
                   type="password"
-                  placeholder={editingUserId ? 'Leave blank to keep' : userInvite ? 'Set by invite' : ''}
+                  placeholder={editingUserId ? t('usersRoles.leaveBlank') : userInvite ? t('usersRoles.setByInvite') : ''}
                   disabled={userInvite}
                   {...registerUser('password')}
                 />
@@ -552,7 +554,7 @@ export function UsersRolesPage() {
                 ) : null}
               </div>
               <div className="field">
-                <label>Status</label>
+                <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
                     id="usr-active"
@@ -560,14 +562,14 @@ export function UsersRolesPage() {
                     onCheckedChange={(checked) => setUserValue('active', checked === true)}
                   />
                   <label htmlFor="usr-active" className="text-sm text-gray-700">
-                    Active
+                    {t('common.active')}
                   </label>
                 </div>
               </div>
               <div className="field">
-                <label>Roles</label>
+                <label>{t('usersRoles.roles')}</label>
                 {roles.length === 0 ? (
-                  <div className="muted">No roles available.</div>
+                  <div className="muted">{t('usersRoles.noRolesAvailable')}</div>
                 ) : (
                   <div className="permission-checks">
                     {roles.map((role) => (
@@ -589,7 +591,7 @@ export function UsersRolesPage() {
             {userFormError ? <div className="error-banner">{userFormError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={userSaving}>
-                {userSaving ? 'Saving…' : editingUserId ? 'Save changes' : 'Create user'}
+                {userSaving ? t('common.saving') : editingUserId ? t('common.saveChanges') : t('usersRoles.createUser')}
               </Button>
             </DialogFooter>
           </form>
@@ -606,16 +608,15 @@ export function UsersRolesPage() {
         }}
       >
         <DialogContent>
-          <DialogHeader title="Invitation sent" />
+          <DialogHeader title={t('usersRoles.invitationSent')} />
           {inviteEmailSent ? (
             <div className="success-banner">
-              An invitation email was sent to {watchUser('email').trim() || 'the user'}.
+              {t('usersRoles.inviteEmailBody', { email: watchUser('email').trim() || t('usersRoles.theUser') })}
             </div>
           ) : (
             <>
               <div className="success-banner">
-                Demo mode has no email server, so share the invite link below with{' '}
-                {watchUser('email') || 'the user'}:
+                {t('usersRoles.demoInviteBody', { email: watchUser('email') || t('usersRoles.theUser') })}
               </div>
               <input readOnly value={inviteLink ?? ''} />
             </>
@@ -628,7 +629,7 @@ export function UsersRolesPage() {
                 setInviteEmailSent(false);
               }}
             >
-              Close
+              {t('common.close')}
             </Button>
             {inviteLink ? (
               <button
@@ -637,11 +638,11 @@ export function UsersRolesPage() {
                 onClick={() => {
                   if (inviteLink) {
                     void navigator.clipboard?.writeText(inviteLink);
-                    toast.toast('Invite link copied.');
+                    toast.toast(t('usersRoles.inviteLinkCopied'));
                   }
                 }}
               >
-                Copy link
+                {t('usersRoles.copyLink')}
               </button>
             ) : null}
           </div>
@@ -650,20 +651,20 @@ export function UsersRolesPage() {
 
       <Dialog open={roleOpen} onOpenChange={(open) => !roleSaving && setRoleOpen(open)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={editingRoleId ? 'Edit role' : 'New role'} />
+          <DialogHeader title={editingRoleId ? t('usersRoles.editRole') : t('usersRoles.newRole')} />
           <form onSubmit={(event) => void submitRole(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="role-name">Name *</label>
+                <label htmlFor="role-name">{t('fields.name')} *</label>
                 <input id="role-name" {...registerRole('name')} />
                 {roleErrors.name ? <div className="field-error">{roleErrors.name.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="role-description">Description</label>
+                <label htmlFor="role-description">{t('fields.description')}</label>
                 <textarea id="role-description" rows={2} {...registerRole('description')} />
               </div>
               <div className="field">
-                <label>Permissions</label>
+                <label>{t('usersRoles.permissions')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
                     id="role-permissions-all"
@@ -677,7 +678,7 @@ export function UsersRolesPage() {
                     }}
                   />
                   <label htmlFor="role-permissions-all" className="text-sm text-gray-700">
-                    All permissions (*)
+                    {t('usersRoles.allPermissions')}
                   </label>
                 </div>
                 {rolePermissionRows}
@@ -686,7 +687,7 @@ export function UsersRolesPage() {
             {roleFormError ? <div className="error-banner">{roleFormError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={roleSaving}>
-                {roleSaving ? 'Saving…' : editingRoleId ? 'Save changes' : 'Create role'}
+                {roleSaving ? t('common.saving') : editingRoleId ? t('common.saveChanges') : t('usersRoles.createRole')}
               </Button>
             </DialogFooter>
           </form>
@@ -698,10 +699,10 @@ export function UsersRolesPage() {
         onOpenChange={(open) => !roleDeleteBusy && !open && setDeletingRole(null)}
       >
         <DialogContent>
-          <DialogHeader title="Delete role" description={`Delete role "${deletingRole?.name}"?`} />
+          <DialogHeader title={t('usersRoles.deleteRoleTitle')} description={t('usersRoles.deleteRoleMessage', { name: deletingRole?.name ?? '' })} />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={roleDeleteBusy} onClick={() => void confirmDeleteRole()}>
-              {roleDeleteBusy ? 'Working…' : 'Delete'}
+              {roleDeleteBusy ? t('common.working') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

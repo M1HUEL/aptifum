@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { components } from '../api/schema';
 import type { Supplier } from '../api/types';
@@ -78,6 +79,7 @@ function parsePageNumber(raw: string | null): number {
 }
 
 export function SuppliersPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(() => parsePageNumber(searchParams.get('page')));
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
@@ -165,7 +167,7 @@ export function SuppliersPage() {
   const submit = handleSubmit((values) => {
     setFormError(null);
     const onSuccess = () => {
-      toast.toast(editingId ? 'Supplier updated.' : 'Supplier created.');
+      toast.toast(editingId ? t('suppliers.supplierUpdated') : t('suppliers.supplierCreated'));
       setModalOpen(false);
       void invalidate(['paged', '/api/v1/purchasing/suppliers']);
     };
@@ -183,7 +185,7 @@ export function SuppliersPage() {
       {},
       {
         onSuccess: () => {
-          toast.toast('Supplier deactivated.');
+          toast.toast(t('suppliers.supplierDeactivated'));
           setDeleting(null);
           void invalidate(['paged', '/api/v1/purchasing/suppliers']);
         },
@@ -196,34 +198,34 @@ export function SuppliersPage() {
   };
 
   const columns: Column<Supplier>[] = [
-    { key: 'code', header: 'Code' },
-    { key: 'tradeName', header: 'Trade name' },
-    { key: 'taxId', header: 'Tax ID', render: (row) => row.taxId ?? '—' },
-    { key: 'email', header: 'Email', render: (row) => row.email ?? '—' },
-    { key: 'phone', header: 'Phone', render: (row) => row.phone ?? '—' },
+    { key: 'code', header: t('fields.code') },
+    { key: 'tradeName', header: t('suppliers.tradeName') },
+    { key: 'taxId', header: t('fields.taxId'), render: (row) => row.taxId ?? '—' },
+    { key: 'email', header: t('fields.email'), render: (row) => row.email ?? '—' },
+    { key: 'phone', header: t('fields.phone'), render: (row) => row.phone ?? '—' },
     {
       key: 'creditLimit',
-      header: 'Credit limit',
+      header: t('fields.creditLimit'),
       render: (row) => (row.creditLimit != null ? formatMoney(row.creditLimit) : '—'),
     },
     {
       key: 'active',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => (
-        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>
+        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           {row.active ? (
             <Button variant="danger" size="sm" onClick={() => setDeleting(row)}>
-              Deactivate
+              {t('common.deactivate')}
             </Button>
           ) : null}
         </div>
@@ -234,27 +236,27 @@ export function SuppliersPage() {
   return (
     <>
       <PageHeader
-        title="Suppliers"
-        subtitle="Supplier accounts"
-        action={<Button onClick={openCreate}>New supplier</Button>}
+        title={t('suppliers.title')}
+        subtitle={t('suppliers.subtitle')}
+        action={<Button onClick={openCreate}>{t('suppliers.newSupplier')}</Button>}
       />
       {error ? <ErrorBanner message={error} /> : null}
       <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
         <input
           type="search"
-          placeholder="Search by trade name…"
+          placeholder={t('suppliers.searchPlaceholder')}
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
         <button type="submit" className="btn">
-          Search
+          {t('common.search')}
         </button>
       </form>
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No suppliers found." />
+            <EmptyState message={t('suppliers.noSuppliersFound')} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -264,55 +266,55 @@ export function SuppliersPage() {
 
       <Dialog open={modalOpen} onOpenChange={(open) => !saving && setModalOpen(open)}>
         <DialogContent>
-          <DialogHeader title={editingId ? 'Edit supplier' : 'New supplier'} />
+          <DialogHeader title={editingId ? t('suppliers.editSupplier') : t('suppliers.newSupplier')} />
           <form onSubmit={(event) => void submit(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="supplier-code">Code *</label>
+                <label htmlFor="supplier-code">{t('fields.code')} *</label>
                 <input id="supplier-code" {...register('code')} />
                 {errors.code ? <div className="field-error">{errors.code.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="supplier-trade">Trade name *</label>
+                <label htmlFor="supplier-trade">{t('suppliers.tradeName')} *</label>
                 <input id="supplier-trade" {...register('tradeName')} />
                 {errors.tradeName ? <div className="field-error">{errors.tradeName.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="supplier-legal">Legal name</label>
+                <label htmlFor="supplier-legal">{t('fields.legalName')}</label>
                 <input id="supplier-legal" {...register('legalName')} />
               </div>
               <div className="field">
-                <label htmlFor="supplier-tax">Tax ID</label>
+                <label htmlFor="supplier-tax">{t('fields.taxId')}</label>
                 <input id="supplier-tax" {...register('taxId')} />
               </div>
               <div className="field">
-                <label htmlFor="supplier-email">Email</label>
+                <label htmlFor="supplier-email">{t('fields.email')}</label>
                 <input id="supplier-email" type="email" {...register('email')} />
                 {errors.email ? <div className="field-error">{errors.email.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="supplier-phone">Phone</label>
+                <label htmlFor="supplier-phone">{t('fields.phone')}</label>
                 <input id="supplier-phone" {...register('phone')} />
               </div>
               <div className="field">
-                <label htmlFor="supplier-currency">Currency</label>
+                <label htmlFor="supplier-currency">{t('fields.currency')}</label>
                 <input id="supplier-currency" maxLength={3} {...register('currency')} />
               </div>
               <div className="field">
-                <label htmlFor="supplier-terms">Payment terms</label>
-                <input id="supplier-terms" placeholder="e.g. net 30" {...register('paymentTerms')} />
+                <label htmlFor="supplier-terms">{t('suppliers.paymentTerms')}</label>
+                <input id="supplier-terms" placeholder={t('suppliers.paymentTermsPlaceholder')} {...register('paymentTerms')} />
               </div>
               <div className="field">
-                <label htmlFor="supplier-credit">Credit limit</label>
+                <label htmlFor="supplier-credit">{t('fields.creditLimit')}</label>
                 <input id="supplier-credit" type="number" min="0" step="0.01" {...register('creditLimit')} />
                 {errors.creditLimit ? <div className="field-error">{errors.creditLimit.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="supplier-address">Address</label>
+                <label htmlFor="supplier-address">{t('fields.address')}</label>
                 <textarea id="supplier-address" rows={2} {...register('address')} />
               </div>
               <div className="field">
-                <label>Status</label>
+                <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
                     id="supplier-active"
@@ -320,7 +322,7 @@ export function SuppliersPage() {
                     onCheckedChange={(checked) => setValue('active', checked === true)}
                   />
                   <label htmlFor="supplier-active" className="text-sm text-gray-700">
-                    Active
+                    {t('common.active')}
                   </label>
                 </div>
               </div>
@@ -328,7 +330,7 @@ export function SuppliersPage() {
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create supplier'}
+                {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('suppliers.createSupplier')}
               </Button>
             </DialogFooter>
           </form>
@@ -341,12 +343,12 @@ export function SuppliersPage() {
       >
         <DialogContent>
           <DialogHeader
-            title="Deactivate supplier"
-            description={`Deactivate "${deleting?.tradeName}"? It will be excluded from new purchase orders.`}
+            title={t('suppliers.deactivateSupplierTitle')}
+            description={t('suppliers.deactivateSupplierMessage', { name: deleting?.tradeName ?? '' })}
           />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDelete()}>
-              {deleteBusy ? 'Working…' : 'Deactivate'}
+              {deleteBusy ? t('common.working') : t('common.deactivate')}
             </Button>
           </DialogFooter>
         </DialogContent>

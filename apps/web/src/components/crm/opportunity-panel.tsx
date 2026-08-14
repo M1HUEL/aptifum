@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { components } from '../../api/schema';
@@ -64,6 +65,7 @@ function opportunityToDto(form: OpportunityFormValues): CreateOpportunityDto {
 }
 
 export function OpportunityPanel({ customers }: { customers: Customer[] }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -71,7 +73,6 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
   const [stageAction, setStageAction] = useState<{
     id: string;
     action: 'mark-won' | 'mark-lost';
-    message: string;
   } | null>(null);
   const toast = useToast();
 
@@ -109,7 +110,7 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
     if (!stageAction) return;
     stageActionMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast(stageAction.message);
+        toast.toast(stageAction.action === 'mark-won' ? t('crm.opportunityWon') : t('crm.opportunityLost'));
         void reload();
       },
       onError: (err) => {
@@ -136,7 +137,7 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
   const submit = handleSubmit((values) => {
     setFormError(null);
     const onSuccess = () => {
-      toast.toast(editingId ? 'Opportunity updated.' : 'Opportunity created.');
+      toast.toast(editingId ? t('crm.opportunityUpdated') : t('crm.opportunityCreated'));
       setOpen(false);
       void reload();
     };
@@ -152,7 +153,7 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
     if (!deleting) return;
     deleteMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast('Opportunity deleted.');
+        toast.toast(t('crm.opportunityDeleted'));
         setDeleting(null);
         void reload();
       },
@@ -164,15 +165,19 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
   };
 
   const columns: Column<Opportunity>[] = [
-    { key: 'name', header: 'Name' },
-    { key: 'customer', header: 'Customer', render: (row) => row.customer?.tradeName ?? '—' },
-    { key: 'stage', header: 'Stage', render: (row) => <Badge tone={stageTone(row.stage)}>{row.stage}</Badge> },
-    { key: 'amount', header: 'Amount', render: (row) => formatMoney(row.amount) },
-    { key: 'probability', header: 'Probability', render: (row) => `${row.probability}%` },
-    { key: 'expectedCloseDate', header: 'Expected close', render: (row) => formatDate(row.expectedCloseDate) },
+    { key: 'name', header: t('fields.name') },
+    { key: 'customer', header: t('fields.customer'), render: (row) => row.customer?.tradeName ?? '—' },
+    { key: 'stage', header: t('crm.stage'), render: (row) => <Badge tone={stageTone(row.stage)}>{row.stage}</Badge> },
+    { key: 'amount', header: t('fields.amount'), render: (row) => formatMoney(row.amount) },
+    { key: 'probability', header: t('fields.probability'), render: (row) => `${row.probability}%` },
+    {
+      key: 'expectedCloseDate',
+      header: t('crm.expectedClose'),
+      render: (row) => formatDate(row.expectedCloseDate),
+    },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           {row.stage !== 'won' && row.stage !== 'lost' ? (
@@ -180,26 +185,24 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setStageAction({ id: row.id, action: 'mark-won', message: 'Opportunity marked as won.' })}
+                onClick={() => setStageAction({ id: row.id, action: 'mark-won' })}
               >
-                Won
+                {t('crm.won')}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() =>
-                  setStageAction({ id: row.id, action: 'mark-lost', message: 'Opportunity marked as lost.' })
-                }
+                onClick={() => setStageAction({ id: row.id, action: 'mark-lost' })}
               >
-                Lost
+                {t('crm.lost')}
               </Button>
             </>
           ) : null}
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           <Button variant="danger" size="sm" onClick={() => setDeleting(row)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       ),
@@ -209,16 +212,16 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
   return (
     <>
       <PageHeader
-        title="Opportunities"
-        subtitle="Manage sales opportunities and stages"
-        action={<Button onClick={openCreate}>New opportunity</Button>}
+        title={t('crm.opportunitiesTitle')}
+        subtitle={t('crm.opportunitiesSubtitle')}
+        action={<Button onClick={openCreate}>{t('crm.newOpportunity')}</Button>}
       />
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No opportunities." />
+            <EmptyState message={t('crm.noOpportunities')} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -228,20 +231,20 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
 
       <Dialog open={open} onOpenChange={(isOpen) => !saving && setOpen(isOpen)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={editingId ? 'Edit opportunity' : 'New opportunity'} />
+          <DialogHeader title={editingId ? t('crm.editOpportunity') : t('crm.newOpportunity')} />
           <form onSubmit={(event) => void submit(event)}>
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="opp-name">
-                  Name<span className="field-required"> *</span>
+                  {t('fields.name')}<span className="field-required"> *</span>
                 </label>
                 <input id="opp-name" {...register('name')} />
                 {errors.name ? <div className="field-error">{errors.name.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="opp-customer">Customer</label>
+                <label htmlFor="opp-customer">{t('fields.customer')}</label>
                 <select id="opp-customer" {...register('customerId')}>
-                  <option value="">— None —</option>
+                  <option value="">{t('crm.none')}</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {customer.tradeName}
@@ -250,7 +253,7 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="opp-stage">Stage</label>
+                <label htmlFor="opp-stage">{t('crm.stage')}</label>
                 <select id="opp-stage" {...register('stage')}>
                   {stages.map((stage) => (
                     <option key={stage} value={stage}>
@@ -260,30 +263,30 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="opp-amount">Amount</label>
+                <label htmlFor="opp-amount">{t('fields.amount')}</label>
                 <input id="opp-amount" type="number" min="0" step="0.01" {...register('amount')} />
               </div>
               <div className="field">
-                <label htmlFor="opp-currency">Currency</label>
+                <label htmlFor="opp-currency">{t('fields.currency')}</label>
                 <input id="opp-currency" maxLength={3} {...register('currency')} />
               </div>
               <div className="field">
-                <label htmlFor="opp-probability">Probability (%)</label>
+                <label htmlFor="opp-probability">{t('crm.probabilityPercent')}</label>
                 <input id="opp-probability" type="number" min="0" max="100" step="1" {...register('probability')} />
               </div>
               <div className="field">
-                <label htmlFor="opp-close">Expected close date</label>
+                <label htmlFor="opp-close">{t('crm.expectedCloseDate')}</label>
                 <input id="opp-close" type="date" {...register('expectedCloseDate')} />
               </div>
               <div className="field">
-                <label htmlFor="opp-notes">Notes</label>
+                <label htmlFor="opp-notes">{t('fields.notes')}</label>
                 <textarea id="opp-notes" rows={3} {...register('notes')} />
               </div>
             </div>
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create opportunity'}
+                {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createOpportunity')}
               </Button>
             </DialogFooter>
           </form>
@@ -293,12 +296,12 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
       <Dialog open={deleting !== null} onOpenChange={(isOpen) => !deletingBusy && !isOpen && setDeleting(null)}>
         <DialogContent>
           <DialogHeader
-            title="Delete opportunity"
-            description={`Delete opportunity "${deleting?.name}"? This cannot be undone.`}
+            title={t('crm.deleteOpportunityTitle')}
+            description={t('crm.deleteOpportunityMessage', { name: deleting?.name })}
           />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={deletingBusy} onClick={() => void confirmDelete()}>
-              {deletingBusy ? 'Working…' : 'Delete'}
+              {deletingBusy ? t('common.working') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

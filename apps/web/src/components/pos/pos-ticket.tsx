@@ -1,4 +1,5 @@
 import type { Customer } from '../../api/types';
+import { useTranslation } from 'react-i18next';
 import { EmptyState, formatMoney } from '../ui';
 
 export interface PosLine {
@@ -58,13 +59,14 @@ export function PosTicket({
   charging: boolean;
   onSubmitCharge: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="card pos-ticket">
-      <h3 className="card-title">Ticket</h3>
+      <h3 className="card-title">{t('pos.ticket')}</h3>
       <div className="field">
-        <label htmlFor="pos-customer">Customer</label>
+        <label htmlFor="pos-customer">{t('fields.customer')}</label>
         <select id="pos-customer" value={customerId} onChange={(event) => onCustomerChange(event.target.value)}>
-          <option value="">Walk-in customer</option>
+          <option value="">{t('pos.walkInCustomer')}</option>
           {customers.map((customer) => (
             <option key={customer.id} value={customer.id}>
               {customer.tradeName}
@@ -74,7 +76,7 @@ export function PosTicket({
       </div>
       <div className="pos-currency-row">
         <div className="field">
-          <label htmlFor="pos-currency">Sale currency</label>
+          <label htmlFor="pos-currency">{t('pos.saleCurrency')}</label>
           <select id="pos-currency" value={saleCurrency} onChange={(event) => onCurrencyChange(event.target.value)}>
             {SALE_CURRENCIES.map((currency) => (
               <option key={currency} value={currency}>
@@ -85,7 +87,9 @@ export function PosTicket({
         </div>
         {saleCurrency !== FUNCTIONAL_CURRENCY ? (
           <div className="field">
-            <label htmlFor="pos-rate">Exchange rate (1 {FUNCTIONAL_CURRENCY} = ? {saleCurrency})</label>
+            <label htmlFor="pos-rate">
+              {t('pos.exchangeRate', { base: FUNCTIONAL_CURRENCY, quote: saleCurrency })}
+            </label>
             <input
               id="pos-rate"
               type="number"
@@ -99,7 +103,7 @@ export function PosTicket({
       </div>
       <div className="pos-lines">
         {ticket.length === 0 ? (
-          <EmptyState message="Tap a product to add it to the ticket." />
+          <EmptyState message={t('pos.tapProductToAdd')} />
         ) : (
           ticket.map((line, index) => (
             <div className="pos-line" key={`${line.productId}:${line.variantId ?? ''}`}>
@@ -112,7 +116,7 @@ export function PosTicket({
                 type="number"
                 min="0.0001"
                 step="any"
-                aria-label={`Quantity for ${line.name}`}
+                aria-label={t('pos.quantityFor', { name: line.name })}
                 value={line.quantity}
                 onChange={(event) => onLineFieldChange(index, 'quantity', event.target.value)}
               />
@@ -121,7 +125,7 @@ export function PosTicket({
                 type="number"
                 min="0"
                 step="0.01"
-                aria-label={`Unit price for ${line.name}`}
+                aria-label={t('pos.unitPriceFor', { name: line.name })}
                 value={line.unitPrice}
                 onChange={(event) => onLineFieldChange(index, 'unitPrice', event.target.value)}
               />
@@ -132,7 +136,7 @@ export function PosTicket({
                 max="100"
                 step="0.01"
                 placeholder="%"
-                aria-label={`Tax for ${line.name}`}
+                aria-label={t('pos.taxFor', { name: line.name })}
                 value={line.taxRate}
                 onChange={(event) => onLineFieldChange(index, 'taxRate', event.target.value)}
               />
@@ -142,7 +146,7 @@ export function PosTicket({
               <button
                 type="button"
                 className="btn btn-sm btn-ghost pos-line-remove"
-                aria-label={`Remove ${line.name}`}
+                aria-label={t('pos.removeLine', { name: line.name })}
                 onClick={() => onRemoveLine(index)}
               >
                 ×
@@ -152,7 +156,7 @@ export function PosTicket({
         )}
       </div>
       <div className="field">
-        <label htmlFor="pos-discount">Discount</label>
+        <label htmlFor="pos-discount">{t('fields.discount')}</label>
         <input
           id="pos-discount"
           type="number"
@@ -164,23 +168,23 @@ export function PosTicket({
       </div>
       <div className="pos-totals">
         <div className="pos-total-row">
-          <span>Subtotal</span>
+          <span>{t('fields.subtotal')}</span>
           <span className="num">{formatMoney(totals.subtotal, saleCurrency)}</span>
         </div>
         <div className="pos-total-row">
-          <span>Discount</span>
+          <span>{t('fields.discount')}</span>
           <span className="num">−{formatMoney(totals.discount, saleCurrency)}</span>
         </div>
         <div className="pos-total-row">
-          <span>Tax</span>
+          <span>{t('fields.tax')}</span>
           <span className="num">{formatMoney(totals.tax, saleCurrency)}</span>
         </div>
         <div className="pos-total-row pos-total-grand">
-          <span>Total</span>
+          <span>{t('tables.total')}</span>
           <span className="num">{formatMoney(totals.total, saleCurrency)}</span>
         </div>
       </div>
-      {!warehouseId ? <div className="error-banner">Select a warehouse to start selling.</div> : null}
+      {!warehouseId ? <div className="error-banner">{t('pos.selectWarehouseToStart')}</div> : null}
       {checkoutError ? <div className="error-banner">{checkoutError}</div> : null}
       <button
         type="button"
@@ -188,7 +192,7 @@ export function PosTicket({
         disabled={charging || ticket.length === 0 || !warehouseId}
         onClick={onSubmitCharge}
       >
-        {charging ? 'Charging…' : `Charge ${formatMoney(totals.total, saleCurrency)}`}
+        {charging ? t('pos.charging') : t('pos.charge', { amount: formatMoney(totals.total, saleCurrency) })}
       </button>
     </div>
   );

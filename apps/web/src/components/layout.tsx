@@ -1,8 +1,10 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth, usePermission } from '../auth/auth-context';
 import { ROUTE_GUARDS } from '../auth/route-permissions';
 
 export function Layout() {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const can = usePermission();
   const visibleItems = ROUTE_GUARDS.filter((item) => !item.permission || can(item.permission));
@@ -18,7 +20,7 @@ export function Layout() {
               to={item.to}
               className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
             >
-              {item.label}
+              {t(item.labelKey)}
             </NavLink>
           ))}
         </nav>
@@ -30,7 +32,7 @@ export function Layout() {
             </div>
           </div>
           <button type="button" className="btn btn-ghost" onClick={() => void logout()}>
-            Sign out
+            {t('layout.signOut')}
           </button>
         </div>
       </aside>

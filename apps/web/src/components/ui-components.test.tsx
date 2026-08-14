@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import i18n from '../i18n';
 import {
   Badge,
   Card,
@@ -14,6 +15,10 @@ import {
   TableSkeleton,
   type Column,
 } from './ui';
+
+beforeAll(async () => {
+  await i18n.changeLanguage('en');
+});
 
 describe('Badge', () => {
   it('renders children with a neutral tone by default', () => {

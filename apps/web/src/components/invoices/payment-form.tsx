@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { components } from '../../api/schema';
@@ -41,6 +42,7 @@ export function PaymentFormModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation();
   const [formError, setFormError] = useState<string | null>(null);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
@@ -73,7 +75,7 @@ export function PaymentFormModal({
     setFormError(null);
     paymentMutation.mutate(toDto(values), {
       onSuccess: () => {
-        toast.toast('Payment recorded.');
+        toast.toast(t('invoices.paymentRecorded'));
         onSaved();
         void invalidate(['paged', '/api/v1/sales/invoices']);
       },
@@ -84,10 +86,12 @@ export function PaymentFormModal({
   return (
     <Dialog open={invoice !== null} onOpenChange={(next) => !busy && !next && onClose()}>
       <DialogContent>
-        <DialogHeader title={`Payment for ${invoice?.number ?? ''}`} />
+        <DialogHeader title={t('invoices.paymentFor', { number: invoice?.number })} />
         <form onSubmit={(event) => void submit(event)}>
           <div className="field">
-            <label htmlFor="payment-method">Method *</label>
+            <label htmlFor="payment-method">
+              {t('invoices.method')} <span className="field-required">*</span>
+            </label>
             <select id="payment-method" {...register('method')}>
               {paymentMethods.map((method) => (
                 <option key={method} value={method}>
@@ -97,29 +101,31 @@ export function PaymentFormModal({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="payment-amount">Amount *</label>
+            <label htmlFor="payment-amount">
+              {t('fields.amount')} <span className="field-required">*</span>
+            </label>
             {invoice ? (
-              <div className="field-hint">Balance due: {formatMoney(invoice.balanceDue)}</div>
+              <div className="field-hint">{t('invoices.balanceDueHint', { amount: formatMoney(invoice.balanceDue) })}</div>
             ) : null}
             <input id="payment-amount" type="number" min="0.01" step="0.01" {...register('amount')} />
             {errors.amount ? <div className="field-error">{errors.amount.message}</div> : null}
           </div>
           <div className="field">
-            <label htmlFor="payment-date">Received at</label>
+            <label htmlFor="payment-date">{t('invoices.receivedAt')}</label>
             <input id="payment-date" type="date" {...register('receivedAt')} />
           </div>
           <div className="field">
-            <label htmlFor="payment-reference">Reference</label>
+            <label htmlFor="payment-reference">{t('invoices.reference')}</label>
             <input id="payment-reference" {...register('reference')} />
           </div>
           <div className="field">
-            <label htmlFor="payment-notes">Notes</label>
+            <label htmlFor="payment-notes">{t('fields.notes')}</label>
             <textarea id="payment-notes" rows={2} {...register('notes')} />
           </div>
           {formError ? <div className="error-banner">{formError}</div> : null}
           <DialogFooter>
             <Button variant="default" type="submit" disabled={busy}>
-              {busy ? 'Recording…' : 'Record payment'}
+              {busy ? t('invoices.recording') : t('invoices.recordPayment')}
             </Button>
           </DialogFooter>
         </form>

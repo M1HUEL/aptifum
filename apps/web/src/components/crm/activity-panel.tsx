@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { components } from '../../api/schema';
@@ -59,6 +60,7 @@ function activityToDto(form: ActivityFormValues): CreateActivityDto {
 }
 
 export function ActivityPanel() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -102,7 +104,7 @@ export function ActivityPanel() {
       { completedAt: new Date().toISOString() },
       {
         onSuccess: () => {
-          toast.toast('Activity completed.');
+          toast.toast(t('crm.activityCompleted'));
           void reload();
         },
         onError: (err) => {
@@ -130,7 +132,7 @@ export function ActivityPanel() {
   const submit = handleSubmit((values) => {
     setFormError(null);
     const onSuccess = () => {
-      toast.toast(editingId ? 'Activity updated.' : 'Activity created.');
+      toast.toast(editingId ? t('crm.activityUpdated') : t('crm.activityCreated'));
       setOpen(false);
       void reload();
     };
@@ -146,7 +148,7 @@ export function ActivityPanel() {
     if (!deleting) return;
     deleteMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast('Activity deleted.');
+        toast.toast(t('crm.activityDeleted'));
         setDeleting(null);
         void reload();
       },
@@ -160,20 +162,20 @@ export function ActivityPanel() {
   const columns: Column<CrmActivity>[] = [
     {
       key: 'activityType',
-      header: 'Type',
+      header: t('crm.type'),
       render: (row) => <Badge tone={row.activityType === 'note' ? 'neutral' : 'info'}>{row.activityType}</Badge>,
     },
-    { key: 'subject', header: 'Subject' },
-    { key: 'description', header: 'Description', render: (row) => row.description ?? '—' },
+    { key: 'subject', header: t('fields.subject') },
+    { key: 'description', header: t('fields.description'), render: (row) => row.description ?? '—' },
     {
       key: 'dueAt',
-      header: 'Due',
+      header: t('crm.due'),
       render: (row) =>
         row.dueAt ? new Date(row.dueAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '—',
     },
     {
       key: 'completedAt',
-      header: 'Completed',
+      header: t('crm.completed'),
       render: (row) =>
         row.completedAt
           ? new Date(row.completedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
@@ -181,19 +183,19 @@ export function ActivityPanel() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           {!row.completedAt ? (
             <Button variant="ghost" size="sm" onClick={() => setCompleteTarget(row)}>
-              Complete
+              {t('crm.complete')}
             </Button>
           ) : null}
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           <Button variant="danger" size="sm" onClick={() => setDeleting(row)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       ),
@@ -203,16 +205,16 @@ export function ActivityPanel() {
   return (
     <>
       <PageHeader
-        title="Activities"
-        subtitle="Calls, meetings, tasks and notes"
-        action={<Button onClick={openCreate}>New activity</Button>}
+        title={t('crm.activitiesTitle')}
+        subtitle={t('crm.activitiesSubtitle')}
+        action={<Button onClick={openCreate}>{t('crm.newActivity')}</Button>}
       />
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No activities." />
+            <EmptyState message={t('crm.noActivities')} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -222,12 +224,12 @@ export function ActivityPanel() {
 
       <Dialog open={open} onOpenChange={(isOpen) => !saving && setOpen(isOpen)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={editingId ? 'Edit activity' : 'New activity'} />
+          <DialogHeader title={editingId ? t('crm.editActivity') : t('crm.newActivity')} />
           <form onSubmit={(event) => void submit(event)}>
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="activity-type">
-                  Type<span className="field-required"> *</span>
+                  {t('crm.type')}<span className="field-required"> *</span>
                 </label>
                 <select id="activity-type" {...register('activityType')}>
                   {activityTypes.map((type) => (
@@ -239,36 +241,40 @@ export function ActivityPanel() {
               </div>
               <div className="field">
                 <label htmlFor="activity-subject">
-                  Subject<span className="field-required"> *</span>
+                  {t('fields.subject')}<span className="field-required"> *</span>
                 </label>
                 <input id="activity-subject" {...register('subject')} />
                 {errors.subject ? <div className="field-error">{errors.subject.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="activity-due">Due at</label>
+                <label htmlFor="activity-due">{t('crm.dueAt')}</label>
                 <input id="activity-due" type="datetime-local" {...register('dueAt')} />
               </div>
               <div className="field">
-                <label htmlFor="activity-completed">Completed at</label>
+                <label htmlFor="activity-completed">{t('crm.completedAt')}</label>
                 <input id="activity-completed" type="datetime-local" {...register('completedAt')} />
               </div>
               <div className="field">
-                <label htmlFor="activity-ref-type">Reference type</label>
-                <input id="activity-ref-type" placeholder="e.g. lead, opportunity" {...register('referenceType')} />
+                <label htmlFor="activity-ref-type">{t('crm.referenceType')}</label>
+                <input
+                  id="activity-ref-type"
+                  placeholder={t('crm.referenceTypePlaceholder')}
+                  {...register('referenceType')}
+                />
               </div>
               <div className="field">
-                <label htmlFor="activity-ref-id">Reference id</label>
+                <label htmlFor="activity-ref-id">{t('crm.referenceId')}</label>
                 <input id="activity-ref-id" {...register('referenceId')} />
               </div>
             </div>
             <div className="field">
-              <label htmlFor="activity-description">Description</label>
+              <label htmlFor="activity-description">{t('fields.description')}</label>
               <textarea id="activity-description" rows={3} {...register('description')} />
             </div>
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create activity'}
+                {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createActivity')}
               </Button>
             </DialogFooter>
           </form>
@@ -277,10 +283,13 @@ export function ActivityPanel() {
 
       <Dialog open={deleting !== null} onOpenChange={(isOpen) => !deletingBusy && !isOpen && setDeleting(null)}>
         <DialogContent>
-          <DialogHeader title="Delete activity" description={`Delete activity "${deleting?.subject}"?`} />
+          <DialogHeader
+            title={t('crm.deleteActivityTitle')}
+            description={t('crm.deleteActivityMessage', { subject: deleting?.subject })}
+          />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={deletingBusy} onClick={() => void confirmDelete()}>
-              {deletingBusy ? 'Working…' : 'Delete'}
+              {deletingBusy ? t('common.working') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

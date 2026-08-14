@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
 import type { components } from '../api/schema';
@@ -86,6 +87,7 @@ function toDto(form: SalesOrderFormValues): CreateOrderDto {
 }
 
 export function SalesOrdersPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState('');
   const [input, setInput] = useState('');
@@ -101,7 +103,7 @@ export function SalesOrdersPage() {
   const [statusAction, setStatusAction] = useState<{
     id: string;
     action: 'confirm' | 'convert' | 'cancel';
-    message: string;
+    messageKey: 'salesOrders.orderConfirmed' | 'salesOrders.quoteConverted' | 'salesOrders.orderCancelled';
   } | null>(null);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
@@ -160,7 +162,7 @@ export function SalesOrdersPage() {
     if (!statusAction) return;
     statusMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast(statusAction.message);
+        toast.toast(t(statusAction.messageKey));
         void invalidate(['paged', '/api/v1/sales/orders']);
       },
       onError: (err) => {
@@ -194,12 +196,12 @@ export function SalesOrdersPage() {
     setFormError(null);
     const body = toDto(values);
     if (body.items.length === 0) {
-      setFormError('Add at least one line item.');
+      setFormError(t('salesOrders.addAtLeastOneLine'));
       return;
     }
     createMutation.mutate(body, {
       onSuccess: () => {
-        toast.toast(values.kind === 'quote' ? 'Quote created.' : 'Sales order created.');
+        toast.toast(values.kind === 'quote' ? t('salesOrders.quoteCreated') : t('salesOrders.orderCreated'));
         setCreateOpen(false);
         void invalidate(['paged', '/api/v1/sales/orders']);
       },
@@ -207,8 +209,12 @@ export function SalesOrdersPage() {
     });
   });
 
-  const runAction = (id: string, action: 'confirm' | 'convert' | 'cancel', message: string) => {
-    setStatusAction({ id, action, message });
+  const runAction = (
+    id: string,
+    action: 'confirm' | 'convert' | 'cancel',
+    messageKey: 'salesOrders.orderConfirmed' | 'salesOrders.quoteConverted' | 'salesOrders.orderCancelled',
+  ) => {
+    setStatusAction({ id, action, messageKey });
   };
 
   const openView = async (order: SalesOrder) => {
@@ -218,77 +224,77 @@ export function SalesOrdersPage() {
       const detail = await apiFetch<SalesOrder>(`/api/v1/sales/orders/${order.id}`);
       setViewing(detail);
     } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not load sales order.', 'error');
+      toast.toast(err instanceof ApiError ? err.message : t('salesOrders.couldNotLoad'), 'error');
     } finally {
       setViewLoading(false);
     }
   };
 
   const columns: Column<SalesOrder>[] = [
-    { key: 'number', header: 'Number' },
+    { key: 'number', header: t('tables.number') },
     {
       key: 'kind',
-      header: 'Kind',
+      header: t('fields.kind'),
       render: (row) => <Badge tone={row.kind === 'order' ? 'info' : 'neutral'}>{row.kind}</Badge>,
     },
     {
       key: 'customer',
-      header: 'Customer',
+      header: t('tables.customer'),
       render: (row) => row.customer?.tradeName ?? '—',
     },
     {
       key: 'warehouse',
-      header: 'Warehouse',
+      header: t('fields.warehouse'),
       render: (row) => row.warehouse?.name ?? '—',
     },
     {
       key: 'issueDate',
-      header: 'Issue date',
+      header: t('tables.issueDate'),
       render: (row) => formatDate(row.issueDate),
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => <Badge tone={statusTone(row.status)}>{row.status}</Badge>,
     },
     {
       key: 'total',
-      header: 'Total',
+      header: t('tables.total'),
       render: (row) => formatMoney(row.total),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => void openView(row)}>
-            View
+            {t('common.view')}
           </Button>
           {row.status === 'draft' ? (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => runAction(row.id, 'confirm', 'Sales order confirmed.')}
+              onClick={() => runAction(row.id, 'confirm', 'salesOrders.orderConfirmed')}
             >
-              Confirm
+              {t('salesOrders.confirm')}
             </Button>
           ) : null}
           {row.status === 'draft' && row.kind === 'quote' ? (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => runAction(row.id, 'convert', 'Quote converted to order.')}
+              onClick={() => runAction(row.id, 'convert', 'salesOrders.quoteConverted')}
             >
-              Convert
+              {t('salesOrders.convert')}
             </Button>
           ) : null}
           {row.status !== 'invoiced' && row.status !== 'cancelled' ? (
             <Button
               variant="danger"
               size="sm"
-              onClick={() => runAction(row.id, 'cancel', 'Sales order cancelled.')}
+              onClick={() => runAction(row.id, 'cancel', 'salesOrders.orderCancelled')}
             >
-              Cancel
+              {t('salesOrders.cancel')}
             </Button>
           ) : null}
         </div>
@@ -299,14 +305,14 @@ export function SalesOrdersPage() {
   return (
     <>
       <PageHeader
-        title="Sales orders"
-        subtitle="Quotes and orders"
-        action={<Button onClick={openCreate}>New sales order</Button>}
+        title={t('salesOrders.title')}
+        subtitle={t('salesOrders.subtitle')}
+        action={<Button onClick={openCreate}>{t('salesOrders.newOrder')}</Button>}
       />
       <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
         <input
           type="search"
-          placeholder="Search by number…"
+          placeholder={t('salesOrders.searchByNumber')}
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
@@ -317,9 +323,9 @@ export function SalesOrdersPage() {
             setPage(1);
           }}
         >
-          <option value="">All kinds</option>
-          <option value="quote">Quote</option>
-          <option value="order">Order</option>
+          <option value="">{t('salesOrders.allKinds')}</option>
+          <option value="quote">{t('salesOrders.quote')}</option>
+          <option value="order">{t('salesOrders.order')}</option>
         </select>
         <select
           value={statusFilter}
@@ -328,14 +334,14 @@ export function SalesOrdersPage() {
             setPage(1);
           }}
         >
-          <option value="">All statuses</option>
-          <option value="draft">Draft</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="invoiced">Invoiced</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="">{t('salesOrders.allStatuses')}</option>
+          <option value="draft">{t('salesOrders.draft')}</option>
+          <option value="confirmed">{t('salesOrders.confirmed')}</option>
+          <option value="invoiced">{t('salesOrders.invoiced')}</option>
+          <option value="cancelled">{t('salesOrders.cancelled')}</option>
         </select>
         <button type="submit" className="btn">
-          Search
+          {t('common.search')}
         </button>
       </form>
       {error ? <ErrorBanner message={error} /> : null}
@@ -343,7 +349,7 @@ export function SalesOrdersPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No sales orders." />
+            <EmptyState message={t('salesOrders.noOrders')} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -353,20 +359,20 @@ export function SalesOrdersPage() {
 
       <Dialog open={createOpen} onOpenChange={(open) => !saving && setCreateOpen(open)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title="New sales order" />
+          <DialogHeader title={t('salesOrders.newOrder')} />
           <form onSubmit={(event) => void submitCreate(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="so-kind">Kind *</label>
+                <label htmlFor="so-kind">{t('fields.kind')} *</label>
                 <select id="so-kind" {...register('kind')}>
-                  <option value="order">Order</option>
-                  <option value="quote">Quote</option>
+                  <option value="order">{t('salesOrders.order')}</option>
+                  <option value="quote">{t('salesOrders.quote')}</option>
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="so-customer">Customer *</label>
+                <label htmlFor="so-customer">{t('fields.customer')} *</label>
                 <select id="so-customer" {...register('customerId')}>
-                  <option value="">— Select customer —</option>
+                  <option value="">{t('salesOrders.selectCustomer')}</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {customer.tradeName}
@@ -376,9 +382,9 @@ export function SalesOrdersPage() {
                 {errors.customerId ? <div className="field-error">{errors.customerId.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="so-warehouse">Warehouse *</label>
+                <label htmlFor="so-warehouse">{t('fields.warehouse')} *</label>
                 <select id="so-warehouse" {...register('warehouseId')}>
-                  <option value="">— Select warehouse —</option>
+                  <option value="">{t('salesOrders.selectWarehouse')}</option>
                   {warehouses.map((warehouse) => (
                     <option key={warehouse.id} value={warehouse.id}>
                       {warehouse.name}
@@ -388,15 +394,15 @@ export function SalesOrdersPage() {
                 {errors.warehouseId ? <div className="field-error">{errors.warehouseId.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="so-issue">Issue date</label>
+                <label htmlFor="so-issue">{t('fields.issueDate')}</label>
                 <input id="so-issue" type="date" {...register('issueDate')} />
               </div>
               <div className="field">
-                <label htmlFor="so-due">Due date</label>
+                <label htmlFor="so-due">{t('fields.dueDate')}</label>
                 <input id="so-due" type="date" {...register('dueDate')} />
               </div>
               <div className="field">
-                <label htmlFor="so-discount">Discount</label>
+                <label htmlFor="so-discount">{t('fields.discount')}</label>
                 <input id="so-discount" type="number" min="0" step="0.01" {...register('discount')} />
                 {errors.discount ? <div className="field-error">{errors.discount.message}</div> : null}
               </div>
@@ -405,9 +411,9 @@ export function SalesOrdersPage() {
               {items.map((_, index) => (
                 <div className="invoice-item" key={index}>
                   <div className="field">
-                    <label htmlFor={`so-item-product-${index}`}>Product</label>
+                    <label htmlFor={`so-item-product-${index}`}>{t('fields.product')}</label>
                     <select id={`so-item-product-${index}`} {...register(`items.${index}.productId`)}>
-                      <option value="">— Select product —</option>
+                      <option value="">{t('salesOrders.selectProduct')}</option>
                       {products.map((product) => (
                         <option key={product.id} value={product.id}>
                           {product.sku} · {product.name}
@@ -416,7 +422,7 @@ export function SalesOrdersPage() {
                     </select>
                   </div>
                   <div className="field">
-                    <label htmlFor={`so-item-qty-${index}`}>Qty</label>
+                    <label htmlFor={`so-item-qty-${index}`}>{t('fields.qty')}</label>
                     <input
                       id={`so-item-qty-${index}`}
                       type="number"
@@ -429,13 +435,13 @@ export function SalesOrdersPage() {
                     ) : null}
                   </div>
                   <div className="field">
-                    <label htmlFor={`so-item-price-${index}`}>Unit price</label>
+                    <label htmlFor={`so-item-price-${index}`}>{t('fields.unitPrice')}</label>
                     <input
                       id={`so-item-price-${index}`}
                       type="number"
                       min="0"
                       step="0.01"
-                      placeholder="sale price"
+                      placeholder={t('salesOrders.salePricePlaceholder')}
                       {...register(`items.${index}.unitPrice`)}
                     />
                     {errors.items?.[index]?.unitPrice ? (
@@ -443,14 +449,14 @@ export function SalesOrdersPage() {
                     ) : null}
                   </div>
                   <div className="field">
-                    <label htmlFor={`so-item-tax-${index}`}>Tax %</label>
+                    <label htmlFor={`so-item-tax-${index}`}>{t('fields.taxRate')} %</label>
                     <input
                       id={`so-item-tax-${index}`}
                       type="number"
                       min="0"
                       max="100"
                       step="0.01"
-                      placeholder="e.g. 18"
+                      placeholder={t('salesOrders.taxPlaceholder')}
                       {...register(`items.${index}.taxRate`)}
                     />
                     {errors.items?.[index]?.taxRate ? (
@@ -458,7 +464,7 @@ export function SalesOrdersPage() {
                     ) : null}
                   </div>
                   <div className="field">
-                    <label htmlFor={`so-item-discount-${index}`}>Discount</label>
+                    <label htmlFor={`so-item-discount-${index}`}>{t('fields.discount')}</label>
                     <input
                       id={`so-item-discount-${index}`}
                       type="number"
@@ -473,7 +479,7 @@ export function SalesOrdersPage() {
                   <div className="invoice-item-remove">
                     {items.length > 1 ? (
                       <Button variant="ghost" size="sm" type="button" onClick={() => removeItem(index)}>
-                        Remove
+                        {t('common.remove')}
                       </Button>
                     ) : null}
                   </div>
@@ -481,16 +487,16 @@ export function SalesOrdersPage() {
               ))}
             </div>
             <Button variant="ghost" size="sm" type="button" onClick={addItem}>
-              + Add line
+              {t('common.addLine')}
             </Button>
             <div className="field">
-              <label htmlFor="so-notes">Notes</label>
+              <label htmlFor="so-notes">{t('fields.notes')}</label>
               <textarea id="so-notes" rows={2} {...register('notes')} />
             </div>
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Creating…' : 'Create sales order'}
+                {saving ? t('common.saving') : t('salesOrders.createOrder')}
               </Button>
             </DialogFooter>
           </form>
@@ -499,51 +505,51 @@ export function SalesOrdersPage() {
 
       <Dialog open={viewing !== null} onOpenChange={(open) => !open && setViewing(null)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={`Sales order ${viewing?.number ?? ''}`} />
+          <DialogHeader title={t('salesOrders.orderTitle', { number: viewing?.number ?? '' })} />
           {viewLoading ? <LoadingBlock /> : null}
           {!viewLoading && viewing ? (
             <div>
               <div className="detail-grid">
                 <div className="detail-item">
-                  <div className="detail-label">Kind</div>
+                  <div className="detail-label">{t('fields.kind')}</div>
                   <div className="detail-value">{viewing.kind}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Status</div>
+                  <div className="detail-label">{t('common.status')}</div>
                   <div className="detail-value">
                     <Badge tone={statusTone(viewing.status)}>{viewing.status}</Badge>
                   </div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Customer</div>
+                  <div className="detail-label">{t('fields.customer')}</div>
                   <div className="detail-value">{viewing.customer?.tradeName ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Warehouse</div>
+                  <div className="detail-label">{t('fields.warehouse')}</div>
                   <div className="detail-value">{viewing.warehouse?.name ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Issue date</div>
+                  <div className="detail-label">{t('fields.issueDate')}</div>
                   <div className="detail-value">{formatDate(viewing.issueDate)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Due date</div>
+                  <div className="detail-label">{t('fields.dueDate')}</div>
                   <div className="detail-value">{viewing.dueDate ? formatDate(viewing.dueDate) : '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Subtotal</div>
+                  <div className="detail-label">{t('fields.subtotal')}</div>
                   <div className="detail-value num">{formatMoney(viewing.subtotal)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Discount</div>
+                  <div className="detail-label">{t('fields.discount')}</div>
                   <div className="detail-value num">{formatMoney(viewing.discount)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Tax</div>
+                  <div className="detail-label">{t('fields.tax')}</div>
                   <div className="detail-value num">{formatMoney(viewing.tax)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Total</div>
+                  <div className="detail-label">{t('fields.total')}</div>
                   <div className="detail-value num">{formatMoney(viewing.total)}</div>
                 </div>
               </div>
@@ -551,11 +557,11 @@ export function SalesOrdersPage() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Product</th>
-                      <th className="num">Qty</th>
-                      <th className="num">Unit price</th>
-                      <th className="num">Tax</th>
-                      <th className="num">Line total</th>
+                      <th>{t('fields.product')}</th>
+                      <th className="num">{t('fields.qty')}</th>
+                      <th className="num">{t('fields.unitPrice')}</th>
+                      <th className="num">{t('fields.tax')}</th>
+                      <th className="num">{t('salesOrders.lineTotal')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -576,7 +582,7 @@ export function SalesOrdersPage() {
           ) : null}
           <DialogFooter>
             <Button variant="secondary" type="button" onClick={() => setViewing(null)}>
-              Close
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

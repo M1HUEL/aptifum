@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/auth-context';
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,14 +31,14 @@ export function LoginPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 429) {
-          setError('Too many login attempts. Please wait a minute and try again.');
+          setError(t('auth.tooManyLoginAttempts'));
         } else if (err.status === 401) {
-          setError('Invalid email or password.');
+          setError(t('auth.invalidCredentials'));
         } else {
           setError(err.message);
         }
       } else {
-        setError('Could not reach the server.');
+        setError(t('auth.couldNotReachServer'));
       }
     } finally {
       setSubmitting(false);
@@ -47,10 +49,10 @@ export function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <h1 className="login-title">Aptifum ERP</h1>
-        <p className="login-subtitle">Sign in to your workspace</p>
+        <p className="login-subtitle">{t('auth.signInSubtitle')}</p>
         <form onSubmit={(event) => void handleSubmit(event)}>
           <label className="field">
-            <span>Email</span>
+            <span>{t('fields.email')}</span>
             <input
               type="email"
               autoComplete="username"
@@ -60,7 +62,7 @@ export function LoginPage() {
             />
           </label>
           <label className="field">
-            <span>Password</span>
+            <span>{t('fields.password')}</span>
             <input
               type="password"
               autoComplete="current-password"
@@ -72,11 +74,11 @@ export function LoginPage() {
           {notice ? <div className="success-banner">{notice}</div> : null}
           {error ? <div className="error-banner">{error}</div> : null}
           <button type="submit" className="btn btn-primary btn-block" disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting ? t('auth.signingIn') : t('auth.loginTitle')}
           </button>
         </form>
         <p className="login-subtitle">
-          <Link to="/forgot-password">Forgot your password?</Link>
+          <Link to="/forgot-password">{t('auth.forgotPassword')}</Link>
         </p>
       </div>
     </div>

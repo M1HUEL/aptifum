@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
@@ -82,6 +83,7 @@ function fromCategory(category: Category): CategoryFormValues {
 }
 
 export function WarehousesCategoriesPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'warehouses' | 'categories'>('warehouses');
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
@@ -198,7 +200,7 @@ export function WarehousesCategoriesPage() {
     try {
       setLocations(await apiFetch<WarehouseLocation[]>(`/api/v1/inventory/warehouses/${warehouse.id}/locations`));
     } catch (err) {
-      setLocationsError(err instanceof ApiError ? err.message : 'Could not load locations.');
+      setLocationsError(err instanceof ApiError ? err.message : t('warehouses.couldNotLoadLocations'));
     } finally {
       setLocationsLoading(false);
     }
@@ -219,7 +221,7 @@ export function WarehousesCategoriesPage() {
   const submitWarehouse = submitWhForm((values) => {
     setWhError(null);
     const onSuccess = () => {
-      toast.toast(editingWhId ? 'Warehouse updated.' : 'Warehouse created.');
+      toast.toast(editingWhId ? t('warehouses.warehouseUpdated') : t('warehouses.warehouseCreated'));
       setWhOpen(false);
       void invalidate(['paged', '/api/v1/inventory/warehouses']);
     };
@@ -235,7 +237,7 @@ export function WarehousesCategoriesPage() {
     if (!deletingWh) return;
     deleteWhMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast('Warehouse deactivated.');
+        toast.toast(t('warehouses.warehouseDeactivated'));
         setDeletingWh(null);
         void invalidate(['paged', '/api/v1/inventory/warehouses']);
       },
@@ -262,7 +264,7 @@ export function WarehousesCategoriesPage() {
     if (!locationsFor) return;
     setLocError(null);
     const onSuccess = () => {
-      toast.toast(editingLocId ? 'Location updated.' : 'Location added.');
+      toast.toast(editingLocId ? t('warehouses.locationUpdated') : t('warehouses.locationAdded'));
       setLocOpen(false);
       void loadLocations(locationsFor);
     };
@@ -278,7 +280,7 @@ export function WarehousesCategoriesPage() {
     if (!deletingLoc || !locationsFor) return;
     deleteLocMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast('Location deactivated.');
+        toast.toast(t('warehouses.locationDeactivated'));
         setDeletingLoc(null);
         void loadLocations(locationsFor);
       },
@@ -304,7 +306,7 @@ export function WarehousesCategoriesPage() {
   const submitCategory = submitCatForm((values) => {
     setCatError(null);
     const onSuccess = () => {
-      toast.toast(editingCatId ? 'Category updated.' : 'Category created.');
+      toast.toast(editingCatId ? t('warehouses.categoryUpdated') : t('warehouses.categoryCreated'));
       setCatOpen(false);
       void invalidate(['paged', '/api/v1/inventory/categories']);
     };
@@ -320,7 +322,7 @@ export function WarehousesCategoriesPage() {
     if (!deletingCat) return;
     deleteCatMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast('Category deleted.');
+        toast.toast(t('warehouses.categoryDeleted'));
         setDeletingCat(null);
         void invalidate(['paged', '/api/v1/inventory/categories']);
       },
@@ -332,28 +334,28 @@ export function WarehousesCategoriesPage() {
   };
 
   const warehouseColumns: Column<Warehouse>[] = [
-    { key: 'code', header: 'Code' },
-    { key: 'name', header: 'Name' },
-    { key: 'address', header: 'Address', render: (row) => row.address ?? '—' },
+    { key: 'code', header: t('fields.code') },
+    { key: 'name', header: t('fields.name') },
+    { key: 'address', header: t('fields.address'), render: (row) => row.address ?? '—' },
     {
       key: 'active',
-      header: 'Status',
-      render: (row) => <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>,
+      header: t('common.status'),
+      render: (row) => <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => void loadLocations(row)}>
-            Locations
+            {t('warehouses.locations')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => openWarehouse(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           {row.active ? (
             <Button variant="danger" size="sm" onClick={() => setDeletingWh(row)}>
-              Deactivate
+              {t('warehouses.deactivate')}
             </Button>
           ) : null}
         </div>
@@ -362,23 +364,23 @@ export function WarehousesCategoriesPage() {
   ];
 
   const categoryColumns: Column<Category>[] = [
-    { key: 'name', header: 'Name' },
-    { key: 'parentId', header: 'Parent', render: (row) => (row.parentId ? '—' : 'Root') },
+    { key: 'name', header: t('fields.name') },
+    { key: 'parentId', header: t('tables.parent'), render: (row) => (row.parentId ? '—' : t('warehouses.root')) },
     {
       key: 'active',
-      header: 'Status',
-      render: (row) => <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>,
+      header: t('common.status'),
+      render: (row) => <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => openCategory(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           <Button variant="danger" size="sm" onClick={() => setDeletingCat(row)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       ),
@@ -388,21 +390,21 @@ export function WarehousesCategoriesPage() {
   return (
     <>
       <PageHeader
-        title="Warehouses & categories"
-        subtitle="Inventory structure"
+        title={t('warehouses.title')}
+        subtitle={t('warehouses.subtitle')}
         action={
           <Button onClick={() => (tab === 'warehouses' ? openWarehouse() : openCategory())}>
-            {tab === 'warehouses' ? 'New warehouse' : 'New category'}
+            {tab === 'warehouses' ? t('warehouses.newWarehouse') : t('warehouses.newCategory')}
           </Button>
         }
       />
 
       <div className="tabs">
         <button type="button" className={tab === 'warehouses' ? 'tab tab-active' : 'tab'} onClick={() => setTab('warehouses')}>
-          Warehouses
+          {t('warehouses.warehouses')}
         </button>
         <button type="button" className={tab === 'categories' ? 'tab tab-active' : 'tab'} onClick={() => setTab('categories')}>
-          Categories
+          {t('warehouses.categories')}
         </button>
       </div>
 
@@ -413,7 +415,7 @@ export function WarehousesCategoriesPage() {
           {warehouseData ? (
             <>
               {warehouseData.data.length === 0 ? (
-                <EmptyState message="No warehouses." />
+                <EmptyState message={t('warehouses.noWarehouses')} />
               ) : (
                 <DataTable columns={warehouseColumns} rows={warehouseData.data} rowKey={(row) => row.id} />
               )}
@@ -428,7 +430,7 @@ export function WarehousesCategoriesPage() {
           {categoryData ? (
             <>
               {categoryData.data.length === 0 ? (
-                <EmptyState message="No categories." />
+                <EmptyState message={t('warehouses.noCategories')} />
               ) : (
                 <DataTable columns={categoryColumns} rows={categoryData.data} rowKey={(row) => row.id} />
               )}
@@ -440,25 +442,25 @@ export function WarehousesCategoriesPage() {
 
       <Dialog open={whOpen} onOpenChange={(open) => !whSaving && setWhOpen(open)}>
         <DialogContent>
-          <DialogHeader title={editingWhId ? 'Edit warehouse' : 'New warehouse'} />
+          <DialogHeader title={editingWhId ? t('warehouses.editWarehouse') : t('warehouses.newWarehouseTitle')} />
           <form onSubmit={(event) => void submitWarehouse(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="wh-code">Code *</label>
+                <label htmlFor="wh-code">{t('fields.code')} *</label>
                 <input id="wh-code" {...registerWh('code')} />
                 {whErrors.code ? <div className="field-error">{whErrors.code.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="wh-name">Name *</label>
+                <label htmlFor="wh-name">{t('fields.name')} *</label>
                 <input id="wh-name" {...registerWh('name')} />
                 {whErrors.name ? <div className="field-error">{whErrors.name.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="wh-address">Address</label>
+                <label htmlFor="wh-address">{t('fields.address')}</label>
                 <textarea id="wh-address" rows={2} {...registerWh('address')} />
               </div>
               <div className="field">
-                <label>Status</label>
+                <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
                     id="wh-active"
@@ -466,7 +468,7 @@ export function WarehousesCategoriesPage() {
                     onCheckedChange={(checked) => setWhValue('active', checked === true)}
                   />
                   <label htmlFor="wh-active" className="text-sm text-gray-700">
-                    Active
+                    {t('common.active')}
                   </label>
                 </div>
               </div>
@@ -474,7 +476,7 @@ export function WarehousesCategoriesPage() {
             {whError ? <div className="error-banner">{whError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={whSaving}>
-                {whSaving ? 'Saving…' : editingWhId ? 'Save changes' : 'Create warehouse'}
+                {whSaving ? t('common.saving') : editingWhId ? t('common.saveChanges') : t('warehouses.createWarehouse')}
               </Button>
             </DialogFooter>
           </form>
@@ -483,27 +485,27 @@ export function WarehousesCategoriesPage() {
 
       <Dialog open={locationsFor !== null} onOpenChange={(open) => !open && setLocationsFor(null)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={`Locations · ${locationsFor?.name ?? ''}`} />
+          <DialogHeader title={t('warehouses.locationsTitle', { name: locationsFor?.name ?? '' })} />
           {locationsLoading ? <LoadingBlock /> : null}
           {locationsError ? <ErrorBanner message={locationsError} /> : null}
           {!locationsLoading && !locationsError ? (
             <>
               <div className="table-actions" style={{ marginBottom: '1rem' }}>
                 <Button size="sm" onClick={() => openLocation()}>
-                  + Add location
+                  {t('warehouses.addLocation')}
                 </Button>
               </div>
               {locations.length === 0 ? (
-                <EmptyState message="No locations." />
+                <EmptyState message={t('warehouses.noLocations')} />
               ) : (
                 <div className="data-table-wrap">
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>{t('fields.code')}</th>
+                        <th>{t('fields.name')}</th>
+                        <th>{t('common.status')}</th>
+                        <th>{t('common.actions')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -513,17 +515,17 @@ export function WarehousesCategoriesPage() {
                           <td>{location.name}</td>
                           <td>
                             <Badge tone={location.active ? 'success' : 'neutral'}>
-                              {location.active ? 'Active' : 'Inactive'}
+                              {location.active ? t('common.active') : t('common.inactive')}
                             </Badge>
                           </td>
                           <td>
                             <div className="table-actions">
                               <Button variant="ghost" size="sm" onClick={() => openLocation(location)}>
-                                Edit
+                                {t('common.edit')}
                               </Button>
                               {location.active ? (
                                 <Button variant="danger" size="sm" onClick={() => setDeletingLoc(location)}>
-                                  Deactivate
+                                  {t('warehouses.deactivate')}
                                 </Button>
                               ) : null}
                             </div>
@@ -538,7 +540,7 @@ export function WarehousesCategoriesPage() {
           ) : null}
           <div className="modal-footer">
             <Button variant="ghost" onClick={() => setLocationsFor(null)}>
-              Close
+              {t('common.close')}
             </Button>
           </div>
         </DialogContent>
@@ -546,21 +548,21 @@ export function WarehousesCategoriesPage() {
 
       <Dialog open={locOpen} onOpenChange={(open) => !locSaving && setLocOpen(open)}>
         <DialogContent>
-          <DialogHeader title={editingLocId ? 'Edit location' : 'Add location'} />
+          <DialogHeader title={editingLocId ? t('warehouses.editLocation') : t('warehouses.addLocationTitle')} />
           <form onSubmit={(event) => void submitLocation(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="loc-code">Code *</label>
+                <label htmlFor="loc-code">{t('fields.code')} *</label>
                 <input id="loc-code" {...registerLoc('code')} />
                 {locErrors.code ? <div className="field-error">{locErrors.code.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="loc-name">Name *</label>
+                <label htmlFor="loc-name">{t('fields.name')} *</label>
                 <input id="loc-name" {...registerLoc('name')} />
                 {locErrors.name ? <div className="field-error">{locErrors.name.message}</div> : null}
               </div>
               <div className="field">
-                <label>Status</label>
+                <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
                     id="loc-active"
@@ -568,7 +570,7 @@ export function WarehousesCategoriesPage() {
                     onCheckedChange={(checked) => setLocValue('active', checked === true)}
                   />
                   <label htmlFor="loc-active" className="text-sm text-gray-700">
-                    Active
+                    {t('common.active')}
                   </label>
                 </div>
               </div>
@@ -576,7 +578,7 @@ export function WarehousesCategoriesPage() {
             {locError ? <div className="error-banner">{locError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={locSaving}>
-                {locSaving ? 'Saving…' : editingLocId ? 'Save changes' : 'Add location'}
+                {locSaving ? t('common.saving') : editingLocId ? t('common.saveChanges') : t('warehouses.addLocationTitle')}
               </Button>
             </DialogFooter>
           </form>
@@ -585,18 +587,18 @@ export function WarehousesCategoriesPage() {
 
       <Dialog open={catOpen} onOpenChange={(open) => !catSaving && setCatOpen(open)}>
         <DialogContent>
-          <DialogHeader title={editingCatId ? 'Edit category' : 'New category'} />
+          <DialogHeader title={editingCatId ? t('warehouses.editCategory') : t('warehouses.newCategoryTitle')} />
           <form onSubmit={(event) => void submitCategory(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="cat-name">Name *</label>
+                <label htmlFor="cat-name">{t('fields.name')} *</label>
                 <input id="cat-name" {...registerCat('name')} />
                 {catErrors.name ? <div className="field-error">{catErrors.name.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="cat-parent">Parent</label>
+                <label htmlFor="cat-parent">{t('tables.parent')}</label>
                 <select id="cat-parent" {...registerCat('parentId')}>
-                  <option value="">— Root —</option>
+                  <option value="">{t('warehouses.root')}</option>
                   {categoryData?.data.map((category) =>
                     category.id !== editingCatId ? (
                       <option key={category.id} value={category.id}>
@@ -607,7 +609,7 @@ export function WarehousesCategoriesPage() {
                 </select>
               </div>
               <div className="field">
-                <label>Status</label>
+                <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
                     id="cat-active"
@@ -615,7 +617,7 @@ export function WarehousesCategoriesPage() {
                     onCheckedChange={(checked) => setCatValue('active', checked === true)}
                   />
                   <label htmlFor="cat-active" className="text-sm text-gray-700">
-                    Active
+                    {t('common.active')}
                   </label>
                 </div>
               </div>
@@ -623,7 +625,7 @@ export function WarehousesCategoriesPage() {
             {catError ? <div className="error-banner">{catError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={catSaving}>
-                {catSaving ? 'Saving…' : editingCatId ? 'Save changes' : 'Create category'}
+                {catSaving ? t('common.saving') : editingCatId ? t('common.saveChanges') : t('warehouses.createCategory')}
               </Button>
             </DialogFooter>
           </form>
@@ -635,10 +637,13 @@ export function WarehousesCategoriesPage() {
         onOpenChange={(open) => !whDeleteBusy && !open && setDeletingWh(null)}
       >
         <DialogContent>
-          <DialogHeader title="Deactivate warehouse" description={`Deactivate "${deletingWh?.name}"?`} />
+          <DialogHeader
+            title={t('warehouses.deactivateWarehouseTitle')}
+            description={t('warehouses.deactivateWarehouseMessage', { name: deletingWh?.name ?? '' })}
+          />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={whDeleteBusy} onClick={() => void confirmDeleteWh()}>
-              {whDeleteBusy ? 'Working…' : 'Deactivate'}
+              {whDeleteBusy ? t('common.working') : t('warehouses.deactivate')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -649,10 +654,13 @@ export function WarehousesCategoriesPage() {
         onOpenChange={(open) => !open && setDeletingCat(null)}
       >
         <DialogContent>
-          <DialogHeader title="Delete category" description={`Delete "${deletingCat?.name}"?`} />
+          <DialogHeader
+            title={t('warehouses.deleteCategoryTitle')}
+            description={t('warehouses.deleteCategoryMessage', { name: deletingCat?.name ?? '' })}
+          />
           <DialogFooter>
             <Button variant="danger" type="button" onClick={() => void confirmDeleteCat()}>
-              Delete
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -663,10 +671,13 @@ export function WarehousesCategoriesPage() {
         onOpenChange={(open) => !locDeleteBusy && !open && setDeletingLoc(null)}
       >
         <DialogContent>
-          <DialogHeader title="Deactivate location" description={`Deactivate "${deletingLoc?.name}"?`} />
+          <DialogHeader
+            title={t('warehouses.deactivateLocationTitle')}
+            description={t('warehouses.deactivateLocationMessage', { name: deletingLoc?.name ?? '' })}
+          />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={locDeleteBusy} onClick={() => void confirmDeleteLoc()}>
-              {locDeleteBusy ? 'Working…' : 'Deactivate'}
+              {locDeleteBusy ? t('common.working') : t('warehouses.deactivate')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as core from '@aptifum/core';
@@ -83,6 +84,7 @@ function parsePageNumber(raw: string | null): number {
 }
 
 export function CustomersPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(() => parsePageNumber(searchParams.get('page')));
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
@@ -166,7 +168,7 @@ export function CustomersPage() {
     setFormError(null);
     const body = toDto(values);
     const onSuccess = () => {
-      toast.toast(editingId ? 'Customer updated.' : 'Customer created.');
+      toast.toast(editingId ? t('customers.customerUpdated') : t('customers.customerCreated'));
       setModalOpen(false);
       void invalidate(['paged', '/api/v1/sales/customers']);
     };
@@ -184,7 +186,7 @@ export function CustomersPage() {
       {},
       {
         onSuccess: () => {
-          toast.toast('Customer deactivated.');
+          toast.toast(t('customers.customerDeactivated'));
           setDeleting(null);
           void invalidate(['paged', '/api/v1/sales/customers']);
         },
@@ -197,29 +199,29 @@ export function CustomersPage() {
   };
 
   const columns = [
-    { key: 'code', header: 'Code' },
-    { key: 'tradeName', header: 'Trade name' },
-    { key: 'taxId', header: 'Tax ID', render: (row: Customer) => row.taxId ?? '—' },
-    { key: 'email', header: 'Email', render: (row: Customer) => row.email ?? '—' },
-    { key: 'creditLimit', header: 'Credit limit', render: (row: Customer) => formatMoney(row.creditLimit) },
+    { key: 'code', header: t('fields.code') },
+    { key: 'tradeName', header: t('fields.tradeName') },
+    { key: 'taxId', header: t('fields.taxId'), render: (row: Customer) => row.taxId ?? '—' },
+    { key: 'email', header: t('fields.email'), render: (row: Customer) => row.email ?? '—' },
+    { key: 'creditLimit', header: t('fields.creditLimit'), render: (row: Customer) => formatMoney(row.creditLimit) },
     {
       key: 'active',
-      header: 'Status',
+      header: t('common.status'),
       render: (row: Customer) => (
-        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>
+        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row: Customer) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           {row.active ? (
             <Button variant="danger" size="sm" onClick={() => setDeleting(row)}>
-              Deactivate
+              {t('customers.deactivate')}
             </Button>
           ) : null}
         </div>
@@ -230,27 +232,27 @@ export function CustomersPage() {
   return (
     <>
       <PageHeader
-        title="Customers"
-        subtitle="Customer accounts"
-        action={<Button onClick={openCreate}>New customer</Button>}
+        title={t('customers.title')}
+        subtitle={t('customers.subtitle')}
+        action={<Button onClick={openCreate}>{t('customers.newCustomer')}</Button>}
       />
       {error ? <ErrorBanner message={error} /> : null}
       <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
         <input
           type="search"
-          placeholder="Search by trade name…"
+          placeholder={t('customers.searchByTradeName')}
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
         <button type="submit" className="btn">
-          Search
+          {t('common.search')}
         </button>
       </form>
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No customers found." />
+            <EmptyState message={t('customers.noCustomers')} />
           ) : (
             <div className="table-wrap">
               <table className="data-table">
@@ -281,58 +283,58 @@ export function CustomersPage() {
 
       <Dialog open={modalOpen} onOpenChange={(open) => !saving && setModalOpen(open)}>
         <DialogContent>
-          <DialogHeader title={editingId ? 'Edit customer' : 'New customer'} />
+          <DialogHeader title={editingId ? t('customers.editCustomer') : t('customers.newCustomer')} />
           <form onSubmit={(event) => void submit(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="customer-code">Code *</label>
+                <label htmlFor="customer-code">{t('fields.code')} *</label>
                 <input id="customer-code" {...register('code')} />
                 {errors.code ? <div className="field-error">{errors.code.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="customer-trade">Trade name *</label>
+                <label htmlFor="customer-trade">{t('fields.tradeName')} *</label>
                 <input id="customer-trade" {...register('tradeName')} />
                 {errors.tradeName ? <div className="field-error">{errors.tradeName.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="customer-legal">Legal name</label>
+                <label htmlFor="customer-legal">{t('fields.legalName')}</label>
                 <input id="customer-legal" {...register('legalName')} />
               </div>
               <div className="field">
-                <label htmlFor="customer-tax">Tax ID</label>
+                <label htmlFor="customer-tax">{t('fields.taxId')}</label>
                 <input id="customer-tax" {...register('taxId')} />
               </div>
               <div className="field">
-                <label htmlFor="customer-email">Email</label>
+                <label htmlFor="customer-email">{t('fields.email')}</label>
                 <input id="customer-email" type="email" {...register('email')} />
                 {errors.email ? <div className="field-error">{errors.email.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="customer-phone">Phone</label>
+                <label htmlFor="customer-phone">{t('fields.phone')}</label>
                 <input id="customer-phone" {...register('phone')} />
               </div>
               <div className="field">
-                <label htmlFor="customer-currency">Currency</label>
+                <label htmlFor="customer-currency">{t('fields.currency')}</label>
                 <input id="customer-currency" maxLength={3} {...register('currency')} />
               </div>
               <div className="field">
-                <label htmlFor="customer-credit">Credit limit</label>
+                <label htmlFor="customer-credit">{t('fields.creditLimit')}</label>
                 <input id="customer-credit" type="number" min="0" step="0.01" {...register('creditLimit')} />
                 {errors.creditLimit ? <div className="field-error">{errors.creditLimit.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="customer-price">Price category</label>
-                <input id="customer-price" placeholder="e.g. retail, wholesale" {...register('priceCategory')} />
+                <label htmlFor="customer-price">{t('fields.priceCategory')}</label>
+                <input id="customer-price" placeholder={t('customers.priceCategoryPlaceholder')} {...register('priceCategory')} />
               </div>
               <div className="field">
-                <label htmlFor="customer-address">Address</label>
+                <label htmlFor="customer-address">{t('fields.address')}</label>
                 <textarea id="customer-address" rows={2} {...register('address')} />
               </div>
               <div className="field">
-                <label htmlFor="customer-state">State (US)</label>
-                <div className="field-hint">Used to apply US sales tax automatically.</div>
+                <label htmlFor="customer-state">{t('customers.stateUs')}</label>
+                <div className="field-hint">{t('customers.stateHint')}</div>
                 <select id="customer-state" {...register('state')}>
-                  <option value="">No state</option>
+                  <option value="">{t('customers.noState')}</option>
                   {Object.entries(core.US_STATES).map(([code, info]) => (
                     <option key={code} value={code}>
                       {code} — {info.name}
@@ -341,20 +343,20 @@ export function CustomersPage() {
                 </select>
               </div>
               <div className="field">
-                <label>Tax status</label>
+                <label>{t('customers.taxStatus')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox id="customer-tax-exempt" checked={taxExempt} onCheckedChange={(checked) => setValue('taxExempt', checked === true)} />
                   <label htmlFor="customer-tax-exempt" className="text-sm text-gray-700">
-                    Tax exempt
+                    {t('fields.taxExempt')}
                   </label>
                 </div>
               </div>
               <div className="field">
-                <label>Status</label>
+                <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox id="customer-active" checked={active} onCheckedChange={(checked) => setValue('active', checked === true)} />
                   <label htmlFor="customer-active" className="text-sm text-gray-700">
-                    Active
+                    {t('common.active')}
                   </label>
                 </div>
               </div>
@@ -362,7 +364,7 @@ export function CustomersPage() {
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create customer'}
+                {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('customers.createCustomer')}
               </Button>
             </DialogFooter>
           </form>
@@ -371,10 +373,13 @@ export function CustomersPage() {
 
       <Dialog open={deleting !== null} onOpenChange={(open) => !deleteBusy && !open && setDeleting(null)}>
         <DialogContent>
-          <DialogHeader title="Deactivate customer" description={`Deactivate "${deleting?.tradeName}"? It will be excluded from new invoices.`} />
+          <DialogHeader
+            title={t('customers.deactivateCustomerTitle')}
+            description={t('customers.deactivateCustomerMessage', { name: deleting?.tradeName ?? '' })}
+          />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDelete()}>
-              {deleteBusy ? 'Working…' : 'Deactivate'}
+              {deleteBusy ? t('common.working') : t('customers.deactivate')}
             </Button>
           </DialogFooter>
         </DialogContent>

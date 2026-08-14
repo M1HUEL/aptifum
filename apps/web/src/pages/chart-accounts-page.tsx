@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { AccountNormalBalance, AccountType, ChartAccount } from '../api/types';
@@ -59,6 +60,7 @@ const emptyForm: AccountFormValues = {
 };
 
 export function ChartAccountsPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -127,7 +129,7 @@ export function ChartAccountsPage() {
   const submit = handleSubmit((values) => {
     setFormError(null);
     const onSuccess = () => {
-      toast.toast(editingId ? 'Account updated.' : 'Account created.');
+      toast.toast(editingId ? t('accounts.accountUpdated') : t('accounts.accountCreated'));
       setModalOpen(false);
       void invalidate(['paged', '/api/v1/accounting/accounts']);
     };
@@ -166,7 +168,7 @@ export function ChartAccountsPage() {
       {},
       {
         onSuccess: () => {
-          toast.toast('Account deleted.');
+          toast.toast(t('accounts.accountDeleted'));
           setDeleting(null);
           void invalidate(['paged', '/api/v1/accounting/accounts']);
         },
@@ -179,36 +181,36 @@ export function ChartAccountsPage() {
   };
 
   const columns: Column<ChartAccount>[] = [
-    { key: 'code', header: 'Code' },
-    { key: 'name', header: 'Name' },
+    { key: 'code', header: t('fields.code') },
+    { key: 'name', header: t('fields.name') },
     {
       key: 'type',
-      header: 'Type',
+      header: t('tables.type'),
       render: (row) => <Badge tone={typeTone(row.type)}>{row.type}</Badge>,
     },
-    { key: 'normalBalance', header: 'Normal balance', render: (row) => row.normalBalance },
+    { key: 'normalBalance', header: t('tables.normalBalance'), render: (row) => row.normalBalance },
     {
       key: 'parent',
-      header: 'Parent',
+      header: t('tables.parent'),
       render: (row) => (row.parent ? `${row.parent.code} · ${row.parent.name}` : '—'),
     },
     {
       key: 'active',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => (
-        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>
+        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           <Button variant="danger" size="sm" onClick={() => setDeleting(row)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       ),
@@ -218,13 +220,13 @@ export function ChartAccountsPage() {
   return (
     <>
       <PageHeader
-        title="Chart of accounts"
-        subtitle="Accounting chart"
-        action={<Button onClick={openCreate}>New account</Button>}
+        title={t('accounts.title')}
+        subtitle={t('accounts.subtitle')}
+        action={<Button onClick={openCreate}>{t('accounts.newAccount')}</Button>}
       />
       {error ? <ErrorBanner message={error} /> : null}
       {loading && accounts.length === 0 ? <LoadingBlock /> : null}
-      {!loading && accounts.length === 0 && !error ? <EmptyState message="No accounts." /> : null}
+      {!loading && accounts.length === 0 && !error ? <EmptyState message={t('accounts.noAccounts')} /> : null}
       {accounts.length > 0 ? (
         <>
           <DataTable columns={columns} rows={accounts} rowKey={(row) => row.id} />
@@ -234,21 +236,21 @@ export function ChartAccountsPage() {
 
       <Dialog open={modalOpen} onOpenChange={(open) => !saving && setModalOpen(open)}>
         <DialogContent>
-          <DialogHeader title={editingId ? 'Edit account' : 'New account'} />
+          <DialogHeader title={editingId ? t('accounts.editAccount') : t('accounts.newAccountTitle')} />
           <form onSubmit={(event) => void submit(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="acc-code">Code *</label>
+                <label htmlFor="acc-code">{t('fields.code')} *</label>
                 <input id="acc-code" disabled={editingId !== null} {...register('code')} />
                 {errors.code ? <div className="field-error">{errors.code.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="acc-name">Name *</label>
+                <label htmlFor="acc-name">{t('fields.name')} *</label>
                 <input id="acc-name" {...register('name')} />
                 {errors.name ? <div className="field-error">{errors.name.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="acc-type">Type *</label>
+                <label htmlFor="acc-type">{t('tables.type')} *</label>
                 <select id="acc-type" {...register('type')}>
                   {accountTypes.map((type) => (
                     <option key={type} value={type}>
@@ -258,7 +260,7 @@ export function ChartAccountsPage() {
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="acc-balance">Normal balance *</label>
+                <label htmlFor="acc-balance">{t('tables.normalBalance')} *</label>
                 <select id="acc-balance" {...register('normalBalance')}>
                   {normalBalances.map((balance) => (
                     <option key={balance} value={balance}>
@@ -268,9 +270,9 @@ export function ChartAccountsPage() {
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="acc-parent">Parent</label>
+                <label htmlFor="acc-parent">{t('tables.parent')}</label>
                 <select id="acc-parent" {...register('parentId')}>
-                  <option value="">— None —</option>
+                  <option value="">{t('accounts.none')}</option>
                   {accounts
                     .filter((account) => account.id !== editingId)
                     .map((account) => (
@@ -281,11 +283,11 @@ export function ChartAccountsPage() {
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="acc-description">Description</label>
+                <label htmlFor="acc-description">{t('fields.description')}</label>
                 <textarea id="acc-description" rows={2} {...register('description')} />
               </div>
               <div className="field">
-                <label>Status</label>
+                <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
                     id="acc-active"
@@ -293,7 +295,7 @@ export function ChartAccountsPage() {
                     onCheckedChange={(checked) => setValue('active', checked === true)}
                   />
                   <label htmlFor="acc-active" className="text-sm text-gray-700">
-                    Active
+                    {t('common.active')}
                   </label>
                 </div>
               </div>
@@ -301,7 +303,7 @@ export function ChartAccountsPage() {
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create account'}
+                {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('accounts.createAccount')}
               </Button>
             </DialogFooter>
           </form>
@@ -314,12 +316,12 @@ export function ChartAccountsPage() {
       >
         <DialogContent>
           <DialogHeader
-            title="Delete account"
-            description={`Delete account "${deleting?.code} · ${deleting?.name}"?`}
+            title={t('accounts.deleteAccount')}
+            description={t('accounts.deleteAccountMessage', { account: `${deleting?.code} · ${deleting?.name}` })}
           />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDelete()}>
-              {deleteBusy ? 'Working…' : 'Delete'}
+              {deleteBusy ? t('common.working') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

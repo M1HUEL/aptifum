@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
 import type { components } from '../api/schema';
@@ -93,6 +94,7 @@ const emptyReceipt: PurchaseReceiptFormValues = {
 };
 
 export function PurchaseOrdersPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState('');
   const [input, setInput] = useState('');
@@ -107,7 +109,7 @@ export function PurchaseOrdersPage() {
   const [statusAction, setStatusAction] = useState<{
     id: string;
     action: 'approve' | 'cancel';
-    message: string;
+    messageKey: 'purchaseOrders.orderApproved' | 'purchaseOrders.orderCancelled';
   } | null>(null);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
@@ -185,7 +187,7 @@ export function PurchaseOrdersPage() {
     if (!statusAction) return;
     statusMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast(statusAction.message);
+        toast.toast(t(statusAction.messageKey));
         void invalidate(['paged', '/api/v1/purchasing/purchase-orders']);
       },
       onError: (err) => {
@@ -219,12 +221,12 @@ export function PurchaseOrdersPage() {
     setFormError(null);
     const body = toDto(values);
     if (body.items.length === 0) {
-      setFormError('Add at least one line item.');
+      setFormError(t('purchaseOrders.addAtLeastOneLine'));
       return;
     }
     createMutation.mutate(body, {
       onSuccess: () => {
-        toast.toast('Purchase order created.');
+        toast.toast(t('purchaseOrders.orderCreated'));
         setCreateOpen(false);
         void invalidate(['paged', '/api/v1/purchasing/purchase-orders']);
       },
@@ -232,8 +234,12 @@ export function PurchaseOrdersPage() {
     });
   });
 
-  const runAction = (id: string, action: 'approve' | 'cancel', message: string) => {
-    setStatusAction({ id, action, message });
+  const runAction = (
+    id: string,
+    action: 'approve' | 'cancel',
+    messageKey: 'purchaseOrders.orderApproved' | 'purchaseOrders.orderCancelled',
+  ) => {
+    setStatusAction({ id, action, messageKey });
   };
 
   const openReceive = async (order: PurchaseOrder) => {
@@ -251,7 +257,7 @@ export function PurchaseOrdersPage() {
       });
       setReceiving(detail);
     } catch (err) {
-      setReceiveError(err instanceof ApiError ? err.message : 'Could not load purchase order.');
+      setReceiveError(err instanceof ApiError ? err.message : t('purchaseOrders.couldNotLoad'));
     }
   };
 
@@ -267,14 +273,14 @@ export function PurchaseOrdersPage() {
         return dto;
       });
     if (itemsDto.length === 0) {
-      setReceiveError('Enter at least one quantity to receive.');
+      setReceiveError(t('purchaseOrders.enterQuantityToReceive'));
       return;
     }
     receiveMutation.mutate(
       { notes: values.notes.trim() || undefined, items: itemsDto },
       {
         onSuccess: () => {
-          toast.toast('Goods receipt recorded.');
+          toast.toast(t('purchaseOrders.receiptRecorded'));
           setReceiving(null);
           void invalidate(['paged', '/api/v1/purchasing/purchase-orders']);
         },
@@ -284,35 +290,35 @@ export function PurchaseOrdersPage() {
   });
 
   const columns: Column<PurchaseOrder>[] = [
-    { key: 'number', header: 'Number' },
+    { key: 'number', header: t('tables.number') },
     {
       key: 'supplier',
-      header: 'Supplier',
+      header: t('purchaseOrders.supplier'),
       render: (row) => row.supplier?.tradeName ?? '—',
     },
     {
       key: 'warehouse',
-      header: 'Warehouse',
+      header: t('fields.warehouse'),
       render: (row) => row.warehouse?.name ?? '—',
     },
     {
       key: 'issueDate',
-      header: 'Issue date',
+      header: t('tables.issueDate'),
       render: (row) => formatDate(row.issueDate),
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => <Badge tone={statusTone(row.status)}>{row.status}</Badge>,
     },
     {
       key: 'total',
-      header: 'Total',
+      header: t('tables.total'),
       render: (row) => formatMoney(row.total),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           {row.status === 'draft' ? (
@@ -320,22 +326,22 @@ export function PurchaseOrdersPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => runAction(row.id, 'approve', 'Purchase order approved.')}
+                onClick={() => runAction(row.id, 'approve', 'purchaseOrders.orderApproved')}
               >
-                Approve
+                {t('purchaseOrders.approve')}
               </Button>
               <Button
                 variant="danger"
                 size="sm"
-                onClick={() => runAction(row.id, 'cancel', 'Purchase order cancelled.')}
+                onClick={() => runAction(row.id, 'cancel', 'purchaseOrders.orderCancelled')}
               >
-                Cancel
+                {t('purchaseOrders.cancel')}
               </Button>
             </>
           ) : null}
           {row.status === 'approved' ? (
             <Button variant="ghost" size="sm" onClick={() => void openReceive(row)}>
-              Receive
+              {t('purchaseOrders.receive')}
             </Button>
           ) : null}
         </div>
@@ -346,14 +352,14 @@ export function PurchaseOrdersPage() {
   return (
     <>
       <PageHeader
-        title="Purchase orders"
-        subtitle="Procurement"
-        action={<Button onClick={openCreate}>New purchase order</Button>}
+        title={t('purchaseOrders.title')}
+        subtitle={t('purchaseOrders.subtitle')}
+        action={<Button onClick={openCreate}>{t('purchaseOrders.newOrder')}</Button>}
       />
       <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
         <input
           type="search"
-          placeholder="Search by number…"
+          placeholder={t('purchaseOrders.searchByNumber')}
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
@@ -364,14 +370,14 @@ export function PurchaseOrdersPage() {
             setPage(1);
           }}
         >
-          <option value="">All statuses</option>
-          <option value="draft">Draft</option>
-          <option value="approved">Approved</option>
-          <option value="received">Received</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="">{t('purchaseOrders.allStatuses')}</option>
+          <option value="draft">{t('purchaseOrders.draft')}</option>
+          <option value="approved">{t('purchaseOrders.approved')}</option>
+          <option value="received">{t('purchaseOrders.received')}</option>
+          <option value="cancelled">{t('purchaseOrders.cancelled')}</option>
         </select>
         <button type="submit" className="btn">
-          Search
+          {t('common.search')}
         </button>
       </form>
       {error ? <ErrorBanner message={error} /> : null}
@@ -379,7 +385,7 @@ export function PurchaseOrdersPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No purchase orders." />
+            <EmptyState message={t('purchaseOrders.noOrders')} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -389,13 +395,13 @@ export function PurchaseOrdersPage() {
 
       <Dialog open={createOpen} onOpenChange={(open) => !saving && setCreateOpen(open)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title="New purchase order" />
+          <DialogHeader title={t('purchaseOrders.newOrder')} />
           <form onSubmit={(event) => void submitCreate(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="po-supplier">Supplier *</label>
+                <label htmlFor="po-supplier">{t('purchaseOrders.supplier')} *</label>
                 <select id="po-supplier" {...register('supplierId')}>
-                  <option value="">— Select supplier —</option>
+                  <option value="">{t('purchaseOrders.selectSupplier')}</option>
                   {suppliers.map((supplier) => (
                     <option key={supplier.id} value={supplier.id}>
                       {supplier.tradeName}
@@ -405,9 +411,9 @@ export function PurchaseOrdersPage() {
                 {errors.supplierId ? <div className="field-error">{errors.supplierId.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="po-warehouse">Warehouse *</label>
+                <label htmlFor="po-warehouse">{t('fields.warehouse')} *</label>
                 <select id="po-warehouse" {...register('warehouseId')}>
-                  <option value="">— Select warehouse —</option>
+                  <option value="">{t('purchaseOrders.selectWarehouse')}</option>
                   {warehouses.map((warehouse) => (
                     <option key={warehouse.id} value={warehouse.id}>
                       {warehouse.name}
@@ -417,11 +423,11 @@ export function PurchaseOrdersPage() {
                 {errors.warehouseId ? <div className="field-error">{errors.warehouseId.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="po-expected">Expected at</label>
+                <label htmlFor="po-expected">{t('purchaseOrders.expectedAt')}</label>
                 <input id="po-expected" type="date" {...register('expectedAt')} />
               </div>
               <div className="field">
-                <label htmlFor="po-discount">Discount</label>
+                <label htmlFor="po-discount">{t('fields.discount')}</label>
                 <input id="po-discount" type="number" min="0" step="0.01" {...register('discount')} />
                 {errors.discount ? <div className="field-error">{errors.discount.message}</div> : null}
               </div>
@@ -430,9 +436,9 @@ export function PurchaseOrdersPage() {
               {items.map((_, index) => (
                 <div className="invoice-item" key={index}>
                   <div className="field">
-                    <label htmlFor={`po-item-product-${index}`}>Product</label>
+                    <label htmlFor={`po-item-product-${index}`}>{t('fields.product')}</label>
                     <select id={`po-item-product-${index}`} {...register(`items.${index}.productId`)}>
-                      <option value="">— Select product —</option>
+                      <option value="">{t('purchaseOrders.selectProduct')}</option>
                       {products.map((product) => (
                         <option key={product.id} value={product.id}>
                           {product.sku} · {product.name}
@@ -441,7 +447,7 @@ export function PurchaseOrdersPage() {
                     </select>
                   </div>
                   <div className="field">
-                    <label htmlFor={`po-item-qty-${index}`}>Qty</label>
+                    <label htmlFor={`po-item-qty-${index}`}>{t('fields.qty')}</label>
                     <input
                       id={`po-item-qty-${index}`}
                       type="number"
@@ -454,13 +460,13 @@ export function PurchaseOrdersPage() {
                     ) : null}
                   </div>
                   <div className="field">
-                    <label htmlFor={`po-item-cost-${index}`}>Unit cost</label>
+                    <label htmlFor={`po-item-cost-${index}`}>{t('fields.unitCost')}</label>
                     <input
                       id={`po-item-cost-${index}`}
                       type="number"
                       min="0"
                       step="0.01"
-                      placeholder="purchase price"
+                      placeholder={t('purchaseOrders.purchasePricePlaceholder')}
                       {...register(`items.${index}.unitCost`)}
                     />
                     {errors.items?.[index]?.unitCost ? (
@@ -468,14 +474,14 @@ export function PurchaseOrdersPage() {
                     ) : null}
                   </div>
                   <div className="field">
-                    <label htmlFor={`po-item-tax-${index}`}>Tax %</label>
+                    <label htmlFor={`po-item-tax-${index}`}>{t('fields.taxRate')} %</label>
                     <input
                       id={`po-item-tax-${index}`}
                       type="number"
                       min="0"
                       max="100"
                       step="0.01"
-                      placeholder="e.g. 18"
+                      placeholder={t('purchaseOrders.taxPlaceholder')}
                       {...register(`items.${index}.taxRate`)}
                     />
                     {errors.items?.[index]?.taxRate ? (
@@ -485,7 +491,7 @@ export function PurchaseOrdersPage() {
                   <div className="invoice-item-remove">
                     {items.length > 1 ? (
                       <Button variant="ghost" size="sm" type="button" onClick={() => removeItem(index)}>
-                        Remove
+                        {t('common.remove')}
                       </Button>
                     ) : null}
                   </div>
@@ -493,16 +499,16 @@ export function PurchaseOrdersPage() {
               ))}
             </div>
             <Button variant="ghost" size="sm" type="button" onClick={addItem}>
-              + Add line
+              {t('common.addLine')}
             </Button>
             <div className="field">
-              <label htmlFor="po-notes">Notes</label>
+              <label htmlFor="po-notes">{t('fields.notes')}</label>
               <textarea id="po-notes" rows={2} {...register('notes')} />
             </div>
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Creating…' : 'Create purchase order'}
+                {saving ? t('common.saving') : t('purchaseOrders.createOrder')}
               </Button>
             </DialogFooter>
           </form>
@@ -514,7 +520,7 @@ export function PurchaseOrdersPage() {
         onOpenChange={(open) => !receiveBusy && !open && setReceiving(null)}
       >
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={`Receive goods for ${receiving?.number ?? ''}`} />
+          <DialogHeader title={t('purchaseOrders.receiveTitle', { number: receiving?.number ?? '' })} />
           <form onSubmit={(event) => void submitReceive(event)}>
             {receiving ? (
               <div className="invoice-items">
@@ -523,19 +529,19 @@ export function PurchaseOrdersPage() {
                   return (
                     <div className="invoice-item" key={item.id}>
                       <div className="field">
-                        <label>Product</label>
+                        <label>{t('fields.product')}</label>
                         <input value={item.description ?? item.productId} readOnly />
                       </div>
                       <div className="field">
-                        <label>Ordered</label>
+                        <label>{t('purchaseOrders.ordered')}</label>
                         <input value={String(item.quantity)} readOnly />
                       </div>
                       <div className="field">
-                        <label>Received</label>
+                        <label>{t('purchaseOrders.received')}</label>
                         <input value={String(item.receivedQuantity)} readOnly />
                       </div>
                       <div className="field">
-                        <label htmlFor={`receive-qty-${item.id}`}>To receive</label>
+                        <label htmlFor={`receive-qty-${item.id}`}>{t('purchaseOrders.toReceive')}</label>
                         <input
                           id={`receive-qty-${item.id}`}
                           type="number"
@@ -552,13 +558,13 @@ export function PurchaseOrdersPage() {
               </div>
             ) : null}
             <div className="field">
-              <label htmlFor="receive-notes">Notes</label>
+              <label htmlFor="receive-notes">{t('fields.notes')}</label>
               <textarea id="receive-notes" rows={2} {...receiveRegister('notes')} />
             </div>
             {receiveError ? <div className="error-banner">{receiveError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={receiveBusy || !receiving}>
-                {receiveBusy ? 'Receiving…' : 'Record receipt'}
+                {receiveBusy ? t('purchaseOrders.receiving') : t('purchaseOrders.recordReceipt')}
               </Button>
             </DialogFooter>
           </form>

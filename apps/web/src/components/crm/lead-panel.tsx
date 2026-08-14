@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { components } from '../../api/schema';
@@ -66,6 +67,7 @@ function leadToDto(form: LeadFormValues): CreateLeadDto {
 }
 
 export function LeadPanel() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -115,7 +117,7 @@ export function LeadPanel() {
   const submit = handleSubmit((values) => {
     setFormError(null);
     const onSuccess = () => {
-      toast.toast(editingId ? 'Lead updated.' : 'Lead created.');
+      toast.toast(editingId ? t('crm.leadUpdated') : t('crm.leadCreated'));
       setOpen(false);
       void reload();
     };
@@ -133,7 +135,7 @@ export function LeadPanel() {
       { customerCode: customerCode.trim() || undefined },
       {
         onSuccess: () => {
-          toast.toast('Lead converted to customer.');
+          toast.toast(t('crm.leadConverted'));
           setConverting(null);
           setCustomerCode('');
           void reload();
@@ -150,7 +152,7 @@ export function LeadPanel() {
     if (!deleting) return;
     deleteMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast('Lead deleted.');
+        toast.toast(t('crm.leadDeleted'));
         setDeleting(null);
         void reload();
       },
@@ -162,27 +164,27 @@ export function LeadPanel() {
   };
 
   const columns: Column<Lead>[] = [
-    { key: 'number', header: 'Number' },
-    { key: 'contactName', header: 'Contact' },
-    { key: 'companyName', header: 'Company', render: (row) => row.companyName ?? '—' },
-    { key: 'email', header: 'Email', render: (row) => row.email ?? '—' },
-    { key: 'estimatedAmount', header: 'Est. amount', render: (row) => formatMoney(row.estimatedAmount) },
-    { key: 'status', header: 'Status', render: (row) => <Badge tone={leadStatusTone(row.status)}>{row.status}</Badge> },
+    { key: 'number', header: t('tables.number') },
+    { key: 'contactName', header: t('crm.contact') },
+    { key: 'companyName', header: t('crm.company'), render: (row) => row.companyName ?? '—' },
+    { key: 'email', header: t('fields.email'), render: (row) => row.email ?? '—' },
+    { key: 'estimatedAmount', header: t('fields.estimatedAmount'), render: (row) => formatMoney(row.estimatedAmount) },
+    { key: 'status', header: t('common.status'), render: (row) => <Badge tone={leadStatusTone(row.status)}>{row.status}</Badge> },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           {row.status !== 'converted' ? (
             <Button variant="ghost" size="sm" onClick={() => setConverting(row)}>
-              Convert
+              {t('crm.convert')}
             </Button>
           ) : null}
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           <Button variant="danger" size="sm" onClick={() => setDeleting(row)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       ),
@@ -192,16 +194,16 @@ export function LeadPanel() {
   return (
     <>
       <PageHeader
-        title="Leads"
-        subtitle="Track and qualify sales leads"
-        action={<Button onClick={openCreate}>New lead</Button>}
+        title={t('crm.leadsTitle')}
+        subtitle={t('crm.leadsSubtitle')}
+        action={<Button onClick={openCreate}>{t('crm.newLead')}</Button>}
       />
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No leads." />
+            <EmptyState message={t('crm.noLeads')} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -211,12 +213,12 @@ export function LeadPanel() {
 
       <Dialog open={open} onOpenChange={(isOpen) => !saving && setOpen(isOpen)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={editingId ? 'Edit lead' : 'New lead'} />
+          <DialogHeader title={editingId ? t('crm.editLead') : t('crm.newLead')} />
           <form onSubmit={(event) => void submit(event)}>
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="lead-contact">
-                  Contact name<span className="field-required"> *</span>
+                  {t('fields.contactName')}<span className="field-required"> *</span>
                 </label>
                 <input id="lead-contact" {...register('contactName')} />
                 {errors.contactName ? (
@@ -224,23 +226,23 @@ export function LeadPanel() {
                 ) : null}
               </div>
               <div className="field">
-                <label htmlFor="lead-company">Company</label>
+                <label htmlFor="lead-company">{t('crm.company')}</label>
                 <input id="lead-company" {...register('companyName')} />
               </div>
               <div className="field">
-                <label htmlFor="lead-email">Email</label>
+                <label htmlFor="lead-email">{t('fields.email')}</label>
                 <input id="lead-email" type="email" {...register('email')} />
               </div>
               <div className="field">
-                <label htmlFor="lead-phone">Phone</label>
+                <label htmlFor="lead-phone">{t('fields.phone')}</label>
                 <input id="lead-phone" {...register('phone')} />
               </div>
               <div className="field">
-                <label htmlFor="lead-source">Source</label>
+                <label htmlFor="lead-source">{t('crm.source')}</label>
                 <input id="lead-source" {...register('source')} />
               </div>
               <div className="field">
-                <label htmlFor="lead-status">Status</label>
+                <label htmlFor="lead-status">{t('common.status')}</label>
                 <select id="lead-status" {...register('status')}>
                   {leadStatuses.map((status) => (
                     <option key={status} value={status}>
@@ -250,22 +252,22 @@ export function LeadPanel() {
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="lead-amount">Estimated amount</label>
+                <label htmlFor="lead-amount">{t('fields.estimatedAmount')}</label>
                 <input id="lead-amount" type="number" min="0" step="0.01" {...register('estimatedAmount')} />
               </div>
               <div className="field">
-                <label htmlFor="lead-currency">Currency</label>
+                <label htmlFor="lead-currency">{t('fields.currency')}</label>
                 <input id="lead-currency" maxLength={3} {...register('currency')} />
               </div>
               <div className="field">
-                <label htmlFor="lead-notes">Notes</label>
+                <label htmlFor="lead-notes">{t('fields.notes')}</label>
                 <textarea id="lead-notes" rows={3} {...register('notes')} />
               </div>
             </div>
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create lead'}
+                {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createLead')}
               </Button>
             </DialogFooter>
           </form>
@@ -274,18 +276,15 @@ export function LeadPanel() {
 
       <Dialog open={converting !== null} onOpenChange={(isOpen) => !convertBusy && !isOpen && setConverting(null)}>
         <DialogContent className="max-w-sm">
-          <DialogHeader title={`Convert lead ${converting?.number ?? ''}`} />
-          <p className="modal-message">
-            Create a customer account for “{converting?.contactName}”. A customer code is generated automatically
-            unless you provide one.
-          </p>
+          <DialogHeader title={t('crm.convertLeadTitle', { number: converting?.number })} />
+          <p className="modal-message">{t('crm.convertLeadMessage', { name: converting?.contactName })}</p>
           <div className="field">
-            <label htmlFor="convert-code">Customer code</label>
+            <label htmlFor="convert-code">{t('crm.customerCode')}</label>
             <input id="convert-code" value={customerCode} onChange={(event) => setCustomerCode(event.target.value)} />
           </div>
           <DialogFooter>
             <Button variant="default" type="button" disabled={convertBusy} onClick={() => void confirmConvert()}>
-              {convertBusy ? 'Converting…' : 'Convert to customer'}
+              {convertBusy ? t('crm.converting') : t('crm.convertToCustomer')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -294,12 +293,12 @@ export function LeadPanel() {
       <Dialog open={deleting !== null} onOpenChange={(isOpen) => !deletingBusy && !isOpen && setDeleting(null)}>
         <DialogContent>
           <DialogHeader
-            title="Delete lead"
-            description={`Delete lead for "${deleting?.contactName}"? This cannot be undone.`}
+            title={t('crm.deleteLeadTitle')}
+            description={t('crm.deleteLeadMessage', { name: deleting?.contactName })}
           />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={deletingBusy} onClick={() => void confirmDelete()}>
-              {deletingBusy ? 'Working…' : 'Delete'}
+              {deletingBusy ? t('common.working') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

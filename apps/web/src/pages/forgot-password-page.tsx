@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError } from '../api/client';
 
 interface ForgotPasswordResult {
@@ -8,6 +9,7 @@ interface ForgotPasswordResult {
 }
 
 export function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -33,9 +35,9 @@ export function ForgotPasswordPage() {
       setError(
         err instanceof ApiError
           ? err.status === 429
-            ? 'Too many requests. Please wait a minute and try again.'
+            ? t('auth.tooManyRequests')
             : err.message
-          : 'Could not reach the server.',
+          : t('auth.couldNotReachServer'),
       );
     } finally {
       setSubmitting(false);
@@ -46,11 +48,11 @@ export function ForgotPasswordPage() {
     <div className="login-page">
       <div className="login-card">
         <h1 className="login-title">Aptifum ERP</h1>
-        <p className="login-subtitle">Reset your password</p>
+        <p className="login-subtitle">{t('auth.resetPasswordSubtitle')}</p>
         {resetUrl === undefined ? (
           <form onSubmit={(event) => void handleSubmit(event)}>
             <label className="field">
-              <span>Email</span>
+              <span>{t('fields.email')}</span>
               <input
                 type="email"
                 autoComplete="username"
@@ -61,25 +63,25 @@ export function ForgotPasswordPage() {
             </label>
             {error ? <div className="error-banner">{error}</div> : null}
             <button type="submit" className="btn btn-primary btn-block" disabled={submitting}>
-              {submitting ? 'Sending…' : 'Send reset link'}
+              {submitting ? t('auth.sending') : t('auth.sendResetLink')}
             </button>
           </form>
         ) : resetUrl ? (
           <div>
             <div className="success-banner">
-              A reset link was generated. Demo mode has no email server, so use the link below:
+              {t('auth.resetLinkGenerated')}
             </div>
             <a className="btn btn-primary btn-block" href={resetUrl}>
-              Open reset link
+              {t('auth.openResetLink')}
             </a>
           </div>
         ) : (
           <div className="success-banner">
-            If an account exists for that email, a reset link will be sent to it.
+            {t('auth.resetLinkSent')}
           </div>
         )}
         <p className="login-subtitle">
-          <Link to="/login">Back to sign in</Link>
+          <Link to="/login">{t('auth.backToSignIn')}</Link>
         </p>
       </div>
     </div>

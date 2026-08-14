@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch } from '../api/client';
@@ -56,32 +58,32 @@ function movementTone(type: MovementType): 'success' | 'danger' | 'info' {
   return 'info';
 }
 
-const stockColumns: Column<ProductStock>[] = [
+const stockColumns = (t: TFunction): Column<ProductStock>[] => [
   {
     key: 'product',
-    header: 'Product',
+    header: t('fields.product'),
     render: (row) => `${row.product.sku} · ${row.product.name}`,
   },
   {
     key: 'warehouse',
-    header: 'Warehouse',
+    header: t('fields.warehouse'),
     render: (row) => row.warehouse.name,
   },
   {
     key: 'quantity',
-    header: 'On hand',
+    header: t('stock.onHand'),
     render: (row) => (
       <Badge tone={row.quantity <= 10 ? 'warning' : 'success'}>{formatNumber(row.quantity)}</Badge>
     ),
   },
   {
     key: 'reservedQuantity',
-    header: 'Reserved',
+    header: t('stock.reserved'),
     render: (row) => formatNumber(row.reservedQuantity),
   },
   {
     key: 'averageCost',
-    header: 'Avg cost',
+    header: t('stock.avgCost'),
     render: (row) => `$${row.averageCost.toFixed(2)}`,
   },
 ];
@@ -115,79 +117,80 @@ function lotTone(status: LotStatus): 'success' | 'warning' | 'danger' {
   return 'success';
 }
 
-const lotColumns: Column<ProductLot>[] = [
+const lotColumns = (t: TFunction): Column<ProductLot>[] => [
   {
     key: 'product',
-    header: 'Product',
+    header: t('fields.product'),
     render: (row) => `${row.product.sku} · ${row.product.name}`,
   },
   {
     key: 'variant',
-    header: 'Variant',
+    header: t('stock.variant'),
     render: (row) => (row.variant ? Object.values(row.variant.attributes ?? {}).join(' · ') || row.variant.sku : '—'),
   },
   {
     key: 'lotNumber',
-    header: 'Lot',
+    header: t('stock.lot'),
     render: (row) => row.lotNumber,
   },
   {
     key: 'warehouse',
-    header: 'Warehouse',
+    header: t('fields.warehouse'),
     render: (row) => row.warehouse.name,
   },
   {
     key: 'expiryDate',
-    header: 'Expiry',
+    header: t('stock.expiry'),
     render: (row) => formatDate(row.expiryDate),
   },
   {
     key: 'quantity',
-    header: 'Qty',
+    header: t('stock.qty'),
     render: (row) => formatNumber(row.quantity),
   },
   {
     key: 'status',
-    header: 'Status',
+    header: t('common.status'),
     render: (row) => <Badge tone={lotTone(row.status)}>{row.status}</Badge>,
   },
 ];
 
-const movementColumns: Column<StockMovement>[] = [
+const movementColumns = (t: TFunction): Column<StockMovement>[] => [
   {
     key: 'occurredAt',
-    header: 'Date',
+    header: t('tables.date'),
     render: (row) => formatDateTime(row.occurredAt),
   },
   {
     key: 'movementType',
-    header: 'Type',
+    header: t('tables.type'),
     render: (row) => <Badge tone={movementTone(row.movementType)}>{row.movementType}</Badge>,
   },
   {
     key: 'product',
-    header: 'Product',
+    header: t('fields.product'),
     render: (row) => `${row.product.sku} · ${row.product.name}`,
   },
   {
     key: 'warehouse',
-    header: 'Warehouse',
+    header: t('fields.warehouse'),
     render: (row) => row.warehouse.name,
   },
   {
     key: 'quantity',
-    header: 'Qty',
+    header: t('stock.qty'),
     render: (row) => formatNumber(row.quantity),
   },
   {
     key: 'unitCost',
-    header: 'Unit cost',
+    header: t('fields.unitCost'),
     render: (row) => `$${row.unitCost.toFixed(2)}`,
   },
-  { key: 'notes', header: 'Notes', render: (row) => row.notes ?? '—' },
+  { key: 'notes', header: t('fields.notes'), render: (row) => row.notes ?? '—' },
 ];
 
 function StockTab() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const { data, error } = usePagedQuery<ProductStock>({
     path: '/api/v1/inventory/stock',
@@ -201,9 +204,9 @@ function StockTab() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No stock records." />
+            <EmptyState message={t('stock.noStockRecords')} />
           ) : (
-            <DataTable columns={stockColumns} rows={data.data} rowKey={(row) => row.id} />
+            <DataTable columns={stockColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
           <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
         </>
@@ -227,6 +230,7 @@ const emptyMovementFilters: MovementFilters = {
 };
 
 function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<MovementFilters>(emptyMovementFilters);
   const extraParams = useMemo(() => {
@@ -260,7 +264,7 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
     <>
       <div className="toolbar">
         <select value={filters.movementType} onChange={(event) => setFilter('movementType', event.target.value)}>
-          <option value="">All types</option>
+          <option value="">{t('stock.allTypes')}</option>
           {movementTypes.map((type) => (
             <option key={type} value={type}>
               {type}
@@ -268,7 +272,7 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
           ))}
         </select>
         <select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
-          <option value="">All warehouses</option>
+          <option value="">{t('stock.allWarehouses')}</option>
           {warehouses.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
               {warehouse.name}
@@ -279,7 +283,7 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
         <input type="date" value={filters.to} onChange={(event) => setFilter('to', event.target.value)} />
         {hasFilters ? (
           <Button variant="ghost" onClick={resetFilters}>
-            Clear filters
+            {t('stock.clearFilters')}
           </Button>
         ) : null}
       </div>
@@ -288,9 +292,9 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No movements match the filters." />
+            <EmptyState message={t('stock.noMovementsMatch')} />
           ) : (
-            <DataTable columns={movementColumns} rows={data.data} rowKey={(row) => row.id} />
+            <DataTable columns={movementColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
           <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
         </>
@@ -310,6 +314,7 @@ const emptyLotFilters: LotFilters = {
 };
 
 function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<LotFilters>(emptyLotFilters);
   const extraParams = useMemo(() => {
@@ -341,13 +346,13 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
     <>
       <div className="toolbar">
         <select value={filters.status} onChange={(event) => setFilter('status', event.target.value)}>
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="expiring">Expiring soon</option>
-          <option value="expired">Expired</option>
+          <option value="">{t('stock.allStatuses')}</option>
+          <option value="active">{t('stock.active')}</option>
+          <option value="expiring">{t('stock.expiringSoon')}</option>
+          <option value="expired">{t('stock.expired')}</option>
         </select>
         <select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
-          <option value="">All warehouses</option>
+          <option value="">{t('stock.allWarehouses')}</option>
           {warehouses.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
               {warehouse.name}
@@ -356,7 +361,7 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
         </select>
         {hasFilters ? (
           <Button variant="ghost" onClick={resetFilters}>
-            Clear filters
+            {t('stock.clearFilters')}
           </Button>
         ) : null}
       </div>
@@ -365,9 +370,9 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No lots match the filters." />
+            <EmptyState message={t('stock.noLotsMatch')} />
           ) : (
-            <DataTable columns={lotColumns} rows={data.data} rowKey={(row) => row.id} />
+            <DataTable columns={lotColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
           <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
         </>
@@ -403,6 +408,7 @@ function toDto(form: StockMovementFormValues): CreateMovementDto {
 }
 
 export function StockPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState<StockTab>(() => parseTab(searchParams.get('tab')));
   const [refreshKey, setRefreshKey] = useState(0);
@@ -511,7 +517,7 @@ export function StockPage() {
     setFormError(null);
     createMutation.mutate(toDto(values), {
       onSuccess: () => {
-        toast.toast('Stock movement recorded.');
+        toast.toast(t('stock.stockMovementRecorded'));
         setModalOpen(false);
         setRefreshKey((key) => key + 1);
         void invalidate(['paged', '/api/v1/inventory/movements']);
@@ -525,27 +531,27 @@ export function StockPage() {
   return (
     <>
       <PageHeader
-        title="Stock"
-        subtitle="Stock levels and movements"
-        action={<Button onClick={openModal}>New movement</Button>}
+        title={t('stock.title')}
+        subtitle={t('stock.subtitle')}
+        action={<Button onClick={openModal}>{t('stock.newMovement')}</Button>}
       />
       <div className="tabs">
         <button type="button" className={tab === 'stock' ? 'tab tab-active' : 'tab'} onClick={() => changeTab('stock')}>
-          Stock levels
+          {t('stock.stockLevels')}
         </button>
         <button
           type="button"
           className={tab === 'movements' ? 'tab tab-active' : 'tab'}
           onClick={() => changeTab('movements')}
         >
-          Movements
+          {t('stock.movements')}
         </button>
         <button
           type="button"
           className={tab === 'lots' ? 'tab tab-active' : 'tab'}
           onClick={() => changeTab('lots')}
         >
-          Lots
+          {t('stock.lots')}
         </button>
       </div>
       {tab === 'stock' ? <StockTab key={`stock-${refreshKey}`} /> : null}
@@ -554,13 +560,13 @@ export function StockPage() {
 
       <Dialog open={modalOpen} onOpenChange={(open) => !saving && setModalOpen(open)}>
         <DialogContent>
-          <DialogHeader title="New stock movement" />
+          <DialogHeader title={t('stock.newStockMovement')} />
           <form onSubmit={(event) => void submit(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="movement-product">Product *</label>
+                <label htmlFor="movement-product">{t('fields.product')} *</label>
                 <select id="movement-product" {...register('productId')}>
-                  <option value="">— Select product —</option>
+                  <option value="">{t('stock.selectProduct')}</option>
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
                       {product.sku} · {product.name}
@@ -570,14 +576,14 @@ export function StockPage() {
                 {errors.productId ? <div className="field-error">{errors.productId.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="movement-warehouse">Warehouse *</label>
+                <label htmlFor="movement-warehouse">{t('fields.warehouse')} *</label>
                 <select
                   id="movement-warehouse"
                   {...register('warehouseId', {
                     onChange: () => setValue('locationId', ''),
                   })}
                 >
-                  <option value="">— Select warehouse —</option>
+                  <option value="">{t('stock.selectWarehouse')}</option>
                   {warehouses.map((warehouse) => (
                     <option key={warehouse.id} value={warehouse.id}>
                       {warehouse.name}
@@ -588,9 +594,9 @@ export function StockPage() {
               </div>
               {locations.length > 0 ? (
                 <div className="field">
-                  <label htmlFor="movement-location">Location</label>
+                  <label htmlFor="movement-location">{t('stock.location')}</label>
                   <select id="movement-location" {...register('locationId')}>
-                    <option value="">— No location —</option>
+                    <option value="">{t('stock.noLocation')}</option>
                     {locations.map((location) => (
                       <option key={location.id} value={location.id}>
                         {location.code} · {location.name}
@@ -600,7 +606,7 @@ export function StockPage() {
                 </div>
               ) : null}
               <div className="field">
-                <label htmlFor="movement-type">Type *</label>
+                <label htmlFor="movement-type">{t('tables.type')} *</label>
                 <select id="movement-type" {...register('movementType')}>
                   {movementTypes.map((type) => (
                     <option key={type} value={type}>
@@ -610,7 +616,7 @@ export function StockPage() {
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="movement-quantity">Quantity *</label>
+                <label htmlFor="movement-quantity">{t('fields.quantity')} *</label>
                 <input
                   id="movement-quantity"
                   type="number"
@@ -620,37 +626,37 @@ export function StockPage() {
                 />
                 {selectedStock ? (
                   <div className="muted" style={{ marginTop: 6 }}>
-                    Available: {formatNumber(selectedStock.quantity)}
+                    {t('stock.available', { quantity: formatNumber(selectedStock.quantity) })}
                     {selectedStock.reservedQuantity > 0
-                      ? ` (reserved ${formatNumber(selectedStock.reservedQuantity)})`
+                      ? t('stock.reservedInfo', { quantity: formatNumber(selectedStock.reservedQuantity) })
                       : ''}
                   </div>
                 ) : null}
                 {errors.quantity ? <div className="field-error">{errors.quantity.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="movement-cost">Unit cost</label>
+                <label htmlFor="movement-cost">{t('fields.unitCost')}</label>
                 <input id="movement-cost" type="number" min="0" step="0.01" {...register('unitCost')} />
                 {errors.unitCost ? <div className="field-error">{errors.unitCost.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="movement-lot">Lot number</label>
-                <input id="movement-lot" placeholder="LOT-001" {...register('lotNumber')} />
+                <label htmlFor="movement-lot">{t('fields.lotNumber')}</label>
+                <input id="movement-lot" placeholder={t('stock.lotPlaceholder')} {...register('lotNumber')} />
                 {errors.lotNumber ? <div className="field-error">{errors.lotNumber.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="movement-expiry">Expiry date</label>
+                <label htmlFor="movement-expiry">{t('fields.expiryDate')}</label>
                 <input id="movement-expiry" type="date" {...register('expiryDate')} />
               </div>
               <div className="field">
-                <label htmlFor="movement-notes">Notes</label>
+                <label htmlFor="movement-notes">{t('fields.notes')}</label>
                 <textarea id="movement-notes" rows={2} {...register('notes')} />
               </div>
             </div>
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Recording…' : 'Record movement'}
+                {saving ? t('stock.recording') : t('stock.recordMovement')}
               </Button>
             </DialogFooter>
           </form>

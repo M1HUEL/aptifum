@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { components } from '../api/schema';
@@ -28,6 +29,7 @@ function toDto(values: ProfileFormValues): UpdateProfileDto {
 }
 
 export function ProfilePage() {
+  const { t } = useTranslation();
   const { user, refreshProfile } = useAuth();
   const toast = useToast();
   const {
@@ -58,31 +60,31 @@ export function ProfilePage() {
       onSuccess: async () => {
         await refreshProfile();
         reset({ ...emptyForm, name: values.name.trim() });
-        toast.toast('Profile updated.');
+        toast.toast(t('profile.updated'));
       },
     });
   });
 
   return (
     <>
-      <PageHeader title="My profile" subtitle="Manage your account information" />
+      <PageHeader title={t('profile.title')} subtitle={t('profile.subtitle')} />
 
       <form onSubmit={(event) => void submit(event)}>
         <div className="form-grid">
           <div className="field">
-            <label htmlFor="profile-email">Email</label>
+            <label htmlFor="profile-email">{t('fields.email')}</label>
             <input id="profile-email" type="email" value={user.email} disabled />
           </div>
           <div className="field">
-            <label htmlFor="profile-name">Name</label>
+            <label htmlFor="profile-name">{t('fields.name')}</label>
             <input id="profile-name" {...register('name')} />
             {errors.name ? <div className="field-error">{errors.name.message}</div> : null}
           </div>
           <div className="field">
-            <label>Roles</label>
+            <label>{t('usersRoles.roles')}</label>
             <div className="badge-group">
               {user.roles.length === 0 ? (
-                <span className="muted">None</span>
+                <span className="muted">{t('common.none')}</span>
               ) : (
                 user.roles.map((role) => (
                   <Badge key={role.name} tone="info">
@@ -95,28 +97,28 @@ export function ProfilePage() {
         </div>
 
         <h3 className="muted" style={{ marginTop: '1.5rem' }}>
-          Change password
+          {t('profile.changePassword')}
         </h3>
         <div className="form-grid" style={{ marginTop: '0.5rem' }}>
           <div className="field">
-            <label htmlFor="profile-current">Current password</label>
+            <label htmlFor="profile-current">{t('fields.currentPassword')}</label>
             <input id="profile-current" type="password" {...register('currentPassword')} />
             {errors.currentPassword ? (
               <div className="field-error">{errors.currentPassword.message}</div>
             ) : null}
           </div>
           <div className="field">
-            <label htmlFor="profile-new">New password</label>
+            <label htmlFor="profile-new">{t('fields.newPassword')}</label>
             <input
               id="profile-new"
               type="password"
-              placeholder="At least 8 characters"
+              placeholder={t('profile.passwordHint')}
               {...register('newPassword')}
             />
             {errors.newPassword ? <div className="field-error">{errors.newPassword.message}</div> : null}
           </div>
           <div className="field">
-            <label htmlFor="profile-confirm">Confirm new password</label>
+            <label htmlFor="profile-confirm">{t('fields.confirmPassword')}</label>
             <input id="profile-confirm" type="password" {...register('confirmPassword')} />
             {errors.confirmPassword ? (
               <div className="field-error">{errors.confirmPassword.message}</div>
@@ -128,7 +130,7 @@ export function ProfilePage() {
 
         <div style={{ marginTop: '1rem' }}>
           <Button type="submit" disabled={saving}>
-            {saving ? 'Saving…' : 'Save changes'}
+            {saving ? t('common.saving') : t('common.saveChanges')}
           </Button>
         </div>
       </form>

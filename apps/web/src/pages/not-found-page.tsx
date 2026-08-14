@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export function NotFoundPage() {
+  const { t } = useTranslation();
   return (
     <div className="page-center">
       <h1 className="status-code">404</h1>
-      <p className="muted">The page you&apos;re looking for doesn&apos;t exist.</p>
+      <p className="muted">{t('errors.notFound')}</p>
       <Link to="/dashboard" className="btn btn-primary">
-        Go to dashboard
+        {t('errors.goToDashboard')}
       </Link>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { apiFetch } from '../api/client';
 import type { Customer, Paginated } from '../api/types';
@@ -10,11 +11,11 @@ import { usePermission } from '../auth/auth-context';
 
 type CrmTab = 'leads' | 'opportunities' | 'contacts' | 'activities';
 
-const TABS: Array<{ key: CrmTab; label: string; permission: string }> = [
-  { key: 'leads', label: 'Leads', permission: 'crm:read' },
-  { key: 'opportunities', label: 'Opportunities', permission: 'crm:read' },
-  { key: 'contacts', label: 'Contacts', permission: 'crm:read' },
-  { key: 'activities', label: 'Activities', permission: 'crm:read' },
+const TABS: Array<{ key: CrmTab; labelKey: string; permission: string }> = [
+  { key: 'leads', labelKey: 'crm.leads', permission: 'crm:read' },
+  { key: 'opportunities', labelKey: 'crm.opportunities', permission: 'crm:read' },
+  { key: 'contacts', labelKey: 'crm.contacts', permission: 'crm:read' },
+  { key: 'activities', labelKey: 'crm.activities', permission: 'crm:read' },
 ];
 
 function parseTab(raw: string | null): CrmTab {
@@ -22,6 +23,7 @@ function parseTab(raw: string | null): CrmTab {
 }
 
 export function CrmPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState<CrmTab>(() => parseTab(searchParams.get('tab')));
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -62,7 +64,7 @@ export function CrmPage() {
             className={tab === item.key ? 'tab tab-active' : 'tab'}
             onClick={() => changeTab(item.key)}
           >
-            {item.label}
+            {t(item.labelKey)}
           </button>
         ))}
       </div>

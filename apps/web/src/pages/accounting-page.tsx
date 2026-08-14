@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch } from '../api/client';
@@ -67,41 +69,41 @@ function toDto(form: JournalEntryFormValues): CreateJournalEntryDto {
   };
 }
 
-function journalColumns(openEntry: (entry: JournalEntry) => void): Column<JournalEntry>[] {
+function journalColumns(t: TFunction, openEntry: (entry: JournalEntry) => void): Column<JournalEntry>[] {
   return [
-    { key: 'number', header: 'Number' },
+    { key: 'number', header: t('tables.number') },
     {
       key: 'entryDate',
-      header: 'Date',
+      header: t('tables.date'),
       render: (row) => formatDate(row.entryDate),
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => <Badge tone={entryStatusTone(row.status)}>{row.status}</Badge>,
     },
     {
       key: 'description',
-      header: 'Description',
+      header: t('fields.description'),
       render: (row) => row.description ?? '—',
     },
     {
       key: 'debitTotal',
-      header: 'Debit',
+      header: t('fields.debit'),
       render: (row) => formatMoney(row.debitTotal),
     },
     {
       key: 'creditTotal',
-      header: 'Credit',
+      header: t('fields.credit'),
       render: (row) => formatMoney(row.creditTotal),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => openEntry(row)}>
-            View
+            {t('common.view')}
           </Button>
         </div>
       ),
@@ -109,35 +111,35 @@ function journalColumns(openEntry: (entry: JournalEntry) => void): Column<Journa
   ];
 }
 
-function periodColumns(onClose: (period: AccountingPeriod) => void): Column<AccountingPeriod>[] {
+function periodColumns(t: TFunction, onClose: (period: AccountingPeriod) => void): Column<AccountingPeriod>[] {
   return [
-    { key: 'period', header: 'Period' },
-    { key: 'label', header: 'Label' },
+    { key: 'period', header: t('tables.period') },
+    { key: 'label', header: t('tables.label') },
     {
       key: 'startDate',
-      header: 'From',
+      header: t('tables.from'),
       render: (row) => formatDate(row.startDate),
     },
     {
       key: 'endDate',
-      header: 'To',
+      header: t('tables.to'),
       render: (row) => formatDate(row.endDate),
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => (
         <Badge tone={row.status === 'open' ? 'success' : 'neutral'}>{row.status}</Badge>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) =>
         row.status === 'open' ? (
           <div className="table-actions">
             <Button variant="danger" size="sm" onClick={() => onClose(row)}>
-              Close
+              {t('accounting.closePeriod')}
             </Button>
           </div>
         ) : null,
@@ -146,6 +148,7 @@ function periodColumns(onClose: (period: AccountingPeriod) => void): Column<Acco
 }
 
 function JournalEntriesTab({ onOpenEntry }: { onOpenEntry: (entry: JournalEntry) => void }) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const { data, error } = usePagedQuery<JournalEntry>({
     path: '/api/v1/accounting/journal-entries',
@@ -159,10 +162,10 @@ function JournalEntriesTab({ onOpenEntry }: { onOpenEntry: (entry: JournalEntry)
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No journal entries." />
+            <EmptyState message={t('accounting.noJournalEntries')} />
           ) : (
             <DataTable
-              columns={journalColumns(onOpenEntry)}
+              columns={journalColumns(t, onOpenEntry)}
               rows={data.data}
               rowKey={(row) => row.id}
             />
@@ -175,6 +178,7 @@ function JournalEntriesTab({ onOpenEntry }: { onOpenEntry: (entry: JournalEntry)
 }
 
 export function AccountingPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'entries' | 'periods'>('entries');
   const [accounts, setAccounts] = useState<ChartAccount[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
@@ -245,12 +249,12 @@ export function AccountingPage() {
     setFormError(null);
     const body = toDto(values);
     if (body.lines.length === 0) {
-      setFormError('Add at least one line.');
+      setFormError(t('accounting.addAtLeastOneLine'));
       return;
     }
     createMutation.mutate(body, {
       onSuccess: () => {
-        toast.toast('Journal entry posted.');
+        toast.toast(t('accounting.journalEntryPosted'));
         setCreateOpen(false);
         void invalidate(['paged', '/api/v1/accounting/journal-entries']);
       },
@@ -262,7 +266,7 @@ export function AccountingPage() {
     if (!closingPeriod) return;
     closeMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast('Period closed.');
+        toast.toast(t('accounting.periodClosed'));
         setClosingPeriod(null);
         void invalidate(['paged', '/api/v1/accounting/periods']);
       },
@@ -276,16 +280,16 @@ export function AccountingPage() {
   return (
     <>
       <PageHeader
-        title="Accounting"
-        subtitle="Journal entries and periods"
-        action={<Button onClick={openCreate}>New journal entry</Button>}
+        title={t('accounting.title')}
+        subtitle={t('accounting.subtitle')}
+        action={<Button onClick={openCreate}>{t('accounting.newJournalEntry')}</Button>}
       />
       <div className="tabs">
         <button type="button" className={tab === 'entries' ? 'tab tab-active' : 'tab'} onClick={() => setTab('entries')}>
-          Journal entries
+          {t('accounting.journalEntries')}
         </button>
         <button type="button" className={tab === 'periods' ? 'tab tab-active' : 'tab'} onClick={() => setTab('periods')}>
-          Periods
+          {t('accounting.periods')}
         </button>
       </div>
       {tab === 'entries' ? (
@@ -297,10 +301,10 @@ export function AccountingPage() {
           {periods ? (
             <>
               {periods.data.length === 0 ? (
-                <EmptyState message="No accounting periods." />
+                <EmptyState message={t('accounting.noAccountingPeriods')} />
               ) : (
                 <DataTable
-                  columns={periodColumns(setClosingPeriod)}
+                  columns={periodColumns(t, setClosingPeriod)}
                   rows={periods.data}
                   rowKey={(row) => row.id}
                 />
@@ -318,16 +322,16 @@ export function AccountingPage() {
 
       <Dialog open={createOpen} onOpenChange={(open) => !saving && setCreateOpen(open)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title="New journal entry" />
+          <DialogHeader title={t('accounting.newJournalEntry')} />
           <form onSubmit={(event) => void submit(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="je-date">Entry date *</label>
+                <label htmlFor="je-date">{t('fields.entryDate')} *</label>
                 <input id="je-date" type="date" {...register('entryDate')} />
                 {errors.entryDate ? <div className="field-error">{errors.entryDate.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="je-description">Description</label>
+                <label htmlFor="je-description">{t('fields.description')}</label>
                 <input id="je-description" {...register('description')} />
                 {errors.description ? <div className="field-error">{errors.description.message}</div> : null}
               </div>
@@ -336,9 +340,9 @@ export function AccountingPage() {
               {lines.map((_, index) => (
                 <div className="invoice-item" key={index}>
                   <div className="field">
-                    <label htmlFor={`je-line-account-${index}`}>Account</label>
+                    <label htmlFor={`je-line-account-${index}`}>{t('tables.account')}</label>
                     <select id={`je-line-account-${index}`} {...register(`lines.${index}.accountCode`)}>
-                      <option value="">— Select account —</option>
+                      <option value="">{t('accounting.selectAccount')}</option>
                       {accounts.map((account) => (
                         <option key={account.id} value={account.code}>
                           {account.code} · {account.name}
@@ -347,7 +351,7 @@ export function AccountingPage() {
                     </select>
                   </div>
                   <div className="field">
-                    <label htmlFor={`je-line-debit-${index}`}>Debit</label>
+                    <label htmlFor={`je-line-debit-${index}`}>{t('fields.debit')}</label>
                     <input
                       id={`je-line-debit-${index}`}
                       type="number"
@@ -360,7 +364,7 @@ export function AccountingPage() {
                     ) : null}
                   </div>
                   <div className="field">
-                    <label htmlFor={`je-line-credit-${index}`}>Credit</label>
+                    <label htmlFor={`je-line-credit-${index}`}>{t('fields.credit')}</label>
                     <input
                       id={`je-line-credit-${index}`}
                       type="number"
@@ -373,7 +377,7 @@ export function AccountingPage() {
                     ) : null}
                   </div>
                   <div className="field">
-                    <label htmlFor={`je-line-memo-${index}`}>Memo</label>
+                    <label htmlFor={`je-line-memo-${index}`}>{t('fields.memo')}</label>
                     <input id={`je-line-memo-${index}`} {...register(`lines.${index}.description`)} />
                     {errors.lines?.[index]?.description ? (
                       <div className="field-error">{errors.lines[index]?.description?.message}</div>
@@ -382,7 +386,7 @@ export function AccountingPage() {
                   <div className="invoice-item-remove">
                     {lines.length > 2 ? (
                       <Button variant="ghost" size="sm" type="button" onClick={() => removeLine(index)}>
-                        Remove
+                        {t('common.remove')}
                       </Button>
                     ) : null}
                   </div>
@@ -390,12 +394,12 @@ export function AccountingPage() {
               ))}
             </div>
             <Button variant="ghost" size="sm" type="button" onClick={addLine}>
-              + Add line
+              {t('common.addLine')}
             </Button>
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Posting…' : 'Post entry'}
+                {saving ? t('accounting.posting') : t('accounting.postEntry')}
               </Button>
             </DialogFooter>
           </form>
@@ -404,24 +408,24 @@ export function AccountingPage() {
 
       <Dialog open={viewing !== null} onOpenChange={(open) => !open && setViewing(null)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={`Entry ${viewing?.number ?? ''}`} />
+          <DialogHeader title={t('accounting.entry', { number: viewing?.number ?? '' })} />
           {viewing ? (
             <>
               <p className="modal-message">
-                {viewing.description ?? 'No description'} · {formatDate(viewing.entryDate)} ·{' '}
+                {viewing.description ?? t('accounting.noDescription')} · {formatDate(viewing.entryDate)} ·{' '}
                 <Badge tone={entryStatusTone(viewing.status)}>{viewing.status}</Badge>
               </p>
               <DataTable
                 columns={[
                   {
                     key: 'account',
-                    header: 'Account',
+                    header: t('tables.account'),
                     render: (row) =>
                       row.account ? `${row.account.code} · ${row.account.name}` : '—',
                   },
-                  { key: 'description', header: 'Description', render: (row) => row.description ?? '—' },
-                  { key: 'debit', header: 'Debit', render: (row) => (row.debit ? formatMoney(row.debit) : '—') },
-                  { key: 'credit', header: 'Credit', render: (row) => (row.credit ? formatMoney(row.credit) : '—') },
+                  { key: 'description', header: t('fields.description'), render: (row) => row.description ?? '—' },
+                  { key: 'debit', header: t('fields.debit'), render: (row) => (row.debit ? formatMoney(row.debit) : '—') },
+                  { key: 'credit', header: t('fields.credit'), render: (row) => (row.credit ? formatMoney(row.credit) : '—') },
                 ]}
                 rows={viewing.lines}
                 rowKey={(row) => row.id}
@@ -430,7 +434,7 @@ export function AccountingPage() {
           ) : null}
           <DialogFooter>
             <Button variant="secondary" type="button" onClick={() => setViewing(null)}>
-              Close
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -442,12 +446,12 @@ export function AccountingPage() {
       >
         <DialogContent>
           <DialogHeader
-            title="Close accounting period"
-            description={`Close period "${closingPeriod?.label}"? No further entries will be allowed in this period.`}
+            title={t('accounting.closePeriodTitle')}
+            description={t('accounting.closePeriodMessage', { label: closingPeriod?.label ?? '' })}
           />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={closeBusy} onClick={() => void confirmClose()}>
-              {closeBusy ? 'Working…' : 'Close period'}
+              {closeBusy ? t('common.working') : t('accounting.closePeriod')}
             </Button>
           </DialogFooter>
         </DialogContent>

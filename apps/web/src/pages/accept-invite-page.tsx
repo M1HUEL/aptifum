@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError } from '../api/client';
 
 export function AcceptInvitePage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') ?? '';
   const navigate = useNavigate();
@@ -14,7 +16,7 @@ export function AcceptInvitePage() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (password !== confirm) {
-      setError('Passwords do not match.');
+      setError(t('auth.passwordsDoNotMatch'));
       return;
     }
     setSubmitting(true);
@@ -28,15 +30,15 @@ export function AcceptInvitePage() {
       });
       navigate('/login', {
         replace: true,
-        state: { notice: 'Your account is ready. Sign in with your new password.' },
+        state: { notice: t('auth.accountReady') },
       });
     } catch (err) {
       setError(
         err instanceof ApiError
           ? err.status === 429
-            ? 'Too many requests. Please wait a minute and try again.'
+            ? t('auth.tooManyRequests')
             : err.message
-          : 'Could not reach the server.',
+          : t('auth.couldNotReachServer'),
       );
     } finally {
       setSubmitting(false);
@@ -47,11 +49,11 @@ export function AcceptInvitePage() {
     <div className="login-page">
       <div className="login-card">
         <h1 className="login-title">Aptifum ERP</h1>
-        <p className="login-subtitle">Accept your invitation</p>
+        <p className="login-subtitle">{t('auth.acceptInvitation')}</p>
         {token ? (
           <form onSubmit={(event) => void handleSubmit(event)}>
             <label className="field">
-              <span>New password</span>
+              <span>{t('fields.newPassword')}</span>
               <input
                 type="password"
                 autoComplete="new-password"
@@ -63,7 +65,7 @@ export function AcceptInvitePage() {
               />
             </label>
             <label className="field">
-              <span>Confirm password</span>
+              <span>{t('fields.confirmPassword')}</span>
               <input
                 type="password"
                 autoComplete="new-password"
@@ -76,14 +78,14 @@ export function AcceptInvitePage() {
             </label>
             {error ? <div className="error-banner">{error}</div> : null}
             <button type="submit" className="btn btn-primary btn-block" disabled={submitting}>
-              {submitting ? 'Saving…' : 'Set password'}
+              {submitting ? t('common.saving') : t('auth.setPassword')}
             </button>
           </form>
         ) : (
-          <div className="error-banner">This invite link is missing or invalid.</div>
+          <div className="error-banner">{t('auth.inviteLinkInvalid')}</div>
         )}
         <p className="login-subtitle">
-          <Link to="/login">Back to sign in</Link>
+          <Link to="/login">{t('auth.backToSignIn')}</Link>
         </p>
       </div>
     </div>

@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { AuditAction, AuditLogEntry } from '../api/types';
 import {
   Badge,
@@ -59,40 +61,41 @@ interface AuditFilters {
 
 const emptyFilters: AuditFilters = { module: '', action: '', from: '', to: '' };
 
-const columns: Column<AuditLogEntry>[] = [
+const columns = (t: TFunction): Column<AuditLogEntry>[] => [
   {
     key: 'createdAt',
-    header: 'When',
+    header: t('tables.when'),
     render: (row) => new Date(row.createdAt).toLocaleString(),
   },
   {
     key: 'action',
-    header: 'Action',
+    header: t('tables.action'),
     render: (row) => <Badge tone={actionTone(row.action)}>{row.action}</Badge>,
   },
-  { key: 'module', header: 'Module' },
-  { key: 'entity', header: 'Entity' },
+  { key: 'module', header: t('tables.module') },
+  { key: 'entity', header: t('tables.entity') },
   {
     key: 'entityId',
-    header: 'Entity ID',
+    header: t('tables.entityId'),
     render: (row) => <span title={row.entityId ?? undefined}>{shortId(row.entityId)}</span>,
   },
   {
     key: 'userId',
-    header: 'User',
+    header: t('tables.user'),
     render: (row) => <span title={row.userId ?? undefined}>{shortId(row.userId)}</span>,
   },
-  { key: 'ip', header: 'IP', render: (row) => row.ip ?? '—' },
+  { key: 'ip', header: t('tables.ip'), render: (row) => row.ip ?? '—' },
   {
     key: 'detail',
-    header: 'Details',
+    header: t('tables.details'),
     render: (row) => {
       const before = shortJson(row.before);
       const after = shortJson(row.after);
       const detail = after ?? before;
       if (!detail) return <span className="muted">—</span>;
+      const title = `${before ? `${t('audit.before')} ${before}\n` : ''}${t('audit.after')} ${after ?? ''}`;
       return (
-        <span className="muted" title={`${before ? `before: ${before}\n` : ''}after: ${after ?? ''}`}>
+        <span className="muted" title={title}>
           <code>{detail}</code>
         </span>
       );
@@ -101,6 +104,7 @@ const columns: Column<AuditLogEntry>[] = [
 ];
 
 export function AuditPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<AuditFilters>(emptyFilters);
 
@@ -133,14 +137,14 @@ export function AuditPage() {
 
   return (
     <>
-      <PageHeader title="Audit log" subtitle="Record of security and write operations" />
+      <PageHeader title={t('audit.title')} subtitle={t('audit.subtitle')} />
 
       <div className="toolbar">
         <select
           value={filters.module}
           onChange={(event) => setFilter('module', event.target.value)}
         >
-          <option value="">All modules</option>
+          <option value="">{t('audit.allModules')}</option>
           {MODULES.map((module) => (
             <option key={module} value={module}>
               {module}
@@ -151,7 +155,7 @@ export function AuditPage() {
           value={filters.action}
           onChange={(event) => setFilter('action', event.target.value)}
         >
-          <option value="">All actions</option>
+          <option value="">{t('audit.allActions')}</option>
           {ACTIONS.map((action) => (
             <option key={action} value={action}>
               {action}
@@ -170,7 +174,7 @@ export function AuditPage() {
         />
         {hasFilters ? (
           <Button variant="ghost" size="sm" onClick={resetFilters}>
-            Clear filters
+            {t('audit.clearFilters')}
           </Button>
         ) : null}
       </div>
@@ -180,9 +184,9 @@ export function AuditPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No audit entries match the filters." />
+            <EmptyState message={t('audit.noAuditEntries')} />
           ) : (
-            <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
+            <DataTable columns={columns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
           <Pagination
             page={data.meta.page}

@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
@@ -78,6 +79,7 @@ function parsePageNumber(raw: string | null): number {
 }
 
 export function ProductsPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(() => parsePageNumber(searchParams.get('page')));
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
@@ -182,7 +184,7 @@ export function ProductsPage() {
   const submit = handleSubmit((values) => {
     setFormError(null);
     const onSuccess = () => {
-      toast.toast(editingId ? 'Product updated.' : 'Product created.');
+      toast.toast(editingId ? t('products.productUpdated') : t('products.productCreated'));
       setModalOpen(false);
       void invalidate(['paged', '/api/v1/inventory/products']);
     };
@@ -200,7 +202,7 @@ export function ProductsPage() {
       {},
       {
         onSuccess: () => {
-          toast.toast('Product deactivated.');
+          toast.toast(t('products.productDeactivated'));
           setDeleting(null);
           void invalidate(['paged', '/api/v1/inventory/products']);
         },
@@ -225,46 +227,48 @@ export function ProductsPage() {
       setViewing(detail);
       setStock(stockResult);
     } catch (err) {
-      setViewError(err instanceof ApiError ? err.message : 'Could not load product.');
+      setViewError(err instanceof ApiError ? err.message : t('errors.couldNotLoadProduct'));
     } finally {
       setViewLoading(false);
     }
   };
 
   const columns: Column<Product>[] = [
-    { key: 'sku', header: 'SKU' },
-    { key: 'name', header: 'Name' },
+    { key: 'sku', header: t('fields.sku') },
+    { key: 'name', header: t('fields.name') },
     {
       key: 'category',
-      header: 'Category',
+      header: t('products.category'),
       render: (row) => row.category?.name ?? '—',
     },
     {
       key: 'salePrice',
-      header: 'Sale price',
+      header: t('fields.salePrice'),
       render: (row) => formatMoney(row.salePrice),
     },
     {
       key: 'enabled',
-      header: 'Status',
+      header: t('common.status'),
       render: (row) => (
-        <Badge tone={row.enabled ? 'success' : 'neutral'}>{row.enabled ? 'Enabled' : 'Disabled'}</Badge>
+        <Badge tone={row.enabled ? 'success' : 'neutral'}>
+          {row.enabled ? t('products.enabled') : t('products.disabled')}
+        </Badge>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => void openView(row)}>
-            View
+            {t('common.view')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           {row.enabled ? (
             <Button variant="danger" size="sm" onClick={() => setDeleting(row)}>
-              Deactivate
+              {t('products.deactivate')}
             </Button>
           ) : null}
         </div>
@@ -275,27 +279,27 @@ export function ProductsPage() {
   return (
     <>
       <PageHeader
-        title="Products"
-        subtitle="Catalog"
-        action={<Button onClick={openCreate}>New product</Button>}
+        title={t('products.title')}
+        subtitle={t('products.subtitle')}
+        action={<Button onClick={openCreate}>{t('products.newProduct')}</Button>}
       />
       {error ? <ErrorBanner message={error} /> : null}
       <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
         <input
           type="search"
-          placeholder="Search by name…"
+          placeholder={t('products.searchByName')}
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
         <button type="submit" className="btn">
-          Search
+          {t('common.search')}
         </button>
       </form>
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No products found." />
+            <EmptyState message={t('products.noProducts')} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -305,38 +309,38 @@ export function ProductsPage() {
 
       <Dialog open={modalOpen} onOpenChange={(open) => !saving && setModalOpen(open)}>
         <DialogContent>
-          <DialogHeader title={editingId ? 'Edit product' : 'New product'} />
+          <DialogHeader title={editingId ? t('products.editProduct') : t('products.newProduct')} />
           <form onSubmit={(event) => void submit(event)}>
             <div className="form-grid">
               <div className="field">
-                <label htmlFor="product-sku">SKU *</label>
+                <label htmlFor="product-sku">{t('fields.sku')} *</label>
                 <input id="product-sku" {...register('sku')} />
                 {errors.sku ? <div className="field-error">{errors.sku.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="product-name">Name *</label>
+                <label htmlFor="product-name">{t('fields.name')} *</label>
                 <input id="product-name" {...register('name')} />
                 {errors.name ? <div className="field-error">{errors.name.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="product-brand">Brand</label>
+                <label htmlFor="product-brand">{t('fields.brand')}</label>
                 <input id="product-brand" {...register('brand')} />
                 {errors.brand ? <div className="field-error">{errors.brand.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="product-uom">Unit of measure</label>
-                <input id="product-uom" placeholder="e.g. unit, kg, box" {...register('unitOfMeasure')} />
+                <label htmlFor="product-uom">{t('fields.unitOfMeasure')}</label>
+                <input id="product-uom" placeholder={t('products.uomPlaceholder')} {...register('unitOfMeasure')} />
                 {errors.unitOfMeasure ? <div className="field-error">{errors.unitOfMeasure.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="product-barcode">Barcode</label>
+                <label htmlFor="product-barcode">{t('fields.barcode')}</label>
                 <input id="product-barcode" {...register('barcode')} />
                 {errors.barcode ? <div className="field-error">{errors.barcode.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="product-category">Category</label>
+                <label htmlFor="product-category">{t('products.category')}</label>
                 <select id="product-category" {...register('categoryId')}>
-                  <option value="">— None —</option>
+                  <option value="">{t('products.none')}</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -345,7 +349,7 @@ export function ProductsPage() {
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="product-purchase">Purchase price</label>
+                <label htmlFor="product-purchase">{t('fields.purchasePrice')}</label>
                 <input
                   id="product-purchase"
                   type="number"
@@ -358,16 +362,16 @@ export function ProductsPage() {
                 ) : null}
               </div>
               <div className="field">
-                <label htmlFor="product-sale">Sale price</label>
+                <label htmlFor="product-sale">{t('fields.salePrice')}</label>
                 <input id="product-sale" type="number" min="0" step="0.01" {...register('salePrice')} />
                 {errors.salePrice ? <div className="field-error">{errors.salePrice.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="product-description">Description</label>
+                <label htmlFor="product-description">{t('fields.description')}</label>
                 <textarea id="product-description" rows={3} {...register('description')} />
               </div>
               <div className="field">
-                <label>Status</label>
+                <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
                     id="product-enabled"
@@ -375,7 +379,7 @@ export function ProductsPage() {
                     onCheckedChange={(checked) => setValue('enabled', checked === true)}
                   />
                   <label htmlFor="product-enabled" className="text-sm text-gray-700">
-                    Enabled
+                    {t('products.enabled')}
                   </label>
                 </div>
               </div>
@@ -383,7 +387,7 @@ export function ProductsPage() {
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create product'}
+                {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('products.createProduct')}
               </Button>
             </DialogFooter>
           </form>
@@ -392,62 +396,62 @@ export function ProductsPage() {
 
       <Dialog open={viewing !== null} onOpenChange={(open) => !open && setViewing(null)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={viewing?.name ?? 'Product'} />
+          <DialogHeader title={viewing?.name ?? t('products.product')} />
           {viewLoading ? <LoadingBlock /> : null}
           {viewError ? <ErrorBanner message={viewError} /> : null}
           {!viewLoading && viewing ? (
             <div>
               <div className="detail-grid">
                 <div className="detail-item">
-                  <div className="detail-label">SKU</div>
+                  <div className="detail-label">{t('fields.sku')}</div>
                   <div className="detail-value">{viewing.sku}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Status</div>
+                  <div className="detail-label">{t('common.status')}</div>
                   <div className="detail-value">
                     <Badge tone={viewing.enabled ? 'success' : 'neutral'}>
-                      {viewing.enabled ? 'Enabled' : 'Disabled'}
+                      {viewing.enabled ? t('products.enabled') : t('products.disabled')}
                     </Badge>
                   </div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Category</div>
+                  <div className="detail-label">{t('products.category')}</div>
                   <div className="detail-value">{viewing.category?.name ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Brand</div>
+                  <div className="detail-label">{t('fields.brand')}</div>
                   <div className="detail-value">{viewing.brand ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Unit of measure</div>
+                  <div className="detail-label">{t('fields.unitOfMeasure')}</div>
                   <div className="detail-value">{viewing.unitOfMeasure ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Barcode</div>
+                  <div className="detail-label">{t('fields.barcode')}</div>
                   <div className="detail-value">{viewing.barcode ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Purchase price</div>
+                  <div className="detail-label">{t('fields.purchasePrice')}</div>
                   <div className="detail-value num">{formatMoney(viewing.purchasePrice)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Sale price</div>
+                  <div className="detail-label">{t('fields.salePrice')}</div>
                   <div className="detail-value num">{formatMoney(viewing.salePrice)}</div>
                 </div>
               </div>
               {viewing.description ? <div className="detail-notes">{viewing.description}</div> : null}
-              <h4 className="detail-section-title">Stock by warehouse</h4>
+              <h4 className="detail-section-title">{t('products.stockByWarehouse')}</h4>
               {stock.length === 0 ? (
-                <p className="modal-message">No stock recorded.</p>
+                <p className="modal-message">{t('products.noStockRecorded')}</p>
               ) : (
                 <div className="data-table-wrap">
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Warehouse</th>
-                        <th className="num">On hand</th>
-                        <th className="num">Reserved</th>
-                        <th className="num">Avg cost</th>
+                        <th>{t('fields.warehouse')}</th>
+                        <th className="num">{t('products.onHand')}</th>
+                        <th className="num">{t('products.reserved')}</th>
+                        <th className="num">{t('products.avgCost')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -467,7 +471,7 @@ export function ProductsPage() {
           ) : null}
           <DialogFooter>
             <Button variant="secondary" type="button" onClick={() => setViewing(null)}>
-              Close
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -476,12 +480,12 @@ export function ProductsPage() {
       <Dialog open={deleting !== null} onOpenChange={(open) => !deleteBusy && !open && setDeleting(null)}>
         <DialogContent>
           <DialogHeader
-            title="Deactivate product"
-            description={`Deactivate "${deleting?.name}"? It will be hidden from new transactions.`}
+            title={t('products.deactivateProductTitle')}
+            description={t('products.deactivateProductMessage', { name: deleting?.name ?? '' })}
           />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDelete()}>
-              {deleteBusy ? 'Working…' : 'Deactivate'}
+              {deleteBusy ? t('common.working') : t('products.deactivate')}
             </Button>
           </DialogFooter>
         </DialogContent>

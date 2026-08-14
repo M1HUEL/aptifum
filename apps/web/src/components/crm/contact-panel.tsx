@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { components } from '../../api/schema';
@@ -65,6 +66,7 @@ function contactToDto(form: ContactFormValues): CreateContactDto {
 }
 
 export function ContactPanel({ customers }: { customers: Customer[] }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -117,7 +119,7 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
   const submit = handleSubmit((values) => {
     setFormError(null);
     const onSuccess = () => {
-      toast.toast(editingId ? 'Contact updated.' : 'Contact created.');
+      toast.toast(editingId ? t('crm.contactUpdated') : t('crm.contactCreated'));
       setOpen(false);
       void reload();
     };
@@ -133,7 +135,7 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
     if (!deleting) return;
     deleteMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast('Contact deleted.');
+        toast.toast(t('crm.contactDeleted'));
         setDeleting(null);
         void reload();
       },
@@ -145,26 +147,28 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
   };
 
   const columns: Column<CrmContact>[] = [
-    { key: 'fullName', header: 'Full name' },
-    { key: 'customer', header: 'Customer', render: (row) => row.customer?.tradeName ?? '—' },
-    { key: 'title', header: 'Title', render: (row) => row.title ?? '—' },
-    { key: 'email', header: 'Email', render: (row) => row.email ?? '—' },
-    { key: 'phone', header: 'Phone', render: (row) => row.phone ?? '—' },
+    { key: 'fullName', header: t('fields.fullName') },
+    { key: 'customer', header: t('fields.customer'), render: (row) => row.customer?.tradeName ?? '—' },
+    { key: 'title', header: t('crm.title'), render: (row) => row.title ?? '—' },
+    { key: 'email', header: t('fields.email'), render: (row) => row.email ?? '—' },
+    { key: 'phone', header: t('fields.phone'), render: (row) => row.phone ?? '—' },
     {
       key: 'active',
-      header: 'Status',
-      render: (row) => <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? 'Active' : 'Inactive'}</Badge>,
+      header: t('common.status'),
+      render: (row) => (
+        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>
+      ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       render: (row) => (
         <div className="table-actions">
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-            Edit
+            {t('common.edit')}
           </Button>
           <Button variant="danger" size="sm" onClick={() => setDeleting(row)}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       ),
@@ -174,16 +178,16 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
   return (
     <>
       <PageHeader
-        title="Contacts"
-        subtitle="Contacts linked to customer accounts"
-        action={<Button onClick={openCreate}>New contact</Button>}
+        title={t('crm.contactsTitle')}
+        subtitle={t('crm.contactsSubtitle')}
+        action={<Button onClick={openCreate}>{t('crm.newContact')}</Button>}
       />
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message="No contacts." />
+            <EmptyState message={t('crm.noContacts')} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -193,20 +197,20 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
 
       <Dialog open={open} onOpenChange={(isOpen) => !saving && setOpen(isOpen)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={editingId ? 'Edit contact' : 'New contact'} />
+          <DialogHeader title={editingId ? t('crm.editContact') : t('crm.newContact')} />
           <form onSubmit={(event) => void submit(event)}>
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="contact-name">
-                  Full name<span className="field-required"> *</span>
+                  {t('fields.fullName')}<span className="field-required"> *</span>
                 </label>
                 <input id="contact-name" {...register('fullName')} />
                 {errors.fullName ? <div className="field-error">{errors.fullName.message}</div> : null}
               </div>
               <div className="field">
-                <label htmlFor="contact-customer">Customer</label>
+                <label htmlFor="contact-customer">{t('fields.customer')}</label>
                 <select id="contact-customer" {...register('customerId')}>
-                  <option value="">— None —</option>
+                  <option value="">{t('crm.none')}</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {customer.tradeName}
@@ -215,31 +219,31 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
                 </select>
               </div>
               <div className="field">
-                <label htmlFor="contact-title">Title</label>
+                <label htmlFor="contact-title">{t('crm.title')}</label>
                 <input id="contact-title" {...register('title')} />
               </div>
               <div className="field">
-                <label htmlFor="contact-email">Email</label>
+                <label htmlFor="contact-email">{t('fields.email')}</label>
                 <input id="contact-email" type="email" {...register('email')} />
               </div>
               <div className="field">
-                <label htmlFor="contact-phone">Phone</label>
+                <label htmlFor="contact-phone">{t('fields.phone')}</label>
                 <input id="contact-phone" {...register('phone')} />
               </div>
               <div className="field">
-                <label htmlFor="contact-mobile">Mobile</label>
+                <label htmlFor="contact-mobile">{t('crm.mobile')}</label>
                 <input id="contact-mobile" {...register('mobile')} />
               </div>
               <div className="field">
-                <label htmlFor="contact-address">Address</label>
+                <label htmlFor="contact-address">{t('fields.address')}</label>
                 <textarea id="contact-address" rows={2} {...register('address')} />
               </div>
               <div className="field">
-                <label htmlFor="contact-notes">Notes</label>
+                <label htmlFor="contact-notes">{t('fields.notes')}</label>
                 <textarea id="contact-notes" rows={2} {...register('notes')} />
               </div>
               <div className="field">
-                <label>Status</label>
+                <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
                     id="contact-active"
@@ -247,7 +251,7 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
                     onCheckedChange={(checked) => setValue('active', checked === true)}
                   />
                   <label htmlFor="contact-active" className="text-sm text-gray-700">
-                    Active
+                    {t('common.active')}
                   </label>
                 </div>
               </div>
@@ -255,7 +259,7 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
             {formError ? <div className="error-banner">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
-                {saving ? 'Saving…' : editingId ? 'Save changes' : 'Create contact'}
+                {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createContact')}
               </Button>
             </DialogFooter>
           </form>
@@ -264,10 +268,13 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
 
       <Dialog open={deleting !== null} onOpenChange={(isOpen) => !deletingBusy && !isOpen && setDeleting(null)}>
         <DialogContent>
-          <DialogHeader title="Delete contact" description={`Delete contact "${deleting?.fullName}"?`} />
+          <DialogHeader
+            title={t('crm.deleteContactTitle')}
+            description={t('crm.deleteContactMessage', { name: deleting?.fullName })}
+          />
           <DialogFooter>
             <Button variant="danger" type="button" disabled={deletingBusy} onClick={() => void confirmDelete()}>
-              {deletingBusy ? 'Working…' : 'Delete'}
+              {deletingBusy ? t('common.working') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

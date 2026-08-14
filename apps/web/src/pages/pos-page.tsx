@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError, downloadFile } from '../api/client';
 import type { Customer, Paginated, PosProduct, Warehouse } from '../api/types';
 import { PageHeader } from '../components/ui';
@@ -18,6 +19,7 @@ const round2 = (n: number): number => Math.round(n * 100) / 100;
 const todayStr = (): string => new Date().toISOString().slice(0, 10);
 
 export function PosPage() {
+  const { t } = useTranslation();
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [warehouseId, setWarehouseId] = useState('');
@@ -84,7 +86,7 @@ export function PosPage() {
       })
       .catch((err) => {
         if (!cancelled) {
-          setCatalogError(err instanceof ApiError ? err.message : 'Could not load products.');
+          setCatalogError(err instanceof ApiError ? err.message : t('pos.couldNotLoadProducts'));
         }
       })
       .finally(() => {
@@ -171,7 +173,7 @@ export function PosPage() {
 
   const submitCharge = async () => {
     if (!warehouseId) {
-      setCheckoutError('Select a warehouse to start the sale.');
+      setCheckoutError(t('pos.selectWarehouseToStartSale'));
       return;
     }
     const items = ticket.map((line) => ({
@@ -182,13 +184,13 @@ export function PosPage() {
       taxRate: line.taxRate === '' ? undefined : Number(line.taxRate) / 100,
     }));
     if (items.length === 0) {
-      setCheckoutError('Add at least one product to the ticket.');
+      setCheckoutError(t('pos.addProductToTicket'));
       return;
     }
     if (saleCurrency !== FUNCTIONAL_CURRENCY) {
       const rate = Number(saleRate);
       if (!Number.isFinite(rate) || rate <= 0) {
-        setCheckoutError('Enter a valid exchange rate for the sale currency.');
+        setCheckoutError(t('pos.invalidExchangeRate'));
         return;
       }
     }
@@ -220,7 +222,7 @@ export function PosPage() {
       });
       setPaymentError(null);
     } catch (err) {
-      setCheckoutError(err instanceof ApiError ? err.message : 'Could not issue the invoice.');
+      setCheckoutError(err instanceof ApiError ? err.message : t('pos.couldNotIssueInvoice'));
     } finally {
       setCharging(false);
     }
@@ -264,9 +266,9 @@ export function PosPage() {
         currency: pendingInvoice.currency,
       });
       setPendingInvoice(null);
-      toast.toast('Sale completed.');
+      toast.toast(t('pos.saleCompleted'));
     } catch (err) {
-      setPaymentError(err instanceof ApiError ? err.message : 'Could not record the payment.');
+      setPaymentError(err instanceof ApiError ? err.message : t('pos.couldNotRecordPayment'));
     } finally {
       setPaymentBusy(false);
     }
@@ -276,7 +278,7 @@ export function PosPage() {
     try {
       await downloadFile(`/api/v1/sales/invoices/${sale.id}/pdf`, `invoice-${sale.number}.pdf`);
     } catch (err) {
-      toast.toast(err instanceof ApiError ? err.message : 'Could not download PDF.', 'error');
+      toast.toast(err instanceof ApiError ? err.message : t('reports.couldNotDownloadPdf'), 'error');
     }
   };
 
@@ -297,8 +299,8 @@ export function PosPage() {
   return (
     <>
       <PageHeader
-        title="Point of sale"
-        subtitle="Sell products and collect payment at the counter"
+        title={t('pos.title')}
+        subtitle={t('pos.subtitle')}
       />
       <div className="pos-layout">
         <PosCatalog

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError, downloadFile } from '../api/client';
 import { usePermission } from '../auth/auth-context';
 import {
@@ -15,55 +17,55 @@ type Shape = 'list' | 'single' | 'financial';
 
 interface ReportDef {
   id: string;
-  label: string;
+  labelKey: string;
   endpoint: string;
   shape: Shape;
   pdf?: boolean;
-  sections?: Array<{ section: string; key: string }>;
-  summaryRows?: Array<{ code: string; name: string; key: string }>;
+  sections?: Array<{ sectionKey: string; key: string }>;
+  summaryRows?: Array<{ code: string; nameKey: string; key: string }>;
 }
 
 const REPORTS: ReportDef[] = [
-  { id: 'dashboard', label: 'Dashboard', endpoint: '/api/v1/reports/dashboard', shape: 'single', pdf: true },
-  { id: 'sales-summary', label: 'Sales summary', endpoint: '/api/v1/reports/sales/summary', shape: 'list', pdf: true },
-  { id: 'sales-by-product', label: 'Sales by product', endpoint: '/api/v1/reports/sales/by-product', shape: 'list', pdf: true },
-  { id: 'sales-by-customer', label: 'Sales by customer', endpoint: '/api/v1/reports/sales/by-customer', shape: 'list', pdf: true },
-  { id: 'inventory-valuation', label: 'Inventory valuation', endpoint: '/api/v1/reports/inventory/valuation', shape: 'list', pdf: true },
-  { id: 'stock-movements', label: 'Stock movements', endpoint: '/api/v1/reports/inventory/movements', shape: 'list', pdf: true },
-  { id: 'low-stock', label: 'Low stock', endpoint: '/api/v1/reports/inventory/low-stock', shape: 'list', pdf: true },
-  { id: 'aging-ar', label: 'Aging (accounts receivable)', endpoint: '/api/v1/reports/aging/ar', shape: 'list', pdf: true },
-  { id: 'aging-ap', label: 'Aging (accounts payable)', endpoint: '/api/v1/reports/aging/ap', shape: 'list', pdf: true },
+  { id: 'dashboard', labelKey: 'reports.list.dashboard', endpoint: '/api/v1/reports/dashboard', shape: 'single', pdf: true },
+  { id: 'sales-summary', labelKey: 'reports.list.salesSummary', endpoint: '/api/v1/reports/sales/summary', shape: 'list', pdf: true },
+  { id: 'sales-by-product', labelKey: 'reports.list.salesByProduct', endpoint: '/api/v1/reports/sales/by-product', shape: 'list', pdf: true },
+  { id: 'sales-by-customer', labelKey: 'reports.list.salesByCustomer', endpoint: '/api/v1/reports/sales/by-customer', shape: 'list', pdf: true },
+  { id: 'inventory-valuation', labelKey: 'reports.list.inventoryValuation', endpoint: '/api/v1/reports/inventory/valuation', shape: 'list', pdf: true },
+  { id: 'stock-movements', labelKey: 'reports.list.stockMovements', endpoint: '/api/v1/reports/inventory/movements', shape: 'list', pdf: true },
+  { id: 'low-stock', labelKey: 'reports.list.lowStock', endpoint: '/api/v1/reports/inventory/low-stock', shape: 'list', pdf: true },
+  { id: 'aging-ar', labelKey: 'reports.list.agingAr', endpoint: '/api/v1/reports/aging/ar', shape: 'list', pdf: true },
+  { id: 'aging-ap', labelKey: 'reports.list.agingAp', endpoint: '/api/v1/reports/aging/ap', shape: 'list', pdf: true },
   {
     id: 'income-statement',
-    label: 'Income statement',
+    labelKey: 'reports.list.incomeStatement',
     endpoint: '/api/v1/reports/financial/income-statement',
     shape: 'financial',
     pdf: true,
     sections: [
-      { section: 'Revenue', key: 'revenue' },
-      { section: 'Cost of sales', key: 'costOfSales' },
-      { section: 'Operating expenses', key: 'operatingExpenses' },
+      { sectionKey: 'reports.section.revenue', key: 'revenue' },
+      { sectionKey: 'reports.section.costOfSales', key: 'costOfSales' },
+      { sectionKey: 'reports.section.operatingExpenses', key: 'operatingExpenses' },
     ],
-    summaryRows: [{ code: '', name: 'Net income', key: 'netIncome' }],
+    summaryRows: [{ code: '', nameKey: 'reports.summaryRow.netIncome', key: 'netIncome' }],
   },
-  { id: 'cash-flow', label: 'Cash flow', endpoint: '/api/v1/reports/financial/cash-flow', shape: 'list', pdf: true },
+  { id: 'cash-flow', labelKey: 'reports.list.cashFlow', endpoint: '/api/v1/reports/financial/cash-flow', shape: 'list', pdf: true },
   {
     id: 'balance-sheet',
-    label: 'Balance sheet',
+    labelKey: 'reports.list.balanceSheet',
     endpoint: '/api/v1/reports/financial/balance-sheet',
     shape: 'financial',
     pdf: true,
     sections: [
-      { section: 'Assets', key: 'assets' },
-      { section: 'Liabilities', key: 'liabilities' },
-      { section: 'Equity', key: 'equity' },
+      { sectionKey: 'reports.section.assets', key: 'assets' },
+      { sectionKey: 'reports.section.liabilities', key: 'liabilities' },
+      { sectionKey: 'reports.section.equity', key: 'equity' },
     ],
     summaryRows: [
-      { code: '', name: 'Total assets', key: 'totalAssets' },
-      { code: '', name: 'Total liabilities and equity', key: 'totalLiabilitiesAndEquity' },
+      { code: '', nameKey: 'reports.summaryRow.totalAssets', key: 'totalAssets' },
+      { code: '', nameKey: 'reports.summaryRow.totalLiabilitiesAndEquity', key: 'totalLiabilitiesAndEquity' },
     ],
   },
-  { id: 'payroll', label: 'Payroll summary', endpoint: '/api/v1/reports/hr/payroll', shape: 'list', pdf: true },
+  { id: 'payroll', labelKey: 'reports.list.payroll', endpoint: '/api/v1/reports/hr/payroll', shape: 'list', pdf: true },
 ];
 
 type Row = Record<string, unknown>;
@@ -86,29 +88,36 @@ function buildColumns(rows: Row[]): Column<Row>[] {
   }));
 }
 
-function flattenFinancial(report: ReportDef, payload: Json): Row[] {
+function flattenFinancial(report: ReportDef, payload: Json, t: TFunction): Row[] {
   const rows: Row[] = [];
-  for (const { section, key } of report.sections ?? []) {
+  for (const { sectionKey, key } of report.sections ?? []) {
     const sectionData = payload[key] as
       | { accounts?: Array<Record<string, unknown>>; total?: number }
       | undefined;
+    const sectionLabel = t(sectionKey);
     for (const account of sectionData?.accounts ?? []) {
-      rows.push({ section, code: account.code, name: account.name, balance: account.balance });
+      rows.push({ section: sectionLabel, code: account.code, name: account.name, balance: account.balance });
     }
     rows.push({
-      section,
+      section: sectionLabel,
       code: '',
-      name: `Total ${section.toLowerCase()}`,
+      name: t('reports.totalSection', { section: sectionLabel.toLowerCase() }),
       balance: sectionData?.total ?? 0,
     });
   }
   for (const row of report.summaryRows ?? []) {
-    rows.push({ section: 'Summary', code: row.code, name: row.name, balance: payload[row.key] ?? 0 });
+    rows.push({
+      section: t('reports.summary'),
+      code: row.code,
+      name: t(row.nameKey),
+      balance: payload[row.key] ?? 0,
+    });
   }
   return rows;
 }
 
 export function ReportsPage() {
+  const { t } = useTranslation();
   const can = usePermission();
   const [reportId, setReportId] = useState(REPORTS[0].id);
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -131,16 +140,16 @@ export function ReportsPage() {
         } else if (report.shape === 'single') {
           setRows([payload]);
         } else {
-          setRows(flattenFinancial(report, payload));
+          setRows(flattenFinancial(report, payload, t));
         }
       } catch (err) {
         setRows(null);
-        setError(err instanceof ApiError ? err.message : 'Could not load the report.');
+        setError(err instanceof ApiError ? err.message : t('reports.couldNotLoad'));
       } finally {
         setLoading(false);
       }
     },
-    [],
+    [t],
   );
 
   useEffect(() => {
@@ -152,7 +161,7 @@ export function ReportsPage() {
     try {
       await downloadFile(`${activeReport.endpoint}?format=csv`, 'export.csv');
     } catch (err) {
-      setDownloadError(err instanceof ApiError ? err.message : 'Could not download the CSV.');
+      setDownloadError(err instanceof ApiError ? err.message : t('reports.couldNotDownloadCsv'));
     }
   };
 
@@ -161,7 +170,7 @@ export function ReportsPage() {
     try {
       await downloadFile(`${activeReport.endpoint}?format=pdf`, 'report.pdf');
     } catch (err) {
-      setDownloadError(err instanceof ApiError ? err.message : 'Could not download the PDF.');
+      setDownloadError(err instanceof ApiError ? err.message : t('reports.couldNotDownloadPdf'));
     }
   };
 
@@ -170,15 +179,15 @@ export function ReportsPage() {
     try {
       await downloadFile(`${activeReport.endpoint}?format=xlsx`, 'export.xlsx');
     } catch (err) {
-      setDownloadError(err instanceof ApiError ? err.message : 'Could not download the XLSX.');
+      setDownloadError(err instanceof ApiError ? err.message : t('reports.couldNotDownloadXlsx'));
     }
   };
 
   if (!can('reporting:read')) {
     return (
       <>
-        <PageHeader title="Reports" />
-        <ErrorBanner message="Your role does not have permission to view reports." />
+        <PageHeader title={t('reports.title')} />
+        <ErrorBanner message={t('errors.noReportsPermission')} />
       </>
     );
   }
@@ -186,23 +195,23 @@ export function ReportsPage() {
   return (
     <>
       <PageHeader
-        title="Reports"
-        subtitle="Analytics and exports"
+        title={t('reports.title')}
+        subtitle={t('reports.subtitle')}
         action={
           <div className="page-header-actions">
             {activeReport.pdf ? (
               <button type="button" className="btn btn-ghost" onClick={() => void downloadPdf()}>
-                Download PDF
+                {t('common.downloadPdf')}
               </button>
             ) : null}
             <button type="button" className="btn btn-ghost" onClick={() => window.print()}>
-              Print / PDF
+              {t('reports.printPdf')}
             </button>
             <button type="button" className="btn btn-ghost" onClick={() => void downloadXlsx()}>
-              Download XLSX
+              {t('reports.downloadXlsx')}
             </button>
             <button type="button" className="btn" onClick={() => void download()}>
-              Download CSV
+              {t('reports.downloadCsv')}
             </button>
           </div>
         }
@@ -211,21 +220,21 @@ export function ReportsPage() {
         <select value={reportId} onChange={(event) => setReportId(event.target.value)}>
           {REPORTS.map((report) => (
             <option key={report.id} value={report.id}>
-              {report.label}
+              {t(report.labelKey)}
             </option>
           ))}
         </select>
       </div>
       <div className="report-print-heading">
-        <h2>{activeReport.label}</h2>
-        <p>Generated {new Date().toLocaleString()}</p>
+        <h2>{t(activeReport.labelKey)}</h2>
+        <p>{t('reports.generated', { date: new Date().toLocaleString() })}</p>
       </div>
       {error ? <ErrorBanner message={error} /> : null}
       {downloadError ? <ErrorBanner message={downloadError} /> : null}
       {loading ? <LoadingBlock /> : null}
       {!loading && rows ? (
         rows.length === 0 ? (
-          <EmptyState message="No data for this report." />
+          <EmptyState message={t('reports.noData')} />
         ) : (
           <DataTable
             columns={buildColumns(rows)}
