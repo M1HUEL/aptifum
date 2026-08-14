@@ -16,6 +16,7 @@ export interface SearchableSelectProps {
   emptyMessage?: string;
   ariaLabel?: string;
   disabled?: boolean;
+  id?: string;
 }
 
 export function SearchableSelect({
@@ -26,6 +27,7 @@ export function SearchableSelect({
   emptyMessage,
   ariaLabel,
   disabled,
+  id,
 }: SearchableSelectProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -56,7 +58,7 @@ export function SearchableSelect({
       onOpenChange={setOpen}
       disabled={disabled}
     >
-      <SelectTrigger aria-label={ariaLabel}>
+      <SelectTrigger aria-label={ariaLabel} id={id}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

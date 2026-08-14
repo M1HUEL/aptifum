@@ -48,6 +48,17 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card">
+        <svg
+          className="login-logo"
+          aria-hidden="true"
+          width="44"
+          height="44"
+          viewBox="0 0 44 44"
+          fill="none"
+        >
+          <rect width="44" height="44" rx="10" fill="#2f5fe6" />
+          <path d="M22 9 L36 35 H29.5 L22 19 L14.5 35 H8 Z" fill="#ffffff" />
+        </svg>
         <h1 className="login-title">Aptifum ERP</h1>
         <p className="login-subtitle">{t('auth.signInSubtitle')}</p>
         <form onSubmit={(event) => void handleSubmit(event)}>

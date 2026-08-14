@@ -26,10 +26,10 @@ import {
   EmptyState,
   ErrorBanner,
   formatNumber,
-  LoadingBlock,
   PageHeader,
   Pagination,
   StatusSelect,
+  TableSkeleton,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
@@ -220,7 +220,7 @@ function StockTab() {
         </button>
       </div>
       {error ? <ErrorBanner message={error} /> : null}
-      {!data && !error ? <LoadingBlock /> : null}
+      {!data && !error ? <TableSkeleton columns={stockColumns(t).length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
@@ -323,7 +323,7 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
         ) : null}
       </div>
       {error ? <ErrorBanner message={error} /> : null}
-      {!data && !error ? <LoadingBlock /> : null}
+      {!data && !error ? <TableSkeleton columns={movementColumns(t).length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
@@ -421,7 +421,7 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
         ) : null}
       </div>
       {error ? <ErrorBanner message={error} /> : null}
-      {!data && !error ? <LoadingBlock /> : null}
+      {!data && !error ? <TableSkeleton columns={lotColumns(t).length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (

@@ -11,9 +11,9 @@ import {
   DataTable,
   EmptyState,
   ErrorBanner,
-  LoadingBlock,
   PageHeader,
   Pagination,
+  TableSkeleton,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -244,7 +244,7 @@ export function ChartAccountsPage() {
         }
       />
       {error ? <ErrorBanner message={error} /> : null}
-      {loading && accounts.length === 0 ? <LoadingBlock /> : null}
+      {loading && accounts.length === 0 ? <TableSkeleton columns={columns.length} /> : null}
       {!loading && accounts.length === 0 && !error ? <EmptyState message={t('accounts.noAccounts')} /> : null}
       {accounts.length > 0 ? (
         <>

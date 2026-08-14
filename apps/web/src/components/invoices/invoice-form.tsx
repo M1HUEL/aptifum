@@ -137,6 +137,7 @@ export function InvoiceFormModal({
                 name="customerId"
                 render={({ field }) => (
                   <SearchableSelect
+                    id="invoice-customer"
                     value={field.value}
                     onChange={field.onChange}
                     options={customerOptions}
@@ -178,6 +179,7 @@ export function InvoiceFormModal({
                     name={`items.${index}.productId`}
                     render={({ field }) => (
                       <SearchableSelect
+                        id={`invoice-item-product-${index}`}
                         value={field.value}
                         onChange={field.onChange}
                         options={productOptions}

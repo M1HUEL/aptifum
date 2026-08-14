@@ -17,6 +17,7 @@ import {
   PageHeader,
   Pagination,
   TableSkeleton,
+  Toolbar,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -272,7 +273,7 @@ export function SuppliersPage() {
         }
       />
       {error ? <ErrorBanner message={error} /> : null}
-      <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
+      <Toolbar as="form" onSubmit={(event) => void submitSearch(event)}>
         <input
           type="search"
           placeholder={t('suppliers.searchPlaceholder')}
@@ -282,7 +283,7 @@ export function SuppliersPage() {
         <button type="submit" className="btn">
           {t('common.search')}
         </button>
-      </form>
+      </Toolbar>
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
         <>

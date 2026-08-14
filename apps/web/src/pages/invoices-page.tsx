@@ -11,10 +11,11 @@ import {
   ErrorBanner,
   formatDate,
   formatMoney,
-  LoadingBlock,
   PageHeader,
   Pagination,
   StatusSelect,
+  TableSkeleton,
+  Toolbar,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/toast';
@@ -208,7 +209,7 @@ export function InvoicesPage() {
           </div>
         }
       />
-      <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
+      <Toolbar as="form" onSubmit={(event) => void submitSearch(event)}>
         <input
           type="search"
           placeholder={t('invoices.searchByNumber')}
@@ -234,9 +235,9 @@ export function InvoicesPage() {
         <button type="submit" className="btn">
           {t('common.search')}
         </button>
-      </form>
+      </Toolbar>
       {error ? <ErrorBanner message={error} /> : null}
-      {!data && !error ? <LoadingBlock /> : null}
+      {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (

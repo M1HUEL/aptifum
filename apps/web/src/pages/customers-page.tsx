@@ -14,6 +14,7 @@ import {
   PageHeader,
   Pagination,
   TableSkeleton,
+  Toolbar,
 } from '../components/ui';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -268,7 +269,7 @@ export function CustomersPage() {
         }
       />
       {error ? <ErrorBanner message={error} /> : null}
-      <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
+      <Toolbar as="form" onSubmit={(event) => void submitSearch(event)}>
         <input
           type="search"
           placeholder={t('customers.searchByTradeName')}
@@ -278,7 +279,7 @@ export function CustomersPage() {
         <button type="submit" className="btn">
           {t('common.search')}
         </button>
-      </form>
+      </Toolbar>
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
         <>

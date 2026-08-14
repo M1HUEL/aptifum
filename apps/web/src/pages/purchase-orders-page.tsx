@@ -29,10 +29,10 @@ import {
   ErrorBanner,
   formatDate,
   formatMoney,
-  LoadingBlock,
   PageHeader,
   Pagination,
   StatusSelect,
+  TableSkeleton,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
@@ -414,7 +414,7 @@ export function PurchaseOrdersPage() {
         </button>
       </form>
       {error ? <ErrorBanner message={error} /> : null}
-      {!data && !error ? <LoadingBlock /> : null}
+      {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (

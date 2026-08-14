@@ -13,9 +13,9 @@ import {
   EmptyState,
   ErrorBanner,
   formatMoney,
-  LoadingBlock,
   PageHeader,
   Pagination,
+  TableSkeleton,
 } from '../ui';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
@@ -217,7 +217,7 @@ export function LeadPanel() {
         }
       />
       {error ? <ErrorBanner message={error} /> : null}
-      {!data && !error ? <LoadingBlock /> : null}
+      {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (

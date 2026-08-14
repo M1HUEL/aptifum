@@ -12,9 +12,9 @@ import {
   DataTable,
   EmptyState,
   ErrorBanner,
-  LoadingBlock,
   PageHeader,
   Pagination,
+  TableSkeleton,
 } from '../ui';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
@@ -201,7 +201,7 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
         }
       />
       {error ? <ErrorBanner message={error} /> : null}
-      {!data && !error ? <LoadingBlock /> : null}
+      {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (

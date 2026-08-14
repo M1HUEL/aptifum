@@ -29,10 +29,10 @@ import {
   EmptyState,
   ErrorBanner,
   formatDate,
-  LoadingBlock,
   PageHeader,
   Pagination,
   StatusSelect,
+  TableSkeleton,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
@@ -616,7 +616,7 @@ export function AttendanceLeavesPage() {
               {t('common.search')}
             </button>
           </form>
-          {attLoading && !attData ? <LoadingBlock /> : null}
+          {attLoading && !attData ? <TableSkeleton columns={attendanceColumns.length} /> : null}
           {attData ? (
             <>
               {attData.data.length === 0 ? (
@@ -667,7 +667,7 @@ export function AttendanceLeavesPage() {
               {t('common.search')}
             </button>
           </form>
-          {leaveLoading && !leaveData ? <LoadingBlock /> : null}
+          {leaveLoading && !leaveData ? <TableSkeleton columns={leaveColumns.length} /> : null}
           {leaveData ? (
             <>
               {leaveData.data.length === 0 ? (

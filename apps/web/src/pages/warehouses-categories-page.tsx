@@ -23,6 +23,7 @@ import {
   LoadingBlock,
   PageHeader,
   Pagination,
+  TableSkeleton,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -438,7 +439,7 @@ export function WarehousesCategoriesPage() {
       {tab === 'warehouses' ? (
         <>
           {warehouseError ? <ErrorBanner message={warehouseError} /> : null}
-          {!warehouseData ? <LoadingBlock /> : null}
+          {!warehouseData ? <TableSkeleton columns={warehouseColumns.length} /> : null}
           {warehouseData ? (
             <>
               {warehouseData.data.length === 0 ? (
@@ -453,7 +454,7 @@ export function WarehousesCategoriesPage() {
       ) : (
         <>
           {categoryError ? <ErrorBanner message={categoryError} /> : null}
-          {!categoryData ? <LoadingBlock /> : null}
+          {!categoryData ? <TableSkeleton columns={categoryColumns.length} /> : null}
           {categoryData ? (
             <>
               {categoryData.data.length === 0 ? (

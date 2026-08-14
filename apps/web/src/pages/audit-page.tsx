@@ -8,9 +8,9 @@ import {
   DataTable,
   EmptyState,
   ErrorBanner,
-  LoadingBlock,
   PageHeader,
   Pagination,
+  TableSkeleton,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { usePagedQuery } from '../hooks/use-paged-query';
@@ -201,7 +201,7 @@ export function AuditPage() {
       </div>
 
       {error ? <ErrorBanner message={error} /> : null}
-      {loading && !data ? <LoadingBlock /> : null}
+      {loading && !data ? <TableSkeleton columns={columns(t).length} /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (

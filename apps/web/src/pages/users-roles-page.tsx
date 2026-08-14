@@ -18,9 +18,9 @@ import {
   DataTable,
   EmptyState,
   ErrorBanner,
-  LoadingBlock,
   PageHeader,
   Pagination,
+  TableSkeleton,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -496,7 +496,7 @@ export function UsersRolesPage() {
       {tab === 'users' ? (
         <>
           {userError ? <ErrorBanner message={userError} /> : null}
-          {userLoading && !userData ? <LoadingBlock /> : null}
+          {userLoading && !userData ? <TableSkeleton columns={userColumns.length} /> : null}
           {userData ? (
             <>
               {userData.data.length === 0 ? (
@@ -517,7 +517,7 @@ export function UsersRolesPage() {
       ) : (
         <>
           {rolesError ? <ErrorBanner message={rolesError} /> : null}
-          {rolesLoading && roles.length === 0 ? <LoadingBlock /> : null}
+          {rolesLoading && roles.length === 0 ? <TableSkeleton columns={roleColumns.length} /> : null}
           {!rolesLoading && roles.length === 0 && !rolesError ? (
             <EmptyState message={t('usersRoles.noRoles')} />
           ) : (

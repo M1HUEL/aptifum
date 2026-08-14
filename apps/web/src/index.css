@@ -338,9 +338,26 @@ p {
   margin-bottom: 16px;
 }
 
+.toolbar input[type='search'] {
+  flex: 1;
+  max-width: 320px;
+}
+
 .search-form input {
   flex: 1;
   max-width: 320px;
+}
+
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.date-range-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 input,
@@ -602,6 +619,11 @@ select:focus {
 .login-title {
   font-size: 22px;
   margin-bottom: 4px;
+}
+
+.login-logo {
+  display: block;
+  margin: 0 auto 12px;
 }
 
 .login-subtitle {

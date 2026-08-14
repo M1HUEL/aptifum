@@ -190,20 +190,26 @@ export function DashboardPage() {
           ))}
         </select>
         {preset === 'custom' ? (
-          <>
+          <div className="date-range">
+            <label className="date-range-label" htmlFor="dash-from">
+              {t('dashboard.from')}
+            </label>
             <input
+              id="dash-from"
               type="date"
               value={customFrom}
-              aria-label={t('dashboard.from')}
               onChange={(event) => setCustomFrom(event.target.value)}
             />
+            <label className="date-range-label" htmlFor="dash-to">
+              {t('dashboard.to')}
+            </label>
             <input
+              id="dash-to"
               type="date"
               value={customTo}
-              aria-label={t('dashboard.to')}
               onChange={(event) => setCustomTo(event.target.value)}
             />
-          </>
+          </div>
         ) : null}
         <select value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)}>
           <option value="">{t('dashboard.allWarehouses')}</option>

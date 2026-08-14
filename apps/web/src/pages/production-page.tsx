@@ -31,6 +31,7 @@ import {
   LoadingBlock,
   PageHeader,
   Pagination,
+  TableSkeleton,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -523,7 +524,7 @@ export function ProductionPage() {
       {tab === 'boms' ? (
         <>
           {bomsError ? <ErrorBanner message={bomsError} /> : null}
-          {!boms && !bomsError ? <LoadingBlock /> : null}
+          {!boms && !bomsError ? <TableSkeleton columns={bomColumns.length} /> : null}
           {boms ? (
             <>
               {boms.data.length === 0 ? (
@@ -538,7 +539,7 @@ export function ProductionPage() {
       ) : (
         <>
           {ordersError ? <ErrorBanner message={ordersError} /> : null}
-          {!orders && !ordersError ? <LoadingBlock /> : null}
+          {!orders && !ordersError ? <TableSkeleton columns={orderColumns.length} /> : null}
           {orders ? (
             <>
               {orders.data.length === 0 ? (

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 
@@ -60,6 +60,21 @@ export function PageHeader({
       {action ? <div className="page-header-action">{action}</div> : null}
     </div>
   );
+}
+
+export function Toolbar({
+  children,
+  as = 'div',
+  ...props
+}: { children: ReactNode; as?: 'div' | 'form' } & ComponentPropsWithoutRef<'form'>) {
+  if (as === 'form') {
+    return (
+      <form className="toolbar" {...props}>
+        {children}
+      </form>
+    );
+  }
+  return <div className="toolbar">{children}</div>;
 }
 
 export function Spinner() {
