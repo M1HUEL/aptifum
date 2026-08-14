@@ -113,7 +113,26 @@ export function ErrorBanner({ message }: { message: string }) {
 }
 
 export function EmptyState({ message }: { message: string }) {
-  return <div className="empty-state">{message}</div>;
+  return (
+    <div className="empty-state">
+      <svg
+        className="empty-state-icon"
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+        <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+      </svg>
+      <span>{message}</span>
+    </div>
+  );
 }
 
 export type BadgeTone = 'neutral' | 'success' | 'warning' | 'danger' | 'info';
@@ -154,13 +173,16 @@ export function DataTable<T>({
         <tbody>
           {rows.map((row) => (
             <tr key={rowKey(row)}>
-              {columns.map((col) => (
-                <td key={col.key}>
-                  {col.render
-                    ? col.render(row)
-                    : String((row as Record<string, unknown>)[col.key] ?? '')}
-                </td>
-              ))}
+              {columns.map((col) => {
+                const value = String((row as Record<string, unknown>)[col.key] ?? '');
+                return col.render ? (
+                  <td key={col.key}>{col.render(row)}</td>
+                ) : (
+                  <td key={col.key} title={value}>
+                    {value}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

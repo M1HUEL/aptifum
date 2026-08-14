@@ -416,7 +416,8 @@ select:focus {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  overflow-x: auto;
+  overflow: auto;
+  max-height: 480px;
   margin-bottom: 14px;
 }
 
@@ -439,6 +440,18 @@ select:focus {
   letter-spacing: 0.04em;
   color: var(--text-muted);
   background: var(--bg);
+}
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.data-table td {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .data-table tr:last-child td {
@@ -559,6 +572,15 @@ select:focus {
   background: var(--surface);
   border: 1px dashed var(--border);
   border-radius: var(--radius);
+}
+
+.empty-state-icon {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 10px;
+  color: var(--text-muted);
+  opacity: 0.6;
+  display: block;
 }
 
 .login-page {
@@ -784,7 +806,8 @@ select:focus {
   box-shadow: 0 10px 30px rgba(18, 26, 43, 0.25);
   width: 100%;
   max-height: 90vh;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-sm {
@@ -805,6 +828,7 @@ select:focus {
   justify-content: space-between;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -813,6 +837,9 @@ select:focus {
 
 .modal-body {
   padding: 20px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .modal-footer {
@@ -821,6 +848,7 @@ select:focus {
   gap: 8px;
   padding: 14px 20px;
   border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .modal-message {
