@@ -201,9 +201,11 @@ const en: Translation = {
   errors: {
     somethingWentWrong: 'Something went wrong',
     tryAgain: 'Try again',
-    notFound: "The page you're looking for doesn't exist.",
-    forbidden: "You don't have permission to access this page.",
+    unauthorized: 'Your session expired. Please sign in again.',
+    forbidden: "You don't have permission to perform this action.",
     forbiddenFor: "You don't have permission to access {{page}}.",
+    notFound: 'The requested resource does not exist.',
+    server: 'A server error occurred. Please try again.',
     goToDashboard: 'Go to dashboard',
     couldNotDownloadPdf: 'Could not download PDF.',
     couldNotLoadPayroll: 'Could not load payroll.',

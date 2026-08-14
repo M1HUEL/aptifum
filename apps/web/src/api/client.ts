@@ -1,4 +1,5 @@
 import type { ApiErrorBody, AuthResult } from './types';
+import i18n from '../i18n';
 
 const ACCESS_KEY = 'aptifum.accessToken';
 const REFRESH_KEY = 'aptifum.refreshToken';
@@ -27,6 +28,7 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
   readonly requestId?: string;
+  readonly rawMessage: string;
 
   constructor(status: number, body: ApiErrorBody) {
     super(body.message || `Request failed (${status})`);
@@ -34,6 +36,16 @@ export class ApiError extends Error {
     this.status = status;
     this.code = body.code;
     this.requestId = body.requestId;
+    this.rawMessage = body.message || `Request failed (${status})`;
+    this.message = this.translatedMessage;
+  }
+
+  get translatedMessage(): string {
+    if (this.status === 401) return i18n.t('errors.unauthorized');
+    if (this.status === 403) return i18n.t('errors.forbidden');
+    if (this.status === 404) return i18n.t('errors.notFound');
+    if (this.status >= 500) return i18n.t('errors.server');
+    return this.rawMessage;
   }
 }
 

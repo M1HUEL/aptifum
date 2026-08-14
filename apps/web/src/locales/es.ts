@@ -199,9 +199,11 @@ const es = {
   errors: {
     somethingWentWrong: 'Algo salió mal',
     tryAgain: 'Intentar de nuevo',
-    notFound: 'La página que busca no existe.',
-    forbidden: 'No tiene permiso para acceder a esta página.',
+    unauthorized: 'Tu sesión expiró. Inicia sesión de nuevo.',
+    forbidden: 'No tienes permiso para realizar esta acción.',
     forbiddenFor: 'No tiene permiso para acceder a {{page}}.',
+    notFound: 'El recurso solicitado no existe.',
+    server: 'Ocurrió un error en el servidor. Inténtalo de nuevo.',
     goToDashboard: 'Ir al panel',
     couldNotDownloadPdf: 'No se pudo descargar el PDF.',
     couldNotLoadPayroll: 'No se pudo cargar la nómina.',

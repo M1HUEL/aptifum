@@ -20,25 +20,23 @@ interface PagedQueryResult<T> {
   reload: () => Promise<void>;
 }
 
-function serializeParams(options: PagedQueryOptions): string {
-  const params = new URLSearchParams({
-    page: String(options.page),
-    limit: String(options.limit ?? 20),
-  });
-  if (options.query) params.set('q', options.query);
-  if (options.extraParams) {
-    for (const [key, value] of Object.entries(options.extraParams)) {
-      if (value) params.set(key, value);
-    }
-  }
-  return params.toString();
-}
-
 export function usePagedQuery<T>(options: PagedQueryOptions): PagedQueryResult<T> {
-  const { path } = options;
-  const search = useMemo(() => serializeParams(options), [options]);
+  const { path, page, limit, query, extraParams } = options;
 
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const staticSearch = useMemo(() => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit ?? 20),
+    });
+    if (extraParams) {
+      for (const [key, value] of Object.entries(extraParams)) {
+        if (value) params.set(key, value);
+      }
+    }
+    return params.toString();
+  }, [page, limit, extraParams]);
+
+  const [debouncedQuery, setDebouncedQuery] = useState(query ?? '');
   const debounceRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -46,7 +44,7 @@ export function usePagedQuery<T>(options: PagedQueryOptions): PagedQueryResult<T
       window.clearTimeout(debounceRef.current);
     }
     debounceRef.current = window.setTimeout(() => {
-      setDebouncedSearch(search);
+      setDebouncedQuery(query ?? '');
       debounceRef.current = null;
     }, SEARCH_DEBOUNCE_MS);
     return () => {
@@ -54,11 +52,14 @@ export function usePagedQuery<T>(options: PagedQueryOptions): PagedQueryResult<T
         window.clearTimeout(debounceRef.current);
       }
     };
-  }, [search]);
+  }, [query]);
 
   const result = useQuery<Paginated<T>>({
-    queryKey: ['paged', path, debouncedSearch],
-    queryFn: () => apiFetch<Paginated<T>>(`${path}?${debouncedSearch}`),
+    queryKey: ['paged', path, staticSearch, debouncedQuery],
+    queryFn: () =>
+      apiFetch<Paginated<T>>(
+        `${path}?${staticSearch}${debouncedQuery ? `&q=${encodeURIComponent(debouncedQuery)}` : ''}`,
+      ),
     placeholderData: (previous) => previous,
   });
 

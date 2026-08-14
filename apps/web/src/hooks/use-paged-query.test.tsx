@@ -85,6 +85,6 @@ describe('usePagedQuery', () => {
 
     expect(result.current.loading).toBe(false);
     const lastCall = mockedFetch.mock.calls.at(-1)?.[0];
-    expect(lastCall).toContain('q=widget+%26+co');
+    expect(lastCall).toContain('q=widget%20%26%20co');
   });
 });

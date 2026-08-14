@@ -1,19 +1,27 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 
-export function formatMoney(value: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(value);
+function resolveLocale(language?: string): string {
+  return language?.startsWith('es') ? 'es-MX' : 'en-US';
 }
 
-export function formatNumber(value: number): string {
-  return new Intl.NumberFormat('en-US').format(value);
+export function formatMoney(value: number, currency = 'USD', locale?: string): string {
+  const resolvedLocale = locale ?? resolveLocale(i18n.language);
+  return new Intl.NumberFormat(resolvedLocale, { style: 'currency', currency }).format(value);
 }
 
-export function formatDate(value: string | null | undefined): string {
+export function formatNumber(value: number, locale?: string): string {
+  const resolvedLocale = locale ?? resolveLocale(i18n.language);
+  return new Intl.NumberFormat(resolvedLocale).format(value);
+}
+
+export function formatDate(value: string | null | undefined, locale?: string): string {
   if (!value) return '—';
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  const resolvedLocale = locale ?? resolveLocale(i18n.language);
+  return date.toLocaleDateString(resolvedLocale, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 export function Card({ title, children }: { title?: string; children: ReactNode }) {
