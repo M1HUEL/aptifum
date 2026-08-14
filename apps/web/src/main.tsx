@@ -7,6 +7,10 @@ import { AuthProvider } from './auth/auth-context';
 import { ToastProvider } from './components/toast';
 import { queryClient } from './lib/query-client';
 import { applyTheme, getInitialTheme } from './lib/theme';
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-500.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/inter/latin-700.css';
 import './i18n';
 import './index.css';
 
