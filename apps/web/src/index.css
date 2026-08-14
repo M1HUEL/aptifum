@@ -125,8 +125,22 @@ p {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px;
+  padding: 8px 8px 12px;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
 }
 
 .nav-link {
@@ -148,7 +162,18 @@ p {
   color: #ffffff;
 }
 
+.sidebar-group-label {
+  padding: 10px 14px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sidebar-text);
+  opacity: 0.55;
+}
+
 .sidebar-footer {
+  flex-shrink: 0;
   padding: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;

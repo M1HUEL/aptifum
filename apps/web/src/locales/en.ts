@@ -151,6 +151,17 @@ const en: Translation = {
     taxExempt: 'Tax exempt',
   },
   nav: {
+    groups: {
+      overview: 'Overview',
+      sales: 'Sales',
+      purchasing: 'Purchasing',
+      inventory: 'Inventory',
+      finance: 'Finance',
+      crm: 'CRM',
+      hr: 'HR',
+      production: 'Production',
+      system: 'System',
+    },
     dashboard: 'Dashboard',
     pos: 'POS',
     products: 'Products',

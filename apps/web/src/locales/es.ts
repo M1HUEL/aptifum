@@ -149,6 +149,17 @@ const es = {
     taxExempt: 'Exento de impuestos',
   },
   nav: {
+    groups: {
+      overview: 'Resumen',
+      sales: 'Ventas',
+      purchasing: 'Compras',
+      inventory: 'Inventario',
+      finance: 'Finanzas',
+      crm: 'CRM',
+      hr: 'RRHH',
+      production: 'Producción',
+      system: 'Sistema',
+    },
     dashboard: 'Panel',
     pos: 'Punto de venta',
     products: 'Productos',

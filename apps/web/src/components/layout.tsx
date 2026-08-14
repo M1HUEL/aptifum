@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth, usePermission } from '../auth/auth-context';
-import { ROUTE_GUARDS } from '../auth/route-permissions';
+import { NAV_GROUPS, ROUTE_GUARDS } from '../auth/route-permissions';
 import { useTheme } from '../lib/theme';
 
 export function Layout() {
@@ -20,16 +20,25 @@ export function Layout() {
       <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sidebar-brand">Aptifum</div>
         <nav className="sidebar-nav">
-          {visibleItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-              onClick={closeSidebar}
-            >
-              {t(item.labelKey)}
-            </NavLink>
-          ))}
+          {NAV_GROUPS.map((group) => {
+            const groupItems = visibleItems.filter((item) => item.group === group.key);
+            if (groupItems.length === 0) return null;
+            return (
+              <div key={group.key}>
+                <div className="sidebar-group-label">{t(group.labelKey)}</div>
+                {groupItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+                    onClick={closeSidebar}
+                  >
+                    {t(item.labelKey)}
+                  </NavLink>
+                ))}
+              </div>
+            );
+          })}
         </nav>
         <div className="sidebar-footer">
           <button

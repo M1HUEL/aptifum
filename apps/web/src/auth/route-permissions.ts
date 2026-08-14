@@ -2,30 +2,48 @@ export interface RouteGuard {
   to: string;
   labelKey: string;
   permission?: string;
+  group?: string;
 }
 
+export interface NavGroup {
+  key: string;
+  labelKey: string;
+}
+
+export const NAV_GROUPS: NavGroup[] = [
+  { key: 'overview', labelKey: 'nav.groups.overview' },
+  { key: 'sales', labelKey: 'nav.groups.sales' },
+  { key: 'purchasing', labelKey: 'nav.groups.purchasing' },
+  { key: 'inventory', labelKey: 'nav.groups.inventory' },
+  { key: 'finance', labelKey: 'nav.groups.finance' },
+  { key: 'crm', labelKey: 'nav.groups.crm' },
+  { key: 'hr', labelKey: 'nav.groups.hr' },
+  { key: 'production', labelKey: 'nav.groups.production' },
+  { key: 'system', labelKey: 'nav.groups.system' },
+];
+
 export const ROUTE_GUARDS: RouteGuard[] = [
-  { to: '/dashboard', labelKey: 'nav.dashboard', permission: 'reporting:read' },
-  { to: '/pos', labelKey: 'nav.pos', permission: 'invoicing:read' },
-  { to: '/products', labelKey: 'nav.products', permission: 'inventory:read' },
-  { to: '/stock', labelKey: 'nav.stock', permission: 'inventory:read' },
-  { to: '/warehouses', labelKey: 'nav.warehouses', permission: 'inventory:read' },
-  { to: '/invoices', labelKey: 'nav.invoices', permission: 'invoicing:read' },
-  { to: '/customers', labelKey: 'nav.customers', permission: 'sales:read' },
-  { to: '/orders', labelKey: 'nav.salesOrders', permission: 'sales:read' },
-  { to: '/purchasing', labelKey: 'nav.purchasing', permission: 'purchasing:read' },
-  { to: '/suppliers', labelKey: 'nav.suppliers', permission: 'purchasing:read' },
-  { to: '/accounting', labelKey: 'nav.accounting', permission: 'accounting:read' },
-  { to: '/accounts', labelKey: 'nav.chartOfAccounts', permission: 'accounting:read' },
-  { to: '/hr', labelKey: 'nav.hr', permission: 'hr:read' },
-  { to: '/attendance', labelKey: 'nav.attendance', permission: 'hr:read' },
-  { to: '/crm', labelKey: 'nav.crm', permission: 'crm:read' },
-  { to: '/production', labelKey: 'nav.production', permission: 'production:read' },
-  { to: '/reports', labelKey: 'nav.reports', permission: 'reporting:read' },
-  { to: '/users-roles', labelKey: 'nav.usersRoles', permission: 'users:read' },
-  { to: '/audit', labelKey: 'nav.audit', permission: 'audit:read' },
-  { to: '/settings', labelKey: 'nav.settings', permission: 'tax:read' },
-  { to: '/profile', labelKey: 'nav.profile' },
+  { to: '/dashboard', labelKey: 'nav.dashboard', permission: 'reporting:read', group: 'overview' },
+  { to: '/profile', labelKey: 'nav.profile', group: 'overview' },
+  { to: '/pos', labelKey: 'nav.pos', permission: 'invoicing:read', group: 'sales' },
+  { to: '/invoices', labelKey: 'nav.invoices', permission: 'invoicing:read', group: 'sales' },
+  { to: '/customers', labelKey: 'nav.customers', permission: 'sales:read', group: 'sales' },
+  { to: '/orders', labelKey: 'nav.salesOrders', permission: 'sales:read', group: 'sales' },
+  { to: '/purchasing', labelKey: 'nav.purchasing', permission: 'purchasing:read', group: 'purchasing' },
+  { to: '/suppliers', labelKey: 'nav.suppliers', permission: 'purchasing:read', group: 'purchasing' },
+  { to: '/products', labelKey: 'nav.products', permission: 'inventory:read', group: 'inventory' },
+  { to: '/stock', labelKey: 'nav.stock', permission: 'inventory:read', group: 'inventory' },
+  { to: '/warehouses', labelKey: 'nav.warehouses', permission: 'inventory:read', group: 'inventory' },
+  { to: '/accounting', labelKey: 'nav.accounting', permission: 'accounting:read', group: 'finance' },
+  { to: '/accounts', labelKey: 'nav.chartOfAccounts', permission: 'accounting:read', group: 'finance' },
+  { to: '/crm', labelKey: 'nav.crm', permission: 'crm:read', group: 'crm' },
+  { to: '/hr', labelKey: 'nav.hr', permission: 'hr:read', group: 'hr' },
+  { to: '/attendance', labelKey: 'nav.attendance', permission: 'hr:read', group: 'hr' },
+  { to: '/production', labelKey: 'nav.production', permission: 'production:read', group: 'production' },
+  { to: '/reports', labelKey: 'nav.reports', permission: 'reporting:read', group: 'system' },
+  { to: '/users-roles', labelKey: 'nav.usersRoles', permission: 'users:read', group: 'system' },
+  { to: '/audit', labelKey: 'nav.audit', permission: 'audit:read', group: 'system' },
+  { to: '/settings', labelKey: 'nav.settings', permission: 'tax:read', group: 'system' },
 ];
 
 export function permissionForRoute(pathname: string): string | undefined {
