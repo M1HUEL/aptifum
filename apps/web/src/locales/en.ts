@@ -173,6 +173,8 @@ const en: Translation = {
   },
   layout: {
     signOut: 'Sign out',
+    toggleTheme: 'Toggle theme',
+    toggleSidebar: 'Open menu',
   },
   auth: {
     loginTitle: 'Sign in',

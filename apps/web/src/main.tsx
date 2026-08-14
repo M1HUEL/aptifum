@@ -6,6 +6,7 @@ import App from './app';
 import { AuthProvider } from './auth/auth-context';
 import { ToastProvider } from './components/toast';
 import { queryClient } from './lib/query-client';
+import { applyTheme, getInitialTheme } from './lib/theme';
 import './i18n';
 import './index.css';
 
@@ -13,6 +14,8 @@ const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error('Root element #root not found');
 }
+
+applyTheme(getInitialTheme());
 
 createRoot(rootElement).render(
   <StrictMode>

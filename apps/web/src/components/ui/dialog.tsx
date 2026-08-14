@@ -17,7 +17,7 @@ const DialogContent = forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-white p-6 shadow-xl focus:outline-none',
+        'fixed left-1/2 top-1/2 z-50 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-[var(--surface)] p-6 shadow-xl focus:outline-none',
         className,
       )}
       {...props}
@@ -31,11 +31,11 @@ DialogContent.displayName = DialogPrimitive.Content.displayName;
 function DialogHeader({ title, description }: { title: string; description?: string }) {
   return (
     <div className="mb-4">
-      <DialogPrimitive.Title className="text-lg font-semibold text-gray-900">
+      <DialogPrimitive.Title className="text-lg font-semibold text-[var(--text)]">
         {title}
       </DialogPrimitive.Title>
       {description ? (
-        <DialogPrimitive.Description className="mt-1 text-sm text-gray-500">
+        <DialogPrimitive.Description className="mt-1 text-sm text-[var(--text-muted)]">
           {description}
         </DialogPrimitive.Description>
       ) : null}

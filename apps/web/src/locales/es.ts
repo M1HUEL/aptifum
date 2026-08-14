@@ -171,6 +171,8 @@ const es = {
   },
   layout: {
     signOut: 'Cerrar sesión',
+    toggleTheme: 'Cambiar tema',
+    toggleSidebar: 'Abrir menú',
   },
   auth: {
     loginTitle: 'Iniciar sesión',

@@ -9,7 +9,7 @@ const Checkbox = forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      'flex h-4 w-4 shrink-0 items-center justify-center rounded border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary',
+      'flex h-4 w-4 shrink-0 items-center justify-center rounded border border-[var(--border)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary',
       className,
     )}
     {...props}
