@@ -9,6 +9,8 @@ const es = {
     saving: 'Guardando…',
     working: 'Procesando…',
     search: 'Buscar',
+    searchOptions: 'Buscar…',
+    noMatches: 'Sin resultados',
     previous: 'Anterior',
     next: 'Siguiente',
     loading: 'Cargando',

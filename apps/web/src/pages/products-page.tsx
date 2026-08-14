@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
 import type { components } from '../api/schema';
@@ -24,6 +24,7 @@ import {
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
@@ -110,6 +111,7 @@ export function ProductsPage() {
     reset,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -117,6 +119,10 @@ export function ProductsPage() {
   });
 
   const enabled = watch('enabled');
+  const categoryOptions = categories.map((category) => ({
+    value: category.id,
+    label: category.name,
+  }));
 
   const { data, error } = usePagedQuery<Product>({
     path: '/api/v1/inventory/products',
@@ -370,14 +376,22 @@ export function ProductsPage() {
               </div>
               <div className="field">
                 <label htmlFor="product-category">{t('products.category')}</label>
-                <select id="product-category" {...register('categoryId')}>
-                  <option value="">{t('products.none')}</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  control={control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={[
+                        { value: '', label: t('products.none') },
+                        ...categoryOptions,
+                      ]}
+                      placeholder={t('products.none')}
+                      ariaLabel={t('products.category')}
+                    />
+                  )}
+                />
               </div>
               <div className="field">
                 <label htmlFor="product-purchase">{t('fields.purchasePrice')}</label>

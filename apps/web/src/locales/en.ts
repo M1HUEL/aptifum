@@ -11,6 +11,8 @@ const en: Translation = {
     saving: 'Saving…',
     working: 'Working…',
     search: 'Search',
+    searchOptions: 'Search…',
+    noMatches: 'No matches',
     previous: 'Previous',
     next: 'Next',
     loading: 'Loading',

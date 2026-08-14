@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
 import type { components } from '../api/schema';
@@ -35,6 +35,7 @@ import {
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { SearchableSelect } from '../components/ui/searchable-select';
 import { usePermission } from '../auth/auth-context';
 import { useToast } from '../components/toast';
 import { exportRowsToCsv } from '../lib/csv';
@@ -196,6 +197,7 @@ export function AttendanceLeavesPage() {
     register: registerClock,
     handleSubmit: submitClockForm,
     reset: resetClock,
+    control: controlClock,
     formState: { errors: clockErrors },
   } = clockForm;
 
@@ -207,6 +209,7 @@ export function AttendanceLeavesPage() {
     register: registerAtt,
     handleSubmit: submitAttForm,
     reset: resetAtt,
+    control: controlAtt,
     formState: { errors: attErrors },
   } = attForm;
 
@@ -218,8 +221,14 @@ export function AttendanceLeavesPage() {
     register: registerLeave,
     handleSubmit: submitLeaveForm,
     reset: resetLeave,
+    control: controlLeave,
     formState: { errors: leaveErrors },
   } = leaveForm;
+
+  const employeeOptions = employees.map((employee) => ({
+    value: employee.id,
+    label: employeeName(employee),
+  }));
 
   const loadAttendance = async (page: number, limit: number, filters: typeof attFilters) => {
     setAttLoading(true);
@@ -683,14 +692,19 @@ export function AttendanceLeavesPage() {
               <label htmlFor="clock-employee">
                 {t('fields.employee')}<span className="field-required"> *</span>
               </label>
-              <select id="clock-employee" {...registerClock('employeeId')}>
-                <option value="">{t('hr.selectEmployee')}</option>
-                {employees.map((employee) => (
-                  <option key={employee.id} value={employee.id}>
-                    {employeeName(employee)}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                control={controlClock}
+                name="employeeId"
+                render={({ field }) => (
+                  <SearchableSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={employeeOptions}
+                    placeholder={t('hr.selectEmployee')}
+                    ariaLabel={t('fields.employee')}
+                  />
+                )}
+              />
               {clockErrors.employeeId ? (
                 <div className="field-error">{clockErrors.employeeId.message}</div>
               ) : null}
@@ -727,14 +741,19 @@ export function AttendanceLeavesPage() {
                 <label htmlFor="att-employee">
                   {t('fields.employee')}<span className="field-required"> *</span>
                 </label>
-                <select id="att-employee" {...registerAtt('employeeId')}>
-                  <option value="">{t('hr.selectEmployee')}</option>
-                  {employees.map((employee) => (
-                    <option key={employee.id} value={employee.id}>
-                      {employeeName(employee)}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  control={controlAtt}
+                  name="employeeId"
+                  render={({ field }) => (
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={employeeOptions}
+                      placeholder={t('hr.selectEmployee')}
+                      ariaLabel={t('fields.employee')}
+                    />
+                  )}
+                />
                 {attErrors.employeeId ? (
                   <div className="field-error">{attErrors.employeeId.message}</div>
                 ) : null}
@@ -790,14 +809,19 @@ export function AttendanceLeavesPage() {
                 <label htmlFor="leave-employee">
                   {t('fields.employee')}<span className="field-required"> *</span>
                 </label>
-                <select id="leave-employee" {...registerLeave('employeeId')}>
-                  <option value="">{t('hr.selectEmployee')}</option>
-                  {employees.map((employee) => (
-                    <option key={employee.id} value={employee.id}>
-                      {employeeName(employee)}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  control={controlLeave}
+                  name="employeeId"
+                  render={({ field }) => (
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={employeeOptions}
+                      placeholder={t('hr.selectEmployee')}
+                      ariaLabel={t('fields.employee')}
+                    />
+                  )}
+                />
                 {leaveErrors.employeeId ? (
                   <div className="field-error">{leaveErrors.employeeId.message}</div>
                 ) : null}

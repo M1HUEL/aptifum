@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
 import type { components } from '../api/schema';
@@ -27,6 +27,7 @@ import {
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
@@ -156,12 +157,16 @@ export function WarehousesCategoriesPage() {
     reset: resetCat,
     setValue: setCatValue,
     watch: watchCat,
+    control: controlCat,
     formState: { errors: catErrors },
   } = categoryForm;
 
   const whActive = watchWh('active');
   const locActive = watchLoc('active');
   const catActive = watchCat('active');
+  const categoryOptions = (categoryData?.data ?? [])
+    .filter((category) => category.id !== editingCatId)
+    .map((category) => ({ value: category.id, label: category.name }));
 
   const createWhMutation = useApiMutation<CreateWarehouseDto>('/api/v1/inventory/warehouses', 'POST');
   const updateWhMutation = useApiMutation<CreateWarehouseDto>(
@@ -619,16 +624,22 @@ export function WarehousesCategoriesPage() {
               </div>
               <div className="field">
                 <label htmlFor="cat-parent">{t('tables.parent')}</label>
-                <select id="cat-parent" {...registerCat('parentId')}>
-                  <option value="">{t('warehouses.root')}</option>
-                  {categoryData?.data.map((category) =>
-                    category.id !== editingCatId ? (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ) : null,
+                <Controller
+                  control={controlCat}
+                  name="parentId"
+                  render={({ field }) => (
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={[
+                        { value: '', label: t('warehouses.root') },
+                        ...categoryOptions,
+                      ]}
+                      placeholder={t('warehouses.root')}
+                      ariaLabel={t('tables.parent')}
+                    />
                   )}
-                </select>
+                />
               </div>
               <div className="field">
                 <label>{t('common.status')}</label>

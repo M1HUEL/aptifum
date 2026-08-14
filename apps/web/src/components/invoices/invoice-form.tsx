@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { components } from '../../api/schema';
 import type { Customer, Product, Warehouse } from '../../api/types';
@@ -8,6 +8,7 @@ import { invoiceFormSchema, type InvoiceFormValues } from '../../api/schemas';
 import { useApiInvalidation, useApiMutation } from '../../api/hooks';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
+import { SearchableSelect } from '../ui/searchable-select';
 import { useToast } from '../toast';
 
 type CreateInvoiceDto = components['schemas']['CreateInvoiceDto'];
@@ -74,6 +75,7 @@ export function InvoiceFormModal({
     reset,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
@@ -81,6 +83,14 @@ export function InvoiceFormModal({
   });
 
   const items = watch('items');
+  const customerOptions = customers.map((customer) => ({
+    value: customer.id,
+    label: customer.tradeName,
+  }));
+  const productOptions = products.map((product) => ({
+    value: product.id,
+    label: `${product.sku} · ${product.name}`,
+  }));
 
   const createMutation = useApiMutation<CreateInvoiceDto>('/api/v1/sales/invoices', 'POST');
   const saving = createMutation.isPending;
@@ -122,14 +132,19 @@ export function InvoiceFormModal({
               <label htmlFor="invoice-customer">
                 {t('fields.customer')} <span className="field-required">*</span>
               </label>
-              <select id="invoice-customer" {...register('customerId')}>
-                <option value="">{t('invoices.selectCustomer')}</option>
-                {customers.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.tradeName}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                control={control}
+                name="customerId"
+                render={({ field }) => (
+                  <SearchableSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={customerOptions}
+                    placeholder={t('invoices.selectCustomer')}
+                    ariaLabel={t('fields.customer')}
+                  />
+                )}
+              />
               {errors.customerId ? <div className="field-error">{errors.customerId.message}</div> : null}
             </div>
             <div className="field">
@@ -158,14 +173,19 @@ export function InvoiceFormModal({
               <div className="invoice-item" key={index}>
                 <div className="field">
                   <label htmlFor={`invoice-item-product-${index}`}>{t('fields.product')}</label>
-                  <select id={`invoice-item-product-${index}`} {...register(`items.${index}.productId`)}>
-                    <option value="">{t('invoices.selectProduct')}</option>
-                    {products.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.sku} · {product.name}
-                      </option>
-                    ))}
-                  </select>
+                  <Controller
+                    control={control}
+                    name={`items.${index}.productId`}
+                    render={({ field }) => (
+                      <SearchableSelect
+                        value={field.value}
+                        onChange={field.onChange}
+                        options={productOptions}
+                        placeholder={t('invoices.selectProduct')}
+                        ariaLabel={t('fields.product')}
+                      />
+                    )}
+                  />
                   {errors.items?.[index]?.productId ? (
                     <div className="field-error">{errors.items[index]?.productId?.message}</div>
                   ) : null}

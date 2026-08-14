@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
@@ -29,6 +29,7 @@ import {
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
@@ -124,6 +125,7 @@ export function SalesOrdersPage() {
     reset,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<SalesOrderFormValues>({
     resolver: zodResolver(salesOrderFormSchema),
@@ -131,6 +133,14 @@ export function SalesOrdersPage() {
   });
 
   const items = watch('items');
+  const customerOptions = customers.map((customer) => ({
+    value: customer.id,
+    label: customer.tradeName,
+  }));
+  const productOptions = products.map((product) => ({
+    value: product.id,
+    label: `${product.sku} · ${product.name}`,
+  }));
 
   useEffect(() => {
     let cancelled = false;
@@ -391,14 +401,19 @@ export function SalesOrdersPage() {
               </div>
               <div className="field">
                 <label htmlFor="so-customer">{t('fields.customer')} *</label>
-                <select id="so-customer" {...register('customerId')}>
-                  <option value="">{t('salesOrders.selectCustomer')}</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.tradeName}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  control={control}
+                  name="customerId"
+                  render={({ field }) => (
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={customerOptions}
+                      placeholder={t('salesOrders.selectCustomer')}
+                      ariaLabel={t('fields.customer')}
+                    />
+                  )}
+                />
                 {errors.customerId ? <div className="field-error">{errors.customerId.message}</div> : null}
               </div>
               <div className="field">
@@ -432,14 +447,19 @@ export function SalesOrdersPage() {
                 <div className="invoice-item" key={index}>
                   <div className="field">
                     <label htmlFor={`so-item-product-${index}`}>{t('fields.product')}</label>
-                    <select id={`so-item-product-${index}`} {...register(`items.${index}.productId`)}>
-                      <option value="">{t('salesOrders.selectProduct')}</option>
-                      {products.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.sku} · {product.name}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      control={control}
+                      name={`items.${index}.productId`}
+                      render={({ field }) => (
+                        <SearchableSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={productOptions}
+                          placeholder={t('salesOrders.selectProduct')}
+                          ariaLabel={t('fields.product')}
+                        />
+                      )}
+                    />
                   </div>
                   <div className="field">
                     <label htmlFor={`so-item-qty-${index}`}>{t('fields.qty')}</label>

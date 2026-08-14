@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
@@ -35,6 +35,7 @@ import {
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
@@ -130,6 +131,7 @@ export function PurchaseOrdersPage() {
     reset,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<PurchaseOrderFormValues>({
     resolver: zodResolver(purchaseOrderFormSchema),
@@ -137,6 +139,14 @@ export function PurchaseOrdersPage() {
   });
 
   const items = watch('items');
+  const supplierOptions = suppliers.map((supplier) => ({
+    value: supplier.id,
+    label: supplier.tradeName,
+  }));
+  const productOptions = products.map((product) => ({
+    value: product.id,
+    label: `${product.sku} · ${product.name}`,
+  }));
 
   const receiveForm = useForm<PurchaseReceiptFormValues>({
     resolver: zodResolver(purchaseReceiptFormSchema),
@@ -420,14 +430,19 @@ export function PurchaseOrdersPage() {
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="po-supplier">{t('purchaseOrders.supplier')} *</label>
-                <select id="po-supplier" {...register('supplierId')}>
-                  <option value="">{t('purchaseOrders.selectSupplier')}</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.tradeName}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  control={control}
+                  name="supplierId"
+                  render={({ field }) => (
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={supplierOptions}
+                      placeholder={t('purchaseOrders.selectSupplier')}
+                      ariaLabel={t('purchaseOrders.supplier')}
+                    />
+                  )}
+                />
                 {errors.supplierId ? <div className="field-error">{errors.supplierId.message}</div> : null}
               </div>
               <div className="field">
@@ -457,14 +472,19 @@ export function PurchaseOrdersPage() {
                 <div className="invoice-item" key={index}>
                   <div className="field">
                     <label htmlFor={`po-item-product-${index}`}>{t('fields.product')}</label>
-                    <select id={`po-item-product-${index}`} {...register(`items.${index}.productId`)}>
-                      <option value="">{t('purchaseOrders.selectProduct')}</option>
-                      {products.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.sku} · {product.name}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      control={control}
+                      name={`items.${index}.productId`}
+                      render={({ field }) => (
+                        <SearchableSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={productOptions}
+                          placeholder={t('purchaseOrders.selectProduct')}
+                          ariaLabel={t('fields.product')}
+                        />
+                      )}
+                    />
                   </div>
                   <div className="field">
                     <label htmlFor={`po-item-qty-${index}`}>{t('fields.qty')}</label>

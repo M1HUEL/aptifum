@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
 import type { components } from '../api/schema';
@@ -35,6 +35,7 @@ import {
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
@@ -188,6 +189,7 @@ export function ProductionPage() {
     reset: resetBom,
     setValue: setBomValue,
     watch: watchBom,
+    control: controlBom,
     formState: { errors: bomErrors },
   } = bomForm;
 
@@ -201,12 +203,17 @@ export function ProductionPage() {
     reset: resetOrder,
     setValue: setOrderValue,
     watch: watchOrder,
+    control: controlOrder,
     formState: { errors: orderErrors },
   } = orderForm;
 
   const bomLines = watchBom('lines');
   const bomActive = watchBom('active');
   const orderProductId = watchOrder('productId');
+  const productOptions = products.map((product) => ({
+    value: product.id,
+    label: `${product.sku} · ${product.name}`,
+  }));
 
   const createBomMutation = useApiMutation<CreateBomDto>('/api/v1/production/boms', 'POST');
   const updateBomMutation = useApiMutation<CreateBomDto>(
@@ -557,14 +564,19 @@ export function ProductionPage() {
               </div>
               <div className="field">
                 <label htmlFor="bom-product">{t('fields.finishedProduct')} *</label>
-                <select id="bom-product" {...registerBom('productId')}>
-                  <option value="">{t('production.selectProduct')}</option>
-                  {products.map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.sku} · {product.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  control={controlBom}
+                  name="productId"
+                  render={({ field }) => (
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={productOptions}
+                      placeholder={t('production.selectProduct')}
+                      ariaLabel={t('fields.finishedProduct')}
+                    />
+                  )}
+                />
                 {bomErrors.productId ? (
                   <div className="field-error">{bomErrors.productId.message}</div>
                 ) : null}
@@ -601,18 +613,13 @@ export function ProductionPage() {
               <div className="form-grid form-grid-3" key={index}>
                 <div className="field">
                   <label htmlFor={`bomline-${index}-product`}>{t('production.component')}</label>
-                  <select
-                    id={`bomline-${index}-product`}
+                  <SearchableSelect
                     value={line.productId}
-                    onChange={(event) => setBomLine(index, 'productId', event.target.value)}
-                  >
-                    <option value="">{t('production.selectProduct')}</option>
-                    {products.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.sku} · {product.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(next) => setBomLine(index, 'productId', next)}
+                    options={productOptions}
+                    placeholder={t('production.selectProduct')}
+                    ariaLabel={t('production.component')}
+                  />
                 </div>
                 <div className="field">
                   <label htmlFor={`bomline-${index}-qty`}>{t('fields.quantity')}</label>
@@ -664,21 +671,22 @@ export function ProductionPage() {
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="order-product">{t('fields.product')} *</label>
-                <select
-                  id="order-product"
-                  {...registerOrder('productId')}
-                  onChange={(event) => {
-                    void registerOrder('productId').onChange(event);
-                    setOrderValue('bomId', '');
-                  }}
-                >
-                  <option value="">{t('production.selectProduct')}</option>
-                  {products.map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.sku} · {product.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  control={controlOrder}
+                  name="productId"
+                  render={({ field }) => (
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={(next) => {
+                        field.onChange(next);
+                        setOrderValue('bomId', '');
+                      }}
+                      options={productOptions}
+                      placeholder={t('production.selectProduct')}
+                      ariaLabel={t('fields.product')}
+                    />
+                  )}
+                />
                 {orderErrors.productId ? (
                   <div className="field-error">{orderErrors.productId.message}</div>
                 ) : null}

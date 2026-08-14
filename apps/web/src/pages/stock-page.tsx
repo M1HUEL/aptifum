@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch } from '../api/client';
 import type { components } from '../api/schema';
@@ -32,6 +32,7 @@ import {
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
@@ -487,11 +488,17 @@ export function StockPage() {
     setValue,
     getValues,
     watch,
+    control,
     formState: { errors },
   } = useForm<StockMovementFormValues>({
     resolver: zodResolver(stockMovementFormSchema),
     defaultValues: emptyForm,
   });
+
+  const warehouseOptions = warehouses.map((warehouse) => ({
+    value: warehouse.id,
+    label: warehouse.name,
+  }));
 
   const warehouseId = watch('warehouseId');
   const productId = watch('productId');
@@ -625,19 +632,22 @@ export function StockPage() {
               </div>
               <div className="field">
                 <label htmlFor="movement-warehouse">{t('fields.warehouse')} *</label>
-                <select
-                  id="movement-warehouse"
-                  {...register('warehouseId', {
-                    onChange: () => setValue('locationId', ''),
-                  })}
-                >
-                  <option value="">{t('stock.selectWarehouse')}</option>
-                  {warehouses.map((warehouse) => (
-                    <option key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  control={control}
+                  name="warehouseId"
+                  render={({ field }) => (
+                    <SearchableSelect
+                      value={field.value}
+                      onChange={(next) => {
+                        field.onChange(next);
+                        setValue('locationId', '');
+                      }}
+                      options={warehouseOptions}
+                      placeholder={t('stock.selectWarehouse')}
+                      ariaLabel={t('fields.warehouse')}
+                    />
+                  )}
+                />
                 {errors.warehouseId ? <div className="field-error">{errors.warehouseId.message}</div> : null}
               </div>
               {locations.length > 0 ? (
