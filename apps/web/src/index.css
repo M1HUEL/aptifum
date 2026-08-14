@@ -1,23 +1,28 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-bg: #f5f6f8;
-  --color-surface: #ffffff;
-  --color-border: #e2e5ea;
-  --color-text: #1c2333;
-  --color-muted: #6b7385;
-  --color-primary: #2f5fe6;
-  --color-primary-dark: #2349b8;
-  --color-sidebar: #121a2b;
-  --color-sidebar-text: #c6cede;
-  --color-success: #1f9d55;
-  --color-success-bg: #e6f6ec;
-  --color-warning: #b7791f;
-  --color-warning-bg: #fdf3e0;
-  --color-danger: #c53030;
-  --color-danger-bg: #fdecec;
-  --color-info: #2b6cb0;
-  --color-info-bg: #e8f1fa;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-sidebar: var(--sidebar-bg);
+  --color-sidebar-text: var(--sidebar-text);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-hover: var(--hover);
+  --color-neutral-bg: var(--neutral-bg);
+  --color-neutral-text: var(--neutral-text);
   --radius-ui: 8px;
 }
 
