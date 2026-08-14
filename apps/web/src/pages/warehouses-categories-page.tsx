@@ -29,6 +29,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { exportRowsToCsv } from '../lib/csv';
 
 type CreateWarehouseDto = components['schemas']['CreateWarehouseDto'];
 type CreateLocationDto = components['schemas']['CreateLocationDto'];
@@ -102,6 +103,8 @@ export function WarehousesCategoriesPage() {
   const [locError, setLocError] = useState<string | null>(null);
   const [deletingLoc, setDeletingLoc] = useState<WarehouseLocation | null>(null);
 
+  const [limit, setLimit] = useState(50);
+
   const [catOpen, setCatOpen] = useState(false);
   const [editingCatId, setEditingCatId] = useState<string | null>(null);
   const [catError, setCatError] = useState<string | null>(null);
@@ -110,12 +113,12 @@ export function WarehousesCategoriesPage() {
   const {
     data: warehouseData,
     error: warehouseError,
-  } = usePagedQuery<Warehouse>({ path: '/api/v1/inventory/warehouses', page: 1, limit: 50 });
+  } = usePagedQuery<Warehouse>({ path: '/api/v1/inventory/warehouses', page: 1, limit });
 
   const {
     data: categoryData,
     error: categoryError,
-  } = usePagedQuery<Category>({ path: '/api/v1/inventory/categories', page: 1, limit: 50 });
+  } = usePagedQuery<Category>({ path: '/api/v1/inventory/categories', page: 1, limit });
 
   const warehouseForm = useForm<WarehouseFormValues>({
     resolver: zodResolver(warehouseFormSchema),
@@ -387,15 +390,34 @@ export function WarehousesCategoriesPage() {
     },
   ];
 
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+  };
+
+  const handleExport = () => {
+    if (tab === 'warehouses') {
+      if (!warehouseData || warehouseData.data.length === 0) return;
+      exportRowsToCsv({ filename: 'warehouses', columns: warehouseColumns, rows: warehouseData.data });
+    } else {
+      if (!categoryData || categoryData.data.length === 0) return;
+      exportRowsToCsv({ filename: 'categories', columns: categoryColumns, rows: categoryData.data });
+    }
+  };
+
   return (
     <>
       <PageHeader
         title={t('warehouses.title')}
         subtitle={t('warehouses.subtitle')}
         action={
-          <Button onClick={() => (tab === 'warehouses' ? openWarehouse() : openCategory())}>
-            {tab === 'warehouses' ? t('warehouses.newWarehouse') : t('warehouses.newCategory')}
-          </Button>
+          <div className="page-header-actions">
+            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+              {t('common.export')}
+            </button>
+            <Button onClick={() => (tab === 'warehouses' ? openWarehouse() : openCategory())}>
+              {tab === 'warehouses' ? t('warehouses.newWarehouse') : t('warehouses.newCategory')}
+            </Button>
+          </div>
         }
       />
 
@@ -419,7 +441,7 @@ export function WarehousesCategoriesPage() {
               ) : (
                 <DataTable columns={warehouseColumns} rows={warehouseData.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={warehouseData.meta.page} limit={warehouseData.meta.limit} total={warehouseData.meta.total} onPage={() => {}} />
+              <Pagination page={warehouseData.meta.page} limit={warehouseData.meta.limit} total={warehouseData.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
             </>
           ) : null}
         </>
@@ -434,7 +456,7 @@ export function WarehousesCategoriesPage() {
               ) : (
                 <DataTable columns={categoryColumns} rows={categoryData.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={categoryData.meta.page} limit={categoryData.meta.limit} total={categoryData.meta.total} onPage={() => {}} />
+              <Pagination page={categoryData.meta.page} limit={categoryData.meta.limit} total={categoryData.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
             </>
           ) : null}
         </>

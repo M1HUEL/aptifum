@@ -37,6 +37,7 @@ import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { exportRowsToCsv } from '../lib/csv';
 
 type CreatePurchaseOrderDto = components['schemas']['CreatePurchaseOrderDto'];
 type CreatePurchaseOrderItemDto = components['schemas']['CreatePurchaseOrderItemDto'];
@@ -96,6 +97,7 @@ const emptyReceipt: PurchaseReceiptFormValues = {
 export function PurchaseOrdersPage() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [query, setQuery] = useState('');
   const [input, setInput] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -117,6 +119,7 @@ export function PurchaseOrdersPage() {
   const { data, error } = usePagedQuery<PurchaseOrder>({
     path: '/api/v1/purchasing/purchase-orders',
     page,
+    limit,
     query,
     extraParams: { status: statusFilter },
   });
@@ -206,6 +209,11 @@ export function PurchaseOrdersPage() {
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     setQuery(input.trim());
+    setPage(1);
+  };
+
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
     setPage(1);
   };
 
@@ -349,12 +357,24 @@ export function PurchaseOrdersPage() {
     },
   ];
 
+  const handleExport = () => {
+    if (!data || data.data.length === 0) return;
+    exportRowsToCsv({ filename: 'purchase-orders', columns, rows: data.data });
+  };
+
   return (
     <>
       <PageHeader
         title={t('purchaseOrders.title')}
         subtitle={t('purchaseOrders.subtitle')}
-        action={<Button onClick={openCreate}>{t('purchaseOrders.newOrder')}</Button>}
+        action={
+          <div className="page-header-actions">
+            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+              {t('common.export')}
+            </button>
+            <Button onClick={openCreate}>{t('purchaseOrders.newOrder')}</Button>
+          </div>
+        }
       />
       <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
         <input
@@ -389,7 +409,7 @@ export function PurchaseOrdersPage() {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} onLimit={handleLimitChange} />
         </>
       ) : null}
 

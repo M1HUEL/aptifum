@@ -22,6 +22,7 @@ import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { useToast } from '../toast';
 import { usePagedQuery } from '../../hooks/use-paged-query';
+import { exportRowsToCsv } from '../../lib/csv';
 import { stageTone, stages } from './crm-helpers';
 
 type CreateOpportunityDto = components['schemas']['CreateOpportunityDto'];
@@ -74,12 +75,13 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
     id: string;
     action: 'mark-won' | 'mark-lost';
   } | null>(null);
+  const [limit, setLimit] = useState(50);
   const toast = useToast();
 
   const { data, error, reload } = usePagedQuery<Opportunity>({
     path: '/api/v1/crm/opportunities',
     page: 1,
-    limit: 50,
+    limit,
   });
 
   const {
@@ -209,12 +211,28 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
     },
   ];
 
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+  };
+
+  const handleExport = () => {
+    if (!data || data.data.length === 0) return;
+    exportRowsToCsv({ filename: 'opportunities', columns, rows: data.data });
+  };
+
   return (
     <>
       <PageHeader
         title={t('crm.opportunitiesTitle')}
         subtitle={t('crm.opportunitiesSubtitle')}
-        action={<Button onClick={openCreate}>{t('crm.newOpportunity')}</Button>}
+        action={
+          <div className="page-header-actions">
+            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+              {t('common.export')}
+            </button>
+            <Button onClick={openCreate}>{t('crm.newOpportunity')}</Button>
+          </div>
+        }
       />
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
@@ -225,7 +243,7 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={() => {}} />
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
         </>
       ) : null}
 

@@ -20,6 +20,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { exportRowsToCsv } from '../lib/csv';
 
 const accountTypes: AccountType[] = ['asset', 'liability', 'equity', 'revenue', 'expense'];
 const normalBalances: AccountNormalBalance[] = ['debit', 'credit'];
@@ -62,6 +63,7 @@ const emptyForm: AccountFormValues = {
 export function ChartAccountsPage() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -86,7 +88,7 @@ export function ChartAccountsPage() {
   const { data, error, loading } = usePagedQuery<ChartAccount>({
     path: '/api/v1/accounting/accounts',
     page,
-    limit: 50,
+    limit,
   });
 
   const accounts = data?.data ?? [];
@@ -217,12 +219,29 @@ export function ChartAccountsPage() {
     },
   ];
 
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+    setPage(1);
+  };
+
+  const handleExport = () => {
+    if (!data || accounts.length === 0) return;
+    exportRowsToCsv({ filename: 'chart-accounts', columns, rows: accounts });
+  };
+
   return (
     <>
       <PageHeader
         title={t('accounts.title')}
         subtitle={t('accounts.subtitle')}
-        action={<Button onClick={openCreate}>{t('accounts.newAccount')}</Button>}
+        action={
+          <div className="page-header-actions">
+            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+              {t('common.export')}
+            </button>
+            <Button onClick={openCreate}>{t('accounts.newAccount')}</Button>
+          </div>
+        }
       />
       {error ? <ErrorBanner message={error} /> : null}
       {loading && accounts.length === 0 ? <LoadingBlock /> : null}
@@ -230,7 +249,7 @@ export function ChartAccountsPage() {
       {accounts.length > 0 ? (
         <>
           <DataTable columns={columns} rows={accounts} rowKey={(row) => row.id} />
-          <Pagination page={data?.meta.page ?? page} limit={data?.meta.limit ?? 50} total={data?.meta.total ?? 0} onPage={setPage} />
+          <Pagination page={data?.meta.page ?? page} limit={data?.meta.limit ?? limit} total={data?.meta.total ?? 0} onPage={setPage} onLimit={handleLimitChange} />
         </>
       ) : null}
 

@@ -37,6 +37,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { exportRowsToCsv } from '../lib/csv';
 
 type OrderStatus = ProductionOrder['status'];
 type CreateBomDto = components['schemas']['CreateBomDto'];
@@ -132,18 +133,19 @@ export function ProductionPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [bomsForSelect, setBomsForSelect] = useState<ProductionBom[]>([]);
+  const [limit, setLimit] = useState(50);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
 
   const {
     data: boms,
     error: bomsError,
-  } = usePagedQuery<ProductionBom>({ path: '/api/v1/production/boms', page: 1, limit: 50 });
+  } = usePagedQuery<ProductionBom>({ path: '/api/v1/production/boms', page: 1, limit });
 
   const {
     data: orders,
     error: ordersError,
-  } = usePagedQuery<ProductionOrder>({ path: '/api/v1/production/orders', page: 1, limit: 50 });
+  } = usePagedQuery<ProductionOrder>({ path: '/api/v1/production/orders', page: 1, limit });
 
   useEffect(() => {
     let cancelled = false;
@@ -467,17 +469,36 @@ export function ProductionPage() {
     (bom) => bom.productId === orderProductId,
   );
 
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+  };
+
+  const handleExport = () => {
+    if (tab === 'boms') {
+      if (!boms || boms.data.length === 0) return;
+      exportRowsToCsv({ filename: 'boms', columns: bomColumns, rows: boms.data });
+    } else {
+      if (!orders || orders.data.length === 0) return;
+      exportRowsToCsv({ filename: 'production-orders', columns: orderColumns, rows: orders.data });
+    }
+  };
+
   return (
     <>
       <PageHeader
         title={t('production.title')}
         subtitle={t('production.subtitle')}
         action={
-          tab === 'boms' ? (
-            <Button onClick={openBomCreate}>{t('production.newBom')}</Button>
-          ) : (
-            <Button onClick={openOrderCreate}>{t('production.newProductionOrder')}</Button>
-          )
+          <div className="page-header-actions">
+            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+              {t('common.export')}
+            </button>
+            {tab === 'boms' ? (
+              <Button onClick={openBomCreate}>{t('production.newBom')}</Button>
+            ) : (
+              <Button onClick={openOrderCreate}>{t('production.newProductionOrder')}</Button>
+            )}
+          </div>
         }
       />
       <div className="tabs">
@@ -503,7 +524,7 @@ export function ProductionPage() {
               ) : (
                 <DataTable columns={bomColumns} rows={boms.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={boms.meta.page} limit={boms.meta.limit} total={boms.meta.total} onPage={() => {}} />
+              <Pagination page={boms.meta.page} limit={boms.meta.limit} total={boms.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
             </>
           ) : null}
         </>
@@ -518,7 +539,7 @@ export function ProductionPage() {
               ) : (
                 <DataTable columns={orderColumns} rows={orders.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={orders.meta.page} limit={orders.meta.limit} total={orders.meta.total} onPage={() => {}} />
+              <Pagination page={orders.meta.page} limit={orders.meta.limit} total={orders.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
             </>
           ) : null}
         </>

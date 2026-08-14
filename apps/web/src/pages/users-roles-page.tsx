@@ -26,6 +26,7 @@ import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
+import { exportRowsToCsv } from '../lib/csv';
 
 const PERMISSION_MODULES = [
   'auth',
@@ -119,6 +120,7 @@ export function UsersRolesPage() {
   const toast = useToast();
 
   const [userPage, setUserPage] = useState(1);
+  const [userLimit, setUserLimit] = useState(20);
   const [userData, setUserData] = useState<Paginated<User> | null>(null);
   const [userLoading, setUserLoading] = useState(false);
   const [userError, setUserError] = useState<string | null>(null);
@@ -169,11 +171,11 @@ export function UsersRolesPage() {
   const userRoleIds = watchUser('roleIds');
   const rolePermissions = watchRole('permissions');
 
-  const loadUsers = async (page: number) => {
+  const loadUsers = async (page: number, limit: number) => {
     setUserLoading(true);
     setUserError(null);
     try {
-      const params = new URLSearchParams({ page: String(page), limit: '20' });
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
       setUserData(await apiFetch<Paginated<User>>(`/api/v1/users?${params.toString()}`));
     } catch (err) {
       setUserError(err instanceof ApiError ? err.message : t('usersRoles.couldNotLoadUsers'));
@@ -195,8 +197,8 @@ export function UsersRolesPage() {
   };
 
   useEffect(() => {
-    void loadUsers(userPage);
-  }, [userPage]);
+    void loadUsers(userPage, userLimit);
+  }, [userPage, userLimit]);
 
   useEffect(() => {
     void loadRoles();
@@ -253,7 +255,7 @@ export function UsersRolesPage() {
         onSuccess: () => {
           toast.toast(t('usersRoles.userUpdated'));
           setUserOpen(false);
-          void loadUsers(userPage);
+          void loadUsers(userPage, userLimit);
         },
         onError: (err) => setUserFormError(err.message),
       });
@@ -270,7 +272,7 @@ export function UsersRolesPage() {
             setInviteEmailSent(true);
           }
           setUserOpen(false);
-          void loadUsers(userPage);
+          void loadUsers(userPage, userLimit);
         },
         onError: (err) => setUserFormError(err.message),
       });
@@ -280,7 +282,7 @@ export function UsersRolesPage() {
       onSuccess: () => {
         toast.toast(t('usersRoles.userCreated'));
         setUserOpen(false);
-        void loadUsers(userPage);
+        void loadUsers(userPage, userLimit);
       },
       onError: (err) => setUserFormError(err.message),
     });
@@ -429,6 +431,21 @@ export function UsersRolesPage() {
     },
   ];
 
+  const handleLimitChange = (next: number) => {
+    setUserLimit(next);
+    setUserPage(1);
+  };
+
+  const handleExport = () => {
+    if (tab === 'users') {
+      if (!userData || userData.data.length === 0) return;
+      exportRowsToCsv({ filename: 'users', columns: userColumns, rows: userData.data });
+    } else {
+      if (roles.length === 0) return;
+      exportRowsToCsv({ filename: 'roles', columns: roleColumns, rows: roles });
+    }
+  };
+
   const rolePermissionRows = PERMISSION_MODULES.map((module) => (
     <div key={module} className="permission-group">
       <div className="permission-module">{module}</div>
@@ -454,11 +471,16 @@ export function UsersRolesPage() {
         title={t('usersRoles.title')}
         subtitle={t('usersRoles.subtitle')}
         action={
-          tab === 'users' ? (
-            <Button onClick={openCreateUser}>{t('usersRoles.newUser')}</Button>
-          ) : (
-            <Button onClick={openCreateRole}>{t('usersRoles.newRole')}</Button>
-          )
+          <div className="page-header-actions">
+            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+              {t('common.export')}
+            </button>
+            {tab === 'users' ? (
+              <Button onClick={openCreateUser}>{t('usersRoles.newUser')}</Button>
+            ) : (
+              <Button onClick={openCreateRole}>{t('usersRoles.newRole')}</Button>
+            )}
+          </div>
         }
       />
 
@@ -487,6 +509,7 @@ export function UsersRolesPage() {
                 limit={userData.meta.limit}
                 total={userData.meta.total}
                 onPage={setUserPage}
+                onLimit={handleLimitChange}
               />
             </>
           ) : null}

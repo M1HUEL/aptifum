@@ -34,6 +34,7 @@ import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { exportRowsToCsv } from '../lib/csv';
 
 type CreateMovementDto = components['schemas']['CreateMovementDto'];
 
@@ -192,13 +193,30 @@ const movementColumns = (t: TFunction): Column<StockMovement>[] => [
 function StockTab() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const { data, error } = usePagedQuery<ProductStock>({
     path: '/api/v1/inventory/stock',
     page,
+    limit,
   });
+
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+    setPage(1);
+  };
+
+  const handleExport = () => {
+    if (!data || data.data.length === 0) return;
+    exportRowsToCsv({ filename: 'stock', columns: stockColumns(t), rows: data.data });
+  };
 
   return (
     <>
+      <div className="toolbar">
+        <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          {t('common.export')}
+        </button>
+      </div>
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
       {data ? (
@@ -208,7 +226,7 @@ function StockTab() {
           ) : (
             <DataTable columns={stockColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} onLimit={handleLimitChange} />
         </>
       ) : null}
     </>
@@ -232,6 +250,7 @@ const emptyMovementFilters: MovementFilters = {
 function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [filters, setFilters] = useState<MovementFilters>(emptyMovementFilters);
   const extraParams = useMemo(() => {
     const params: Record<string, string> = {};
@@ -245,6 +264,7 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
   const { data, error } = usePagedQuery<StockMovement>({
     path: '/api/v1/inventory/movements',
     page,
+    limit,
     extraParams,
   });
 
@@ -260,9 +280,22 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
 
   const hasFilters = filters.warehouseId || filters.movementType || filters.from || filters.to;
 
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+    setPage(1);
+  };
+
+  const handleExport = () => {
+    if (!data || data.data.length === 0) return;
+    exportRowsToCsv({ filename: 'stock-movements', columns: movementColumns(t), rows: data.data });
+  };
+
   return (
     <>
       <div className="toolbar">
+        <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          {t('common.export')}
+        </button>
         <select value={filters.movementType} onChange={(event) => setFilter('movementType', event.target.value)}>
           <option value="">{t('stock.allTypes')}</option>
           {movementTypes.map((type) => (
@@ -296,7 +329,7 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
           ) : (
             <DataTable columns={movementColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} onLimit={handleLimitChange} />
         </>
       ) : null}
     </>
@@ -316,6 +349,7 @@ const emptyLotFilters: LotFilters = {
 function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [filters, setFilters] = useState<LotFilters>(emptyLotFilters);
   const extraParams = useMemo(() => {
     const params: Record<string, string> = {};
@@ -327,6 +361,7 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
   const { data, error } = usePagedQuery<ProductLot>({
     path: '/api/v1/inventory/lots',
     page,
+    limit,
     extraParams,
   });
 
@@ -342,9 +377,22 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
 
   const hasFilters = filters.warehouseId || filters.status;
 
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+    setPage(1);
+  };
+
+  const handleExport = () => {
+    if (!data || data.data.length === 0) return;
+    exportRowsToCsv({ filename: 'lots', columns: lotColumns(t), rows: data.data });
+  };
+
   return (
     <>
       <div className="toolbar">
+        <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          {t('common.export')}
+        </button>
         <select value={filters.status} onChange={(event) => setFilter('status', event.target.value)}>
           <option value="">{t('stock.allStatuses')}</option>
           <option value="active">{t('stock.active')}</option>
@@ -374,7 +422,7 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
           ) : (
             <DataTable columns={lotColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} onLimit={handleLimitChange} />
         </>
       ) : null}
     </>

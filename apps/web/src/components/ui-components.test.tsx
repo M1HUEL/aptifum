@@ -139,23 +139,31 @@ describe('DataTable', () => {
 });
 
 describe('Pagination', () => {
-  it('disables Previous on the first page', () => {
-    render(<Pagination page={1} limit={10} total={50} onPage={vi.fn()} />);
+  it('disables Previous on the first page and shows the range', () => {
+    render(<Pagination page={1} limit={20} total={137} onPage={vi.fn()} />);
     expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
-    expect(screen.getByText(/Page 1 of 5/)).toBeInTheDocument();
+    expect(screen.getByText('Showing 1–20 of 137')).toBeInTheDocument();
   });
 
   it('disables Next on the last page', () => {
-    render(<Pagination page={5} limit={10} total={50} onPage={vi.fn()} />);
+    render(<Pagination page={7} limit={20} total={137} onPage={vi.fn()} />);
     expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
   });
 
   it('calls onPage with the next page', async () => {
     const onPage = vi.fn();
     const user = userEvent.setup();
-    render(<Pagination page={2} limit={10} total={50} onPage={onPage} />);
+    render(<Pagination page={2} limit={20} total={137} onPage={onPage} />);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     expect(onPage).toHaveBeenCalledWith(3);
+  });
+
+  it('calls onLimit when the rows-per-page select changes', async () => {
+    const onLimit = vi.fn();
+    const user = userEvent.setup();
+    render(<Pagination page={1} limit={20} total={137} onPage={vi.fn()} onLimit={onLimit} />);
+    await user.selectOptions(screen.getByLabelText('Rows per page'), '50');
+    expect(onLimit).toHaveBeenCalledWith(50);
   });
 });

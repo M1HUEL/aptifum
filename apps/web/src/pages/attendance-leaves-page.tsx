@@ -37,6 +37,7 @@ import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { usePermission } from '../auth/auth-context';
 import { useToast } from '../components/toast';
+import { exportRowsToCsv } from '../lib/csv';
 
 const leaveTypes = ['vacation', 'sick', 'personal', 'other'] as const;
 const leaveStatuses = ['pending', 'approved', 'rejected', 'cancelled'] as const;
@@ -155,6 +156,7 @@ export function AttendanceLeavesPage() {
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attPage, setAttPage] = useState(1);
+  const [attLimit, setAttLimit] = useState(20);
   const [attData, setAttData] = useState<Paginated<AttendanceRecord> | null>(null);
   const [attError, setAttError] = useState<string | null>(null);
   const [attLoading, setAttLoading] = useState(false);
@@ -162,6 +164,7 @@ export function AttendanceLeavesPage() {
   const [attFilterInput, setAttFilterInput] = useState({ employeeId: '', from: '', to: '', status: '' });
 
   const [leavePage, setLeavePage] = useState(1);
+  const [leaveLimit, setLeaveLimit] = useState(20);
   const [leaveData, setLeaveData] = useState<Paginated<Leave> | null>(null);
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [leaveLoading, setLeaveLoading] = useState(false);
@@ -218,11 +221,11 @@ export function AttendanceLeavesPage() {
     formState: { errors: leaveErrors },
   } = leaveForm;
 
-  const loadAttendance = async (page: number, filters: typeof attFilters) => {
+  const loadAttendance = async (page: number, limit: number, filters: typeof attFilters) => {
     setAttLoading(true);
     setAttError(null);
     try {
-      const params = new URLSearchParams({ page: String(page), limit: '20' });
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (filters.employeeId) params.set('employeeId', filters.employeeId);
       if (filters.from) params.set('from', filters.from);
       if (filters.to) params.set('to', filters.to);
@@ -235,11 +238,11 @@ export function AttendanceLeavesPage() {
     }
   };
 
-  const loadLeaves = async (page: number, filters: typeof leaveFilters) => {
+  const loadLeaves = async (page: number, limit: number, filters: typeof leaveFilters) => {
     setLeaveLoading(true);
     setLeaveError(null);
     try {
-      const params = new URLSearchParams({ page: String(page), limit: '20' });
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (filters.employeeId) params.set('employeeId', filters.employeeId);
       if (filters.status) params.set('status', filters.status);
       if (filters.leaveType) params.set('leaveType', filters.leaveType);
@@ -264,12 +267,12 @@ export function AttendanceLeavesPage() {
   }, []);
 
   useEffect(() => {
-    void loadAttendance(attPage, attFilters);
-  }, [attPage, attFilters]);
+    void loadAttendance(attPage, attLimit, attFilters);
+  }, [attPage, attLimit, attFilters]);
 
   useEffect(() => {
-    void loadLeaves(leavePage, leaveFilters);
-  }, [leavePage, leaveFilters]);
+    void loadLeaves(leavePage, leaveLimit, leaveFilters);
+  }, [leavePage, leaveLimit, leaveFilters]);
 
   const clockMutation = useApiMutation<ClockAttendanceDto>('/api/v1/hr/attendance/clock', 'POST');
   const createAttMutation = useApiMutation<CreateAttendanceDto>('/api/v1/hr/attendance', 'POST');
@@ -301,7 +304,7 @@ export function AttendanceLeavesPage() {
         toast.toast(
           leaveActionTarget.action === 'approve' ? t('hr.leaveApproved') : t('hr.leaveRejected'),
         );
-        void loadLeaves(leavePage, leaveFilters);
+        void loadLeaves(leavePage, leaveLimit, leaveFilters);
       },
       onError: (err) => {
         toast.toast(err.message, 'error');
@@ -340,7 +343,7 @@ export function AttendanceLeavesPage() {
         onSuccess: () => {
           toast.toast(values.action === 'in' ? t('hr.clockInRecorded') : t('hr.clockOutRecorded'));
           setClockOpen(false);
-          void loadAttendance(attPage, attFilters);
+          void loadAttendance(attPage, attLimit, attFilters);
         },
         onError: (err) => setClockError(err.message),
       },
@@ -364,7 +367,7 @@ export function AttendanceLeavesPage() {
     const onSuccess = () => {
       toast.toast(editingAttId ? t('hr.attendanceUpdated') : t('hr.attendanceCreated'));
       setAttOpen(false);
-      void loadAttendance(attPage, attFilters);
+      void loadAttendance(attPage, attLimit, attFilters);
     };
     const onError = (err: { message: string }) => setAttFormError(err.message);
     if (editingAttId) {
@@ -380,7 +383,7 @@ export function AttendanceLeavesPage() {
       onSuccess: () => {
         toast.toast(t('hr.attendanceDeleted'));
         setDeletingAtt(null);
-        void loadAttendance(attPage, attFilters);
+        void loadAttendance(attPage, attLimit, attFilters);
       },
       onError: (err) => {
         toast.toast(err.message, 'error');
@@ -406,7 +409,7 @@ export function AttendanceLeavesPage() {
     const onSuccess = () => {
       toast.toast(editingLeaveId ? t('hr.leaveUpdated') : t('hr.leaveCreated'));
       setLeaveOpen(false);
-      void loadLeaves(leavePage, leaveFilters);
+      void loadLeaves(leavePage, leaveLimit, leaveFilters);
     };
     const onError = (err: { message: string }) => setLeaveFormError(err.message);
     if (editingLeaveId) {
@@ -422,7 +425,7 @@ export function AttendanceLeavesPage() {
       onSuccess: () => {
         toast.toast(t('hr.leaveDeleted'));
         setDeletingLeave(null);
-        void loadLeaves(leavePage, leaveFilters);
+        void loadLeaves(leavePage, leaveLimit, leaveFilters);
       },
       onError: (err) => {
         toast.toast(err.message, 'error');
@@ -512,22 +515,47 @@ export function AttendanceLeavesPage() {
     },
   ];
 
+  const handleAttLimitChange = (next: number) => {
+    setAttLimit(next);
+    setAttPage(1);
+  };
+
+  const handleLeaveLimitChange = (next: number) => {
+    setLeaveLimit(next);
+    setLeavePage(1);
+  };
+
+  const handleExport = () => {
+    if (tab === 'attendance') {
+      if (!attData || attData.data.length === 0) return;
+      exportRowsToCsv({ filename: 'attendance', columns: attendanceColumns, rows: attData.data });
+    } else {
+      if (!leaveData || leaveData.data.length === 0) return;
+      exportRowsToCsv({ filename: 'leaves', columns: leaveColumns, rows: leaveData.data });
+    }
+  };
+
   return (
     <>
       <PageHeader
         title={t('hr.attendanceTitle')}
         subtitle={t('hr.attendanceSubtitle')}
         action={
-          tab === 'attendance' ? (
-            <div className="table-actions">
-              <Button variant="ghost" onClick={openClock}>
-                {t('hr.clockInOut')}
-              </Button>
-              <Button onClick={() => openAttendance()}>{t('hr.newAttendance')}</Button>
-            </div>
-          ) : (
-            <Button onClick={() => openLeave()}>{t('hr.newLeave')}</Button>
-          )
+          <div className="page-header-actions">
+            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+              {t('common.export')}
+            </button>
+            {tab === 'attendance' ? (
+              <div className="table-actions">
+                <Button variant="ghost" onClick={openClock}>
+                  {t('hr.clockInOut')}
+                </Button>
+                <Button onClick={() => openAttendance()}>{t('hr.newAttendance')}</Button>
+              </div>
+            ) : (
+              <Button onClick={() => openLeave()}>{t('hr.newLeave')}</Button>
+            )}
+          </div>
         }
       />
 
@@ -588,7 +616,7 @@ export function AttendanceLeavesPage() {
               ) : (
                 <DataTable columns={attendanceColumns} rows={attData.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={attData.meta.page} limit={attData.meta.limit} total={attData.meta.total} onPage={setAttPage} />
+              <Pagination page={attData.meta.page} limit={attData.meta.limit} total={attData.meta.total} onPage={setAttPage} onLimit={handleAttLimitChange} />
             </>
           ) : null}
         </>
@@ -641,7 +669,7 @@ export function AttendanceLeavesPage() {
               ) : (
                 <DataTable columns={leaveColumns} rows={leaveData.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={leaveData.meta.page} limit={leaveData.meta.limit} total={leaveData.meta.total} onPage={setLeavePage} />
+              <Pagination page={leaveData.meta.page} limit={leaveData.meta.limit} total={leaveData.meta.total} onPage={setLeavePage} onLimit={handleLeaveLimitChange} />
             </>
           ) : null}
         </>

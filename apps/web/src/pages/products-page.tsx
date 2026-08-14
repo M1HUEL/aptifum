@@ -26,6 +26,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { exportRowsToCsv } from '../lib/csv';
 
 type CreateProductDto = components['schemas']['CreateProductDto'];
 
@@ -78,10 +79,17 @@ function parsePageNumber(raw: string | null): number {
   return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
 }
 
+function parseLimitNumber(raw: string | null): number {
+  if (!raw) return 20;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isNaN(parsed) || parsed < 1 ? 20 : parsed;
+}
+
 export function ProductsPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(() => parsePageNumber(searchParams.get('page')));
+  const [limit, setLimit] = useState(() => parseLimitNumber(searchParams.get('limit')));
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
   const [input, setInput] = useState(() => searchParams.get('q') ?? '');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -113,6 +121,7 @@ export function ProductsPage() {
   const { data, error } = usePagedQuery<Product>({
     path: '/api/v1/inventory/products',
     page,
+    limit,
     query,
   });
 
@@ -121,6 +130,7 @@ export function ProductsPage() {
     setInput(urlQuery);
     setQuery(urlQuery);
     setPage(parsePageNumber(searchParams.get('page')));
+    setLimit(parseLimitNumber(searchParams.get('limit')));
   }, [searchParams]);
 
   const createMutation = useApiMutation<CreateProductDto>('/api/v1/inventory/products', 'POST');
@@ -164,6 +174,15 @@ export function ProductsPage() {
     setPage(next);
     const params = new URLSearchParams(searchParams);
     params.set('page', String(next));
+    setSearchParams(params);
+  };
+
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.set('limit', String(next));
+    params.set('page', '1');
     setSearchParams(params);
   };
 
@@ -276,12 +295,24 @@ export function ProductsPage() {
     },
   ];
 
+  const handleExport = () => {
+    if (!data || data.data.length === 0) return;
+    exportRowsToCsv({ filename: 'products', columns, rows: data.data });
+  };
+
   return (
     <>
       <PageHeader
         title={t('products.title')}
         subtitle={t('products.subtitle')}
-        action={<Button onClick={openCreate}>{t('products.newProduct')}</Button>}
+        action={
+          <div className="page-header-actions">
+            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+              {t('common.export')}
+            </button>
+            <Button onClick={openCreate}>{t('products.newProduct')}</Button>
+          </div>
+        }
       />
       {error ? <ErrorBanner message={error} /> : null}
       <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
@@ -303,7 +334,7 @@ export function ProductsPage() {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} />
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} onLimit={handleLimitChange} />
         </>
       ) : null}
 

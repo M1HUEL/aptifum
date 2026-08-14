@@ -14,6 +14,7 @@ import {
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { exportRowsToCsv } from '../lib/csv';
 
 const MODULES = [
   'auth',
@@ -106,6 +107,7 @@ const columns = (t: TFunction): Column<AuditLogEntry>[] => [
 export function AuditPage() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [filters, setFilters] = useState<AuditFilters>(emptyFilters);
 
   const extraParams = useMemo(() => {
@@ -120,6 +122,7 @@ export function AuditPage() {
   const { data, error, loading } = usePagedQuery<AuditLogEntry>({
     path: '/api/v1/audit',
     page,
+    limit,
     extraParams,
   });
 
@@ -135,9 +138,27 @@ export function AuditPage() {
 
   const hasFilters = Object.values(filters).some(Boolean);
 
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+    setPage(1);
+  };
+
+  const handleExport = () => {
+    if (!data || data.data.length === 0) return;
+    exportRowsToCsv({ filename: 'audit', columns: columns(t), rows: data.data });
+  };
+
   return (
     <>
-      <PageHeader title={t('audit.title')} subtitle={t('audit.subtitle')} />
+      <PageHeader
+        title={t('audit.title')}
+        subtitle={t('audit.subtitle')}
+        action={
+          <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+            {t('common.export')}
+          </button>
+        }
+      />
 
       <div className="toolbar">
         <select
@@ -193,6 +214,7 @@ export function AuditPage() {
             limit={data.meta.limit}
             total={data.meta.total}
             onPage={setPage}
+            onLimit={handleLimitChange}
           />
         </>
       ) : null}

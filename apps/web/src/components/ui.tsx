@@ -174,14 +174,20 @@ export function Pagination({
   limit,
   total,
   onPage,
+  onLimit,
+  limits = [10, 20, 50],
 }: {
   page: number;
   limit: number;
   total: number;
   onPage: (page: number) => void;
+  onLimit?: (limit: number) => void;
+  limits?: number[];
 }) {
   const { t } = useTranslation();
   const totalPages = Math.max(1, Math.ceil(total / limit));
+  const start = total === 0 ? 0 : (page - 1) * limit + 1;
+  const end = Math.min(page * limit, total);
   return (
     <div className="pagination">
       <button
@@ -192,7 +198,7 @@ export function Pagination({
         {t('common.previous')}
       </button>
       <span>
-        {t('common.pageOfRows', { page, totalPages, total })}
+        {t('common.showingRange', { start, end, total })}
       </span>
       <button
         type="button"
@@ -201,6 +207,19 @@ export function Pagination({
       >
         {t('common.next')}
       </button>
+      {onLimit ? (
+        <select
+          aria-label={t('common.rowsPerPage')}
+          value={limit}
+          onChange={(event) => onLimit(Number(event.target.value))}
+        >
+          {limits.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+      ) : null}
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { exportRowsToCsv } from '../lib/csv';
 import { InvoiceFormModal } from '../components/invoices/invoice-form';
 import { PaymentFormModal } from '../components/invoices/payment-form';
 import { InvoiceDetailsModal } from '../components/invoices/invoice-details';
@@ -28,10 +29,17 @@ function parsePageNumber(raw: string | null): number {
   return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
 }
 
+function parseLimitNumber(raw: string | null): number {
+  if (!raw) return 20;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isNaN(parsed) || parsed < 1 ? 20 : parsed;
+}
+
 export function InvoicesPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(() => parsePageNumber(searchParams.get('page')));
+  const [limit, setLimit] = useState(() => parseLimitNumber(searchParams.get('limit')));
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
   const [input, setInput] = useState(() => searchParams.get('q') ?? '');
   const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') ?? '');
@@ -47,6 +55,7 @@ export function InvoicesPage() {
   const { data, error, reload } = usePagedQuery<Invoice>({
     path: '/api/v1/sales/invoices',
     page,
+    limit,
     query,
     extraParams: { status: statusFilter, type: typeFilter },
   });
@@ -58,6 +67,7 @@ export function InvoicesPage() {
     setStatusFilter(searchParams.get('status') ?? '');
     setTypeFilter(searchParams.get('type') ?? '');
     setPage(parsePageNumber(searchParams.get('page')));
+    setLimit(parseLimitNumber(searchParams.get('limit')));
   }, [searchParams]);
 
   useEffect(() => {
@@ -95,6 +105,15 @@ export function InvoicesPage() {
     setPage(next);
     const params = new URLSearchParams(searchParams);
     params.set('page', String(next));
+    setSearchParams(params);
+  };
+
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.set('limit', String(next));
+    params.set('page', '1');
     setSearchParams(params);
   };
 
@@ -169,12 +188,24 @@ export function InvoicesPage() {
     },
   ];
 
+  const handleExport = () => {
+    if (!data || data.data.length === 0) return;
+    exportRowsToCsv({ filename: 'invoices', columns, rows: data.data });
+  };
+
   return (
     <>
       <PageHeader
         title={t('invoices.title')}
         subtitle={t('invoices.subtitle')}
-        action={<Button onClick={() => setInvoiceOpen(true)}>{t('invoices.newInvoice')}</Button>}
+        action={
+          <div className="page-header-actions">
+            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+              {t('common.export')}
+            </button>
+            <Button onClick={() => setInvoiceOpen(true)}>{t('invoices.newInvoice')}</Button>
+          </div>
+        }
       />
       <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
         <input
@@ -207,7 +238,7 @@ export function InvoicesPage() {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} />
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} onLimit={handleLimitChange} />
         </>
       ) : null}
 

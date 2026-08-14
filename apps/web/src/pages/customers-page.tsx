@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components
 import { useApiInvalidation, useApiMutation } from '../api/hooks';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { exportRowsToCsv } from '../lib/csv';
 
 type CreateCustomerDto = components['schemas']['CreateCustomerDto'];
 
@@ -83,10 +84,17 @@ function parsePageNumber(raw: string | null): number {
   return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
 }
 
+function parseLimitNumber(raw: string | null): number {
+  if (!raw) return 20;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isNaN(parsed) || parsed < 1 ? 20 : parsed;
+}
+
 export function CustomersPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(() => parsePageNumber(searchParams.get('page')));
+  const [limit, setLimit] = useState(() => parseLimitNumber(searchParams.get('limit')));
   const [query, setQuery] = useState(() => searchParams.get('q') ?? '');
   const [input, setInput] = useState(() => searchParams.get('q') ?? '');
   const [modalOpen, setModalOpen] = useState(false);
@@ -111,6 +119,7 @@ export function CustomersPage() {
   const { data, error } = usePagedQuery<Customer>({
     path: '/api/v1/sales/customers',
     page,
+    limit,
     query,
   });
 
@@ -119,6 +128,7 @@ export function CustomersPage() {
     setInput(urlQuery);
     setQuery(urlQuery);
     setPage(parsePageNumber(searchParams.get('page')));
+    setLimit(parseLimitNumber(searchParams.get('limit')));
   }, [searchParams]);
 
   const taxExempt = watch('taxExempt');
@@ -147,6 +157,15 @@ export function CustomersPage() {
     setPage(next);
     const params = new URLSearchParams(searchParams);
     params.set('page', String(next));
+    setSearchParams(params);
+  };
+
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.set('limit', String(next));
+    params.set('page', '1');
     setSearchParams(params);
   };
 
@@ -229,12 +248,24 @@ export function CustomersPage() {
     },
   ];
 
+  const handleExport = () => {
+    if (!data || data.data.length === 0) return;
+    exportRowsToCsv({ filename: 'customers', columns, rows: data.data });
+  };
+
   return (
     <>
       <PageHeader
         title={t('customers.title')}
         subtitle={t('customers.subtitle')}
-        action={<Button onClick={openCreate}>{t('customers.newCustomer')}</Button>}
+        action={
+          <div className="page-header-actions">
+            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+              {t('common.export')}
+            </button>
+            <Button onClick={openCreate}>{t('customers.newCustomer')}</Button>
+          </div>
+        }
       />
       {error ? <ErrorBanner message={error} /> : null}
       <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
@@ -277,7 +308,7 @@ export function CustomersPage() {
               </table>
             </div>
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} />
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} onLimit={handleLimitChange} />
         </>
       ) : null}
 

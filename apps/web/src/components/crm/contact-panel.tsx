@@ -21,6 +21,7 @@ import { Checkbox } from '../ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { useToast } from '../toast';
 import { usePagedQuery } from '../../hooks/use-paged-query';
+import { exportRowsToCsv } from '../../lib/csv';
 
 type CreateContactDto = components['schemas']['CreateContactDto'];
 type UpdateContactDto = components['schemas']['UpdateContactDto'];
@@ -71,12 +72,13 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<CrmContact | null>(null);
+  const [limit, setLimit] = useState(50);
   const toast = useToast();
 
   const { data, error, reload } = usePagedQuery<CrmContact>({
     path: '/api/v1/crm/contacts',
     page: 1,
-    limit: 50,
+    limit,
   });
 
   const {
@@ -175,12 +177,28 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
     },
   ];
 
+  const handleLimitChange = (next: number) => {
+    setLimit(next);
+  };
+
+  const handleExport = () => {
+    if (!data || data.data.length === 0) return;
+    exportRowsToCsv({ filename: 'contacts', columns, rows: data.data });
+  };
+
   return (
     <>
       <PageHeader
         title={t('crm.contactsTitle')}
         subtitle={t('crm.contactsSubtitle')}
-        action={<Button onClick={openCreate}>{t('crm.newContact')}</Button>}
+        action={
+          <div className="page-header-actions">
+            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+              {t('common.export')}
+            </button>
+            <Button onClick={openCreate}>{t('crm.newContact')}</Button>
+          </div>
+        }
       />
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <LoadingBlock /> : null}
@@ -191,7 +209,7 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={() => {}} />
+          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
         </>
       ) : null}
 
