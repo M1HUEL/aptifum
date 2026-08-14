@@ -26,6 +26,7 @@ import {
   LoadingBlock,
   PageHeader,
   Pagination,
+  StatusSelect,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
@@ -357,19 +358,21 @@ export function SalesOrdersPage() {
           <option value="quote">{t('salesOrders.quote')}</option>
           <option value="order">{t('salesOrders.order')}</option>
         </select>
-        <select
+        <StatusSelect
           value={statusFilter}
-          onChange={(event) => {
-            setStatusFilter(event.target.value);
+          onChange={(value) => {
+            setStatusFilter(value);
             setPage(1);
           }}
-        >
-          <option value="">{t('salesOrders.allStatuses')}</option>
-          <option value="draft">{t('salesOrders.draft')}</option>
-          <option value="confirmed">{t('salesOrders.confirmed')}</option>
-          <option value="invoiced">{t('salesOrders.invoiced')}</option>
-          <option value="cancelled">{t('salesOrders.cancelled')}</option>
-        </select>
+          ariaLabel={t('common.status')}
+          options={[
+            { value: '', label: t('salesOrders.allStatuses') },
+            { value: 'draft', label: t('salesOrders.draft') },
+            { value: 'confirmed', label: t('salesOrders.confirmed') },
+            { value: 'invoiced', label: t('salesOrders.invoiced') },
+            { value: 'cancelled', label: t('salesOrders.cancelled') },
+          ]}
+        />
         <button type="submit" className="btn">
           {t('common.search')}
         </button>

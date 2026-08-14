@@ -29,6 +29,7 @@ import {
   LoadingBlock,
   PageHeader,
   Pagination,
+  StatusSelect,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
@@ -394,12 +395,17 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
         <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
           {t('common.export')}
         </button>
-        <select value={filters.status} onChange={(event) => setFilter('status', event.target.value)}>
-          <option value="">{t('stock.allStatuses')}</option>
-          <option value="active">{t('stock.active')}</option>
-          <option value="expiring">{t('stock.expiringSoon')}</option>
-          <option value="expired">{t('stock.expired')}</option>
-        </select>
+        <StatusSelect
+          value={filters.status}
+          onChange={(value) => setFilter('status', value)}
+          ariaLabel={t('common.status')}
+          options={[
+            { value: '', label: t('stock.allStatuses') },
+            { value: 'active', label: t('stock.active') },
+            { value: 'expiring', label: t('stock.expiringSoon') },
+            { value: 'expired', label: t('stock.expired') },
+          ]}
+        />
         <select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
           <option value="">{t('stock.allWarehouses')}</option>
           {warehouses.map((warehouse) => (

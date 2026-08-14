@@ -32,6 +32,7 @@ import {
   LoadingBlock,
   PageHeader,
   Pagination,
+  StatusSelect,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
@@ -602,17 +603,15 @@ export function AttendanceLeavesPage() {
               value={attFilterInput.to}
               onChange={(event) => setAttFilterInput((current) => ({ ...current, to: event.target.value }))}
             />
-            <select
+            <StatusSelect
               value={attFilterInput.status}
-              onChange={(event) => setAttFilterInput((current) => ({ ...current, status: event.target.value }))}
-            >
-              <option value="">{t('hr.allStatuses')}</option>
-              {attendanceStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => setAttFilterInput((current) => ({ ...current, status: value }))}
+              ariaLabel={t('common.status')}
+              options={[
+                { value: '', label: t('hr.allStatuses') },
+                ...attendanceStatuses.map((status) => ({ value: status, label: status })),
+              ]}
+            />
             <button type="submit" className="btn">
               {t('common.search')}
             </button>
@@ -644,17 +643,15 @@ export function AttendanceLeavesPage() {
                 </option>
               ))}
             </select>
-            <select
+            <StatusSelect
               value={leaveFilterInput.status}
-              onChange={(event) => setLeaveFilterInput((current) => ({ ...current, status: event.target.value }))}
-            >
-              <option value="">{t('hr.allStatuses')}</option>
-              {leaveStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => setLeaveFilterInput((current) => ({ ...current, status: value }))}
+              ariaLabel={t('common.status')}
+              options={[
+                { value: '', label: t('hr.allStatuses') },
+                ...leaveStatuses.map((status) => ({ value: status, label: status })),
+              ]}
+            />
             <select
               value={leaveFilterInput.leaveType}
               onChange={(event) => setLeaveFilterInput((current) => ({ ...current, leaveType: event.target.value }))}

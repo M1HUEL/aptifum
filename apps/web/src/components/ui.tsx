@@ -169,6 +169,28 @@ export function DataTable<T>({
   );
 }
 
+export function StatusSelect({
+  value,
+  onChange,
+  options,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  ariaLabel?: string;
+}) {
+  return (
+    <select value={value} onChange={(event) => onChange(event.target.value)} aria-label={ariaLabel}>
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export function Pagination({
   page,
   limit,

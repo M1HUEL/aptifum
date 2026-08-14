@@ -220,6 +220,8 @@ const es = {
     couldNotLoad: 'No se pudo cargar el panel.',
     noReportsPermission: 'Su rol no tiene permiso para ver reportes.',
     allWarehouses: 'Todos los almacenes',
+    from: 'Desde',
+    to: 'Hasta',
     groups: {
       day: 'Día',
       month: 'Mes',
@@ -233,6 +235,7 @@ const es = {
       month: 'Este mes',
       year: 'Este año',
       all: 'Todo el tiempo',
+      custom: 'Personalizado',
     },
     stat: {
       revenuePeriod: 'Ingresos (período)',

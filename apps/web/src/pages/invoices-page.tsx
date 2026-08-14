@@ -14,6 +14,7 @@ import {
   LoadingBlock,
   PageHeader,
   Pagination,
+  StatusSelect,
 } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/toast';
@@ -214,12 +215,17 @@ export function InvoicesPage() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <select value={statusFilter} onChange={(event) => handleStatusChange(event.target.value)}>
-          <option value="">{t('invoices.allStatuses')}</option>
-          <option value="draft">{t('invoices.draft')}</option>
-          <option value="issued">{t('invoices.issued')}</option>
-          <option value="cancelled">{t('invoices.cancelled')}</option>
-        </select>
+        <StatusSelect
+          value={statusFilter}
+          onChange={handleStatusChange}
+          ariaLabel={t('common.status')}
+          options={[
+            { value: '', label: t('invoices.allStatuses') },
+            { value: 'draft', label: t('invoices.draft') },
+            { value: 'issued', label: t('invoices.issued') },
+            { value: 'cancelled', label: t('invoices.cancelled') },
+          ]}
+        />
         <select value={typeFilter} onChange={(event) => handleTypeChange(event.target.value)}>
           <option value="">{t('invoices.allTypes')}</option>
           <option value="invoice">{t('invoices.invoice')}</option>

@@ -222,6 +222,8 @@ const en: Translation = {
     couldNotLoad: 'Could not load the dashboard.',
     noReportsPermission: 'Your role does not have permission to view reports.',
     allWarehouses: 'All warehouses',
+    from: 'From',
+    to: 'To',
     groups: {
       day: 'Day',
       month: 'Month',
@@ -235,6 +237,7 @@ const en: Translation = {
       month: 'This month',
       year: 'This year',
       all: 'All time',
+      custom: 'Custom',
     },
     stat: {
       revenuePeriod: 'Revenue (period)',

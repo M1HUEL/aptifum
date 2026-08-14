@@ -41,6 +41,7 @@ const rangeOptions = [
   { value: 'month', labelKey: 'dashboard.ranges.month' },
   { value: 'year', labelKey: 'dashboard.ranges.year' },
   { value: 'all', labelKey: 'dashboard.ranges.all' },
+  { value: 'custom', labelKey: 'dashboard.ranges.custom' },
 ];
 
 function rangeFor(preset: string): { from: string; to: string } {
@@ -120,8 +121,17 @@ export function DashboardPage() {
   const [groupBy, setGroupBy] = useState('month');
   const [preset, setPreset] = useState('month');
   const [warehouseId, setWarehouseId] = useState('');
+  const [customFrom, setCustomFrom] = useState(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 29);
+    return start.toISOString().slice(0, 10);
+  });
+  const [customTo, setCustomTo] = useState(() => new Date().toISOString().slice(0, 10));
 
-  const { from, to } = useMemo(() => rangeFor(preset), [preset]);
+  const { from, to } = useMemo(() => {
+    if (preset === 'custom') return { from: customFrom, to: customTo };
+    return rangeFor(preset);
+  }, [preset, customFrom, customTo]);
 
   const reportParams = useMemo(() => {
     const params = new URLSearchParams({ from, to });
@@ -179,6 +189,22 @@ export function DashboardPage() {
             </option>
           ))}
         </select>
+        {preset === 'custom' ? (
+          <>
+            <input
+              type="date"
+              value={customFrom}
+              aria-label={t('dashboard.from')}
+              onChange={(event) => setCustomFrom(event.target.value)}
+            />
+            <input
+              type="date"
+              value={customTo}
+              aria-label={t('dashboard.to')}
+              onChange={(event) => setCustomTo(event.target.value)}
+            />
+          </>
+        ) : null}
         <select value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)}>
           <option value="">{t('dashboard.allWarehouses')}</option>
           {(warehousesQuery.data?.data ?? []).map((warehouse) => (
