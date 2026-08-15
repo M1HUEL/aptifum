@@ -7,6 +7,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { useApiMutation, useApiQuery } from '../api/hooks';
 import { useToast } from '../components/toast';
+import { useLanguage } from '../lib/language';
 
 interface UsSalesTaxConfig {
   nexusStates: string[];
@@ -29,6 +30,7 @@ interface UpdateUsSalesTaxDto {
 export function SettingsPage() {
   const { t } = useTranslation();
   const toast = useToast();
+  const { language, setLanguage } = useLanguage();
   const [nexus, setNexus] = useState<Set<string>>(new Set());
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -103,8 +105,31 @@ export function SettingsPage() {
       {loadError ? <ErrorBanner message={loadError} /> : null}
       {loading ? <LoadingBlock /> : null}
       {!loading ? (
-        <section className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">
-          <h2>{t('settings.usSalesTax')}</h2>
+        <>
+          <section className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">
+            <h2>{t('settings.preferences')}</h2>
+            <p className="text-[12px] text-muted">{t('settings.languageDescription')}</p>
+            <div className="mt-3 inline-flex rounded-ui border border-border bg-bg p-1" role="group" aria-label={t('settings.language')}>
+              <button
+                type="button"
+                className={`cursor-pointer rounded-ui px-4 py-1.5 text-sm font-semibold select-none transition-colors ${language === 'es' ? 'bg-primary text-white' : 'text-text hover:bg-hover'}`}
+                onClick={() => setLanguage('es')}
+                aria-pressed={language === 'es'}
+              >
+                Español
+              </button>
+              <button
+                type="button"
+                className={`cursor-pointer rounded-ui px-4 py-1.5 text-sm font-semibold select-none transition-colors ${language === 'en' ? 'bg-primary text-white' : 'text-text hover:bg-hover'}`}
+                onClick={() => setLanguage('en')}
+                aria-pressed={language === 'en'}
+              >
+                English
+              </button>
+            </div>
+          </section>
+          <section className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">
+            <h2>{t('settings.usSalesTax')}</h2>
           {country && country !== 'US' ? (
             <p className="text-[12px] text-muted">
               {t('settings.usOnlyNoteStart')}
@@ -166,7 +191,8 @@ export function SettingsPage() {
               {saveMutation.isPending ? t('common.saving') : t('settings.saveSettings')}
             </Button>
           </div>
-        </section>
+          </section>
+        </>
       ) : null}
     </>
   );

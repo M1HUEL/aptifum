@@ -188,6 +188,7 @@ const en: Translation = {
     signOut: 'Sign out',
     toggleTheme: 'Toggle theme',
     toggleSidebar: 'Open menu',
+    toggleLanguage: 'Switch language',
   },
   auth: {
     loginTitle: 'Sign in',
@@ -903,6 +904,9 @@ const en: Translation = {
   settings: {
     title: 'Settings',
     subtitle: 'Company and tax settings',
+    preferences: 'Preferences',
+    language: 'Language',
+    languageDescription: 'Select the interface language.',
     usSalesTax: 'US sales tax',
     usOnlyNoteStart: 'Sales tax is only calculated automatically for US-based tenants. Your country is set to ',
     usOnlyNoteEnd: '.',

@@ -186,6 +186,7 @@ const es = {
     signOut: 'Cerrar sesión',
     toggleTheme: 'Cambiar tema',
     toggleSidebar: 'Abrir menú',
+    toggleLanguage: 'Cambiar idioma',
   },
   auth: {
     loginTitle: 'Iniciar sesión',
@@ -901,6 +902,9 @@ const es = {
   settings: {
     title: 'Configuración',
     subtitle: 'Configuración de la empresa y de impuestos',
+    preferences: 'Preferencias',
+    language: 'Idioma',
+    languageDescription: 'Seleccione el idioma de la interfaz.',
     usSalesTax: 'Impuesto a las ventas de EE. UU.',
     usOnlyNoteStart:
       'El impuesto a las ventas solo se calcula automáticamente para arrendatarios con sede en EE. UU. Su país está configurado como ',

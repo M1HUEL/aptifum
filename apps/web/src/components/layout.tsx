@@ -4,12 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { useAuth, usePermission } from '../auth/auth-context';
 import { NAV_GROUPS, ROUTE_GUARDS } from '../auth/route-permissions';
 import { useTheme } from '../lib/theme';
+import { useLanguage } from '../lib/language';
 
 export function Layout() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const can = usePermission();
   const { theme, toggleTheme } = useTheme();
+  const { language, toggleLanguage } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const visibleItems = ROUTE_GUARDS.filter((item) => !item.permission || can(item.permission));
 
@@ -45,13 +47,48 @@ export function Layout() {
           })}
         </nav>
         <div className="flex shrink-0 flex-col gap-2.5 border-t border-white/10 p-3">
-          <button
-            type="button"
-            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={toggleTheme}
-            aria-label={t('layout.toggleTheme')}
-          >
-            {theme === 'dark' ? (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={toggleTheme}
+              aria-label={t('layout.toggleTheme')}
+            >
+              {theme === 'dark' ? (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+              ) : (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              )}
+            </button>
+            <button
+              type="button"
+              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={toggleLanguage}
+              aria-label={t('layout.toggleLanguage')}
+            >
               <svg
                 width="16"
                 height="16"
@@ -62,24 +99,13 @@ export function Layout() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                <path d="M2 12h20" />
               </svg>
-            ) : (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            )}
-          </button>
+              <span>{language.toUpperCase()}</span>
+            </button>
+          </div>
           <div className="min-w-0">
             <div className="truncate font-semibold text-white">{user?.name || user?.email}</div>
             <div className="text-[12px] text-sidebar-text">
