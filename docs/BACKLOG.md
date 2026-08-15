@@ -20,9 +20,13 @@
 
 ## 3. Future improvements (ideas, not committed)
 
+- **CSV bulk import** (products, customers, suppliers, initial stock): there is no file-upload infrastructure today; a multipart CSV import with a per-row validation report is the top onboarding feature.
+- **In-app notifications center:** outbox/reminders today only reach email/SMTP (or demo mode); a bell with in-app notifications (invoices, payments, reminders) would be a high-visibility UX win.
+- **Outbound webhooks:** domain events (`invoice.issued`, `payment.received`, `supplier_bill.issued`, ...) are emitted but only consumed by email; deliver them to external integrations.
+- **Document attachments:** file-upload infrastructure (multer) + attachments on invoices, orders, customers.
+- **Reorder points / purchase suggestions:** derive reorder alerts from the existing low-stock report and suggest purchase orders.
 - **Localized notification templates:** outbox/reminders email templates are English-only; localize them (or key them by tenant language) to match the bilingual web UI.
 - **Share form validation between web and API:** zod form schemas are hand-maintained in `apps/web/src/api/schemas.ts`; generating them from the OpenAPI schema or sharing the `packages/core` DTOs would prevent drift.
-- **Reorder points / purchase suggestions:** derive reorder alerts from the existing low-stock report and suggest purchase orders.
 - **Expand Playwright e2e coverage** (currently auth, inventory, POS, RBAC, reports, sales) and add a coverage threshold in CI.
 - **Barcode scanning and bulk operations** in the POS and inventory pages.
 - **Realtime updates** (WebSocket/SSE) for POS, stock and dashboard metrics instead of polling.

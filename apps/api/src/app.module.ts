@@ -13,6 +13,7 @@ import { CrmModule } from './modules/crm/crm.module';
 import { EmailModule } from './modules/email/email.module';
 import { ExchangeRatesModule } from './modules/exchange-rates/exchange-rates.module';
 import { HrModule } from './modules/hr/hr.module';
+import { ImportsModule } from './modules/imports/imports.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { OutboxModule } from './modules/outbox/outbox.module';
 import { PaymentsModule } from './modules/payments/payments.module';
@@ -60,6 +61,7 @@ import { UsersModule } from './modules/users/users.module';
     TenantsModule,
     AuditModule,
     InventoryModule,
+    ImportsModule,
     SalesModule,
     PurchasingModule,
     AccountingModule,
