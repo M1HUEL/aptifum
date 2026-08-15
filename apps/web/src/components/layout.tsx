@@ -31,6 +31,7 @@ import {
   Users,
   Users2,
   Warehouse,
+  X,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth, usePermission } from '../auth/auth-context';
@@ -91,7 +92,10 @@ export function Layout() {
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 900px)');
-    const onChange = (event: MediaQueryListEvent) => setIsMobile(event.matches);
+    const onChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
+      if (!event.matches) setSidebarOpen(false);
+    };
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, []);
@@ -100,114 +104,142 @@ export function Layout() {
     window.localStorage.setItem('aptifum.sidebarCollapsed', collapsed ? '1' : '0');
   }, [collapsed]);
 
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSidebarOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sidebarOpen]);
+
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="flex min-h-screen">
-      <aside
-        className={`sticky top-0 z-50 flex h-screen ${effectiveCollapsed ? 'w-[64px]' : 'w-[220px]'} shrink-0 flex-col bg-sidebar text-sidebar-text transition-[width,transform] duration-200 max-[900px]:fixed max-[900px]:left-0 max-[900px]:top-0 max-[900px]:z-50 max-[900px]:-translate-x-full print:hidden${sidebarOpen ? ' max-[900px]:translate-x-0' : ''}`}
-      >
-        <div className={`flex items-center ${effectiveCollapsed ? 'flex-col gap-1 px-0 pt-5 pb-4' : 'justify-center gap-2.5 px-5 py-4'}`}>
+    <div className="flex min-h-screen flex-col">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-white/10 bg-sidebar px-4 text-sidebar-text print:hidden">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <button
+            type="button"
+            className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-ui text-sidebar-text transition-colors select-none hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+            onClick={isMobile ? () => setSidebarOpen(true) : () => setCollapsed((value) => !value)}
+            aria-label={isMobile ? t('layout.toggleSidebar') : collapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')}
+          >
+            {isMobile ? <Menu className="size-6" /> : effectiveCollapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}
+          </button>
           <div className="flex size-8 shrink-0 items-center justify-center rounded-ui bg-primary font-bold text-white">
             A
           </div>
-          {!effectiveCollapsed ? <div className="min-w-0 truncate text-lg font-bold text-white">Aptifum</div> : null}
-          <button
-            type="button"
-            className={`${effectiveCollapsed ? 'size-6' : 'size-8 border border-white/20'} flex shrink-0 cursor-pointer items-center justify-center rounded-ui text-sidebar-text transition-colors select-none hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 max-[900px]:hidden`}
-            onClick={() => setCollapsed((value) => !value)}
-            aria-label={collapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')}
-          >
-            {effectiveCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-          </button>
+          <span className="truncate text-lg font-bold text-white">Aptifum</span>
         </div>
-        <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain p-2 pb-3 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.2)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb]:bg-white/20">
-          {visibleGroups.map((group, index) => (
-            <div key={group.key}>
-              {!effectiveCollapsed ? <div className="px-[14px] pt-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-sidebar-text opacity-55">{t(group.labelKey)}</div> : null}
-              {group.items.map((item) => {
-                const ItemIcon = ROUTE_ICONS[item.to] ?? Building2;
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    title={effectiveCollapsed ? t(item.labelKey) : undefined}
-                    className={({ isActive }) =>
-                      `relative flex items-center gap-2 rounded-ui ${effectiveCollapsed ? 'justify-center px-0 py-[9px]' : 'px-[14px] py-[9px]'} font-medium text-sidebar-text no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40${isActive ? ' bg-primary text-white hover:bg-primary' : ' hover:bg-white/10 hover:text-white'}`
-                    }
-                    onClick={closeSidebar}
-                  >
-                    {({ isActive }) => (
-                      <>
-                        {isActive ? <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-white" aria-hidden="true" /> : null}
-                        <ItemIcon className="size-4 shrink-0" />
-                        {!effectiveCollapsed ? <span className="truncate">{t(item.labelKey)}</span> : null}
-                      </>
-                    )}
-                  </NavLink>
-                );
-              })}
-              {effectiveCollapsed && index < visibleGroups.length - 1 ? <div className="mx-3 my-2 border-t border-white/10" /> : null}
-            </div>
-          ))}
-        </nav>
-        <div className="flex shrink-0 flex-col gap-2.5 border-t border-white/10 p-3">
-          <div className={`${effectiveCollapsed ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
-            <button
-              type="button"
-              className={`${effectiveCollapsed ? 'justify-center px-0' : 'flex-1 px-[14px]'} inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-50`}
-              onClick={toggleTheme}
-              aria-label={t('layout.toggleTheme')}
-            >
-              {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </button>
-            <button
-              type="button"
-              className={`${effectiveCollapsed ? 'justify-center px-0' : 'flex-1 px-[14px]'} inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-50`}
-              onClick={toggleLanguage}
-              aria-label={t('layout.toggleLanguage')}
-            >
-              <Languages className="size-4" />
-              {!effectiveCollapsed ? <span>{language.toUpperCase()}</span> : null}
-            </button>
-          </div>
-          <div className={`flex items-center ${effectiveCollapsed ? 'justify-center' : 'gap-2.5'}`}>
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-white select-none">
-              {user ? userInitials(user.name, user.email) : '?'}
-            </div>
-            {!effectiveCollapsed ? (
-              <div className="min-w-0">
-                <div className="truncate font-semibold text-white">{user?.name || user?.email}</div>
-                <div className="truncate text-[12px] text-sidebar-text">
-                  {user?.roles.map((role) => role.name).join(', ')}
-                </div>
-              </div>
-            ) : null}
-          </div>
-          <button
-            type="button"
-            className={`${effectiveCollapsed ? 'justify-center px-0' : 'px-[14px]'} inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-50`}
-            onClick={() => void logout()}
-            aria-label={t('layout.signOut')}
-          >
-            <LogOut className="size-4" />
-            {!effectiveCollapsed ? t('layout.signOut') : null}
-          </button>
-        </div>
-      </aside>
-      {sidebarOpen ? <div className="hidden max-[900px]:fixed max-[900px]:inset-0 max-[900px]:z-40 max-[900px]:block max-[900px]:bg-black/40" onClick={closeSidebar} /> : null}
-      <main className="max-w-[1100px] flex-1 px-8 py-7 max-[900px]:px-4 max-[900px]:py-5 print:max-w-full print:p-0">
-        <button
-          type="button"
-          className="hidden cursor-pointer items-center justify-center rounded-ui border border-border bg-surface px-[14px] py-2 font-semibold text-text select-none hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary max-[900px]:fixed max-[900px]:left-3 max-[900px]:top-3 max-[900px]:z-50 max-[900px]:inline-flex print:hidden"
-          onClick={() => setSidebarOpen((open) => !open)}
-          aria-label={t('layout.toggleSidebar')}
-          aria-expanded={sidebarOpen}
+      </header>
+      <div className="flex flex-1 pt-14">
+        <aside
+          className={`sticky top-14 flex h-[calc(100vh-3.5rem)] ${effectiveCollapsed ? 'w-[64px]' : 'w-[220px]'} shrink-0 flex-col bg-sidebar text-sidebar-text transition-[width,transform] duration-200 ease-out max-[900px]:fixed max-[900px]:left-0 max-[900px]:top-0 max-[900px]:z-50 max-[900px]:h-screen max-[900px]:-translate-x-full print:hidden${sidebarOpen ? ' max-[900px]:translate-x-0' : ''}`}
         >
-          <Menu className="size-5" />
-        </button>
-        <Outlet />
-      </main>
+          <div className="hidden items-center justify-between gap-2.5 px-4 py-4 max-[900px]:flex">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-ui bg-primary font-bold text-white">
+                A
+              </div>
+              <span className="truncate text-lg font-bold text-white">Aptifum</span>
+            </div>
+            <button
+              type="button"
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-ui text-sidebar-text transition-colors select-none hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+              onClick={closeSidebar}
+              aria-label={t('layout.toggleSidebar')}
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+          <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain p-2 pb-3 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.2)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb]:bg-white/20">
+            {visibleGroups.map((group, index) => (
+              <div key={group.key}>
+                {!effectiveCollapsed ? <div className="px-[14px] pt-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-sidebar-text opacity-55">{t(group.labelKey)}</div> : null}
+                {group.items.map((item) => {
+                  const ItemIcon = ROUTE_ICONS[item.to] ?? Building2;
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      title={effectiveCollapsed ? t(item.labelKey) : undefined}
+                      className={({ isActive }) =>
+                        `relative flex items-center gap-2 rounded-ui ${effectiveCollapsed ? 'justify-center px-0 py-[9px]' : 'px-[14px] py-[9px]'} font-medium text-sidebar-text no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40${isActive ? ' bg-primary text-white hover:bg-primary' : ' hover:bg-white/10 hover:text-white'}`
+                      }
+                      onClick={closeSidebar}
+                    >
+                      {({ isActive }) => (
+                        <>
+                          {isActive ? <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-white" aria-hidden="true" /> : null}
+                          <ItemIcon className="size-4 shrink-0" />
+                          {!effectiveCollapsed ? <span className="truncate">{t(item.labelKey)}</span> : null}
+                        </>
+                      )}
+                    </NavLink>
+                  );
+                })}
+                {effectiveCollapsed && index < visibleGroups.length - 1 ? <div className="mx-3 my-2 border-t border-white/10" /> : null}
+              </div>
+            ))}
+          </nav>
+          <div className="flex shrink-0 flex-col gap-2.5 border-t border-white/10 p-3">
+            <div className={`${effectiveCollapsed ? 'flex flex-col gap-2' : 'flex gap-2'}`}>
+              <button
+                type="button"
+                className={`${effectiveCollapsed ? 'justify-center px-0' : 'flex-1 px-[14px]'} inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-50`}
+                onClick={toggleTheme}
+                aria-label={t('layout.toggleTheme')}
+              >
+                {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
+              </button>
+              <button
+                type="button"
+                className={`${effectiveCollapsed ? 'justify-center px-0' : 'flex-1 px-[14px]'} inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-50`}
+                onClick={toggleLanguage}
+                aria-label={t('layout.toggleLanguage')}
+              >
+                <Languages className="size-4" />
+                {!effectiveCollapsed ? <span>{language.toUpperCase()}</span> : null}
+              </button>
+            </div>
+            <div className={`flex items-center ${effectiveCollapsed ? 'justify-center' : 'gap-2.5'}`}>
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-white select-none">
+                {user ? userInitials(user.name, user.email) : '?'}
+              </div>
+              {!effectiveCollapsed ? (
+                <div className="min-w-0">
+                  <div className="truncate font-semibold text-white">{user?.name || user?.email}</div>
+                  <div className="truncate text-[12px] text-sidebar-text">
+                    {user?.roles.map((role) => role.name).join(', ')}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className={`${effectiveCollapsed ? 'justify-center px-0' : 'px-[14px]'} inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-not-allowed disabled:opacity-50`}
+              onClick={() => void logout()}
+              aria-label={t('layout.signOut')}
+            >
+              <LogOut className="size-4" />
+              {!effectiveCollapsed ? t('layout.signOut') : null}
+            </button>
+          </div>
+        </aside>
+        <div className={`fixed inset-0 z-40 hidden bg-black/40 transition-opacity duration-200 max-[900px]:block${sidebarOpen ? ' opacity-100' : ' pointer-events-none opacity-0'}`} onClick={closeSidebar} aria-hidden={!sidebarOpen} />
+        <main className="max-w-[1100px] flex-1 px-8 py-7 max-[900px]:px-4 max-[900px]:py-5 print:max-w-full print:p-0">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
