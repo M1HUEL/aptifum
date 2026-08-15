@@ -21,9 +21,15 @@ describe('FX revaluation and realized FX on settlement (e2e)', () => {
   let customer: Created;
   let supplier: Created;
 
-  const bookedDate = '2026-08-01';
-  const revalDate = '2026-08-15';
-  const laterDate = '2026-08-20';
+  const utcDay = (offset: number) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + offset);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const bookedDate = utcDay(-14);
+  const revalDate = utcDay(1);
+  const laterDate = utcDay(6);
 
   const tb = () =>
     request(app.getHttpServer())
