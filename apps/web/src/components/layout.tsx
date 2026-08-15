@@ -1,10 +1,75 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import {
+  BarChart3,
+  Boxes,
+  Briefcase,
+  Building2,
+  CalendarCheck,
+  ClipboardList,
+  Factory,
+  FileSpreadsheet,
+  FileText,
+  Languages,
+  LayoutDashboard,
+  ListOrdered,
+  LogOut,
+  Menu,
+  Moon,
+  Package,
+  ScrollText,
+  Settings,
+  ShieldCheck,
+  ShoppingBag,
+  ShoppingCart,
+  Sun,
+  Truck,
+  User,
+  Users,
+  Users2,
+  Warehouse,
+  type LucideIcon,
+} from 'lucide-react';
 import { useAuth, usePermission } from '../auth/auth-context';
 import { NAV_GROUPS, ROUTE_GUARDS } from '../auth/route-permissions';
 import { useTheme } from '../lib/theme';
 import { useLanguage } from '../lib/language';
+
+const ROUTE_ICONS: Record<string, LucideIcon> = {
+  '/dashboard': LayoutDashboard,
+  '/profile': User,
+  '/pos': ShoppingCart,
+  '/invoices': FileText,
+  '/customers': Users,
+  '/orders': ClipboardList,
+  '/purchasing': ShoppingBag,
+  '/suppliers': Truck,
+  '/products': Package,
+  '/stock': Boxes,
+  '/warehouses': Warehouse,
+  '/accounting': FileSpreadsheet,
+  '/accounts': ListOrdered,
+  '/crm': Users2,
+  '/hr': Briefcase,
+  '/attendance': CalendarCheck,
+  '/production': Factory,
+  '/reports': BarChart3,
+  '/users-roles': ShieldCheck,
+  '/audit': ScrollText,
+  '/settings': Settings,
+};
+
+function userInitials(name: string | null, email: string): string {
+  if (name) {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return parts[0]?.slice(0, 2).toUpperCase() ?? '?';
+  }
+  return email.slice(0, 2).toUpperCase();
+}
 
 export function Layout() {
   const { t } = useTranslation();
@@ -22,7 +87,12 @@ export function Layout() {
       <aside
         className={`sticky top-0 z-50 flex h-screen w-[220px] shrink-0 flex-col bg-sidebar text-sidebar-text transition-transform duration-200 max-[900px]:fixed max-[900px]:left-0 max-[900px]:top-0 max-[900px]:z-50 max-[900px]:-translate-x-full print:hidden${sidebarOpen ? ' max-[900px]:translate-x-0' : ''}`}
       >
-        <div className="px-5 pb-4 pt-5 text-lg font-bold text-white">Aptifum</div>
+        <div className="flex items-center gap-2.5 px-5 pb-4 pt-5">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-ui bg-primary font-bold text-white">
+            A
+          </div>
+          <div className="text-lg font-bold text-white">Aptifum</div>
+        </div>
         <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain p-2 pb-3 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.2)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb]:bg-white/20">
           {NAV_GROUPS.map((group) => {
             const groupItems = visibleItems.filter((item) => item.group === group.key);
@@ -30,18 +100,22 @@ export function Layout() {
             return (
               <div key={group.key}>
                 <div className="px-[14px] pt-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-sidebar-text opacity-55">{t(group.labelKey)}</div>
-                {groupItems.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      `block rounded-ui px-[14px] py-[9px] font-medium text-sidebar-text no-underline${isActive ? ' bg-primary text-white hover:bg-primary' : ' hover:bg-white/10 hover:text-white'}`
-                    }
-                    onClick={closeSidebar}
-                  >
-                    {t(item.labelKey)}
-                  </NavLink>
-                ))}
+                {groupItems.map((item) => {
+                  const ItemIcon = ROUTE_ICONS[item.to] ?? Building2;
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) =>
+                        `flex items-center gap-2 rounded-ui px-[14px] py-[9px] font-medium text-sidebar-text no-underline${isActive ? ' bg-primary text-white hover:bg-primary' : ' hover:bg-white/10 hover:text-white'}`
+                      }
+                      onClick={closeSidebar}
+                    >
+                      <ItemIcon className="size-4 shrink-0" />
+                      <span className="truncate">{t(item.labelKey)}</span>
+                    </NavLink>
+                  );
+                })}
               </div>
             );
           })}
@@ -54,34 +128,7 @@ export function Layout() {
               onClick={toggleTheme}
               aria-label={t('layout.toggleTheme')}
             >
-              {theme === 'dark' ? (
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-                </svg>
-              ) : (
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-              )}
+              {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
             </button>
             <button
               type="button"
@@ -89,27 +136,19 @@ export function Layout() {
               onClick={toggleLanguage}
               aria-label={t('layout.toggleLanguage')}
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-                <path d="M2 12h20" />
-              </svg>
+              <Languages className="size-4" />
               <span>{language.toUpperCase()}</span>
             </button>
           </div>
-          <div className="min-w-0">
-            <div className="truncate font-semibold text-white">{user?.name || user?.email}</div>
-            <div className="text-[12px] text-sidebar-text">
-              {user?.roles.map((role) => role.name).join(', ')}
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-white select-none">
+              {user ? userInitials(user.name, user.email) : '?'}
+            </div>
+            <div className="min-w-0">
+              <div className="truncate font-semibold text-white">{user?.name || user?.email}</div>
+              <div className="truncate text-[12px] text-sidebar-text">
+                {user?.roles.map((role) => role.name).join(', ')}
+              </div>
             </div>
           </div>
           <button
@@ -117,6 +156,7 @@ export function Layout() {
             className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={() => void logout()}
           >
+            <LogOut className="size-4" />
             {t('layout.signOut')}
           </button>
         </div>
@@ -130,20 +170,7 @@ export function Layout() {
           aria-label={t('layout.toggleSidebar')}
           aria-expanded={sidebarOpen}
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
+          <Menu className="size-5" />
         </button>
         <Outlet />
       </main>
