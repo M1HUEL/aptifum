@@ -6,25 +6,27 @@ Multi-tenant ERP with sales, purchasing, inventory, manufacturing, HR, accountin
 
 - **Monorepo** — [pnpm](https://pnpm.io) workspaces + [Turborepo](https://turbo.build)
 - **API** — NestJS 11, TypeORM, PostgreSQL 18
-- **Web** — React 19, Vite, React Router
+- **Web** — React 19, Vite, React Router, TanStack Query, Tailwind CSS 4, Radix UI, lucide-react, recharts, react-hook-form + zod
 - **Packages** — shared core (domain enums/utilities), typed config (zod), database entities/seeders, logger
 - **Auth** — JWT access/refresh with session rotation, RBAC permissions, throttling
+- **Web UI** — bilingual interface (**English / Spanish**, Spanish default) with a language switcher, light/dark theme, collapsible sidebar and mobile drawer; typed API client generated from the OpenAPI spec (CI fails on drift)
 - **Multi-currency** — per-tenant exchange rates; invoices, payments and supplier bills post to the tenant's functional currency
 - **Online payments** — Stripe checkout for issued invoices with signature-verified webhooks recording card payments idempotently
 - **Tax compliance** — MX CFDI 4.0 e-invoicing (self-contained XML, digital seal, demo TFD with per-tenant self-signed certificates; real PAC is a production hook) plus RFC/EIN validation by tenant country; **US sales tax** auto-calculated from the customer's state and the tenant's nexus configuration (per-state rates configurable in Settings)
-- **Docs** — PDF (pdfkit) and CSV export across reports and invoices
+- **Docs** — PDF (pdfkit), CSV and XLSX export across reports and invoices
 
 ## Repository layout
 
 ```
 apps/
   api/        NestJS API (REST, Swagger at /docs)
-  web/        React dashboard
+  web/        React dashboard (POS, reports, admin UI)
 packages/
   core/       Domain enums, permissions, shared utilities
   config/     Environment validation (zod) and app env
   database/   Entities, migrations, seeders
   logger/     Shared logger
+docs/         Product spec, domain glossary, backlog
 ```
 
 ## Prerequisites
@@ -66,7 +68,13 @@ The seeded admin login is `admin@aptifum.dev` / `Admin123!`. Change it before an
 
 ### User invitations
 
-Admins can invite users by email from **Users & Roles**. There is no email server in the demo, so the invite endpoint returns the acceptance token and the dashboard shows a copyable link (`/accept-invite?token=...`) that the invited user opens to set their password.
+Admins can invite users by email from **Users & Roles**. When `SMTP_HOST` is configured, the API delivers real emails (invites, password resets, notifications/reminders). Without SMTP the API runs in demo mode: the invite endpoint returns the acceptance token and the dashboard shows a copyable link (`/accept-invite?token=...`) that the invited user opens to set their password.
+
+## Web dashboard
+
+The dashboard (`apps/web`) covers the full product: POS/cashier, customers, sales orders, invoices, purchasing, inventory (products, variants, stock, transfers, warehouses), production, HR (employees, attendance/leaves, payroll), CRM (contacts, leads, opportunities, activities), accounting (chart of accounts, journal, financial reports), analytics reports, settings, users & roles and the audit log. Navigation is permission-gated and grouped (see `apps/web/src/auth/route-permissions.ts`).
+
+The UI is bilingual (**English / Spanish**, Spanish by default) via i18next with a language switcher in the sidebar and settings, supports a light/dark theme (persisted, follows the system preference by default), and ships a desktop-collapsible sidebar with a mobile drawer. Shared components live in `apps/web/src/components/ui/*` — `Input`, `Select`, `Textarea`, `Button` (variants + loading), `Card`, `Dialog`, `ConfirmDialog`, `Table`, `Badge`, `Checkbox`, `SearchableSelect`. Destructive actions are confirmed with a shared `ConfirmDialog`, and login/auth pages use theme-aware branding.
 
 ## Scripts
 
@@ -99,6 +107,11 @@ Admins can invite users by email from **Users & Roles**. There is no email serve
 | `SESSION_RETENTION_DAYS` | `30` | Days expired sessions are kept |
 | `PASSWORD_RESET_TTL` | `15m` | Password reset token lifetime |
 | `INVITE_TTL` | `72h` | User invitation token lifetime |
+| `SMTP_HOST` | *(empty)* | SMTP server for real email delivery; empty = demo mode (tokens returned in the API response) |
+| `SMTP_PORT` | `2525` | SMTP port |
+| `SMTP_USER` / `SMTP_PASS` | *(empty)* | SMTP credentials |
+| `SMTP_FROM_EMAIL` | `no-reply@aptifum.dev` | Outgoing sender address |
+| `SMTP_FROM_NAME` | `Aptifum` | Outgoing sender name |
 
 ## Testing
 
@@ -108,7 +121,9 @@ Unit and e2e tests live in `apps/api/test`. E2e specs run migrations against the
 pnpm test
 ```
 
-The GitHub Actions CI workflow runs lint, typecheck, build and tests on every push/PR.
+Web unit tests run with Vitest + Testing Library (`pnpm --filter @aptifum/web test`); Playwright end-to-end specs cover auth, inventory, POS, RBAC, reports and sales flows (`pnpm --filter @aptifum/web test:e2e`, needs the dev server and database running).
+
+The GitHub Actions CI workflow runs lint, typecheck, build, API tests, web unit tests and an OpenAPI drift check on every push/PR.
 
 ## Docker deployment
 

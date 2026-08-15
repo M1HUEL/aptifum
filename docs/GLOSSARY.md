@@ -56,7 +56,7 @@
 | **InvoiceType** | Enum: `invoice`, `credit_note`. |
 | **InvoiceStatus** | Enum: `draft`, `issued`, `cancelled`. |
 | **Document series** | Per-tenant numbering configuration (`document_series`): kind, prefix, `next_number`. Numbers are assigned atomically under a row lock (e.g. `INV-000001`). |
-| **DocumentSeriesKind** | Enum: `quote`, `order`, `invoice`, `credit_note`. |
+| **DocumentSeriesKind** | Enum: `quote`, `order`, `invoice`, `credit_note`, `purchase_order`, `goods_receipt`, `supplier_bill`, `journal_entry`, `lead`, `payroll`, `production_order`. |
 | **Line total** | `quantity × unit_price` before discount/tax, per item. |
 | **Discount** | Reduction applied at line level or globally to the document (`subtotal − discount → taxable → + tax = total`). |
 | **Tax** | Configured tax rate (`taxes`), `kind` sales/purchase; applied per line via `tax_rate`/`tax_amount`. |
@@ -115,6 +115,7 @@
 ## 7. References
 
 - Model and relationships: `docs/SPEC.md` §13, §22, §23, §24.
+- Web dashboard: `docs/SPEC.md` §25.
 - Enums: `packages/core/src/index.ts`.
 - Entities: `packages/database/src/entities/`.
 - Stock logic: `packages/database/src/services/stock.ts`.

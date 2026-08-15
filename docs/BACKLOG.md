@@ -1,7 +1,7 @@
 # Aptifum ERP — Backlog & Known Gaps (working notes)
 
 > Living scratchpad. Not part of the SPEC; keep `docs/SPEC.md` as the reference for what is defined.
-> **Pruned 2026-08:** every item shipped since the SPEC-vs-implementation review was removed — transactional outbox + domain events, email + due-date/approval reminder notifications, supplier bills (AP), web POS, multi-currency + FX revaluation, product variants + lots/expiry, warehouse locations CRUD, stock transfers, Stripe online payments, MX CFDI 4.0 demo timbrado, and US sales tax nexus. Only open gaps remain below.
+> **Pruned 2026-08:** every item shipped since the SPEC-vs-implementation review was removed — transactional outbox + domain events, email + due-date/approval reminder notifications, supplier bills (AP), web POS, multi-currency + FX revaluation, product variants + lots/expiry, warehouse locations CRUD, stock transfers, Stripe online payments, MX CFDI 4.0 demo timbrado, US sales tax nexus, and the bilingual web dashboard (EN/ES + shared UI components). Only open gaps remain below.
 
 ## 1. Open (defined in SPEC, not implemented)
 
@@ -15,4 +15,14 @@
 
 - **Customer statement** (§6.2): explicitly dropped; the orphan DTO was deleted.
 - **Offline / desktop POS** (§11 #2): web POS shipped; a desktop or offline client is not planned.
-- **i18n** (§3, §9, §11 #5): English only for now.
+
+> Note: i18n is no longer deferred — the web UI is bilingual (EN/ES, §11 #5). Localizing the API-side email/notification templates remains a possible improvement (see §3).
+
+## 3. Future improvements (ideas, not committed)
+
+- **Localized notification templates:** outbox/reminders email templates are English-only; localize them (or key them by tenant language) to match the bilingual web UI.
+- **Share form validation between web and API:** zod form schemas are hand-maintained in `apps/web/src/api/schemas.ts`; generating them from the OpenAPI schema or sharing the `packages/core` DTOs would prevent drift.
+- **Reorder points / purchase suggestions:** derive reorder alerts from the existing low-stock report and suggest purchase orders.
+- **Expand Playwright e2e coverage** (currently auth, inventory, POS, RBAC, reports, sales) and add a coverage threshold in CI.
+- **Barcode scanning and bulk operations** in the POS and inventory pages.
+- **Realtime updates** (WebSocket/SSE) for POS, stock and dashboard metrics instead of polling.

@@ -54,17 +54,20 @@ aptifum/
 │   │           ├── rbac/             # Roles, permissions, assignments
 │   │           ├── tenants/          # Company/tenant, business configuration
 │   │           ├── audit/            # Audit log
-│   │           ├── inventory/        # Products, stock, movements, warehouses
-│   │           ├── sales/            # Customers, quotes, orders, invoices
-│   │           ├── invoicing/        # Billing, credit/debit notes, collections
-│   │           ├── purchasing/       # Suppliers, POs, receiving, AP
-│   │           ├── accounting/       # Chart of accounts, entries, closings
+│   │           ├── inventory/        # Products, variants, stock, movements, warehouses, transfers
+│   │           ├── sales/            # Customers, quotes, orders, invoices, credit notes, payments, series
+│   │           ├── purchasing/       # Suppliers, POs, receiving, bills, supplier payments (AP)
+│   │           ├── accounting/       # Chart of accounts, entries, closings, FX revaluation
 │   │           ├── exchange-rates/   # Exchange rates for multi-currency posting
-│   │           ├── hr/               # Employees, attendance, payroll
-│   │           ├── crm/              # Opportunities, pipeline, activities
-│   │           ├── payments/         # Online card payments (Stripe), webhooks
+│   │           ├── hr/               # Employees, attendance, leaves, payroll
+│   │           ├── crm/              # Contacts, leads, opportunities, activities
 │   │           ├── production/       # BOMs/recipes, production orders
-│   │           └── reporting/        # Reports, exports
+│   │           ├── tax/              # MX CFDI 4.0 documents + certificates, US sales tax nexus
+│   │           ├── payments/         # Online card payments (Stripe), webhooks
+│   │           ├── reports/          # BI reports, CSV/PDF/XLSX exports
+│   │           ├── outbox/           # Transactional outbox, dispatcher + consumers
+│   │           ├── reminders/        # Due-date / approval reminders cron
+│   │           └── email/            # Email notifications consumer
 │   └── web/                          # React dashboard
 ├── packages/
 │   ├── core/                         # Shared types, enums, DTOs, constants
@@ -220,7 +223,7 @@ Entries are generated within the **same transaction** as the source document (ou
 - **Scalability:** stateless API; horizontal API replicas on the same DB; optional workers for heavy processes (reports, payroll).
 - **Availability:** daily backups + PITR, healthchecks (`/health`).
 - **Maintainability:** lint + typecheck + tests in CI; ≥ 80% coverage on financial flows.
-- **i18n:** English only (single language); UI and API strings are English, no i18n layer for now (see §11).
+- **i18n:** bilingual web UI — **English and Spanish** (Spanish default), persisted in localStorage and switchable from the sidebar/settings (see §11 #5). API responses and outbox email templates remain English.
 - **Observability:** structured JSON logs; optional metrics (OpenTelemetry) for request duration and errors.
 - **Accountability:** full audit of all mutations (see §4).
 
@@ -248,7 +251,7 @@ The following decisions were settled and now constrain the product (see §6 and 
 | 2 | Physical POS / offline sales | **Web-only** — a web POS/cashier (catalog, ticket, payment collection) is **shipped** on the dashboard; no offline/desktop client. |
 | 3 | Multi-currency | **Single functional currency per tenant** (`default_currency`). Exchange rates are **implemented** (per-tenant `exchange_rates`, foreign-currency invoices/payments/supplier bills post in the functional currency, see §16.7). **Revaluation + settlement FX shipped (2026-08):** `POST /accounting/revaluations` revalues open foreign-currency balances (idempotent re-runs, automatic reversal of prior revaluations) and payments realize the FX difference vs the booked rate. |
 | 4 | Notifications | **Email notifications shipped** for invoice/credit-note issuance, payments and goods receipts, delivered by the transactional outbox dispatcher (see §8). **Due-date/approval reminders shipped (2026-08)**: a daily cron emits `reminder.*` outbox events (overdue AR/AP, purchase orders pending approval ≥ 2 days) delivered to customers and permissioned tenant users. SMS deferred to **F4**. |
-| 5 | Languages | **English only** (single language). UI and API strings are English; no i18n layer for now. |
+| 5 | Languages | **Bilingual web UI shipped.** The dashboard is English + Spanish (Spanish default) via i18next/react-i18next with a language switcher in the sidebar and settings; the API and outbox email templates remain English. |
 | 6 | Team | **Single developer.** Conventions stay simple; lightweight CI. |
 | 7 | Pilot business | **No real pilot yet.** Business rules are validated with synthetic examples; SPEC remains the reference. |
 | 8 | Online payments | **Stripe shipped (2026-08).** Per-tenant provider config (`test`/`live`), server-side Checkout Sessions for issued invoices with an outstanding balance, and a signature-verified webhook that records card payments idempotently (see §6.9, §22). Bank feeds and other gateways remain **F4**. |
@@ -282,6 +285,9 @@ The following decisions were settled and now constrain the product (see §6 and 
 - [x] F4 Online card payments (Stripe): per-tenant `payment_providers` config with masked secrets, `POST /payments/invoices/:id/checkout` → Stripe Checkout Session, and `POST /webhooks/stripe` signature-verified webhook that records card payments idempotently — defined in §22.
 - [x] MX/US tax compliance backend (CFDI 4.0): RFC/EIN validation on customers by tenant country, `cfdi_documents` + `cfdi_certificates`, self-contained CFDI 4.0 XML with SAT-compliant cadena original + RSA-SHA256 seal + demo TFD 1.1 (self-signed per-tenant emisor/PAC certificates), outbox consumer auto-generates on `invoice.issued`, `/tax/...` settings/catalogs/cancel/xml endpoints — defined in §23. Web: CFDI UUID + XML download in the invoice detail modal.
 - [x] F4 US sales tax nexus (§24): per-tenant config in `tenants.config.usSalesTax` (`nexusStates` + optional per-state rate overrides over the `US_STATES` defaults, seeded `['CA','TX']`), `customers.state` / `customers.tax_exempt`, and automatic line `tax_rate` resolution on invoice/order creation (explicit per-line rate wins); `/tax/us-sales-tax` read/update + `/tax/us-sales-tax/states` catalog. Web: Settings page (`/settings`) for nexus/rates and customer form state/tax-exempt fields.
+- [x] Web dashboard (§25): full React dashboard covering every module (POS, sales, purchasing, inventory, production, HR, CRM, accounting, reports, users/roles, audit, settings), bilingual EN/ES (i18next), light/dark theme, permission-gated grouped navigation, Playwright e2e specs.
+- [x] Shared web UI components: `Input`/`Select`/`Textarea` form primitives, unified `Button` with variants + `loading` state, composable `Card` (Radix `Slot`), `ConfirmDialog` for destructive actions, collapsible sidebar with collapse persistence + active accent + focus-visible rings, theme-aware branding on login/auth pages.
+- [x] Reports additions: `GET /reports/alerts`, `GET /reports/financial/cash-flow`, `GET /reports/hr/payroll`, and XLSX export (`?format=xlsx`) across reports (§21).
 
 ## 13. F1 data model (inventory + sales/billing)
 
@@ -634,13 +640,14 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 
 - **No new tables or entities.** All reports derive from existing tables: `invoices`, `invoice_items`, `stock_movements`, `product_stock`, `goods_receipts`, `purchase_orders`, `supplier_payments`, `production_orders`, `journal_entries`, `journal_entry_lines`, `payments`.
 - Read-only, tenant-scoped SQL (parametrized, `$1 = tenant_id`), respecting soft deletes and `journal_entries.status <> 'draft'`.
-- Module permission: `reporting:read` (role `accountant` has it seeded). All routes under `/reports/...`; every endpoint supports `?format=csv` (returns `text/csv` with `Content-Disposition` attachment).
+- Module permission: `reporting:read` (role `accountant` has it seeded). All routes under `/reports/...`; every endpoint supports `?format=csv|pdf|xlsx` (CSV/XLSX returned as `Content-Disposition` attachments, PDF rendered with pdfkit).
 
 ### 21.2 Endpoints
 
 | Endpoint | Output |
 |----------|--------|
-| `GET /reports/dashboard` | salesToday, salesMonth, monthInvoices, receivables, payables, inventoryValue, lowStockProducts, openPurchaseOrders, productionInProgress, netIncomeMonth |
+| `GET /reports/dashboard` | salesToday, salesMonth, monthInvoices, receivables, payables, inventoryValue, lowStockProducts, openPurchaseOrders, productionInProgress, netIncomeMonth (+ range variants `rangeInvoices`, `netIncomeRange` with `from`/`to`) |
+| `GET /reports/alerts` | actionable alerts feed: low stock, overdue receivables and payables |
 | `GET /reports/inventory/valuation?warehouseId=` | rows per product/warehouse (quantity × average cost) + totals |
 | `GET /reports/inventory/movements?productId=&warehouseId=&movementType=&from=&to=&page=&limit=` | paginated stock movements (+ count) |
 | `GET /reports/inventory/low-stock?threshold=` | products at or below threshold (default 10) |
@@ -651,6 +658,8 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 | `GET /reports/aging/ap` | AP per supplier bucketed by `bill_date` (bills) / `received_at` (unbilled receipts) age, **net of `supplier_payments` not linked to a bill** (payments applied FIFO to the oldest buckets first; total = max(0, received − paid)) |
 | `GET /reports/financial/income-statement?periodId=&from=&to=` | revenue / cost of sales / operating expenses sections + net income |
 | `GET /reports/financial/balance-sheet?asOf=` | assets / liabilities / equity sections (equity includes current-period net income) |
+| `GET /reports/financial/cash-flow?from=&to=` | monthly cash-flow statement: inflows / outflows / net per period + running cash balance |
+| `GET /reports/hr/payroll?from=&to=` | payroll summary per period |
 
 ### 21.3 Formulas (source of truth)
 
@@ -776,4 +785,41 @@ Resolution happens during invoice/order creation (`invoices.service.ts`, `orders
 Web: Settings page (`/settings`, nav gated on `tax:read`) edits nexus checkboxes and per-state rate overrides; the customer form captures `state` (US state dropdown) and `tax_exempt`.
 
 ---
+
+## 25. Web dashboard (F4)
+
+### 25.1 Stack
+
+- React 19 + Vite 7 + React Router 7, TanStack Query (server state), Tailwind CSS 4, Radix UI primitives (dialog, select, checkbox, toast, `Slot`), lucide-react icons, recharts charts, react-hook-form + zod validation.
+- i18next/react-i18next with `en`/`es` resources (`apps/web/src/locales/`), Spanish default, persisted in localStorage (`aptifum.language`); switcher in the sidebar and settings.
+- Light/dark theme persisted in localStorage (`aptifum.theme`), defaults to the system preference.
+- Typed API client generated from the OpenAPI spec (`pnpm --filter @aptifum/web gen:api` → `src/api/schema.ts`); CI fails on drift.
+
+### 25.2 Pages and navigation
+
+Navigation is permission-gated and grouped via `apps/web/src/auth/route-permissions.ts` (`RouteGuard` + `NavGroup`):
+
+| Group | Routes |
+|-------|--------|
+| overview | dashboard (`reporting:read`), profile |
+| sales | POS (`invoicing:read`), invoices, customers, sales orders (`sales:read`) |
+| purchasing | purchase orders, suppliers (`purchasing:read`) |
+| inventory | products, stock, warehouses (`inventory:read`) |
+| finance | accounting, chart of accounts (`accounting:read`) |
+| crm | contacts/leads/opportunities/activities (`crm:read`) |
+| hr | employees, attendance/leaves (`hr:read`) |
+| production | production orders (`production:read`) |
+| system | reports (`reporting:read`), users & roles (`users:read`), audit (`audit:read`), settings (`tax:read`) |
+
+Protected routes render `Forbidden`/`NotFound` and redirect to login when unauthenticated. The sidebar collapses on desktop (state persisted) and becomes a drawer under 900 px; the active route shows an accent bar and nav links expose focus-visible rings. Login and auth pages (forgot/reset password, accept invite) use theme-aware branding (CSS `--color-primary`).
+
+### 25.3 Shared components
+
+Shared primitives live in `apps/web/src/components/ui/*`: `Input`, `Select`, `Textarea`, `Button` (variants + `loading` state), `Card` (composable, Radix `Slot.asChild`), `Dialog`, `ConfirmDialog` (destructive confirmations with `busy` state), `Table`, `Badge`, `Checkbox`, `SearchableSelect`. All forms use react-hook-form + zod; destructive actions always go through the shared `ConfirmDialog`.
+
+### 25.4 Testing
+
+- **Unit:** Vitest + Testing Library (`pnpm --filter @aptifum/web test`) — components, i18n and helpers (~75 tests).
+- **E2E:** Playwright (`apps/web/playwright.config.ts`) covering auth, inventory, POS, RBAC, reports and sales flows.
+- **CI:** web unit tests and the OpenAPI drift check run in GitHub Actions; Playwright e2e is run locally (`pnpm --filter @aptifum/web test:e2e`).
 
