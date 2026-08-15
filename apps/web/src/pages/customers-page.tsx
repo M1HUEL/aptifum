@@ -25,6 +25,7 @@ import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { ConfirmDialog } from '../components/ui/confirm-dialog';
+import { CsvImportDialog } from '../components/csv-import-dialog';
 import { useApiInvalidation, useApiMutation } from '../api/hooks';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
@@ -107,6 +108,7 @@ export function CustomersPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Customer | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
 
@@ -226,8 +228,8 @@ export function CustomersPage() {
   const columns = [
     { key: 'code', header: t('fields.code') },
     { key: 'tradeName', header: t('fields.tradeName') },
-    { key: 'taxId', header: t('fields.taxId'), render: (row: Customer) => row.taxId ?? '—' },
-    { key: 'email', header: t('fields.email'), render: (row: Customer) => row.email ?? '—' },
+    { key: 'taxId', header: t('fields.taxId'), render: (row: Customer) => row.taxId ?? 'â€”' },
+    { key: 'email', header: t('fields.email'), render: (row: Customer) => row.email ?? 'â€”' },
     { key: 'creditLimit', header: t('fields.creditLimit'), render: (row: Customer) => formatMoney(row.creditLimit) },
     {
       key: 'active',
@@ -272,6 +274,9 @@ export function CustomersPage() {
               onClick={handleExport}
             >
               {t('common.export')}
+            </Button>
+            <Button type="button" onClick={() => setImportOpen(true)}>
+              {t('common.import')}
             </Button>
             <Button onClick={openCreate}>{t('customers.newCustomer')}</Button>
           </div>
@@ -389,7 +394,7 @@ export function CustomersPage() {
                   <option value="">{t('customers.noState')}</option>
                   {Object.entries(core.US_STATES).map(([code, info]) => (
                     <option key={code} value={code}>
-                      {code} — {info.name}
+                      {code} â€” {info.name}
                     </option>
                   ))}
                 </Select>
@@ -431,6 +436,14 @@ export function CustomersPage() {
         confirmLabel={t('customers.deactivate')}
         busy={deleteBusy}
         onConfirm={() => void confirmDelete()}
+      />
+      <CsvImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        type="customers"
+        onImported={() =>
+          void invalidate(['paged', '/api/v1/sales/customers']).then(() => toast.toast(t('customers.imported')))
+        }
       />
     </>
   );

@@ -41,6 +41,7 @@ import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
+import { CsvImportDialog } from '../components/csv-import-dialog';
 
 type CreateMovementDto = components['schemas']['CreateMovementDto'];
 
@@ -69,7 +70,7 @@ const stockColumns = (t: TFunction): Column<ProductStock>[] => [
   {
     key: 'product',
     header: t('fields.product'),
-    render: (row) => `${row.product.sku} · ${row.product.name}`,
+    render: (row) => `${row.product.sku} Â· ${row.product.name}`,
   },
   {
     key: 'warehouse',
@@ -108,7 +109,7 @@ function formatDateTime(value: string): string {
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return '—';
+  if (!value) return 'â€”';
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString('en-US', {
@@ -128,12 +129,12 @@ const lotColumns = (t: TFunction): Column<ProductLot>[] => [
   {
     key: 'product',
     header: t('fields.product'),
-    render: (row) => `${row.product.sku} · ${row.product.name}`,
+    render: (row) => `${row.product.sku} Â· ${row.product.name}`,
   },
   {
     key: 'variant',
     header: t('stock.variant'),
-    render: (row) => (row.variant ? Object.values(row.variant.attributes ?? {}).join(' · ') || row.variant.sku : '—'),
+    render: (row) => (row.variant ? Object.values(row.variant.attributes ?? {}).join(' Â· ') || row.variant.sku : 'â€”'),
   },
   {
     key: 'lotNumber',
@@ -176,7 +177,7 @@ const movementColumns = (t: TFunction): Column<StockMovement>[] => [
   {
     key: 'product',
     header: t('fields.product'),
-    render: (row) => `${row.product.sku} · ${row.product.name}`,
+    render: (row) => `${row.product.sku} Â· ${row.product.name}`,
   },
   {
     key: 'warehouse',
@@ -193,7 +194,7 @@ const movementColumns = (t: TFunction): Column<StockMovement>[] => [
     header: t('fields.unitCost'),
     render: (row) => `$${row.unitCost.toFixed(2)}`,
   },
-  { key: 'notes', header: t('fields.notes'), render: (row) => row.notes ?? '—' },
+  { key: 'notes', header: t('fields.notes'), render: (row) => row.notes ?? 'â€”' },
 ];
 
 function StockTab() {
@@ -492,6 +493,7 @@ export function StockPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [locations, setLocations] = useState<WarehouseLocation[]>([]);
   const [productStock, setProductStock] = useState<ProductStock[]>([]);
+  const [importOpen, setImportOpen] = useState(false);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
 
@@ -613,7 +615,14 @@ export function StockPage() {
       <PageHeader
         title={t('stock.title')}
         subtitle={t('stock.subtitle')}
-        action={<Button onClick={openModal}>{t('stock.newMovement')}</Button>}
+        action={
+          <div className="flex justify-end gap-2">
+            <Button type="button" onClick={() => setImportOpen(true)}>
+              {t('common.import')}
+            </Button>
+            <Button onClick={openModal}>{t('stock.newMovement')}</Button>
+          </div>
+        }
       />
       <div className="mb-4 flex gap-1">
         <button
@@ -665,7 +674,7 @@ export function StockPage() {
                   <option value="">{t('stock.selectProduct')}</option>
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
-                      {product.sku} · {product.name}
+                      {product.sku} Â· {product.name}
                     </option>
                   ))}
                 </Select>
@@ -698,7 +707,7 @@ export function StockPage() {
                     <option value="">{t('stock.noLocation')}</option>
                     {locations.map((location) => (
                       <option key={location.id} value={location.id}>
-                        {location.code} · {location.name}
+                        {location.code} Â· {location.name}
                       </option>
                     ))}
                   </Select>
@@ -762,6 +771,17 @@ export function StockPage() {
           </form>
         </DialogContent>
       </Dialog>
+      <CsvImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        type="initial-stock"
+        onImported={() => {
+          void invalidate(['paged', '/api/v1/inventory/movements']);
+          void invalidate(['paged', '/api/v1/inventory/stock']);
+          void invalidate(['paged', '/api/v1/inventory/lots']);
+          toast.toast(t('stock.imported'));
+        }}
+      />
     </>
   );
 }

@@ -33,6 +33,7 @@ import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
+import { CsvImportDialog } from '../components/csv-import-dialog';
 
 type CreateProductDto = components['schemas']['CreateProductDto'];
 
@@ -107,6 +108,7 @@ export function ProductsPage() {
   const [viewLoading, setViewLoading] = useState(false);
   const [viewError, setViewError] = useState<string | null>(null);
   const [stock, setStock] = useState<ProductStock[]>([]);
+  const [importOpen, setImportOpen] = useState(false);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
 
@@ -269,7 +271,7 @@ export function ProductsPage() {
     {
       key: 'category',
       header: t('products.category'),
-      render: (row) => row.category?.name ?? '—',
+      render: (row) => row.category?.name ?? 'â€”',
     },
     {
       key: 'salePrice',
@@ -324,6 +326,9 @@ export function ProductsPage() {
               onClick={handleExport}
             >
               {t('common.export')}
+            </Button>
+            <Button type="button" onClick={() => setImportOpen(true)}>
+              {t('common.import')}
             </Button>
             <Button onClick={openCreate}>{t('products.newProduct')}</Button>
           </div>
@@ -475,19 +480,19 @@ export function ProductsPage() {
                 </div>
                 <div className="detail-item">
                   <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('products.category')}</div>
-                  <div className="mt-0.5 block">{viewing.category?.name ?? '—'}</div>
+                  <div className="mt-0.5 block">{viewing.category?.name ?? 'â€”'}</div>
                 </div>
                 <div className="detail-item">
                   <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.brand')}</div>
-                  <div className="mt-0.5 block">{viewing.brand ?? '—'}</div>
+                  <div className="mt-0.5 block">{viewing.brand ?? 'â€”'}</div>
                 </div>
                 <div className="detail-item">
                   <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.unitOfMeasure')}</div>
-                  <div className="mt-0.5 block">{viewing.unitOfMeasure ?? '—'}</div>
+                  <div className="mt-0.5 block">{viewing.unitOfMeasure ?? 'â€”'}</div>
                 </div>
                 <div className="detail-item">
                   <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.barcode')}</div>
-                  <div className="mt-0.5 block">{viewing.barcode ?? '—'}</div>
+                  <div className="mt-0.5 block">{viewing.barcode ?? 'â€”'}</div>
                 </div>
                 <div className="detail-item">
                   <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.purchasePrice')}</div>
@@ -560,6 +565,14 @@ export function ProductsPage() {
         confirmLabel={t('products.deactivate')}
         busy={deleteBusy}
         onConfirm={() => void confirmDelete()}
+      />
+      <CsvImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        type="products"
+        onImported={() =>
+          void invalidate(['paged', '/api/v1/inventory/products']).then(() => toast.toast(t('products.imported')))
+        }
       />
     </>
   );

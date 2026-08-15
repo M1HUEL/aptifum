@@ -26,6 +26,7 @@ import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { ConfirmDialog } from '../components/ui/confirm-dialog';
+import { CsvImportDialog } from '../components/csv-import-dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
@@ -101,6 +102,7 @@ export function SuppliersPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Supplier | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
 
@@ -224,13 +226,13 @@ export function SuppliersPage() {
   const columns: Column<Supplier>[] = [
     { key: 'code', header: t('fields.code') },
     { key: 'tradeName', header: t('suppliers.tradeName') },
-    { key: 'taxId', header: t('fields.taxId'), render: (row) => row.taxId ?? '—' },
-    { key: 'email', header: t('fields.email'), render: (row) => row.email ?? '—' },
-    { key: 'phone', header: t('fields.phone'), render: (row) => row.phone ?? '—' },
+    { key: 'taxId', header: t('fields.taxId'), render: (row) => row.taxId ?? 'â€”' },
+    { key: 'email', header: t('fields.email'), render: (row) => row.email ?? 'â€”' },
+    { key: 'phone', header: t('fields.phone'), render: (row) => row.phone ?? 'â€”' },
     {
       key: 'creditLimit',
       header: t('fields.creditLimit'),
-      render: (row) => (row.creditLimit != null ? formatMoney(row.creditLimit) : '—'),
+      render: (row) => (row.creditLimit != null ? formatMoney(row.creditLimit) : 'â€”'),
     },
     {
       key: 'active',
@@ -275,6 +277,9 @@ export function SuppliersPage() {
               onClick={handleExport}
             >
               {t('common.export')}
+            </Button>
+            <Button type="button" onClick={() => setImportOpen(true)}>
+              {t('common.import')}
             </Button>
             <Button onClick={openCreate}>{t('suppliers.newSupplier')}</Button>
           </div>
@@ -388,6 +393,16 @@ export function SuppliersPage() {
         confirmLabel={t('common.deactivate')}
         busy={deleteBusy}
         onConfirm={() => void confirmDelete()}
+      />
+      <CsvImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        type="suppliers"
+        onImported={() =>
+          void invalidate(['paged', '/api/v1/purchasing/suppliers']).then(() =>
+            toast.toast(t('suppliers.imported')),
+          )
+        }
       />
     </>
   );
