@@ -203,16 +203,16 @@ export function ReportsPage() {
         action={
           <div className="flex justify-end gap-2">
             {activeReport.pdf ? (
-              <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => void downloadPdf()}>
+              <Button variant="secondary" type="button" onClick={() => void downloadPdf()}>
                 {t('common.downloadPdf')}
-              </button>
+              </Button>
             ) : null}
-            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => window.print()}>
+            <Button variant="secondary" type="button" onClick={() => window.print()}>
               {t('reports.printPdf')}
-            </button>
-            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => void downloadXlsx()}>
+            </Button>
+            <Button variant="secondary" type="button" onClick={() => void downloadXlsx()}>
               {t('reports.downloadXlsx')}
-            </button>
+            </Button>
             <Button type="button" onClick={() => void download()}>
               {t('reports.downloadCsv')}
             </Button>

@@ -65,9 +65,13 @@ export function PageHeader({
 }) {
   return (
     <div className="mb-5 flex items-start justify-between gap-4 max-[640px]:flex-col max-[640px]:items-stretch">
-      <div>
-        <h1>{title}</h1>
-        {subtitle ? <p>{subtitle}</p> : null}
+      <div className="min-w-0">
+        <h1 className="text-[22px] font-bold leading-tight tracking-[-0.02em] text-text">
+          {title}
+        </h1>
+        {subtitle ? (
+          <p className="mt-1 text-[13px] leading-relaxed text-muted">{subtitle}</p>
+        ) : null}
       </div>
       {action ? <div className="shrink-0 max-[640px]:flex max-[640px]:justify-end">{action}</div> : null}
     </div>

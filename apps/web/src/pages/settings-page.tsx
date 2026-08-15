@@ -107,7 +107,9 @@ export function SettingsPage() {
       {!loading ? (
         <>
           <section className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">
-            <h2>{t('settings.preferences')}</h2>
+            <h2 className="mb-1 text-[17px] font-bold tracking-[-0.01em] text-text">
+              {t('settings.preferences')}
+            </h2>
             <p className="text-[12px] text-muted">{t('settings.languageDescription')}</p>
             <div className="mt-3 inline-flex rounded-ui border border-border bg-bg p-1" role="group" aria-label={t('settings.language')}>
               <button
@@ -129,7 +131,9 @@ export function SettingsPage() {
             </div>
           </section>
           <section className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">
-            <h2>{t('settings.usSalesTax')}</h2>
+            <h2 className="mb-1 text-[17px] font-bold tracking-[-0.01em] text-text">
+              {t('settings.usSalesTax')}
+            </h2>
           {country && country !== 'US' ? (
             <p className="text-[12px] text-muted">
               {t('settings.usOnlyNoteStart')}
