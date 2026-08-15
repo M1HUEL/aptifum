@@ -7,11 +7,11 @@ const badgeVariants = cva(
   {
     variants: {
       tone: {
-        neutral: 'bg-[var(--neutral-bg)] text-[var(--neutral-text)]',
-        success: 'bg-green-100 text-green-800',
-        warning: 'bg-yellow-100 text-yellow-800',
-        danger: 'bg-red-100 text-red-800',
-        info: 'bg-blue-100 text-blue-800',
+        neutral: 'bg-neutral-bg text-neutral-text',
+        success: 'bg-success-bg text-success',
+        warning: 'bg-warning-bg text-warning',
+        danger: 'bg-danger-bg text-danger',
+        info: 'bg-info-bg text-info',
       },
     },
     defaultVariants: {

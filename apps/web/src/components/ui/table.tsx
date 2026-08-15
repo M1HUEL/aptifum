@@ -3,7 +3,7 @@ import { cn } from '../../lib/cn';
 
 const Table = forwardRef<HTMLTableElement, TableHTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div className="w-full overflow-auto rounded-lg border border-[var(--border)]">
+    <div className="w-full overflow-auto rounded-lg border border-border">
       <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />
     </div>
   ),
@@ -12,7 +12,7 @@ Table.displayName = 'Table';
 
 const TableHeader = forwardRef<HTMLTableSectionElement, HTMLAttributes<HTMLTableSectionElement>>(
   ({ className, ...props }, ref) => (
-    <thead ref={ref} className={cn('[&_tr]:border-b [&_tr]:bg-[var(--bg)]', className)} {...props} />
+    <thead ref={ref} className={cn('[&_tr]:border-b [&_tr]:bg-bg', className)} {...props} />
   ),
 );
 TableHeader.displayName = 'TableHeader';
@@ -28,7 +28,7 @@ const TableRow = forwardRef<HTMLTableRowElement, HTMLAttributes<HTMLTableRowElem
   ({ className, ...props }, ref) => (
     <tr
       ref={ref}
-      className={cn('border-b border-[var(--border)] transition-colors hover:bg-[var(--hover)]', className)}
+      className={cn('border-b border-border transition-colors hover:bg-hover', className)}
       {...props}
     />
   ),
@@ -40,7 +40,7 @@ const TableHead = forwardRef<HTMLTableCellElement, ThHTMLAttributes<HTMLTableCel
     <th
       ref={ref}
       className={cn(
-        'h-10 px-3 text-left align-middle text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]',
+        'h-10 px-3 text-left align-middle text-xs font-medium uppercase tracking-wide text-muted',
         className,
       )}
       {...props}

@@ -62,7 +62,7 @@ export function SearchableSelect({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        <div className="sticky top-0 z-10 mb-1 border-b border-[var(--border)] bg-[var(--surface)] px-1 pb-1.5">
+        <div className="sticky top-0 z-10 mb-1 border-b border-border bg-surface px-1 pb-1.5">
           <input
             ref={inputRef}
             type="text"
@@ -70,7 +70,7 @@ export function SearchableSelect({
             aria-label={t('common.searchOptions')}
             placeholder={t('common.searchOptions')}
             className={cn(
-              'h-9 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-primary',
+              'h-9 w-full rounded border border-border bg-surface px-3 text-sm text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary',
             )}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={(event) => {
@@ -82,7 +82,7 @@ export function SearchableSelect({
           />
         </div>
         {filteredOptions.length === 0 ? (
-          <div className="px-3 py-6 text-center text-sm text-[var(--text-muted)]">
+          <div className="px-3 py-6 text-center text-sm text-muted">
             {emptyMessage ?? t('common.noMatches')}
           </div>
         ) : (

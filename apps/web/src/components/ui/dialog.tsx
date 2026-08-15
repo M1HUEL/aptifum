@@ -15,11 +15,11 @@ const DialogContent = forwardRef<
   const { t } = useTranslation();
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[rgba(18,26,43,0.5)]" />
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          'fixed left-1/2 top-1/2 z-50 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-[var(--surface)] p-6 shadow-xl focus:outline-none',
+          'fixed left-1/2 top-1/2 z-50 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-ui bg-surface p-6 shadow-xl focus:outline-none',
           className,
         )}
         {...props}
@@ -28,7 +28,7 @@ const DialogContent = forwardRef<
           <button
             type="button"
             aria-label={t('common.close')}
-            className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--hover)] hover:text-[var(--text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-hover hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <svg
               width="16"
@@ -55,11 +55,11 @@ DialogContent.displayName = DialogPrimitive.Content.displayName;
 function DialogHeader({ title, description }: { title: string; description?: string }) {
   return (
     <div className="mb-4">
-      <DialogPrimitive.Title className="text-lg font-semibold text-[var(--text)]">
+      <DialogPrimitive.Title className="text-lg font-semibold text-text">
         {title}
       </DialogPrimitive.Title>
       {description ? (
-        <DialogPrimitive.Description className="mt-1 text-sm text-[var(--text-muted)]">
+        <DialogPrimitive.Description className="mt-1 text-sm text-muted">
           {description}
         </DialogPrimitive.Description>
       ) : null}
