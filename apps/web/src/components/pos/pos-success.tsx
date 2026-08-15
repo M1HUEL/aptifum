@@ -46,9 +46,9 @@ export function PosSuccess({
         <Button variant="ghost" onClick={() => onDownloadPdf(sale)}>
           {t('common.downloadPdf')}
         </Button>
-        <Link to="/invoices" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50">
-          {t('pos.viewInvoices')}
-        </Link>
+        <Button variant="secondary" asChild>
+          <Link to="/invoices">{t('pos.viewInvoices')}</Link>
+        </Button>
         <Button onClick={onReset}>{t('pos.newSale')}</Button>
       </div>
     </div>

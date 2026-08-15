@@ -502,9 +502,9 @@ export function ProductionPage() {
         subtitle={t('production.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
+            <Button type="button" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
-            </button>
+            </Button>
             {tab === 'boms' ? (
               <Button onClick={openBomCreate}>{t('production.newBom')}</Button>
             ) : (
@@ -661,7 +661,7 @@ export function ProductionPage() {
             </Button>
             {bomError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{bomError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={bomSaving}>
+              <Button variant="default" type="submit" disabled={bomSaving} loading={bomSaving}>
                 {bomSaving ? t('common.saving') : editingBomId ? t('common.saveChanges') : t('production.createBom')}
               </Button>
             </DialogFooter>
@@ -755,7 +755,7 @@ export function ProductionPage() {
             </div>
             {orderError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{orderError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={orderSaving}>
+              <Button variant="default" type="submit" disabled={orderSaving} loading={orderSaving}>
                 {orderSaving ? t('common.saving') : editingOrderId ? t('common.saveChanges') : t('production.createOrder')}
               </Button>
             </DialogFooter>

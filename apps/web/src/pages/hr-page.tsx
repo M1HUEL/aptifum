@@ -517,7 +517,7 @@ export function HrPage() {
             </div>
             {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={saving}>
+              <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('hr.createEmployee')}
               </Button>
             </DialogFooter>
@@ -592,7 +592,7 @@ export function HrPage() {
             )}
             {payrollError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{payrollError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={payrollBusy}>
+              <Button variant="default" type="submit" disabled={payrollBusy} loading={payrollBusy}>
                 {payrollBusy ? t('hr.generating') : t('hr.generateDraft')}
               </Button>
             </DialogFooter>

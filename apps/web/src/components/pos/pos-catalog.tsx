@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { Paginated, PosProduct, Warehouse } from '../../api/types';
 import { Badge, EmptyState, ErrorBanner, formatMoney, LoadingBlock, Pagination , Input, Select } from '../ui';
 import { Package } from 'lucide-react';
+import { Button } from '../ui/button';
 
 export function PosCatalog({
   warehouses,
@@ -54,9 +55,9 @@ export function PosCatalog({
           value={input}
           onChange={(event) => onInputChange(event.target.value)}
         />
-        <button type="submit" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50">
+        <Button type="submit">
           {t('common.search')}
-        </button>
+        </Button>
       </form>
       {error ? <ErrorBanner message={error} /> : null}
       {loading ? <LoadingBlock /> : null}

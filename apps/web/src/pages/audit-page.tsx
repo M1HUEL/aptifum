@@ -157,9 +157,9 @@ export function AuditPage() {
         title={t('audit.title')}
         subtitle={t('audit.subtitle')}
         action={
-          <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
+          <Button type="button" aria-label={t('common.export')} onClick={handleExport}>
             {t('common.export')}
-          </button>
+          </Button>
         }
       />
 

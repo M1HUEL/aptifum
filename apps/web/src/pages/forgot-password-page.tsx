@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError } from '../api/client';
 import { Input } from '../components/ui';
+import { Button } from '../components/ui/button';
 
 interface ForgotPasswordResult {
   sent: boolean;
@@ -65,13 +66,9 @@ export function ForgotPasswordPage() {
             {error ? (
               <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{error}</div>
             ) : null}
-            <button
-              type="submit"
-              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-primary bg-primary px-[14px] py-2 text-sm font-semibold text-white select-none hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 w-full"
-              disabled={submitting}
-            >
+            <Button type="submit" className="w-full" loading={submitting}>
               {submitting ? t('auth.sending') : t('auth.sendResetLink')}
-            </button>
+            </Button>
           </form>
         ) : resetUrl ? (
           <div>

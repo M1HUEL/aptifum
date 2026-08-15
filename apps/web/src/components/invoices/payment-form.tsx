@@ -124,7 +124,7 @@ export function PaymentFormModal({
           </div>
           {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
           <DialogFooter>
-            <Button variant="default" type="submit" disabled={busy}>
+            <Button variant="default" type="submit" disabled={busy} loading={busy}>
               {busy ? t('invoices.recording') : t('invoices.recordPayment')}
             </Button>
           </DialogFooter>

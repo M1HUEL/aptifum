@@ -475,9 +475,9 @@ export function UsersRolesPage() {
         subtitle={t('usersRoles.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
+            <Button type="button" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
-            </button>
+            </Button>
             {tab === 'users' ? (
               <Button onClick={openCreateUser}>{t('usersRoles.newUser')}</Button>
             ) : (
@@ -616,7 +616,7 @@ export function UsersRolesPage() {
             </div>
             {userFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{userFormError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={userSaving}>
+              <Button variant="default" type="submit" disabled={userSaving} loading={userSaving}>
                 {userSaving ? t('common.saving') : editingUserId ? t('common.saveChanges') : t('usersRoles.createUser')}
               </Button>
             </DialogFooter>
@@ -712,7 +712,7 @@ export function UsersRolesPage() {
             </div>
             {roleFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{roleFormError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={roleSaving}>
+              <Button variant="default" type="submit" disabled={roleSaving} loading={roleSaving}>
                 {roleSaving ? t('common.saving') : editingRoleId ? t('common.saveChanges') : t('usersRoles.createRole')}
               </Button>
             </DialogFooter>

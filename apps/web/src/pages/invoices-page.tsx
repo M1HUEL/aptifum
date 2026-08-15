@@ -205,14 +205,13 @@ export function InvoicesPage() {
         subtitle={t('invoices.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <button
+            <Button
               type="button"
-              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={t('common.export')}
               onClick={handleExport}
             >
               {t('common.export')}
-            </button>
+            </Button>
             <Button onClick={() => setInvoiceOpen(true)}>{t('invoices.newInvoice')}</Button>
           </div>
         }
@@ -241,12 +240,11 @@ export function InvoicesPage() {
           <option value="invoice">{t('invoices.invoice')}</option>
           <option value="credit_note">{t('invoices.creditNote')}</option>
         </Select>
-        <button
+        <Button
           type="submit"
-          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {t('common.search')}
-        </button>
+        </Button>
       </Toolbar>
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}

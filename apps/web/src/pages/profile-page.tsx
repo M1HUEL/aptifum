@@ -150,7 +150,7 @@ export function ProfilePage() {
         {updateMutation.isError ? <ErrorBanner message={updateMutation.error.message} /> : null}
 
         <div style={{ marginTop: '1rem' }}>
-          <Button type="submit" disabled={saving}>
+          <Button type="submit" disabled={saving} loading={saving}>
             {saving ? t('common.saving') : t('common.saveChanges')}
           </Button>
         </div>

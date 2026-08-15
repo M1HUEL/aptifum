@@ -254,7 +254,7 @@ export function InvoiceFormModal({
           </div>
           {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
           <DialogFooter>
-            <Button variant="default" type="submit" disabled={saving}>
+            <Button variant="default" type="submit" disabled={saving} loading={saving}>
               {saving ? t('invoices.issuing') : t('invoices.issueInvoice')}
             </Button>
           </DialogFooter>

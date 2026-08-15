@@ -219,14 +219,14 @@ function StockTab() {
   return (
     <>
       <div className="mb-4 flex gap-2.5">
-        <button
+        <Button
           type="button"
-          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+         
           aria-label={t('common.export')}
           onClick={handleExport}
         >
           {t('common.export')}
-        </button>
+        </Button>
       </div>
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <TableSkeleton columns={stockColumns(t).length} /> : null}
@@ -304,14 +304,14 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
   return (
     <>
       <div className="mb-4 flex gap-2.5">
-        <button
+        <Button
           type="button"
-          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+         
           aria-label={t('common.export')}
           onClick={handleExport}
         >
           {t('common.export')}
-        </button>
+        </Button>
         <Select value={filters.movementType} onChange={(event) => setFilter('movementType', event.target.value)}>
           <option value="">{t('stock.allTypes')}</option>
           {movementTypes.map((type) => (
@@ -406,14 +406,14 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
   return (
     <>
       <div className="mb-4 flex gap-2.5">
-        <button
+        <Button
           type="button"
-          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+         
           aria-label={t('common.export')}
           onClick={handleExport}
         >
           {t('common.export')}
-        </button>
+        </Button>
         <StatusSelect
           value={filters.status}
           onChange={(value) => setFilter('status', value)}
@@ -755,7 +755,7 @@ export function StockPage() {
             </div>
             {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={saving}>
+              <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('stock.recording') : t('stock.recordMovement')}
               </Button>
             </DialogFooter>

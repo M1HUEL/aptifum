@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError } from '../api/client';
 import { Input } from '../components/ui';
+import { Button } from '../components/ui/button';
 
 export function AcceptInvitePage() {
   const { t } = useTranslation();
@@ -78,9 +79,9 @@ export function AcceptInvitePage() {
               />
             </label>
             {error ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{error}</div> : null}
-            <button type="submit" className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-ui border border-primary bg-primary px-[14px] py-2 text-sm font-semibold text-white select-none hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50" disabled={submitting}>
+            <Button type="submit" className="w-full" loading={submitting}>
               {submitting ? t('common.saving') : t('auth.setPassword')}
-            </button>
+            </Button>
           </form>
         ) : (
           <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{t('auth.inviteLinkInvalid')}</div>

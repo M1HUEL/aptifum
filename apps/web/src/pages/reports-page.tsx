@@ -14,6 +14,7 @@ import {
   Select,
 } from '../components/ui';
 import { BarChart3 } from 'lucide-react';
+import { Button } from '../components/ui/button';
 
 type Shape = 'list' | 'single' | 'financial';
 
@@ -212,9 +213,9 @@ export function ReportsPage() {
             <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => void downloadXlsx()}>
               {t('reports.downloadXlsx')}
             </button>
-            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" onClick={() => void download()}>
+            <Button type="button" onClick={() => void download()}>
               {t('reports.downloadCsv')}
-            </button>
+            </Button>
           </div>
         }
       />

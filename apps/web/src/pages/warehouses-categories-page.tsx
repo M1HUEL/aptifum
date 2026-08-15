@@ -420,9 +420,9 @@ export function WarehousesCategoriesPage() {
         subtitle={t('warehouses.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
+            <Button type="button" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
-            </button>
+            </Button>
             <Button onClick={() => (tab === 'warehouses' ? openWarehouse() : openCategory())}>
               {tab === 'warehouses' ? t('warehouses.newWarehouse') : t('warehouses.newCategory')}
             </Button>
@@ -506,7 +506,7 @@ export function WarehousesCategoriesPage() {
             </div>
             {whError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{whError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={whSaving}>
+              <Button variant="default" type="submit" disabled={whSaving} loading={whSaving}>
                 {whSaving ? t('common.saving') : editingWhId ? t('common.saveChanges') : t('warehouses.createWarehouse')}
               </Button>
             </DialogFooter>
@@ -608,7 +608,7 @@ export function WarehousesCategoriesPage() {
             </div>
             {locError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{locError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={locSaving}>
+              <Button variant="default" type="submit" disabled={locSaving} loading={locSaving}>
                 {locSaving ? t('common.saving') : editingLocId ? t('common.saveChanges') : t('warehouses.addLocationTitle')}
               </Button>
             </DialogFooter>
@@ -661,7 +661,7 @@ export function WarehousesCategoriesPage() {
             </div>
             {catError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{catError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={catSaving}>
+              <Button variant="default" type="submit" disabled={catSaving} loading={catSaving}>
                 {catSaving ? t('common.saving') : editingCatId ? t('common.saveChanges') : t('warehouses.createCategory')}
               </Button>
             </DialogFooter>

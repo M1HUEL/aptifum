@@ -556,9 +556,9 @@ export function AttendanceLeavesPage() {
         subtitle={t('hr.attendanceSubtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
+            <Button type="button" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
-            </button>
+            </Button>
             {tab === 'attendance' ? (
               <div className="flex justify-end gap-1.5">
                 <Button variant="ghost" onClick={openClock}>
@@ -616,9 +616,9 @@ export function AttendanceLeavesPage() {
                 ...attendanceStatuses.map((status) => ({ value: status, label: status })),
               ]}
             />
-            <button type="submit" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50">
+            <Button type="submit">
               {t('common.search')}
-            </button>
+            </Button>
           </form>
           {attLoading && !attData ? <TableSkeleton columns={attendanceColumns.length} /> : null}
           {attData ? (
@@ -667,9 +667,9 @@ export function AttendanceLeavesPage() {
                 </option>
               ))}
             </Select>
-            <button type="submit" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50">
+            <Button type="submit">
               {t('common.search')}
-            </button>
+            </Button>
           </form>
           {leaveLoading && !leaveData ? <TableSkeleton columns={leaveColumns.length} /> : null}
           {leaveData ? (
@@ -725,7 +725,7 @@ export function AttendanceLeavesPage() {
             </div>
             {clockError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{clockError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={clockBusy}>
+              <Button variant="default" type="submit" disabled={clockBusy} loading={clockBusy}>
                 {clockBusy ? t('hr.recording') : t('hr.record')}
               </Button>
             </DialogFooter>
@@ -793,7 +793,7 @@ export function AttendanceLeavesPage() {
             </div>
             {attFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{attFormError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={attSaving}>
+              <Button variant="default" type="submit" disabled={attSaving} loading={attSaving}>
                 {attSaving ? t('common.saving') : editingAttId ? t('common.saveChanges') : t('hr.createAttendance')}
               </Button>
             </DialogFooter>
@@ -871,7 +871,7 @@ export function AttendanceLeavesPage() {
             </div>
             {leaveFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{leaveFormError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={leaveSaving}>
+              <Button variant="default" type="submit" disabled={leaveSaving} loading={leaveSaving}>
                 {leaveSaving ? t('common.saving') : editingLeaveId ? t('common.saveChanges') : t('hr.createLeave')}
               </Button>
             </DialogFooter>

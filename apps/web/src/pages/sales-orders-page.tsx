@@ -338,14 +338,13 @@ export function SalesOrdersPage() {
         subtitle={t('salesOrders.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <button
+            <Button
               type="button"
-              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={t('common.export')}
               onClick={handleExport}
             >
               {t('common.export')}
-            </button>
+            </Button>
             <Button onClick={openCreate}>{t('salesOrders.newOrder')}</Button>
           </div>
         }
@@ -384,12 +383,11 @@ export function SalesOrdersPage() {
             { value: 'cancelled', label: t('salesOrders.cancelled') },
           ]}
         />
-        <button
+        <Button
           type="submit"
-          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {t('common.search')}
-        </button>
+        </Button>
       </form>
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
@@ -556,7 +554,7 @@ export function SalesOrdersPage() {
             </div>
             {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={saving}>
+              <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : t('salesOrders.createOrder')}
               </Button>
             </DialogFooter>
