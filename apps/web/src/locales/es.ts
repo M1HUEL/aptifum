@@ -187,6 +187,8 @@ const es = {
     toggleTheme: 'Cambiar tema',
     toggleSidebar: 'Abrir menú',
     toggleLanguage: 'Cambiar idioma',
+    collapseSidebar: 'Colapsar menú',
+    expandSidebar: 'Expandir menú',
   },
   auth: {
     loginTitle: 'Iniciar sesión',

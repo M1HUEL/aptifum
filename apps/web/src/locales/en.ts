@@ -189,6 +189,8 @@ const en: Translation = {
     toggleTheme: 'Toggle theme',
     toggleSidebar: 'Open menu',
     toggleLanguage: 'Switch language',
+    collapseSidebar: 'Collapse sidebar',
+    expandSidebar: 'Expand sidebar',
   },
   auth: {
     loginTitle: 'Sign in',
