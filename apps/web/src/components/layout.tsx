@@ -103,7 +103,7 @@ export function Layout() {
           <div className="flex size-8 shrink-0 items-center justify-center rounded-ui bg-primary font-bold text-white">
             A
           </div>
-          {!effectiveCollapsed ? <div className="text-lg font-bold text-white">Aptifum</div> : null}
+          {!effectiveCollapsed ? <div className="min-w-0 flex-1 truncate text-lg font-bold text-white">Aptifum</div> : null}
           <button
             type="button"
             className={`${effectiveCollapsed ? 'size-6' : 'size-7'} flex shrink-0 cursor-pointer items-center justify-center rounded-ui text-sidebar-text transition-colors select-none hover:bg-white/10 max-[900px]:hidden`}
