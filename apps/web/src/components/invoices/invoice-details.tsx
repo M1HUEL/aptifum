@@ -61,7 +61,7 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
         {error ? <ErrorBanner message={error} /> : null}
         {!loading && viewing ? (
           <div>
-            <div className="mb-2 grid grid-cols-2 gap-x-4 gap-y-3">
+            <div className="mb-2 grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 gap-y-3">
               <div className="detail-item">
                 <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('common.status')}</div>
                 <div className="mt-0.5 block">
@@ -174,7 +174,7 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
             </div>
             {cfdiLoading ? <LoadingBlock /> : null}
             {!cfdiLoading && cfdi ? (
-              <div className="mb-2 grid grid-cols-2 gap-x-4 gap-y-3">
+              <div className="mb-2 grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 gap-y-3">
                 <div className="detail-item">
                   <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('invoices.uuid')}</div>
                   <div className="mt-0.5 block">{cfdi.uuid}</div>

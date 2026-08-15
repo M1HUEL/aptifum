@@ -302,7 +302,7 @@ export function PosPage() {
         title={t('pos.title')}
         subtitle={t('pos.subtitle')}
       />
-      <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-5 max-900:grid-cols-1">
+      <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-5 max-[900px]:grid-cols-1">
         <PosCatalog
           warehouses={warehouses}
           warehouseId={warehouseId}

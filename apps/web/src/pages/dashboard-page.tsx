@@ -303,7 +303,7 @@ export function DashboardPage() {
         </Card>
       ) : null}
 
-      <div className="mb-4 grid grid-cols-2 gap-4 max-900:grid-cols-1">
+      <div className="mb-4 grid grid-cols-2 gap-4 max-[900px]:grid-cols-1 max-[480px]:grid-cols-2">
         <Card title={t('dashboard.salesTrend')}>
           <div className="mb-2.5 flex justify-end">
             <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={groupBy} onChange={(event) => setGroupBy(event.target.value)}>

@@ -127,7 +127,7 @@ export function InvoiceFormModal({
       <DialogContent className="max-w-2xl">
         <DialogHeader title={t('invoices.issueInvoice')} />
         <form onSubmit={(event) => void submit(event)}>
-          <div className="grid grid-cols-2 gap-x-4">
+          <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="invoice-customer">
                 {t('fields.customer')} <span className="text-danger">*</span>

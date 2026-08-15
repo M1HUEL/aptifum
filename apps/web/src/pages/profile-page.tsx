@@ -70,7 +70,7 @@ export function ProfilePage() {
       <PageHeader title={t('profile.title')} subtitle={t('profile.subtitle')} />
 
       <form onSubmit={(event) => void submit(event)}>
-        <div className="grid grid-cols-2 gap-x-4">
+        <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="profile-email">{t('fields.email')}</label>
             <input
@@ -109,7 +109,7 @@ export function ProfilePage() {
         <h3 className="text-[12px] text-muted" style={{ marginTop: '1.5rem' }}>
           {t('profile.changePassword')}
         </h3>
-        <div className="grid grid-cols-2 gap-x-4" style={{ marginTop: '0.5rem' }}>
+        <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1" style={{ marginTop: '0.5rem' }}>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="profile-current">{t('fields.currentPassword')}</label>
             <input

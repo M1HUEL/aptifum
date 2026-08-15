@@ -1,5 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Inbox } from 'lucide-react';
 import i18n from '../i18n';
 
 function resolveLocale(language?: string): string {
@@ -52,12 +53,12 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-5 flex items-start justify-between gap-4">
+    <div className="mb-5 flex items-start justify-between gap-4 max-[640px]:flex-col max-[640px]:items-stretch">
       <div>
         <h1>{title}</h1>
         {subtitle ? <p>{subtitle}</p> : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? <div className="shrink-0 max-[640px]:flex max-[640px]:justify-end">{action}</div> : null}
     </div>
   );
 }
@@ -69,12 +70,12 @@ export function Toolbar({
 }: { children: ReactNode; as?: 'div' | 'form' } & ComponentPropsWithoutRef<'form'>) {
   if (as === 'form') {
     return (
-      <form className="mb-4 flex gap-2.5 print:hidden" {...props}>
+      <form className="mb-4 flex flex-wrap gap-2.5 print:hidden max-[640px]:gap-2" {...props}>
         {children}
       </form>
     );
   }
-  return <div className="mb-4 flex gap-2.5 print:hidden">{children}</div>;
+  return <div className="mb-4 flex flex-wrap gap-2.5 print:hidden max-[640px]:gap-2">{children}</div>;
 }
 
 export function Spinner() {
@@ -133,25 +134,22 @@ export function ErrorBanner({ message }: { message: string }) {
   return <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{message}</div>;
 }
 
-export function EmptyState({ message }: { message: string }) {
+export function EmptyState({
+  message,
+  icon,
+  action,
+}: {
+  message: string;
+  icon?: ReactNode;
+  action?: ReactNode;
+}) {
   return (
     <div className="rounded-ui border border-dashed border-border bg-surface p-10 text-center text-muted">
-      <svg
-        className="mx-auto mb-2.5 block size-8 text-muted opacity-60"
-        width="32"
-        height="32"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M22 12h-6l-2 3h-4l-2-3H2" />
-        <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-      </svg>
+      <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-hover/50">
+        {icon ?? <Inbox className="size-6 text-muted opacity-70" aria-hidden="true" />}
+      </div>
       <span>{message}</span>
+      {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
     </div>
   );
 }
@@ -208,9 +206,9 @@ export function DataTable<T>({
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="[&>tr:nth-child(even)]:bg-hover/30">
           {rows.map((row) => (
-            <tr key={rowKey(row)}>
+            <tr key={rowKey(row)} className="transition-colors hover:bg-hover">
               {columns.map((col) => {
                 const value = String((row as Record<string, unknown>)[col.key] ?? '');
                 const cellClass =
@@ -275,9 +273,10 @@ export function Pagination({
   const start = total === 0 ? 0 : (page - 1) * limit + 1;
   const end = Math.min(page * limit, total);
   return (
-    <div className="flex items-center justify-end gap-[14px] text-muted print:hidden">
+    <div className="flex flex-wrap items-center justify-end gap-x-[14px] gap-y-2 text-muted print:hidden">
       <button
         type="button"
+        className="cursor-pointer text-text transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
         disabled={page <= 1}
         onClick={() => onPage(page - 1)}
       >
@@ -288,13 +287,14 @@ export function Pagination({
       </span>
       <button
         type="button"
+        className="cursor-pointer text-text transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
         disabled={page >= totalPages}
         onClick={() => onPage(page + 1)}
       >
         {t('common.next')}
       </button>
       {onLimit ? (
-        <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           aria-label={t('common.rowsPerPage')}
           value={limit}
           onChange={(event) => onLimit(Number(event.target.value))}
