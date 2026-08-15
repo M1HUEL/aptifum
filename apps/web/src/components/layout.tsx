@@ -21,6 +21,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ScrollText,
+  Search,
   Settings,
   ShieldCheck,
   ShoppingBag,
@@ -38,6 +39,7 @@ import { useAuth, usePermission } from '../auth/auth-context';
 import { NAV_GROUPS, ROUTE_GUARDS } from '../auth/route-permissions';
 import { useTheme } from '../lib/theme';
 import { useLanguage } from '../lib/language';
+import { CommandPalette } from './command-palette';
 
 const ROUTE_ICONS: Record<string, LucideIcon> = {
   '/dashboard': LayoutDashboard,
@@ -81,6 +83,7 @@ export function Layout() {
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => window.localStorage.getItem('aptifum.sidebarCollapsed') === '1');
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 900px)').matches);
   const effectiveCollapsed = collapsed && !isMobile;
@@ -139,6 +142,28 @@ export function Layout() {
             A
           </div>
           <span className="truncate text-lg font-bold text-white">Aptifum</span>
+        </div>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            aria-label={t('commandPalette.triggerLabel')}
+            className="hidden min-w-0 cursor-pointer items-center gap-2 rounded-ui border border-white/20 bg-transparent px-3 py-1.5 text-sm font-semibold text-sidebar-text transition-colors select-none hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 md:flex"
+          >
+            <Search className="size-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">{t('commandPalette.triggerLabel')}</span>
+            <kbd className="shrink-0 rounded-ui border border-white/20 px-1.5 py-0.5 text-[11px] text-sidebar-text opacity-70">
+              Ctrl K
+            </kbd>
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            aria-label={t('commandPalette.triggerLabel')}
+            className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-ui text-sidebar-text transition-colors select-none hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 md:hidden"
+          >
+            <Search className="size-5" aria-hidden="true" />
+          </button>
         </div>
       </header>
       <div className="flex flex-1 pt-14">
@@ -240,6 +265,7 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </div>
   );
 }

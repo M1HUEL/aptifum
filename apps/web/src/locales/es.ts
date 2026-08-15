@@ -950,6 +950,17 @@ const es = {
     rowError: 'Fila {{row}}',
     uploadError: 'No se pudo importar el archivo.',
   },
+  commandPalette: {
+    triggerLabel: 'Buscar',
+    placeholder: 'Busca páginas, productos, clientes o facturas…',
+    empty: 'Sin resultados',
+    groups: {
+      navigate: 'Navegación',
+      products: 'Productos',
+      customers: 'Clientes',
+      invoices: 'Facturas',
+    },
+  },
   validation: {
     required: '{{field}} es obligatorio',
     maxChars: '{{field}} debe tener como máximo {{max}} caracteres',

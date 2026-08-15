@@ -950,6 +950,17 @@ const en: Translation = {
     rowError: 'Row {{row}}',
     uploadError: 'Could not import the file.',
   },
+  commandPalette: {
+    triggerLabel: 'Search',
+    placeholder: 'Search pages, products, customers or invoices…',
+    empty: 'No results',
+    groups: {
+      navigate: 'Navigate',
+      products: 'Products',
+      customers: 'Customers',
+      invoices: 'Invoices',
+    },
+  },
   validation: {
     required: '{{field}} is required',
     maxChars: '{{field}} must be at most {{max}} characters',
