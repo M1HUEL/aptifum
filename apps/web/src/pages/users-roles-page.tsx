@@ -21,6 +21,8 @@ import {
   PageHeader,
   Pagination,
   TableSkeleton,
+  Input,
+  Textarea,
 } from '../components/ui';
 import { ShieldCheck, Users } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -534,7 +536,7 @@ export function UsersRolesPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="usr-email">{t('fields.email')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                <Input className="w-full"
                   id="usr-email"
                   type="email"
                   disabled={editingUserId !== null}
@@ -544,7 +546,7 @@ export function UsersRolesPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="usr-name">{t('fields.name')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="usr-name" {...registerUser('name')} />
+                <Input className="w-full" id="usr-name" {...registerUser('name')} />
               </div>
               {!editingUserId ? (
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -566,7 +568,7 @@ export function UsersRolesPage() {
                   {editingUserId ? t('usersRoles.newPasswordOptional') : t('usersRoles.password')}
                   {!editingUserId && !userInvite ? ' *' : ''}
                 </label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                <Input className="w-full"
                   id="usr-password"
                   type="password"
                   placeholder={editingUserId ? t('usersRoles.leaveBlank') : userInvite ? t('usersRoles.setByInvite') : ''}
@@ -642,7 +644,7 @@ export function UsersRolesPage() {
               <div className="mb-4 rounded-ui border border-success/40 bg-success-bg px-[14px] py-2.5 text-success">
                 {t('usersRoles.demoInviteBody', { email: watchUser('email') || t('usersRoles.theUser') })}
               </div>
-              <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" readOnly value={inviteLink ?? ''} />
+              <Input className="w-full" readOnly value={inviteLink ?? ''} />
             </>
           )}
           <div className="flex shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
@@ -680,12 +682,12 @@ export function UsersRolesPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="role-name">{t('fields.name')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="role-name" {...registerRole('name')} />
+                <Input className="w-full" id="role-name" {...registerRole('name')} />
                 {roleErrors.name ? <div className="text-[12px] font-normal text-danger">{roleErrors.name.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="role-description">{t('fields.description')}</label>
-                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="role-description" rows={2} {...registerRole('description')} />
+                <Textarea className="w-full" id="role-description" rows={2} {...registerRole('description')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('usersRoles.permissions')}</label>

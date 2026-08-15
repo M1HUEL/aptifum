@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError } from '../api/client';
+import { Input } from '../components/ui';
 
 interface ForgotPasswordResult {
   sent: boolean;
@@ -53,7 +54,7 @@ export function ForgotPasswordPage() {
           <form onSubmit={(event) => void handleSubmit(event)}>
             <label className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <span>{t('fields.email')}</span>
-              <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+              <Input className="w-full"
                 type="email"
                 autoComplete="username"
                 required

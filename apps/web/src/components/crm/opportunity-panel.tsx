@@ -17,6 +17,9 @@ import {
   PageHeader,
   Pagination,
   TableSkeleton,
+  Input,
+  Select,
+  Textarea,
 } from '../ui';
 import { Target } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -257,49 +260,49 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
                 <label htmlFor="opp-name">
                   {t('fields.name')}<span className="text-danger"> *</span>
                 </label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-name" {...register('name')} />
+                <Input className="w-full" id="opp-name" {...register('name')} />
                 {errors.name ? <div className="text-[12px] font-normal text-danger">{errors.name.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-customer">{t('fields.customer')}</label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-customer" {...register('customerId')}>
+                <Select className="w-full" id="opp-customer" {...register('customerId')}>
                   <option value="">{t('crm.none')}</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {customer.tradeName}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-stage">{t('crm.stage')}</label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-stage" {...register('stage')}>
+                <Select className="w-full" id="opp-stage" {...register('stage')}>
                   {stages.map((stage) => (
                     <option key={stage} value={stage}>
                       {stage}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-amount">{t('fields.amount')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-amount" type="number" min="0" step="0.01" {...register('amount')} />
+                <Input className="w-full" id="opp-amount" type="number" min="0" step="0.01" {...register('amount')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-currency">{t('fields.currency')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-currency" maxLength={3} {...register('currency')} />
+                <Input className="w-full" id="opp-currency" maxLength={3} {...register('currency')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-probability">{t('crm.probabilityPercent')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-probability" type="number" min="0" max="100" step="1" {...register('probability')} />
+                <Input className="w-full" id="opp-probability" type="number" min="0" max="100" step="1" {...register('probability')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-close">{t('crm.expectedCloseDate')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-close" type="date" {...register('expectedCloseDate')} />
+                <Input className="w-full" id="opp-close" type="date" {...register('expectedCloseDate')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-notes">{t('fields.notes')}</label>
-                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-notes" rows={3} {...register('notes')} />
+                <Textarea className="w-full" id="opp-notes" rows={3} {...register('notes')} />
               </div>
             </div>
             {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}

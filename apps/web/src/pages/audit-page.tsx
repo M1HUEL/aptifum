@@ -11,6 +11,8 @@ import {
   PageHeader,
   Pagination,
   TableSkeleton,
+  Input,
+  Select,
 } from '../components/ui';
 import { ScrollText } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -162,7 +164,7 @@ export function AuditPage() {
       />
 
       <div className="mb-4 flex gap-2.5">
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Select
           value={filters.module}
           onChange={(event) => setFilter('module', event.target.value)}
         >
@@ -172,8 +174,8 @@ export function AuditPage() {
               {module}
             </option>
           ))}
-        </select>
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        </Select>
+        <Select
           value={filters.action}
           onChange={(event) => setFilter('action', event.target.value)}
         >
@@ -183,13 +185,13 @@ export function AuditPage() {
               {action}
             </option>
           ))}
-        </select>
-        <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        </Select>
+        <Input
           type="date"
           value={filters.from}
           onChange={(event) => setFilter('from', event.target.value)}
         />
-        <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Input
           type="date"
           value={filters.to}
           onChange={(event) => setFilter('to', event.target.value)}

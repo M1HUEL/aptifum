@@ -28,6 +28,9 @@ import {
   Pagination,
   StatusSelect,
   TableSkeleton,
+  Input,
+  Select,
+  Textarea,
 } from '../components/ui';
 import { ClipboardList } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -348,14 +351,14 @@ export function SalesOrdersPage() {
         }
       />
       <form className="mb-4 flex gap-2.5" onSubmit={(event) => void submitSearch(event)}>
-        <input
-          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Input
+          className="max-w-[320px] flex-1 w-full"
           type="search"
           placeholder={t('salesOrders.searchByNumber')}
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text"
+        <Select
           value={kindFilter}
           onChange={(event) => {
             setKindFilter(event.target.value);
@@ -365,7 +368,7 @@ export function SalesOrdersPage() {
           <option value="">{t('salesOrders.allKinds')}</option>
           <option value="quote">{t('salesOrders.quote')}</option>
           <option value="order">{t('salesOrders.order')}</option>
-        </select>
+        </Select>
         <StatusSelect
           value={statusFilter}
           onChange={(value) => {
@@ -408,10 +411,10 @@ export function SalesOrdersPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-kind">{t('fields.kind')} *</label>
-                <select id="so-kind" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('kind')}>
+                <Select id="so-kind" className="w-full" {...register('kind')}>
                   <option value="order">{t('salesOrders.order')}</option>
                   <option value="quote">{t('salesOrders.quote')}</option>
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-customer">{t('fields.customer')} *</label>
@@ -432,27 +435,27 @@ export function SalesOrdersPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-warehouse">{t('fields.warehouse')} *</label>
-                <select id="so-warehouse" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('warehouseId')}>
+                <Select id="so-warehouse" className="w-full" {...register('warehouseId')}>
                   <option value="">{t('salesOrders.selectWarehouse')}</option>
                   {warehouses.map((warehouse) => (
                     <option key={warehouse.id} value={warehouse.id}>
                       {warehouse.name}
                     </option>
                   ))}
-                </select>
+                </Select>
                 {errors.warehouseId ? <div className="text-[12px] font-normal text-danger">{errors.warehouseId.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-issue">{t('fields.issueDate')}</label>
-                <input id="so-issue" type="date" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('issueDate')} />
+                <Input id="so-issue" type="date" className="w-full" {...register('issueDate')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-due">{t('fields.dueDate')}</label>
-                <input id="so-due" type="date" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('dueDate')} />
+                <Input id="so-due" type="date" className="w-full" {...register('dueDate')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-discount">{t('fields.discount')}</label>
-                <input id="so-discount" type="number" min="0" step="0.01" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('discount')} />
+                <Input id="so-discount" type="number" min="0" step="0.01" className="w-full" {...register('discount')} />
                 {errors.discount ? <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div> : null}
               </div>
             </div>
@@ -477,12 +480,12 @@ export function SalesOrdersPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`so-item-qty-${index}`}>{t('fields.qty')}</label>
-                    <input
+                    <Input
                       id={`so-item-qty-${index}`}
                       type="number"
                       min="0.0001"
                       step="any"
-                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                      className="w-full"
                       {...register(`items.${index}.quantity`)}
                     />
                     {errors.items?.[index]?.quantity ? (
@@ -491,13 +494,13 @@ export function SalesOrdersPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`so-item-price-${index}`}>{t('fields.unitPrice')}</label>
-                    <input
+                    <Input
                       id={`so-item-price-${index}`}
                       type="number"
                       min="0"
                       step="0.01"
                       placeholder={t('salesOrders.salePricePlaceholder')}
-                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                      className="w-full"
                       {...register(`items.${index}.unitPrice`)}
                     />
                     {errors.items?.[index]?.unitPrice ? (
@@ -506,14 +509,14 @@ export function SalesOrdersPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`so-item-tax-${index}`}>{t('fields.taxRate')} %</label>
-                    <input
+                    <Input
                       id={`so-item-tax-${index}`}
                       type="number"
                       min="0"
                       max="100"
                       step="0.01"
                       placeholder={t('salesOrders.taxPlaceholder')}
-                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                      className="w-full"
                       {...register(`items.${index}.taxRate`)}
                     />
                     {errors.items?.[index]?.taxRate ? (
@@ -522,12 +525,12 @@ export function SalesOrdersPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`so-item-discount-${index}`}>{t('fields.discount')}</label>
-                    <input
+                    <Input
                       id={`so-item-discount-${index}`}
                       type="number"
                       min="0"
                       step="0.01"
-                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                      className="w-full"
                       {...register(`items.${index}.discount`)}
                     />
                     {errors.items?.[index]?.discount ? (
@@ -549,7 +552,7 @@ export function SalesOrdersPage() {
             </Button>
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="so-notes">{t('fields.notes')}</label>
-              <textarea id="so-notes" rows={2} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('notes')} />
+              <Textarea id="so-notes" rows={2} className="w-full" {...register('notes')} />
             </div>
             {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>

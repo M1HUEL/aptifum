@@ -18,6 +18,8 @@ import {
   Pagination,
   TableSkeleton,
   Toolbar,
+  Input,
+  Textarea,
 } from '../components/ui';
 import { Truck } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -280,8 +282,8 @@ export function SuppliersPage() {
       />
       {error ? <ErrorBanner message={error} /> : null}
       <Toolbar as="form" onSubmit={(event) => void submitSearch(event)}>
-        <input
-          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Input
+          className="max-w-[320px] flex-1 w-full"
           type="search"
           placeholder={t('suppliers.searchPlaceholder')}
           value={input}
@@ -313,47 +315,47 @@ export function SuppliersPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-code">{t('fields.code')} *</label>
-                <input id="supplier-code" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('code')} />
+                <Input id="supplier-code" className="w-full" {...register('code')} />
                 {errors.code ?               <div className="text-[12px] font-normal text-danger">{errors.code.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-trade">{t('suppliers.tradeName')} *</label>
-                <input id="supplier-trade" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('tradeName')} />
+                <Input id="supplier-trade" className="w-full" {...register('tradeName')} />
                 {errors.tradeName ?               <div className="text-[12px] font-normal text-danger">{errors.tradeName.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-legal">{t('fields.legalName')}</label>
-                <input id="supplier-legal" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('legalName')} />
+                <Input id="supplier-legal" className="w-full" {...register('legalName')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-tax">{t('fields.taxId')}</label>
-                <input id="supplier-tax" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('taxId')} />
+                <Input id="supplier-tax" className="w-full" {...register('taxId')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-email">{t('fields.email')}</label>
-                <input id="supplier-email" type="email" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('email')} />
+                <Input id="supplier-email" type="email" className="w-full" {...register('email')} />
                 {errors.email ?               <div className="text-[12px] font-normal text-danger">{errors.email.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-phone">{t('fields.phone')}</label>
-                <input id="supplier-phone" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('phone')} />
+                <Input id="supplier-phone" className="w-full" {...register('phone')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-currency">{t('fields.currency')}</label>
-                <input id="supplier-currency" maxLength={3} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('currency')} />
+                <Input id="supplier-currency" maxLength={3} className="w-full" {...register('currency')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-terms">{t('suppliers.paymentTerms')}</label>
-                <input id="supplier-terms" placeholder={t('suppliers.paymentTermsPlaceholder')} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('paymentTerms')} />
+                <Input id="supplier-terms" placeholder={t('suppliers.paymentTermsPlaceholder')} className="w-full" {...register('paymentTerms')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-credit">{t('fields.creditLimit')}</label>
-                <input id="supplier-credit" type="number" min="0" step="0.01" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('creditLimit')} />
+                <Input id="supplier-credit" type="number" min="0" step="0.01" className="w-full" {...register('creditLimit')} />
                 {errors.creditLimit ?               <div className="text-[12px] font-normal text-danger">{errors.creditLimit.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-address">{t('fields.address')}</label>
-                <textarea id="supplier-address" rows={2} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('address')} />
+                <Textarea id="supplier-address" rows={2} className="w-full" {...register('address')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>

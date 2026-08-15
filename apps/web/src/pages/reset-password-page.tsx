@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError } from '../api/client';
+import { Input } from '../components/ui';
 
 export function ResetPasswordPage() {
   const { t } = useTranslation();
@@ -54,7 +55,7 @@ export function ResetPasswordPage() {
           <form onSubmit={(event) => void handleSubmit(event)}>
             <label className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <span>{t('fields.newPassword')}</span>
-              <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+              <Input className="w-full"
                 type="password"
                 autoComplete="new-password"
                 minLength={8}
@@ -66,7 +67,7 @@ export function ResetPasswordPage() {
             </label>
             <label className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <span>{t('fields.confirmPassword')}</span>
-              <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+              <Input className="w-full"
                 type="password"
                 autoComplete="new-password"
                 minLength={8}

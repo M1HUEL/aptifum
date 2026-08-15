@@ -15,6 +15,9 @@ import {
   PageHeader,
   Pagination,
   TableSkeleton,
+  Input,
+  Select,
+  Textarea,
 } from '../ui';
 import { Activity } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -250,32 +253,32 @@ export function ActivityPanel() {
                 <label htmlFor="activity-type">
                   {t('crm.type')}<span className="text-danger"> *</span>
                 </label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-type" {...register('activityType')}>
+                <Select className="w-full" id="activity-type" {...register('activityType')}>
                   {activityTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-subject">
                   {t('fields.subject')}<span className="text-danger"> *</span>
                 </label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-subject" {...register('subject')} />
+                <Input className="w-full" id="activity-subject" {...register('subject')} />
                 {errors.subject ? <div className="text-[12px] font-normal text-danger">{errors.subject.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-due">{t('crm.dueAt')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-due" type="datetime-local" {...register('dueAt')} />
+                <Input className="w-full" id="activity-due" type="datetime-local" {...register('dueAt')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-completed">{t('crm.completedAt')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-completed" type="datetime-local" {...register('completedAt')} />
+                <Input className="w-full" id="activity-completed" type="datetime-local" {...register('completedAt')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-ref-type">{t('crm.referenceType')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                <Input className="w-full"
                   id="activity-ref-type"
                   placeholder={t('crm.referenceTypePlaceholder')}
                   {...register('referenceType')}
@@ -283,12 +286,12 @@ export function ActivityPanel() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-ref-id">{t('crm.referenceId')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-ref-id" {...register('referenceId')} />
+                <Input className="w-full" id="activity-ref-id" {...register('referenceId')} />
               </div>
             </div>
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="activity-description">{t('fields.description')}</label>
-              <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-description" rows={3} {...register('description')} />
+              <Textarea className="w-full" id="activity-description" rows={3} {...register('description')} />
             </div>
             {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>

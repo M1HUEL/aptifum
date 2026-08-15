@@ -1,6 +1,6 @@
 import type { Customer } from '../../api/types';
 import { useTranslation } from 'react-i18next';
-import { EmptyState, formatMoney } from '../ui';
+import { EmptyState, formatMoney , Input, Select } from '../ui';
 import { ShoppingCart } from 'lucide-react';
 
 export interface PosLine {
@@ -66,32 +66,32 @@ export function PosTicket({
       <h3 className="mb-3.5 text-[15px]">{t('pos.ticket')}</h3>
       <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
         <label htmlFor="pos-customer">{t('fields.customer')}</label>
-        <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="pos-customer" value={customerId} onChange={(event) => onCustomerChange(event.target.value)}>
+        <Select className="w-full" id="pos-customer" value={customerId} onChange={(event) => onCustomerChange(event.target.value)}>
           <option value="">{t('pos.walkInCustomer')}</option>
           {customers.map((customer) => (
             <option key={customer.id} value={customer.id}>
               {customer.tradeName}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       <div className="mb-3 grid grid-cols-2 gap-2.5 max-[480px]:grid-cols-1">
         <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
           <label htmlFor="pos-currency">{t('pos.saleCurrency')}</label>
-          <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="pos-currency" value={saleCurrency} onChange={(event) => onCurrencyChange(event.target.value)}>
+          <Select className="w-full" id="pos-currency" value={saleCurrency} onChange={(event) => onCurrencyChange(event.target.value)}>
             {SALE_CURRENCIES.map((currency) => (
               <option key={currency} value={currency}>
                 {currency}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         {saleCurrency !== FUNCTIONAL_CURRENCY ? (
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="pos-rate">
               {t('pos.exchangeRate', { base: FUNCTIONAL_CURRENCY, quote: saleCurrency })}
             </label>
-            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            <Input className="w-full"
               id="pos-rate"
               type="number"
               min="0.000001"
@@ -158,7 +158,7 @@ export function PosTicket({
       </div>
       <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
         <label htmlFor="pos-discount">{t('fields.discount')}</label>
-        <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Input className="w-full"
           id="pos-discount"
           type="number"
           min="0"

@@ -20,6 +20,8 @@ import {
   LoadingBlock,
   PageHeader,
   Pagination,
+  Input,
+  Select,
 } from '../components/ui';
 import { CalendarRange, FileSpreadsheet } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -328,12 +330,12 @@ export function AccountingPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="je-date">{t('fields.entryDate')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="je-date" type="date" {...register('entryDate')} />
+                <Input className="w-full" id="je-date" type="date" {...register('entryDate')} />
                 {errors.entryDate ? <div className="text-[12px] font-normal text-danger">{errors.entryDate.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="je-description">{t('fields.description')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="je-description" {...register('description')} />
+                <Input className="w-full" id="je-description" {...register('description')} />
                 {errors.description ? <div className="text-[12px] font-normal text-danger">{errors.description.message}</div> : null}
               </div>
             </div>
@@ -342,18 +344,18 @@ export function AccountingPage() {
                 <div className="grid grid-cols-[3fr_1fr_1.5fr_1fr_auto] items-start gap-2.5" key={index}>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-account-${index}`}>{t('tables.account')}</label>
-                    <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id={`je-line-account-${index}`} {...register(`lines.${index}.accountCode`)}>
+                    <Select className="w-full" id={`je-line-account-${index}`} {...register(`lines.${index}.accountCode`)}>
                       <option value="">{t('accounting.selectAccount')}</option>
                       {accounts.map((account) => (
                         <option key={account.id} value={account.code}>
                           {account.code} · {account.name}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-debit-${index}`}>{t('fields.debit')}</label>
-                    <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                    <Input className="w-full"
                       id={`je-line-debit-${index}`}
                       type="number"
                       min="0"
@@ -366,7 +368,7 @@ export function AccountingPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-credit-${index}`}>{t('fields.credit')}</label>
-                    <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                    <Input className="w-full"
                       id={`je-line-credit-${index}`}
                       type="number"
                       min="0"
@@ -379,7 +381,7 @@ export function AccountingPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-memo-${index}`}>{t('fields.memo')}</label>
-                    <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id={`je-line-memo-${index}`} {...register(`lines.${index}.description`)} />
+                    <Input className="w-full" id={`je-line-memo-${index}`} {...register(`lines.${index}.description`)} />
                     {errors.lines?.[index]?.description ? (
                       <div className="text-[12px] font-normal text-danger">{errors.lines[index]?.description?.message}</div>
                     ) : null}

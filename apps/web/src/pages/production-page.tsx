@@ -32,6 +32,9 @@ import {
   PageHeader,
   Pagination,
   TableSkeleton,
+  Input,
+  Select,
+  Textarea,
 } from '../components/ui';
 import { Factory, ListTree } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -561,7 +564,7 @@ export function ProductionPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="bom-name">{t('fields.name')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="bom-name" {...registerBom('name')} />
+                <Input className="w-full" id="bom-name" {...registerBom('name')} />
                 {bomErrors.name ? <div className="text-[12px] font-normal text-danger">{bomErrors.name.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -585,7 +588,7 @@ export function ProductionPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="bom-output">{t('fields.outputQuantity')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                <Input className="w-full"
                   id="bom-output"
                   type="number"
                   min="0.0001"
@@ -625,7 +628,7 @@ export function ProductionPage() {
                 </div>
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`bomline-${index}-qty`}>{t('fields.quantity')}</label>
-                  <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                  <Input className="w-full"
                     id={`bomline-${index}-qty`}
                     type="number"
                     min="0.0001"
@@ -637,7 +640,7 @@ export function ProductionPage() {
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`bomline-${index}-waste`}>{t('fields.wasteRate')} (%)</label>
                   <div className="flex items-center gap-1.5">
-                    <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                    <Input className="w-full"
                       id={`bomline-${index}-waste`}
                       type="number"
                       min="0"
@@ -695,32 +698,32 @@ export function ProductionPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-bom">{t('production.bom')}</label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="order-bom" {...registerOrder('bomId')} disabled={!orderProductId}>
+                <Select className="w-full" id="order-bom" {...registerOrder('bomId')} disabled={!orderProductId}>
                   <option value="">{t('production.noneNoBom')}</option>
                   {bomOptionsForProduct.map((bom) => (
                     <option key={bom.id} value={bom.id}>
                       {bom.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-warehouse">{t('fields.warehouse')} *</label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="order-warehouse" {...registerOrder('warehouseId')}>
+                <Select className="w-full" id="order-warehouse" {...registerOrder('warehouseId')}>
                   <option value="">{t('production.selectWarehouse')}</option>
                   {warehouses.map((warehouse) => (
                     <option key={warehouse.id} value={warehouse.id}>
                       {warehouse.code} · {warehouse.name}
                     </option>
                   ))}
-                </select>
+                </Select>
                 {orderErrors.warehouseId ? (
                   <div className="text-[12px] font-normal text-danger">{orderErrors.warehouseId.message}</div>
                 ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-quantity">{t('fields.quantity')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                <Input className="w-full"
                   id="order-quantity"
                   type="number"
                   min="0.0001"
@@ -733,21 +736,21 @@ export function ProductionPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-labor">{t('fields.laborCost')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="order-labor" type="number" min="0" step="0.01" {...registerOrder('laborCost')} />
+                <Input className="w-full" id="order-labor" type="number" min="0" step="0.01" {...registerOrder('laborCost')} />
                 {orderErrors.laborCost ? (
                   <div className="text-[12px] font-normal text-danger">{orderErrors.laborCost.message}</div>
                 ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-overhead">{t('fields.overhead')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="order-overhead" type="number" min="0" step="0.01" {...registerOrder('overhead')} />
+                <Input className="w-full" id="order-overhead" type="number" min="0" step="0.01" {...registerOrder('overhead')} />
                 {orderErrors.overhead ? (
                   <div className="text-[12px] font-normal text-danger">{orderErrors.overhead.message}</div>
                 ) : null}
               </div>
               <div className="col-span-2 mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-notes">{t('fields.notes')}</label>
-                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="order-notes" rows={3} {...registerOrder('notes')} />
+                <Textarea className="w-full" id="order-notes" rows={3} {...registerOrder('notes')} />
               </div>
             </div>
             {orderError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{orderError}</div> : null}

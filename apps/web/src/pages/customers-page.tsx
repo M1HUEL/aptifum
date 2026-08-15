@@ -15,6 +15,9 @@ import {
   Pagination,
   TableSkeleton,
   Toolbar,
+  Input,
+  Select,
+  Textarea,
 } from '../components/ui';
 import { Users } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
@@ -276,8 +279,8 @@ export function CustomersPage() {
       />
       {error ? <ErrorBanner message={error} /> : null}
       <Toolbar as="form" onSubmit={(event) => void submitSearch(event)}>
-        <input
-          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Input
+          className="max-w-[320px] flex-1 w-full"
           type="search"
           placeholder={t('customers.searchByTradeName')}
           value={input}
@@ -338,59 +341,59 @@ export function CustomersPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-code">{t('fields.code')} *</label>
-                <input id="customer-code" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('code')} />
+                <Input id="customer-code" className="w-full" {...register('code')} />
                 {errors.code ?               <div className="text-[12px] font-normal text-danger">{errors.code.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-trade">{t('fields.tradeName')} *</label>
-                <input id="customer-trade" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('tradeName')} />
+                <Input id="customer-trade" className="w-full" {...register('tradeName')} />
                 {errors.tradeName ?               <div className="text-[12px] font-normal text-danger">{errors.tradeName.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-legal">{t('fields.legalName')}</label>
-                <input id="customer-legal" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('legalName')} />
+                <Input id="customer-legal" className="w-full" {...register('legalName')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-tax">{t('fields.taxId')}</label>
-                <input id="customer-tax" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('taxId')} />
+                <Input id="customer-tax" className="w-full" {...register('taxId')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-email">{t('fields.email')}</label>
-                <input id="customer-email" type="email" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('email')} />
+                <Input id="customer-email" type="email" className="w-full" {...register('email')} />
                 {errors.email ?               <div className="text-[12px] font-normal text-danger">{errors.email.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-phone">{t('fields.phone')}</label>
-                <input id="customer-phone" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('phone')} />
+                <Input id="customer-phone" className="w-full" {...register('phone')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-currency">{t('fields.currency')}</label>
-                <input id="customer-currency" maxLength={3} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('currency')} />
+                <Input id="customer-currency" maxLength={3} className="w-full" {...register('currency')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-credit">{t('fields.creditLimit')}</label>
-                <input id="customer-credit" type="number" min="0" step="0.01" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('creditLimit')} />
+                <Input id="customer-credit" type="number" min="0" step="0.01" className="w-full" {...register('creditLimit')} />
                 {errors.creditLimit ?               <div className="text-[12px] font-normal text-danger">{errors.creditLimit.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-price">{t('fields.priceCategory')}</label>
-                <input id="customer-price" placeholder={t('customers.priceCategoryPlaceholder')} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('priceCategory')} />
+                <Input id="customer-price" placeholder={t('customers.priceCategoryPlaceholder')} className="w-full" {...register('priceCategory')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-address">{t('fields.address')}</label>
-                <textarea id="customer-address" rows={2} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('address')} />
+                <Textarea id="customer-address" rows={2} className="w-full" {...register('address')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-state">{t('customers.stateUs')}</label>
                 <div className="text-[12px] font-normal text-muted">{t('customers.stateHint')}</div>
-                <select id="customer-state" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('state')}>
+                <Select id="customer-state" className="w-full" {...register('state')}>
                   <option value="">{t('customers.noState')}</option>
                   {Object.entries(core.US_STATES).map(([code, info]) => (
                     <option key={code} value={code}>
                       {code} — {info.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('customers.taxStatus')}</label>

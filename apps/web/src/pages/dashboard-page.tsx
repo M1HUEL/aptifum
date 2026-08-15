@@ -25,6 +25,8 @@ import {
   LoadingBlock,
   PageHeader,
   StatCard,
+  Input,
+  Select,
 } from '../components/ui';
 
 const groupOptions = [
@@ -182,19 +184,19 @@ export function DashboardPage() {
         subtitle={`${rangeLabel} · ${formatDate(from)} → ${formatDate(to)}`}
       />
       <div className="mb-4 flex gap-2.5">
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={preset} onChange={(event) => setPreset(event.target.value)}>
+        <Select value={preset} onChange={(event) => setPreset(event.target.value)}>
           {rangeOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {t(option.labelKey)}
             </option>
           ))}
-        </select>
+        </Select>
         {preset === 'custom' ? (
           <div className="flex items-center gap-2.5">
             <label className="whitespace-nowrap text-[13px] text-muted" htmlFor="dash-from">
               {t('dashboard.from')}
             </label>
-            <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            <Input
               id="dash-from"
               type="date"
               value={customFrom}
@@ -203,7 +205,7 @@ export function DashboardPage() {
             <label className="whitespace-nowrap text-[13px] text-muted" htmlFor="dash-to">
               {t('dashboard.to')}
             </label>
-            <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            <Input
               id="dash-to"
               type="date"
               value={customTo}
@@ -211,14 +213,14 @@ export function DashboardPage() {
             />
           </div>
         ) : null}
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)}>
+        <Select value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)}>
           <option value="">{t('dashboard.allWarehouses')}</option>
           {(warehousesQuery.data?.data ?? []).map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
               {warehouse.name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       {error ? <ErrorBanner message={error} /> : null}
       {!report && !error ? <LoadingBlock /> : null}
@@ -306,13 +308,13 @@ export function DashboardPage() {
       <div className="mb-4 grid grid-cols-2 gap-4 max-[900px]:grid-cols-1 max-[480px]:grid-cols-2">
         <Card title={t('dashboard.salesTrend')}>
           <div className="mb-2.5 flex justify-end">
-            <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={groupBy} onChange={(event) => setGroupBy(event.target.value)}>
+            <Select value={groupBy} onChange={(event) => setGroupBy(event.target.value)}>
               {groupOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {t(option.labelKey)}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           {summary ? (
             <div className="w-full">

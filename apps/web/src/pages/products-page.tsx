@@ -21,6 +21,8 @@ import {
   Pagination,
   TableSkeleton,
   Toolbar,
+  Input,
+  Textarea,
 } from '../components/ui';
 import { Package } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -329,8 +331,8 @@ export function ProductsPage() {
       />
       {error ? <ErrorBanner message={error} /> : null}
       <Toolbar as="form" onSubmit={(event) => void submitSearch(event)}>
-        <input
-          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Input
+          className="max-w-[320px] flex-1 w-full"
           type="search"
           placeholder={t('products.searchByName')}
           value={input}
@@ -362,27 +364,27 @@ export function ProductsPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-sku">{t('fields.sku')} *</label>
-                <input id="product-sku" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('sku')} />
+                <Input id="product-sku" className="w-full" {...register('sku')} />
                 {errors.sku ? <div className="text-[12px] font-normal text-danger">{errors.sku.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-name">{t('fields.name')} *</label>
-                <input id="product-name" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('name')} />
+                <Input id="product-name" className="w-full" {...register('name')} />
                 {errors.name ? <div className="text-[12px] font-normal text-danger">{errors.name.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-brand">{t('fields.brand')}</label>
-                <input id="product-brand" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('brand')} />
+                <Input id="product-brand" className="w-full" {...register('brand')} />
                 {errors.brand ? <div className="text-[12px] font-normal text-danger">{errors.brand.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-uom">{t('fields.unitOfMeasure')}</label>
-                <input id="product-uom" placeholder={t('products.uomPlaceholder')} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('unitOfMeasure')} />
+                <Input id="product-uom" placeholder={t('products.uomPlaceholder')} className="w-full" {...register('unitOfMeasure')} />
                 {errors.unitOfMeasure ? <div className="text-[12px] font-normal text-danger">{errors.unitOfMeasure.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-barcode">{t('fields.barcode')}</label>
-                <input id="product-barcode" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('barcode')} />
+                <Input id="product-barcode" className="w-full" {...register('barcode')} />
                 {errors.barcode ? <div className="text-[12px] font-normal text-danger">{errors.barcode.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -407,12 +409,12 @@ export function ProductsPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-purchase">{t('fields.purchasePrice')}</label>
-                <input
+                <Input
                   id="product-purchase"
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                  className="w-full"
                   {...register('purchasePrice')}
                 />
                 {errors.purchasePrice ? (
@@ -421,12 +423,12 @@ export function ProductsPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-sale">{t('fields.salePrice')}</label>
-                <input id="product-sale" type="number" min="0" step="0.01" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('salePrice')} />
+                <Input id="product-sale" type="number" min="0" step="0.01" className="w-full" {...register('salePrice')} />
                 {errors.salePrice ? <div className="text-[12px] font-normal text-danger">{errors.salePrice.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-description">{t('fields.description')}</label>
-                <textarea id="product-description" rows={3} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('description')} />
+                <Textarea id="product-description" rows={3} className="w-full" {...register('description')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>

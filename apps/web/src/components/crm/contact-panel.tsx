@@ -15,6 +15,9 @@ import {
   PageHeader,
   Pagination,
   TableSkeleton,
+  Input,
+  Select,
+  Textarea,
 } from '../ui';
 import { Contact } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -223,43 +226,43 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
                 <label htmlFor="contact-name">
                   {t('fields.fullName')}<span className="text-danger"> *</span>
                 </label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-name" {...register('fullName')} />
+                <Input className="w-full" id="contact-name" {...register('fullName')} />
                 {errors.fullName ? <div className="text-[12px] font-normal text-danger">{errors.fullName.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-customer">{t('fields.customer')}</label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-customer" {...register('customerId')}>
+                <Select className="w-full" id="contact-customer" {...register('customerId')}>
                   <option value="">{t('crm.none')}</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
                       {customer.tradeName}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-title">{t('crm.title')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-title" {...register('title')} />
+                <Input className="w-full" id="contact-title" {...register('title')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-email">{t('fields.email')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-email" type="email" {...register('email')} />
+                <Input className="w-full" id="contact-email" type="email" {...register('email')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-phone">{t('fields.phone')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-phone" {...register('phone')} />
+                <Input className="w-full" id="contact-phone" {...register('phone')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-mobile">{t('crm.mobile')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-mobile" {...register('mobile')} />
+                <Input className="w-full" id="contact-mobile" {...register('mobile')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-address">{t('fields.address')}</label>
-                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-address" rows={2} {...register('address')} />
+                <Textarea className="w-full" id="contact-address" rows={2} {...register('address')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-notes">{t('fields.notes')}</label>
-                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-notes" rows={2} {...register('notes')} />
+                <Textarea className="w-full" id="contact-notes" rows={2} {...register('notes')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>

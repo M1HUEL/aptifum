@@ -1,6 +1,6 @@
 import { type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatMoney } from '../ui';
+import { formatMoney , Input, Select } from '../ui';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { FUNCTIONAL_CURRENCY } from './pos-ticket';
@@ -51,7 +51,7 @@ export function PosPaymentModal({
             <label htmlFor="payment-method">
               {t('invoices.method')}<span className="text-danger"> *</span>
             </label>
-            <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            <Select className="w-full"
               id="payment-method"
               value={form.method}
               onChange={(event) => onFormChange('method', event.target.value)}
@@ -61,13 +61,13 @@ export function PosPaymentModal({
                   {method}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-amount">
               {t('fields.amount')}<span className="text-danger"> *</span>
             </label>
-            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            <Input className="w-full"
               id="payment-amount"
               type="number"
               min="0.01"
@@ -84,7 +84,7 @@ export function PosPaymentModal({
           </div>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-date">{t('invoices.receivedAt')}</label>
-            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            <Input className="w-full"
               id="payment-date"
               type="date"
               value={form.receivedAt}
@@ -93,7 +93,7 @@ export function PosPaymentModal({
           </div>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-reference">{t('invoices.reference')}</label>
-            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            <Input className="w-full"
               id="payment-reference"
               value={form.reference}
               onChange={(event) => onFormChange('reference', event.target.value)}

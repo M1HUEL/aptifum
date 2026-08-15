@@ -31,6 +31,8 @@ import {
   formatMoney,
   LoadingBlock,
   PageHeader,
+  Input,
+  Select,
 } from '../components/ui';
 import { Users, Wallet } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -442,62 +444,62 @@ export function HrPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-no">{t('fields.employeeNo')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="emp-no" {...register('employeeNo')} />
+                <Input className="w-full" id="emp-no" {...register('employeeNo')} />
                 {errors.employeeNo ? <div className="text-[12px] font-normal text-danger">{errors.employeeNo.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-first">{t('fields.firstName')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="emp-first" {...register('firstName')} />
+                <Input className="w-full" id="emp-first" {...register('firstName')} />
                 {errors.firstName ? <div className="text-[12px] font-normal text-danger">{errors.firstName.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-last">{t('fields.lastName')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="emp-last" {...register('lastName')} />
+                <Input className="w-full" id="emp-last" {...register('lastName')} />
                 {errors.lastName ? <div className="text-[12px] font-normal text-danger">{errors.lastName.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-email">{t('fields.email')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="emp-email" type="email" {...register('email')} />
+                <Input className="w-full" id="emp-email" type="email" {...register('email')} />
                 {errors.email ? <div className="text-[12px] font-normal text-danger">{errors.email.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-phone">{t('fields.phone')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="emp-phone" {...register('phone')} />
+                <Input className="w-full" id="emp-phone" {...register('phone')} />
                 {errors.phone ? <div className="text-[12px] font-normal text-danger">{errors.phone.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-department">{t('fields.department')}</label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="emp-department" {...register('departmentId')}>
+                <Select className="w-full" id="emp-department" {...register('departmentId')}>
                   <option value="">{t('hr.none')}</option>
                   {departments.map((department) => (
                     <option key={department.id} value={department.id}>
                       {department.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-position">{t('fields.position')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="emp-position" {...register('position')} />
+                <Input className="w-full" id="emp-position" {...register('position')} />
                 {errors.position ? <div className="text-[12px] font-normal text-danger">{errors.position.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-hire">{t('fields.hireDate')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="emp-hire" type="date" {...register('hireDate')} />
+                <Input className="w-full" id="emp-hire" type="date" {...register('hireDate')} />
                 {errors.hireDate ? <div className="text-[12px] font-normal text-danger">{errors.hireDate.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-salary">{t('fields.salary')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="emp-salary" type="number" min="0" step="0.01" {...register('salary')} />
+                <Input className="w-full" id="emp-salary" type="number" min="0" step="0.01" {...register('salary')} />
                 {errors.salary ? <div className="text-[12px] font-normal text-danger">{errors.salary.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-frequency">{t('fields.salaryFrequency')}</label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="emp-frequency" {...register('salaryFrequency')}>
+                <Select className="w-full" id="emp-frequency" {...register('salaryFrequency')}>
                   <option value="monthly">{t('hr.monthly')}</option>
                   <option value="biweekly">{t('hr.biweekly')}</option>
                   <option value="weekly">{t('hr.weekly')}</option>
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
@@ -529,7 +531,7 @@ export function HrPage() {
           <form onSubmit={(event) => void submitPayroll(event)}>
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="payroll-period">{t('fields.period')} *</label>
-              <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="payroll-period" type="month" {...payrollRegister('period')} />
+              <Input className="w-full" id="payroll-period" type="month" {...payrollRegister('period')} />
               {payrollErrors.period ? (
                 <div className="text-[12px] font-normal text-danger">{payrollErrors.period.message}</div>
               ) : null}
@@ -542,11 +544,11 @@ export function HrPage() {
                   <div className="grid grid-cols-[3fr_1fr_1.5fr_1fr_auto] items-start gap-2.5" key={employee.id}>
                     <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                       <label>{t('fields.employee')}</label>
-                      <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={`${employee.firstName} ${employee.lastName}`} readOnly />
+                      <Input className="w-full" value={`${employee.firstName} ${employee.lastName}`} readOnly />
                     </div>
                     <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                       <label htmlFor={`pay-bonus-${employee.id}`}>{t('fields.bonus')}</label>
-                      <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                      <Input className="w-full"
                         id={`pay-bonus-${employee.id}`}
                         type="number"
                         min="0"
@@ -559,7 +561,7 @@ export function HrPage() {
                     </div>
                     <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                       <label htmlFor={`pay-overtime-${employee.id}`}>{t('fields.overtime')}</label>
-                      <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                      <Input className="w-full"
                         id={`pay-overtime-${employee.id}`}
                         type="number"
                         min="0"
@@ -572,7 +574,7 @@ export function HrPage() {
                     </div>
                     <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                       <label htmlFor={`pay-deductions-${employee.id}`}>{t('fields.deductions')}</label>
-                      <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                      <Input className="w-full"
                         id={`pay-deductions-${employee.id}`}
                         type="number"
                         min="0"

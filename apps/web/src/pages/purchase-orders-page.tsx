@@ -33,6 +33,9 @@ import {
   Pagination,
   StatusSelect,
   TableSkeleton,
+  Input,
+  Select,
+  Textarea,
 } from '../components/ui';
 import { ShoppingBag } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -394,8 +397,8 @@ export function PurchaseOrdersPage() {
         }
       />
       <form className="mb-4 flex gap-2.5" onSubmit={(event) => void submitSearch(event)}>
-        <input
-          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Input
+          className="max-w-[320px] flex-1 w-full"
           type="search"
           placeholder={t('purchaseOrders.searchByNumber')}
           value={input}
@@ -460,23 +463,23 @@ export function PurchaseOrdersPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="po-warehouse">{t('fields.warehouse')} *</label>
-                <select id="po-warehouse" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('warehouseId')}>
+                <Select id="po-warehouse" className="w-full" {...register('warehouseId')}>
                   <option value="">{t('purchaseOrders.selectWarehouse')}</option>
                   {warehouses.map((warehouse) => (
                     <option key={warehouse.id} value={warehouse.id}>
                       {warehouse.name}
                     </option>
                   ))}
-                </select>
+                </Select>
                 {errors.warehouseId ? <div className="text-[12px] font-normal text-danger">{errors.warehouseId.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="po-expected">{t('purchaseOrders.expectedAt')}</label>
-                <input id="po-expected" type="date" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('expectedAt')} />
+                <Input id="po-expected" type="date" className="w-full" {...register('expectedAt')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="po-discount">{t('fields.discount')}</label>
-                <input id="po-discount" type="number" min="0" step="0.01" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('discount')} />
+                <Input id="po-discount" type="number" min="0" step="0.01" className="w-full" {...register('discount')} />
                 {errors.discount ? <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div> : null}
               </div>
             </div>
@@ -501,12 +504,12 @@ export function PurchaseOrdersPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`po-item-qty-${index}`}>{t('fields.qty')}</label>
-                    <input
+                    <Input
                       id={`po-item-qty-${index}`}
                       type="number"
                       min="0.0001"
                       step="any"
-                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                      className="w-full"
                       {...register(`items.${index}.quantity`)}
                     />
                     {errors.items?.[index]?.quantity ? (
@@ -515,13 +518,13 @@ export function PurchaseOrdersPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`po-item-cost-${index}`}>{t('fields.unitCost')}</label>
-                    <input
+                    <Input
                       id={`po-item-cost-${index}`}
                       type="number"
                       min="0"
                       step="0.01"
                       placeholder={t('purchaseOrders.purchasePricePlaceholder')}
-                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                      className="w-full"
                       {...register(`items.${index}.unitCost`)}
                     />
                     {errors.items?.[index]?.unitCost ? (
@@ -530,14 +533,14 @@ export function PurchaseOrdersPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`po-item-tax-${index}`}>{t('fields.taxRate')} %</label>
-                    <input
+                    <Input
                       id={`po-item-tax-${index}`}
                       type="number"
                       min="0"
                       max="100"
                       step="0.01"
                       placeholder={t('purchaseOrders.taxPlaceholder')}
-                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                      className="w-full"
                       {...register(`items.${index}.taxRate`)}
                     />
                     {errors.items?.[index]?.taxRate ? (
@@ -559,7 +562,7 @@ export function PurchaseOrdersPage() {
             </Button>
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="po-notes">{t('fields.notes')}</label>
-              <textarea id="po-notes" rows={2} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('notes')} />
+              <Textarea id="po-notes" rows={2} className="w-full" {...register('notes')} />
             </div>
             {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
@@ -586,25 +589,25 @@ export function PurchaseOrdersPage() {
                     <div className="grid grid-cols-[3fr_1fr_1.5fr_1fr_auto] items-start gap-2.5" key={item.id}>
                       <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                         <label>{t('fields.product')}</label>
-                        <input value={item.description ?? item.productId} readOnly className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
+                        <Input value={item.description ?? item.productId} readOnly className="w-full" />
                       </div>
                       <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                         <label>{t('purchaseOrders.ordered')}</label>
-                        <input value={String(item.quantity)} readOnly className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
+                        <Input value={String(item.quantity)} readOnly className="w-full" />
                       </div>
                       <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                         <label>{t('purchaseOrders.received')}</label>
-                        <input value={String(item.receivedQuantity)} readOnly className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
+                        <Input value={String(item.receivedQuantity)} readOnly className="w-full" />
                       </div>
                       <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                         <label htmlFor={`receive-qty-${item.id}`}>{t('purchaseOrders.toReceive')}</label>
-                        <input
+                        <Input
                           id={`receive-qty-${item.id}`}
                           type="number"
                           min="0"
                           max={maxReceive}
                           step="any"
-                          className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                          className="w-full"
                           {...receiveRegister(`items.${index}.quantity`)}
                         />
                       </div>
@@ -616,7 +619,7 @@ export function PurchaseOrdersPage() {
             ) : null}
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="receive-notes">{t('fields.notes')}</label>
-              <textarea id="receive-notes" rows={2} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...receiveRegister('notes')} />
+              <Textarea id="receive-notes" rows={2} className="w-full" {...receiveRegister('notes')} />
             </div>
             {receiveError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{receiveError}</div> : null}
             <DialogFooter>

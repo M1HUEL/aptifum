@@ -16,6 +16,8 @@ import {
   StatusSelect,
   TableSkeleton,
   Toolbar,
+  Input,
+  Select,
 } from '../components/ui';
 import { FileText } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -216,8 +218,8 @@ export function InvoicesPage() {
         }
       />
       <Toolbar as="form" onSubmit={(event) => void submitSearch(event)}>
-        <input
-          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Input
+          className="max-w-[320px] flex-1 w-full"
           type="search"
           placeholder={t('invoices.searchByNumber')}
           value={input}
@@ -234,11 +236,11 @@ export function InvoicesPage() {
             { value: 'cancelled', label: t('invoices.cancelled') },
           ]}
         />
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={typeFilter} onChange={(event) => handleTypeChange(event.target.value)}>
+        <Select value={typeFilter} onChange={(event) => handleTypeChange(event.target.value)}>
           <option value="">{t('invoices.allTypes')}</option>
           <option value="invoice">{t('invoices.invoice')}</option>
           <option value="credit_note">{t('invoices.creditNote')}</option>
-        </select>
+        </Select>
         <button
           type="submit"
           className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"

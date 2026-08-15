@@ -10,6 +10,7 @@ import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { SearchableSelect } from '../ui/searchable-select';
 import { useToast } from '../toast';
+import { Input, Select, Textarea } from '../ui';
 
 type CreateInvoiceDto = components['schemas']['CreateInvoiceDto'];
 type CreateInvoiceItemDto = components['schemas']['CreateInvoiceItemDto'];
@@ -150,22 +151,22 @@ export function InvoiceFormModal({
             </div>
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="invoice-warehouse">{t('fields.warehouse')}</label>
-              <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="invoice-warehouse" {...register('warehouseId')}>
+              <Select className="w-full" id="invoice-warehouse" {...register('warehouseId')}>
                 <option value="">{t('invoices.defaultWarehouse')}</option>
                 {warehouses.map((warehouse) => (
                   <option key={warehouse.id} value={warehouse.id}>
                     {warehouse.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="invoice-due">{t('fields.dueDate')}</label>
-              <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="invoice-due" type="date" {...register('dueDate')} />
+              <Input className="w-full" id="invoice-due" type="date" {...register('dueDate')} />
             </div>
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="invoice-discount">{t('fields.discount')}</label>
-              <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="invoice-discount" type="number" min="0" step="0.01" {...register('discount')} />
+              <Input className="w-full" id="invoice-discount" type="number" min="0" step="0.01" {...register('discount')} />
               {errors.discount ? <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div> : null}
             </div>
           </div>
@@ -194,7 +195,7 @@ export function InvoiceFormModal({
                 </div>
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`invoice-item-qty-${index}`}>{t('fields.qty')}</label>
-                  <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                  <Input className="w-full"
                     id={`invoice-item-qty-${index}`}
                     type="number"
                     min="0.0001"
@@ -207,7 +208,7 @@ export function InvoiceFormModal({
                 </div>
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`invoice-item-price-${index}`}>{t('fields.unitPrice')}</label>
-                  <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                  <Input className="w-full"
                     id={`invoice-item-price-${index}`}
                     type="number"
                     min="0"
@@ -221,7 +222,7 @@ export function InvoiceFormModal({
                 </div>
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`invoice-item-tax-${index}`}>{t('invoices.taxPercent')}</label>
-                  <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+                  <Input className="w-full"
                     id={`invoice-item-tax-${index}`}
                     type="number"
                     min="0"
@@ -249,7 +250,7 @@ export function InvoiceFormModal({
           </Button>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="invoice-notes">{t('fields.notes')}</label>
-            <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="invoice-notes" rows={2} {...register('notes')} />
+            <Textarea className="w-full" id="invoice-notes" rows={2} {...register('notes')} />
           </div>
           {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
           <DialogFooter>

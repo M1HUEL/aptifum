@@ -16,6 +16,9 @@ import {
   PageHeader,
   Pagination,
   TableSkeleton,
+  Input,
+  Select,
+  Textarea,
 } from '../ui';
 import { UserRound } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -239,48 +242,48 @@ export function LeadPanel() {
                 <label htmlFor="lead-contact">
                   {t('fields.contactName')}<span className="text-danger"> *</span>
                 </label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-contact" {...register('contactName')} />
+                <Input className="w-full" id="lead-contact" {...register('contactName')} />
                 {errors.contactName ? (
                   <div className="text-[12px] font-normal text-danger">{errors.contactName.message}</div>
                 ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-company">{t('crm.company')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-company" {...register('companyName')} />
+                <Input className="w-full" id="lead-company" {...register('companyName')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-email">{t('fields.email')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-email" type="email" {...register('email')} />
+                <Input className="w-full" id="lead-email" type="email" {...register('email')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-phone">{t('fields.phone')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-phone" {...register('phone')} />
+                <Input className="w-full" id="lead-phone" {...register('phone')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-source">{t('crm.source')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-source" {...register('source')} />
+                <Input className="w-full" id="lead-source" {...register('source')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-status">{t('common.status')}</label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-status" {...register('status')}>
+                <Select className="w-full" id="lead-status" {...register('status')}>
                   {leadStatuses.map((status) => (
                     <option key={status} value={status}>
                       {status}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-amount">{t('fields.estimatedAmount')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-amount" type="number" min="0" step="0.01" {...register('estimatedAmount')} />
+                <Input className="w-full" id="lead-amount" type="number" min="0" step="0.01" {...register('estimatedAmount')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-currency">{t('fields.currency')}</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-currency" maxLength={3} {...register('currency')} />
+                <Input className="w-full" id="lead-currency" maxLength={3} {...register('currency')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-notes">{t('fields.notes')}</label>
-                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-notes" rows={3} {...register('notes')} />
+                <Textarea className="w-full" id="lead-notes" rows={3} {...register('notes')} />
               </div>
             </div>
             {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
@@ -299,7 +302,7 @@ export function LeadPanel() {
           <p className="text-muted">{t('crm.convertLeadMessage', { name: converting?.contactName })}</p>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="convert-code">{t('crm.customerCode')}</label>
-            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="convert-code" value={customerCode} onChange={(event) => setCustomerCode(event.target.value)} />
+            <Input className="w-full" id="convert-code" value={customerCode} onChange={(event) => setCustomerCode(event.target.value)} />
           </div>
           <DialogFooter>
             <Button variant="default" type="button" disabled={convertBusy} onClick={() => void confirmConvert()}>

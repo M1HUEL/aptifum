@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/auth-context';
+import { Input } from '../components/ui';
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -64,7 +65,7 @@ export function LoginPage() {
         <form onSubmit={(event) => void handleSubmit(event)}>
           <label className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <span>{t('fields.email')}</span>
-            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            <Input className="w-full"
               type="email"
               autoComplete="username"
               required
@@ -74,7 +75,7 @@ export function LoginPage() {
           </label>
           <label className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <span>{t('fields.password')}</span>
-            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            <Input className="w-full"
               type="password"
               autoComplete="current-password"
               required

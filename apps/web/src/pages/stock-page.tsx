@@ -30,6 +30,9 @@ import {
   Pagination,
   StatusSelect,
   TableSkeleton,
+  Input,
+  Select,
+  Textarea,
 } from '../components/ui';
 import { Boxes, History } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -309,24 +312,24 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
         >
           {t('common.export')}
         </button>
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={filters.movementType} onChange={(event) => setFilter('movementType', event.target.value)}>
+        <Select value={filters.movementType} onChange={(event) => setFilter('movementType', event.target.value)}>
           <option value="">{t('stock.allTypes')}</option>
           {movementTypes.map((type) => (
             <option key={type} value={type}>
               {type}
             </option>
           ))}
-        </select>
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
+        </Select>
+        <Select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
           <option value="">{t('stock.allWarehouses')}</option>
           {warehouses.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
               {warehouse.name}
             </option>
           ))}
-        </select>
-        <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" type="date" value={filters.from} onChange={(event) => setFilter('from', event.target.value)} />
-        <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" type="date" value={filters.to} onChange={(event) => setFilter('to', event.target.value)} />
+        </Select>
+        <Input type="date" value={filters.from} onChange={(event) => setFilter('from', event.target.value)} />
+        <Input type="date" value={filters.to} onChange={(event) => setFilter('to', event.target.value)} />
         {hasFilters ? (
           <Button variant="ghost" onClick={resetFilters}>
             {t('stock.clearFilters')}
@@ -422,14 +425,14 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
             { value: 'expired', label: t('stock.expired') },
           ]}
         />
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
+        <Select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
           <option value="">{t('stock.allWarehouses')}</option>
           {warehouses.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
               {warehouse.name}
             </option>
           ))}
-        </select>
+        </Select>
         {hasFilters ? (
           <Button variant="ghost" onClick={resetFilters}>
             {t('stock.clearFilters')}
@@ -658,14 +661,14 @@ export function StockPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-product">{t('fields.product')} *</label>
-                <select id="movement-product" className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('productId')}>
+                <Select id="movement-product" {...register('productId')}>
                   <option value="">{t('stock.selectProduct')}</option>
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
                       {product.sku} · {product.name}
                     </option>
                   ))}
-                </select>
+                </Select>
                 {errors.productId ?                 <div className="text-[12px] font-normal text-danger">{errors.productId.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -691,34 +694,34 @@ export function StockPage() {
               {locations.length > 0 ? (
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor="movement-location">{t('stock.location')}</label>
-                  <select id="movement-location" className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('locationId')}>
+                  <Select id="movement-location" {...register('locationId')}>
                     <option value="">{t('stock.noLocation')}</option>
                     {locations.map((location) => (
                       <option key={location.id} value={location.id}>
                         {location.code} · {location.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               ) : null}
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-type">{t('tables.type')} *</label>
-                <select id="movement-type" className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('movementType')}>
+                <Select id="movement-type" {...register('movementType')}>
                   {movementTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-quantity">{t('fields.quantity')} *</label>
-                <input
+                <Input
                   id="movement-quantity"
                   type="number"
                   min="0.0001"
                   step="any"
-                  className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+
                   {...register('quantity')}
                 />
                 {selectedStock ? (
@@ -733,21 +736,21 @@ export function StockPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-cost">{t('fields.unitCost')}</label>
-                <input id="movement-cost" type="number" min="0" step="0.01" className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('unitCost')} />
+                <Input id="movement-cost" type="number" min="0" step="0.01" {...register('unitCost')} />
                 {errors.unitCost ?                 <div className="text-[12px] font-normal text-danger">{errors.unitCost.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-lot">{t('fields.lotNumber')}</label>
-                <input id="movement-lot" placeholder={t('stock.lotPlaceholder')} className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('lotNumber')} />
+                <Input id="movement-lot" placeholder={t('stock.lotPlaceholder')} {...register('lotNumber')} />
                 {errors.lotNumber ?                 <div className="text-[12px] font-normal text-danger">{errors.lotNumber.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-expiry">{t('fields.expiryDate')}</label>
-                <input id="movement-expiry" type="date" className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('expiryDate')} />
+                <Input id="movement-expiry" type="date" {...register('expiryDate')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-notes">{t('fields.notes')}</label>
-                <textarea id="movement-notes" rows={2} className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('notes')} />
+                <Textarea id="movement-notes" rows={2} {...register('notes')} />
               </div>
             </div>
             {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}

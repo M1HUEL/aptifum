@@ -14,6 +14,9 @@ import {
   PageHeader,
   Pagination,
   TableSkeleton,
+  Input,
+  Select,
+  Textarea,
 } from '../components/ui';
 import { ListOrdered } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -261,37 +264,37 @@ export function ChartAccountsPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-code">{t('fields.code')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-code" disabled={editingId !== null} {...register('code')} />
+                <Input className="w-full" id="acc-code" disabled={editingId !== null} {...register('code')} />
                 {errors.code ? <div className="text-[12px] font-normal text-danger">{errors.code.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-name">{t('fields.name')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-name" {...register('name')} />
+                <Input className="w-full" id="acc-name" {...register('name')} />
                 {errors.name ? <div className="text-[12px] font-normal text-danger">{errors.name.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-type">{t('tables.type')} *</label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-type" {...register('type')}>
+                <Select className="w-full" id="acc-type" {...register('type')}>
                   {accountTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-balance">{t('tables.normalBalance')} *</label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-balance" {...register('normalBalance')}>
+                <Select className="w-full" id="acc-balance" {...register('normalBalance')}>
                   {normalBalances.map((balance) => (
                     <option key={balance} value={balance}>
                       {balance}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-parent">{t('tables.parent')}</label>
-                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-parent" {...register('parentId')}>
+                <Select className="w-full" id="acc-parent" {...register('parentId')}>
                   <option value="">{t('accounts.none')}</option>
                   {accounts
                     .filter((account) => account.id !== editingId)
@@ -300,11 +303,11 @@ export function ChartAccountsPage() {
                         {account.code} · {account.name}
                       </option>
                     ))}
-                </select>
+                </Select>
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-description">{t('fields.description')}</label>
-                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-description" rows={2} {...register('description')} />
+                <Textarea className="w-full" id="acc-description" rows={2} {...register('description')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>

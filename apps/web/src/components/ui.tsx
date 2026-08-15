@@ -1,7 +1,27 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Inbox } from 'lucide-react';
+import { cn } from '../lib/cn';
 import i18n from '../i18n';
+
+const inputBase =
+  'rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15';
+
+export function Input({ className, ...props }: ComponentPropsWithoutRef<'input'>) {
+  return <input className={cn(inputBase, className)} {...props} />;
+}
+
+export function Select({ className, children, ...props }: ComponentPropsWithoutRef<'select'>) {
+  return (
+    <select className={cn(inputBase, className)} {...props}>
+      {children}
+    </select>
+  );
+}
+
+export function Textarea({ className, ...props }: ComponentPropsWithoutRef<'textarea'>) {
+  return <textarea className={cn(inputBase, className)} {...props} />;
+}
 
 function resolveLocale(language?: string): string {
   return language?.startsWith('es') ? 'es-MX' : 'en-US';
@@ -243,13 +263,13 @@ export function StatusSelect({
   ariaLabel?: string;
 }) {
   return (
-    <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={value} onChange={(event) => onChange(event.target.value)} aria-label={ariaLabel}>
+    <Select className="w-full" value={value} onChange={(event) => onChange(event.target.value)} aria-label={ariaLabel}>
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }
 
@@ -294,7 +314,8 @@ export function Pagination({
         {t('common.next')}
       </button>
       {onLimit ? (
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Select
+          className="w-auto"
           aria-label={t('common.rowsPerPage')}
           value={limit}
           onChange={(event) => onLimit(Number(event.target.value))}
@@ -304,7 +325,7 @@ export function Pagination({
               {value}
             </option>
           ))}
-        </select>
+        </Select>
       ) : null}
     </div>
   );

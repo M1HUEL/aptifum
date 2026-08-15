@@ -24,6 +24,8 @@ import {
   PageHeader,
   Pagination,
   TableSkeleton,
+  Input,
+  Textarea,
 } from '../components/ui';
 import { MapPin, Tags, Warehouse as WarehouseIcon } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -476,17 +478,17 @@ export function WarehousesCategoriesPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="wh-code">{t('fields.code')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="wh-code" {...registerWh('code')} />
+                <Input className="w-full" id="wh-code" {...registerWh('code')} />
                 {whErrors.code ? <div className="text-[12px] font-normal text-danger">{whErrors.code.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="wh-name">{t('fields.name')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="wh-name" {...registerWh('name')} />
+                <Input className="w-full" id="wh-name" {...registerWh('name')} />
                 {whErrors.name ? <div className="text-[12px] font-normal text-danger">{whErrors.name.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="wh-address">{t('fields.address')}</label>
-                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="wh-address" rows={2} {...registerWh('address')} />
+                <Textarea className="w-full" id="wh-address" rows={2} {...registerWh('address')} />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
@@ -582,12 +584,12 @@ export function WarehousesCategoriesPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="loc-code">{t('fields.code')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="loc-code" {...registerLoc('code')} />
+                <Input className="w-full" id="loc-code" {...registerLoc('code')} />
                 {locErrors.code ? <div className="text-[12px] font-normal text-danger">{locErrors.code.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="loc-name">{t('fields.name')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="loc-name" {...registerLoc('name')} />
+                <Input className="w-full" id="loc-name" {...registerLoc('name')} />
                 {locErrors.name ? <div className="text-[12px] font-normal text-danger">{locErrors.name.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -621,7 +623,7 @@ export function WarehousesCategoriesPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="cat-name">{t('fields.name')} *</label>
-                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="cat-name" {...registerCat('name')} />
+                <Input className="w-full" id="cat-name" {...registerCat('name')} />
                 {catErrors.name ? <div className="text-[12px] font-normal text-danger">{catErrors.name.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">

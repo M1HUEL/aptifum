@@ -6,7 +6,7 @@ import type { components } from '../../api/schema';
 import type { Invoice } from '../../api/types';
 import { paymentFormSchema, type PaymentFormValues } from '../../api/schemas';
 import { useApiInvalidation, useApiMutation } from '../../api/hooks';
-import { formatMoney } from '../ui';
+import { formatMoney , Input, Select, Textarea } from '../ui';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { useToast } from '../toast';
@@ -92,13 +92,13 @@ export function PaymentFormModal({
             <label htmlFor="payment-method">
               {t('invoices.method')} <span className="text-danger">*</span>
             </label>
-            <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="payment-method" {...register('method')}>
+            <Select className="w-full" id="payment-method" {...register('method')}>
               {paymentMethods.map((method) => (
                 <option key={method} value={method}>
                   {method}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-amount">
@@ -107,20 +107,20 @@ export function PaymentFormModal({
             {invoice ? (
               <div className="text-[12px] font-normal text-muted">{t('invoices.balanceDueHint', { amount: formatMoney(invoice.balanceDue) })}</div>
             ) : null}
-            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="payment-amount" type="number" min="0.01" step="0.01" {...register('amount')} />
+            <Input className="w-full" id="payment-amount" type="number" min="0.01" step="0.01" {...register('amount')} />
             {errors.amount ? <div className="text-[12px] font-normal text-danger">{errors.amount.message}</div> : null}
           </div>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-date">{t('invoices.receivedAt')}</label>
-            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="payment-date" type="date" {...register('receivedAt')} />
+            <Input className="w-full" id="payment-date" type="date" {...register('receivedAt')} />
           </div>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-reference">{t('invoices.reference')}</label>
-            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="payment-reference" {...register('reference')} />
+            <Input className="w-full" id="payment-reference" {...register('reference')} />
           </div>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-notes">{t('fields.notes')}</label>
-            <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="payment-notes" rows={2} {...register('notes')} />
+            <Textarea className="w-full" id="payment-notes" rows={2} {...register('notes')} />
           </div>
           {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
           <DialogFooter>

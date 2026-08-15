@@ -1,7 +1,7 @@
 import { type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Paginated, PosProduct, Warehouse } from '../../api/types';
-import { Badge, EmptyState, ErrorBanner, formatMoney, LoadingBlock, Pagination } from '../ui';
+import { Badge, EmptyState, ErrorBanner, formatMoney, LoadingBlock, Pagination , Input, Select } from '../ui';
 import { Package } from 'lucide-react';
 
 export function PosCatalog({
@@ -33,7 +33,7 @@ export function PosCatalog({
   return (
     <div className="min-w-0">
       <div className="mb-4 flex gap-2.5">
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Select
           id="pos-warehouse"
           value={warehouseId}
           onChange={(event) => onWarehouseChange(event.target.value)}
@@ -44,11 +44,11 @@ export function PosCatalog({
               {warehouse.name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       <form className="mb-4 flex gap-2.5" onSubmit={onSubmitSearch}>
-        <input
-          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+        <Input
+          className="max-w-[320px] flex-1 w-full"
           type="search"
           placeholder={t('pos.searchPlaceholder')}
           value={input}

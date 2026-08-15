@@ -11,6 +11,7 @@ import {
   formatNumber,
   LoadingBlock,
   PageHeader,
+  Select,
 } from '../components/ui';
 import { BarChart3 } from 'lucide-react';
 
@@ -218,13 +219,13 @@ export function ReportsPage() {
         }
       />
       <div className="mb-4 flex gap-2.5">
-        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={reportId} onChange={(event) => setReportId(event.target.value)}>
+        <Select value={reportId} onChange={(event) => setReportId(event.target.value)}>
           {REPORTS.map((report) => (
             <option key={report.id} value={report.id}>
               {t(report.labelKey)}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       <div className="hidden print:block print:mb-4">
         <h2 className="print:text-lg">{t(activeReport.labelKey)}</h2>
