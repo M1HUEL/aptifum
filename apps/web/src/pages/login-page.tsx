@@ -49,7 +49,7 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#121a2b] via-[#1e2a44] to-primary">
-      <div className="w-[360px] rounded-xl bg-surface p-8 shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
+      <div className="w-[360px] rounded-ui border border-border bg-surface p-8 shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
         <svg
           className="mx-auto mb-3 block"
           aria-hidden="true"
@@ -58,7 +58,7 @@ export function LoginPage() {
           viewBox="0 0 44 44"
           fill="none"
         >
-          <rect width="44" height="44" rx="10" fill="#2f5fe6" />
+          <rect width="44" height="44" rx="10" fill="var(--color-primary)" />
           <path d="M22 9 L36 35 H29.5 L22 19 L14.5 35 H8 Z" fill="#ffffff" />
         </svg>
         <h1 className="mb-1 text-[22px]">Aptifum ERP</h1>
