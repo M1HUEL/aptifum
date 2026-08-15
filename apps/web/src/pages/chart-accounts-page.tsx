@@ -207,7 +207,7 @@ export function ChartAccountsPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
             {t('common.edit')}
           </Button>
@@ -235,8 +235,8 @@ export function ChartAccountsPage() {
         title={t('accounts.title')}
         subtitle={t('accounts.subtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </button>
             <Button onClick={openCreate}>{t('accounts.newAccount')}</Button>
@@ -257,20 +257,20 @@ export function ChartAccountsPage() {
         <DialogContent>
           <DialogHeader title={editingId ? t('accounts.editAccount') : t('accounts.newAccountTitle')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-code">{t('fields.code')} *</label>
-                <input id="acc-code" disabled={editingId !== null} {...register('code')} />
-                {errors.code ? <div className="field-error">{errors.code.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-code" disabled={editingId !== null} {...register('code')} />
+                {errors.code ? <div className="text-[12px] font-normal text-danger">{errors.code.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-name">{t('fields.name')} *</label>
-                <input id="acc-name" {...register('name')} />
-                {errors.name ? <div className="field-error">{errors.name.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-name" {...register('name')} />
+                {errors.name ? <div className="text-[12px] font-normal text-danger">{errors.name.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-type">{t('tables.type')} *</label>
-                <select id="acc-type" {...register('type')}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-type" {...register('type')}>
                   {accountTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
@@ -278,9 +278,9 @@ export function ChartAccountsPage() {
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-balance">{t('tables.normalBalance')} *</label>
-                <select id="acc-balance" {...register('normalBalance')}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-balance" {...register('normalBalance')}>
                   {normalBalances.map((balance) => (
                     <option key={balance} value={balance}>
                       {balance}
@@ -288,9 +288,9 @@ export function ChartAccountsPage() {
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-parent">{t('tables.parent')}</label>
-                <select id="acc-parent" {...register('parentId')}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-parent" {...register('parentId')}>
                   <option value="">{t('accounts.none')}</option>
                   {accounts
                     .filter((account) => account.id !== editingId)
@@ -301,11 +301,11 @@ export function ChartAccountsPage() {
                     ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-description">{t('fields.description')}</label>
-                <textarea id="acc-description" rows={2} {...register('description')} />
+                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-description" rows={2} {...register('description')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
@@ -319,7 +319,7 @@ export function ChartAccountsPage() {
                 </div>
               </div>
             </div>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('accounts.createAccount')}

@@ -285,7 +285,7 @@ export function ProductsPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => void openView(row)}>
             {t('common.view')}
           </Button>
@@ -313,8 +313,13 @@ export function ProductsPage() {
         title={t('products.title')}
         subtitle={t('products.subtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={t('common.export')}
+              onClick={handleExport}
+            >
               {t('common.export')}
             </button>
             <Button onClick={openCreate}>{t('products.newProduct')}</Button>
@@ -324,12 +329,16 @@ export function ProductsPage() {
       {error ? <ErrorBanner message={error} /> : null}
       <Toolbar as="form" onSubmit={(event) => void submitSearch(event)}>
         <input
+          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           type="search"
           placeholder={t('products.searchByName')}
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <button type="submit" className="btn">
+        <button
+          type="submit"
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+        >
           {t('common.search')}
         </button>
       </Toolbar>
@@ -349,33 +358,33 @@ export function ProductsPage() {
         <DialogContent>
           <DialogHeader title={editingId ? t('products.editProduct') : t('products.newProduct')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-sku">{t('fields.sku')} *</label>
-                <input id="product-sku" {...register('sku')} />
-                {errors.sku ? <div className="field-error">{errors.sku.message}</div> : null}
+                <input id="product-sku" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('sku')} />
+                {errors.sku ? <div className="text-[12px] font-normal text-danger">{errors.sku.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-name">{t('fields.name')} *</label>
-                <input id="product-name" {...register('name')} />
-                {errors.name ? <div className="field-error">{errors.name.message}</div> : null}
+                <input id="product-name" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('name')} />
+                {errors.name ? <div className="text-[12px] font-normal text-danger">{errors.name.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-brand">{t('fields.brand')}</label>
-                <input id="product-brand" {...register('brand')} />
-                {errors.brand ? <div className="field-error">{errors.brand.message}</div> : null}
+                <input id="product-brand" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('brand')} />
+                {errors.brand ? <div className="text-[12px] font-normal text-danger">{errors.brand.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-uom">{t('fields.unitOfMeasure')}</label>
-                <input id="product-uom" placeholder={t('products.uomPlaceholder')} {...register('unitOfMeasure')} />
-                {errors.unitOfMeasure ? <div className="field-error">{errors.unitOfMeasure.message}</div> : null}
+                <input id="product-uom" placeholder={t('products.uomPlaceholder')} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('unitOfMeasure')} />
+                {errors.unitOfMeasure ? <div className="text-[12px] font-normal text-danger">{errors.unitOfMeasure.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-barcode">{t('fields.barcode')}</label>
-                <input id="product-barcode" {...register('barcode')} />
-                {errors.barcode ? <div className="field-error">{errors.barcode.message}</div> : null}
+                <input id="product-barcode" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('barcode')} />
+                {errors.barcode ? <div className="text-[12px] font-normal text-danger">{errors.barcode.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-category">{t('products.category')}</label>
                 <Controller
                   control={control}
@@ -395,29 +404,30 @@ export function ProductsPage() {
                   )}
                 />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-purchase">{t('fields.purchasePrice')}</label>
                 <input
                   id="product-purchase"
                   type="number"
                   min="0"
                   step="0.01"
+                  className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   {...register('purchasePrice')}
                 />
                 {errors.purchasePrice ? (
-                  <div className="field-error">{errors.purchasePrice.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{errors.purchasePrice.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-sale">{t('fields.salePrice')}</label>
-                <input id="product-sale" type="number" min="0" step="0.01" {...register('salePrice')} />
-                {errors.salePrice ? <div className="field-error">{errors.salePrice.message}</div> : null}
+                <input id="product-sale" type="number" min="0" step="0.01" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('salePrice')} />
+                {errors.salePrice ? <div className="text-[12px] font-normal text-danger">{errors.salePrice.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-description">{t('fields.description')}</label>
-                <textarea id="product-description" rows={3} {...register('description')} />
+                <textarea id="product-description" rows={3} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('description')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
@@ -431,7 +441,7 @@ export function ProductsPage() {
                 </div>
               </div>
             </div>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('products.createProduct')}
@@ -448,66 +458,82 @@ export function ProductsPage() {
           {viewError ? <ErrorBanner message={viewError} /> : null}
           {!viewLoading && viewing ? (
             <div>
-              <div className="detail-grid">
+              <div className="mb-2 grid grid-cols-2 gap-x-4 gap-y-3">
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.sku')}</div>
-                  <div className="detail-value">{viewing.sku}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.sku')}</div>
+                  <div className="mt-0.5 block">{viewing.sku}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('common.status')}</div>
-                  <div className="detail-value">
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('common.status')}</div>
+                  <div className="mt-0.5 block">
                     <Badge tone={viewing.enabled ? 'success' : 'neutral'}>
                       {viewing.enabled ? t('products.enabled') : t('products.disabled')}
                     </Badge>
                   </div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('products.category')}</div>
-                  <div className="detail-value">{viewing.category?.name ?? '—'}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('products.category')}</div>
+                  <div className="mt-0.5 block">{viewing.category?.name ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.brand')}</div>
-                  <div className="detail-value">{viewing.brand ?? '—'}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.brand')}</div>
+                  <div className="mt-0.5 block">{viewing.brand ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.unitOfMeasure')}</div>
-                  <div className="detail-value">{viewing.unitOfMeasure ?? '—'}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.unitOfMeasure')}</div>
+                  <div className="mt-0.5 block">{viewing.unitOfMeasure ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.barcode')}</div>
-                  <div className="detail-value">{viewing.barcode ?? '—'}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.barcode')}</div>
+                  <div className="mt-0.5 block">{viewing.barcode ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.purchasePrice')}</div>
-                  <div className="detail-value num">{formatMoney(viewing.purchasePrice)}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.purchasePrice')}</div>
+                  <div className="mt-0.5 block text-right tabular-nums">{formatMoney(viewing.purchasePrice)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.salePrice')}</div>
-                  <div className="detail-value num">{formatMoney(viewing.salePrice)}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.salePrice')}</div>
+                  <div className="mt-0.5 block text-right tabular-nums">{formatMoney(viewing.salePrice)}</div>
                 </div>
               </div>
-              {viewing.description ? <div className="detail-notes">{viewing.description}</div> : null}
-              <h4 className="detail-section-title">{t('products.stockByWarehouse')}</h4>
+              {viewing.description ? <div className="mt-2">{viewing.description}</div> : null}
+              <h4 className="mb-2 mt-4 text-[14px]">{t('products.stockByWarehouse')}</h4>
               {stock.length === 0 ? (
-                <p className="modal-message">{t('products.noStockRecorded')}</p>
+                <p className="text-muted">{t('products.noStockRecorded')}</p>
               ) : (
-                <div className="data-table-wrap">
-                  <table className="data-table">
+                <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
+                  <table className="w-full border-collapse [&_tr:last-child>td]:border-b-0">
                     <thead>
                       <tr>
-                        <th>{t('fields.warehouse')}</th>
-                        <th className="num">{t('products.onHand')}</th>
-                        <th className="num">{t('products.reserved')}</th>
-                        <th className="num">{t('products.avgCost')}</th>
+                        <th className="sticky top-0 z-[1] whitespace-nowrap border-b border-border bg-bg px-[14px] py-2.5 text-left text-[12px] uppercase tracking-[0.04em] text-muted">
+                          {t('fields.warehouse')}
+                        </th>
+                        <th className="sticky top-0 z-[1] whitespace-nowrap border-b border-border bg-bg px-[14px] py-2.5 text-left text-[12px] uppercase tracking-[0.04em] text-muted text-right tabular-nums">
+                          {t('products.onHand')}
+                        </th>
+                        <th className="sticky top-0 z-[1] whitespace-nowrap border-b border-border bg-bg px-[14px] py-2.5 text-left text-[12px] uppercase tracking-[0.04em] text-muted text-right tabular-nums">
+                          {t('products.reserved')}
+                        </th>
+                        <th className="sticky top-0 z-[1] whitespace-nowrap border-b border-border bg-bg px-[14px] py-2.5 text-left text-[12px] uppercase tracking-[0.04em] text-muted text-right tabular-nums">
+                          {t('products.avgCost')}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {stock.map((entry) => (
                         <tr key={entry.id}>
-                          <td>{entry.warehouse?.name ?? entry.warehouseId}</td>
-                          <td className="num">{formatNumber(entry.quantity)}</td>
-                          <td className="num">{formatNumber(entry.reservedQuantity)}</td>
-                          <td className="num">{formatMoney(entry.averageCost)}</td>
+                          <td className="max-w-[260px] overflow-hidden whitespace-nowrap border-b border-border px-[14px] py-2.5 text-left text-ellipsis last:text-right">
+                            {entry.warehouse?.name ?? entry.warehouseId}
+                          </td>
+                          <td className="max-w-[260px] overflow-hidden whitespace-nowrap border-b border-border px-[14px] py-2.5 text-left text-ellipsis last:text-right text-right tabular-nums">
+                            {formatNumber(entry.quantity)}
+                          </td>
+                          <td className="max-w-[260px] overflow-hidden whitespace-nowrap border-b border-border px-[14px] py-2.5 text-left text-ellipsis last:text-right text-right tabular-nums">
+                            {formatNumber(entry.reservedQuantity)}
+                          </td>
+                          <td className="max-w-[260px] overflow-hidden whitespace-nowrap border-b border-border px-[14px] py-2.5 text-left text-ellipsis last:text-right text-right tabular-nums">
+                            {formatMoney(entry.averageCost)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

@@ -127,10 +127,10 @@ export function InvoiceFormModal({
       <DialogContent className="max-w-2xl">
         <DialogHeader title={t('invoices.issueInvoice')} />
         <form onSubmit={(event) => void submit(event)}>
-          <div className="form-grid">
-            <div className="field">
+          <div className="grid grid-cols-2 gap-x-4">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="invoice-customer">
-                {t('fields.customer')} <span className="field-required">*</span>
+                {t('fields.customer')} <span className="text-danger">*</span>
               </label>
               <Controller
                 control={control}
@@ -146,11 +146,11 @@ export function InvoiceFormModal({
                   />
                 )}
               />
-              {errors.customerId ? <div className="field-error">{errors.customerId.message}</div> : null}
+              {errors.customerId ? <div className="text-[12px] font-normal text-danger">{errors.customerId.message}</div> : null}
             </div>
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="invoice-warehouse">{t('fields.warehouse')}</label>
-              <select id="invoice-warehouse" {...register('warehouseId')}>
+              <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="invoice-warehouse" {...register('warehouseId')}>
                 <option value="">{t('invoices.defaultWarehouse')}</option>
                 {warehouses.map((warehouse) => (
                   <option key={warehouse.id} value={warehouse.id}>
@@ -159,20 +159,20 @@ export function InvoiceFormModal({
                 ))}
               </select>
             </div>
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="invoice-due">{t('fields.dueDate')}</label>
-              <input id="invoice-due" type="date" {...register('dueDate')} />
+              <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="invoice-due" type="date" {...register('dueDate')} />
             </div>
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="invoice-discount">{t('fields.discount')}</label>
-              <input id="invoice-discount" type="number" min="0" step="0.01" {...register('discount')} />
-              {errors.discount ? <div className="field-error">{errors.discount.message}</div> : null}
+              <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="invoice-discount" type="number" min="0" step="0.01" {...register('discount')} />
+              {errors.discount ? <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div> : null}
             </div>
           </div>
-          <div className="invoice-items">
+          <div className="mb-3 rounded-ui border border-border p-3">
             {items.map((_, index) => (
-              <div className="invoice-item" key={index}>
-                <div className="field">
+              <div className="grid grid-cols-[3fr_1fr_1.5fr_1fr_auto] items-start gap-2.5" key={index}>
+                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`invoice-item-product-${index}`}>{t('fields.product')}</label>
                   <Controller
                     control={control}
@@ -189,12 +189,12 @@ export function InvoiceFormModal({
                     )}
                   />
                   {errors.items?.[index]?.productId ? (
-                    <div className="field-error">{errors.items[index]?.productId?.message}</div>
+                    <div className="text-[12px] font-normal text-danger">{errors.items[index]?.productId?.message}</div>
                   ) : null}
                 </div>
-                <div className="field">
+                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`invoice-item-qty-${index}`}>{t('fields.qty')}</label>
-                  <input
+                  <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                     id={`invoice-item-qty-${index}`}
                     type="number"
                     min="0.0001"
@@ -202,12 +202,12 @@ export function InvoiceFormModal({
                     {...register(`items.${index}.quantity`)}
                   />
                   {errors.items?.[index]?.quantity ? (
-                    <div className="field-error">{errors.items[index]?.quantity?.message}</div>
+                    <div className="text-[12px] font-normal text-danger">{errors.items[index]?.quantity?.message}</div>
                   ) : null}
                 </div>
-                <div className="field">
+                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`invoice-item-price-${index}`}>{t('fields.unitPrice')}</label>
-                  <input
+                  <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                     id={`invoice-item-price-${index}`}
                     type="number"
                     min="0"
@@ -216,12 +216,12 @@ export function InvoiceFormModal({
                     {...register(`items.${index}.unitPrice`)}
                   />
                   {errors.items?.[index]?.unitPrice ? (
-                    <div className="field-error">{errors.items[index]?.unitPrice?.message}</div>
+                    <div className="text-[12px] font-normal text-danger">{errors.items[index]?.unitPrice?.message}</div>
                   ) : null}
                 </div>
-                <div className="field">
+                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`invoice-item-tax-${index}`}>{t('invoices.taxPercent')}</label>
-                  <input
+                  <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                     id={`invoice-item-tax-${index}`}
                     type="number"
                     min="0"
@@ -231,10 +231,10 @@ export function InvoiceFormModal({
                     {...register(`items.${index}.taxRate`)}
                   />
                   {errors.items?.[index]?.taxRate ? (
-                    <div className="field-error">{errors.items[index]?.taxRate?.message}</div>
+                    <div className="text-[12px] font-normal text-danger">{errors.items[index]?.taxRate?.message}</div>
                   ) : null}
                 </div>
-                <div className="invoice-item-remove">
+                <div className="pt-6">
                   {items.length > 1 ? (
                     <Button variant="ghost" size="sm" type="button" onClick={() => removeItem(index)}>
                       {t('common.remove')}
@@ -247,11 +247,11 @@ export function InvoiceFormModal({
           <Button variant="ghost" size="sm" type="button" onClick={addItem}>
             {t('common.addLine')}
           </Button>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="invoice-notes">{t('fields.notes')}</label>
-            <textarea id="invoice-notes" rows={2} {...register('notes')} />
+            <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="invoice-notes" rows={2} {...register('notes')} />
           </div>
-          {formError ? <div className="error-banner">{formError}</div> : null}
+          {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
           <DialogFooter>
             <Button variant="default" type="submit" disabled={saving}>
               {saving ? t('invoices.issuing') : t('invoices.issueInvoice')}

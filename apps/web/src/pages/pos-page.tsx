@@ -302,7 +302,7 @@ export function PosPage() {
         title={t('pos.title')}
         subtitle={t('pos.subtitle')}
       />
-      <div className="pos-layout">
+      <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-5 max-900:grid-cols-1">
         <PosCatalog
           warehouses={warehouses}
           warehouseId={warehouseId}
@@ -319,7 +319,7 @@ export function PosPage() {
           onAddProduct={addProduct}
           onPage={setPage}
         />
-        <div className="pos-ticket-col">
+        <div className="min-w-0">
           {completed ? (
             <PosSuccess sale={completed} onDownloadPdf={(sale) => void downloadPdf(sale)} onReset={resetSale} />
           ) : (

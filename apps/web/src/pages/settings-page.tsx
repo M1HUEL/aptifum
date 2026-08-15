@@ -103,16 +103,16 @@ export function SettingsPage() {
       {loadError ? <ErrorBanner message={loadError} /> : null}
       {loading ? <LoadingBlock /> : null}
       {!loading ? (
-        <section className="card">
+        <section className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">
           <h2>{t('settings.usSalesTax')}</h2>
           {country && country !== 'US' ? (
-            <p className="muted">
+            <p className="text-[12px] text-muted">
               {t('settings.usOnlyNoteStart')}
               <strong>{country}</strong>
               {t('settings.usOnlyNoteEnd')}
             </p>
           ) : null}
-          <p className="muted">{t('settings.nexusInstructions')}</p>
+          <p className="text-[12px] text-muted">{t('settings.nexusInstructions')}</p>
           <Table>
             <TableHeader>
               <TableRow>
@@ -154,7 +154,7 @@ export function SettingsPage() {
                           onChange={(event) => setOverride(code, event.target.value)}
                         />
                       ) : (
-                        <span className="muted">—</span>
+                        <span className="text-[12px] text-muted">—</span>
                       )}
                     </TableCell>
                   </TableRow>

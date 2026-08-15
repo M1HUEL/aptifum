@@ -416,7 +416,7 @@ export function ProductionPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => openBomEdit(row)}>
             {t('common.edit')}
           </Button>
@@ -441,7 +441,7 @@ export function ProductionPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => void viewOrder(row)} disabled={viewBusy}>
             {t('common.view')}
           </Button>
@@ -497,8 +497,8 @@ export function ProductionPage() {
         title={t('production.title')}
         subtitle={t('production.subtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </button>
             {tab === 'boms' ? (
@@ -509,7 +509,7 @@ export function ProductionPage() {
           </div>
         }
       />
-      <div className="tabs">
+      <div className="mb-4 flex gap-1">
         <button type="button" className={tab === 'boms' ? 'tab tab-active' : 'tab'} onClick={() => setTab('boms')}>
           {t('production.boms')}
         </button>
@@ -557,13 +557,13 @@ export function ProductionPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingBomId ? t('production.editBom') : t('production.newBomTitle')} />
           <form onSubmit={(event) => void submitBom(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="bom-name">{t('fields.name')} *</label>
-                <input id="bom-name" {...registerBom('name')} />
-                {bomErrors.name ? <div className="field-error">{bomErrors.name.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="bom-name" {...registerBom('name')} />
+                {bomErrors.name ? <div className="text-[12px] font-normal text-danger">{bomErrors.name.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="bom-product">{t('fields.finishedProduct')} *</label>
                 <Controller
                   control={controlBom}
@@ -579,12 +579,12 @@ export function ProductionPage() {
                   )}
                 />
                 {bomErrors.productId ? (
-                  <div className="field-error">{bomErrors.productId.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{bomErrors.productId.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="bom-output">{t('fields.outputQuantity')}</label>
-                <input
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   id="bom-output"
                   type="number"
                   min="0.0001"
@@ -592,10 +592,10 @@ export function ProductionPage() {
                   {...registerBom('outputQuantity')}
                 />
                 {bomErrors.outputQuantity ? (
-                  <div className="field-error">{bomErrors.outputQuantity.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{bomErrors.outputQuantity.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
@@ -609,10 +609,10 @@ export function ProductionPage() {
                 </div>
               </div>
             </div>
-            <div className="section-title">{t('production.componentLines')}</div>
+            <div className="mb-2 mt-4 font-semibold">{t('production.componentLines')}</div>
             {bomLines.map((line, index) => (
-              <div className="form-grid form-grid-3" key={index}>
-                <div className="field">
+              <div className="grid grid-cols-2 gap-x-4 [grid-template-columns:3fr_1fr_1fr]" key={index}>
+                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`bomline-${index}-product`}>{t('production.component')}</label>
                   <SearchableSelect
                     value={line.productId}
@@ -622,9 +622,9 @@ export function ProductionPage() {
                     ariaLabel={t('production.component')}
                   />
                 </div>
-                <div className="field">
+                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`bomline-${index}-qty`}>{t('fields.quantity')}</label>
-                  <input
+                  <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                     id={`bomline-${index}-qty`}
                     type="number"
                     min="0.0001"
@@ -633,10 +633,10 @@ export function ProductionPage() {
                     onChange={(event) => setBomLine(index, 'quantity', event.target.value)}
                   />
                 </div>
-                <div className="field">
+                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`bomline-${index}-waste`}>{t('fields.wasteRate')} (%)</label>
-                  <div className="inline-with-remove">
-                    <input
+                  <div className="flex items-center gap-1.5">
+                    <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       id={`bomline-${index}-waste`}
                       type="number"
                       min="0"
@@ -655,7 +655,7 @@ export function ProductionPage() {
             <Button variant="ghost" size="sm" type="button" onClick={addBomLine}>
               {t('common.addLine')}
             </Button>
-            {bomError ? <div className="error-banner">{bomError}</div> : null}
+            {bomError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{bomError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={bomSaving}>
                 {bomSaving ? t('common.saving') : editingBomId ? t('common.saveChanges') : t('production.createBom')}
@@ -669,8 +669,8 @@ export function ProductionPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingOrderId ? t('production.editProductionOrder') : t('production.newProductionOrderTitle')} />
           <form onSubmit={(event) => void submitOrder(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-product">{t('fields.product')} *</label>
                 <Controller
                   control={controlOrder}
@@ -689,12 +689,12 @@ export function ProductionPage() {
                   )}
                 />
                 {orderErrors.productId ? (
-                  <div className="field-error">{orderErrors.productId.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{orderErrors.productId.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-bom">{t('production.bom')}</label>
-                <select id="order-bom" {...registerOrder('bomId')} disabled={!orderProductId}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="order-bom" {...registerOrder('bomId')} disabled={!orderProductId}>
                   <option value="">{t('production.noneNoBom')}</option>
                   {bomOptionsForProduct.map((bom) => (
                     <option key={bom.id} value={bom.id}>
@@ -703,9 +703,9 @@ export function ProductionPage() {
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-warehouse">{t('fields.warehouse')} *</label>
-                <select id="order-warehouse" {...registerOrder('warehouseId')}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="order-warehouse" {...registerOrder('warehouseId')}>
                   <option value="">{t('production.selectWarehouse')}</option>
                   {warehouses.map((warehouse) => (
                     <option key={warehouse.id} value={warehouse.id}>
@@ -714,12 +714,12 @@ export function ProductionPage() {
                   ))}
                 </select>
                 {orderErrors.warehouseId ? (
-                  <div className="field-error">{orderErrors.warehouseId.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{orderErrors.warehouseId.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-quantity">{t('fields.quantity')} *</label>
-                <input
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   id="order-quantity"
                   type="number"
                   min="0.0001"
@@ -727,29 +727,29 @@ export function ProductionPage() {
                   {...registerOrder('quantity')}
                 />
                 {orderErrors.quantity ? (
-                  <div className="field-error">{orderErrors.quantity.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{orderErrors.quantity.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-labor">{t('fields.laborCost')}</label>
-                <input id="order-labor" type="number" min="0" step="0.01" {...registerOrder('laborCost')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="order-labor" type="number" min="0" step="0.01" {...registerOrder('laborCost')} />
                 {orderErrors.laborCost ? (
-                  <div className="field-error">{orderErrors.laborCost.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{orderErrors.laborCost.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-overhead">{t('fields.overhead')}</label>
-                <input id="order-overhead" type="number" min="0" step="0.01" {...registerOrder('overhead')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="order-overhead" type="number" min="0" step="0.01" {...registerOrder('overhead')} />
                 {orderErrors.overhead ? (
-                  <div className="field-error">{orderErrors.overhead.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{orderErrors.overhead.message}</div>
                 ) : null}
               </div>
-              <div className="field field-wide">
+              <div className="col-span-2 mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-notes">{t('fields.notes')}</label>
-                <textarea id="order-notes" rows={3} {...registerOrder('notes')} />
+                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="order-notes" rows={3} {...registerOrder('notes')} />
               </div>
             </div>
-            {orderError ? <div className="error-banner">{orderError}</div> : null}
+            {orderError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{orderError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={orderSaving}>
                 {orderSaving ? t('common.saving') : editingOrderId ? t('common.saveChanges') : t('production.createOrder')}
@@ -764,63 +764,63 @@ export function ProductionPage() {
           <DialogHeader title={t('production.order', { number: viewing?.number ?? '' })} />
           {viewing ? (
             <>
-              <div className="detail-grid">
+              <div className="mb-2 grid grid-cols-2 gap-x-4 gap-y-3">
                 <div>
-                  <span className="detail-label">{t('fields.product')}</span>
-                  <span className="detail-value">
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.product')}</span>
+                  <span className="mt-0.5 block">
                     {viewing.product.sku} · {viewing.product.name}
                   </span>
                 </div>
                 <div>
-                  <span className="detail-label">{t('production.bom')}</span>
-                  <span className="detail-value">{viewing.bom?.name ?? '—'}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('production.bom')}</span>
+                  <span className="mt-0.5 block">{viewing.bom?.name ?? '—'}</span>
                 </div>
                 <div>
-                  <span className="detail-label">{t('fields.warehouse')}</span>
-                  <span className="detail-value">
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.warehouse')}</span>
+                  <span className="mt-0.5 block">
                     {viewing.warehouse ? `${viewing.warehouse.code} · ${viewing.warehouse.name}` : '—'}
                   </span>
                 </div>
                 <div>
-                  <span className="detail-label">{t('fields.quantity')}</span>
-                  <span className="detail-value">{formatNumber(viewing.quantity)}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.quantity')}</span>
+                  <span className="mt-0.5 block">{formatNumber(viewing.quantity)}</span>
                 </div>
                 <div>
-                  <span className="detail-label">{t('common.status')}</span>
-                  <span className="detail-value">
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('common.status')}</span>
+                  <span className="mt-0.5 block">
                     <Badge tone={statusTone(viewing.status)}>{viewing.status}</Badge>
                   </span>
                 </div>
                 <div>
-                  <span className="detail-label">{t('tables.materialCost')}</span>
-                  <span className="detail-value">{formatMoney(viewing.materialCost)}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.materialCost')}</span>
+                  <span className="mt-0.5 block">{formatMoney(viewing.materialCost)}</span>
                 </div>
                 <div>
-                  <span className="detail-label">{t('tables.laborOverhead')}</span>
-                  <span className="detail-value">{formatMoney(viewing.laborCost + viewing.overhead)}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.laborOverhead')}</span>
+                  <span className="mt-0.5 block">{formatMoney(viewing.laborCost + viewing.overhead)}</span>
                 </div>
                 <div>
-                  <span className="detail-label">{t('tables.totalCost')}</span>
-                  <span className="detail-value">{formatMoney(viewing.totalCost)}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.totalCost')}</span>
+                  <span className="mt-0.5 block">{formatMoney(viewing.totalCost)}</span>
                 </div>
               </div>
               {viewing.notes ? (
-                <p className="detail-notes">
-                  <span className="detail-label">{t('fields.notes')}</span>
+                <p className="mt-2">
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.notes')}</span>
                   {viewing.notes}
                 </p>
               ) : null}
               {viewing.lines.length > 0 ? (
                 <>
-                  <div className="section-title">{t('production.consumedMaterials')}</div>
-                  <table className="data-table">
+                  <div className="mb-2 mt-4 font-semibold">{t('production.consumedMaterials')}</div>
+                  <table className="w-full border-collapse">
                     <thead>
                       <tr>
                         <th>{t('fields.product')}</th>
-                        <th className="num">{t('tables.planned')}</th>
-                        <th className="num">{t('tables.consumed')}</th>
-                        <th className="num">{t('fields.unitCost')}</th>
-                        <th className="num">{t('tables.lineCost')}</th>
+                        <th className="text-right tabular-nums">{t('tables.planned')}</th>
+                        <th className="text-right tabular-nums">{t('tables.consumed')}</th>
+                        <th className="text-right tabular-nums">{t('fields.unitCost')}</th>
+                        <th className="text-right tabular-nums">{t('tables.lineCost')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -829,17 +829,17 @@ export function ProductionPage() {
                           <td>
                             {line.product.sku} · {line.product.name}
                           </td>
-                          <td className="num">{formatNumber(line.plannedQuantity)}</td>
-                          <td className="num">{formatNumber(line.consumedQuantity)}</td>
-                          <td className="num">{formatMoney(line.unitCost)}</td>
-                          <td className="num">{formatMoney(line.lineCost)}</td>
+                          <td className="text-right tabular-nums">{formatNumber(line.plannedQuantity)}</td>
+                          <td className="text-right tabular-nums">{formatNumber(line.consumedQuantity)}</td>
+                          <td className="text-right tabular-nums">{formatMoney(line.unitCost)}</td>
+                          <td className="text-right tabular-nums">{formatMoney(line.lineCost)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </>
               ) : null}
-              <div className="modal-footer">
+              <div className="flex shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
                 <Button variant="ghost" onClick={() => setViewing(null)}>
                   {t('common.close')}
                 </Button>

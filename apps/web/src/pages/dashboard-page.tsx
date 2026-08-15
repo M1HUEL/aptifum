@@ -82,7 +82,7 @@ function StatusRow({
 }) {
   const warn = warnThreshold !== undefined && count >= warnThreshold;
   return (
-    <div className="status-row">
+    <div className="flex items-center justify-between border-b border-border pb-2.5 last:border-b-0 last:pb-0">
       <span>{label}</span>
       <Badge tone={warn ? 'warning' : 'success'}>{count}</Badge>
     </div>
@@ -105,13 +105,13 @@ function AlertSection({
   const { t } = useTranslation();
   return (
     <div>
-      <div className="alert-head">
+      <div className="mb-3 flex items-center justify-between">
         <strong>{title}</strong>
-        <Link className="alert-link" to={linkTo}>
+        <Link className="whitespace-nowrap text-[13px] text-primary hover:underline" to={linkTo}>
           {count > 0 ? t('dashboard.viewAll', { count }) : emptyText}
         </Link>
       </div>
-      {count > 0 ? <div className="status-list">{children}</div> : <p className="alert-empty">{emptyText}</p>}
+      {count > 0 ? <div className="flex flex-col gap-2.5">{children}</div> : <p className="text-[13px] text-muted">{emptyText}</p>}
     </div>
   );
 }
@@ -181,8 +181,8 @@ export function DashboardPage() {
         title={t('nav.dashboard')}
         subtitle={`${rangeLabel} · ${formatDate(from)} → ${formatDate(to)}`}
       />
-      <div className="toolbar">
-        <select value={preset} onChange={(event) => setPreset(event.target.value)}>
+      <div className="mb-4 flex gap-2.5">
+        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={preset} onChange={(event) => setPreset(event.target.value)}>
           {rangeOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {t(option.labelKey)}
@@ -190,20 +190,20 @@ export function DashboardPage() {
           ))}
         </select>
         {preset === 'custom' ? (
-          <div className="date-range">
-            <label className="date-range-label" htmlFor="dash-from">
+          <div className="flex items-center gap-2.5">
+            <label className="whitespace-nowrap text-[13px] text-muted" htmlFor="dash-from">
               {t('dashboard.from')}
             </label>
-            <input
+            <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               id="dash-from"
               type="date"
               value={customFrom}
               onChange={(event) => setCustomFrom(event.target.value)}
             />
-            <label className="date-range-label" htmlFor="dash-to">
+            <label className="whitespace-nowrap text-[13px] text-muted" htmlFor="dash-to">
               {t('dashboard.to')}
             </label>
-            <input
+            <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               id="dash-to"
               type="date"
               value={customTo}
@@ -211,7 +211,7 @@ export function DashboardPage() {
             />
           </div>
         ) : null}
-        <select value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)}>
+        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)}>
           <option value="">{t('dashboard.allWarehouses')}</option>
           {(warehousesQuery.data?.data ?? []).map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
@@ -224,7 +224,7 @@ export function DashboardPage() {
       {!report && !error ? <LoadingBlock /> : null}
       {report ? (
         <>
-          <div className="stat-grid">
+          <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3.5">
             <StatCard label={t('dashboard.stat.revenuePeriod')} value={formatMoney(report.salesRange)} />
             <StatCard label={t('dashboard.stat.netIncomePeriod')} value={formatMoney(report.netIncomeRange)} />
             <StatCard label={t('dashboard.stat.invoicesPeriod')} value={String(report.rangeInvoices)} />
@@ -232,7 +232,7 @@ export function DashboardPage() {
             <StatCard label={t('dashboard.stat.salesThisMonth')} value={formatMoney(report.salesMonth)} />
             <StatCard label={t('dashboard.stat.netIncomeMonth')} value={formatMoney(report.netIncomeMonth)} />
           </div>
-          <div className="stat-grid">
+          <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3.5">
             <StatCard label={t('dashboard.stat.invoicesMonth')} value={String(report.monthInvoices)} />
             <StatCard label={t('dashboard.stat.receivables')} value={formatMoney(report.receivables)} />
             <StatCard label={t('dashboard.stat.payables')} value={formatMoney(report.payables)} />
@@ -240,7 +240,7 @@ export function DashboardPage() {
             <StatCard label={t('dashboard.stat.lowStockProducts')} value={String(report.lowStockProducts)} />
             <StatCard label={t('dashboard.stat.openPurchaseOrders')} value={String(report.openPurchaseOrders)} />
           </div>
-          <div className="stat-grid">
+          <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3.5">
             <StatCard label={t('dashboard.stat.productionInProgress')} value={String(report.productionInProgress)} />
           </div>
         </>
@@ -248,7 +248,7 @@ export function DashboardPage() {
 
       {alerts ? (
         <Card title={t('dashboard.alerts')}>
-          <div className="alert-grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-[18px]">
             <AlertSection
               title={t('dashboard.lowStock')}
               count={alerts.summary.lowStock}
@@ -256,7 +256,7 @@ export function DashboardPage() {
               emptyText={t('dashboard.lowStockOk')}
             >
               {alerts.lowStock.map((product) => (
-                <div className="status-row" key={product.productId}>
+                <div className="flex items-center justify-between border-b border-border pb-2.5 last:border-b-0 last:pb-0" key={product.productId}>
                   <span>
                     {product.name}
                     <span className="text-muted"> ({product.sku})</span>
@@ -274,7 +274,7 @@ export function DashboardPage() {
               emptyText={t('dashboard.noOverdueInvoices')}
             >
               {alerts.overdueReceivables.map((invoice) => (
-                <div className="status-row" key={invoice.invoiceId}>
+                <div className="flex items-center justify-between border-b border-border pb-2.5 last:border-b-0 last:pb-0" key={invoice.invoiceId}>
                   <span>
                     {invoice.number}
                     <span className="text-muted"> · {invoice.customerName}</span>
@@ -290,7 +290,7 @@ export function DashboardPage() {
               emptyText={t('dashboard.noOverduePayables')}
             >
               {alerts.overduePayables.map((receipt) => (
-                <div className="status-row" key={receipt.receiptId}>
+                <div className="flex items-center justify-between border-b border-border pb-2.5 last:border-b-0 last:pb-0" key={receipt.receiptId}>
                   <span>
                     {receipt.number}
                     <span className="text-muted"> · {receipt.supplierName}</span>
@@ -303,10 +303,10 @@ export function DashboardPage() {
         </Card>
       ) : null}
 
-      <div className="chart-grid">
+      <div className="mb-4 grid grid-cols-2 gap-4 max-900:grid-cols-1">
         <Card title={t('dashboard.salesTrend')}>
-          <div className="chart-controls">
-            <select value={groupBy} onChange={(event) => setGroupBy(event.target.value)}>
+          <div className="mb-2.5 flex justify-end">
+            <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={groupBy} onChange={(event) => setGroupBy(event.target.value)}>
               {groupOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {t(option.labelKey)}
@@ -315,7 +315,7 @@ export function DashboardPage() {
             </select>
           </div>
           {summary ? (
-            <div className="chart-box">
+            <div className="w-full">
               <ResponsiveContainer width="100%" height={260}>
                 <AreaChart data={summary.data}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -347,9 +347,9 @@ export function DashboardPage() {
 
         <Card title={t('dashboard.topProducts')}>
           {topProducts.length === 0 ? (
-            <p className="modal-message">{t('dashboard.noSalesData')}</p>
+            <p className="text-muted">{t('dashboard.noSalesData')}</p>
           ) : (
-            <div className="chart-box">
+            <div className="w-full">
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={topProducts} layout="vertical" margin={{ left: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -376,7 +376,7 @@ export function DashboardPage() {
 
       {report ? (
         <Card title={t('dashboard.operationalHealth')}>
-          <div className="status-list">
+          <div className="flex flex-col gap-2.5">
             <StatusRow label={t('dashboard.stat.openPurchaseOrders')} count={report.openPurchaseOrders} />
             <StatusRow label={t('dashboard.productionOrdersInProgress')} count={report.productionInProgress} />
             <StatusRow label={t('dashboard.stat.lowStockProducts')} count={report.lowStockProducts} warnThreshold={1} />

@@ -198,26 +198,26 @@ export function ReportsPage() {
         title={t('reports.title')}
         subtitle={t('reports.subtitle')}
         action={
-          <div className="page-header-actions">
+          <div className="flex justify-end gap-2">
             {activeReport.pdf ? (
-              <button type="button" className="btn btn-ghost" onClick={() => void downloadPdf()}>
+              <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => void downloadPdf()}>
                 {t('common.downloadPdf')}
               </button>
             ) : null}
-            <button type="button" className="btn btn-ghost" onClick={() => window.print()}>
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => window.print()}>
               {t('reports.printPdf')}
             </button>
-            <button type="button" className="btn btn-ghost" onClick={() => void downloadXlsx()}>
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => void downloadXlsx()}>
               {t('reports.downloadXlsx')}
             </button>
-            <button type="button" className="btn" onClick={() => void download()}>
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" onClick={() => void download()}>
               {t('reports.downloadCsv')}
             </button>
           </div>
         }
       />
-      <div className="toolbar">
-        <select value={reportId} onChange={(event) => setReportId(event.target.value)}>
+      <div className="mb-4 flex gap-2.5">
+        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={reportId} onChange={(event) => setReportId(event.target.value)}>
           {REPORTS.map((report) => (
             <option key={report.id} value={report.id}>
               {t(report.labelKey)}
@@ -225,9 +225,9 @@ export function ReportsPage() {
           ))}
         </select>
       </div>
-      <div className="report-print-heading">
-        <h2>{t(activeReport.labelKey)}</h2>
-        <p>{t('reports.generated', { date: new Date().toLocaleString() })}</p>
+      <div className="hidden print:block print:mb-4">
+        <h2 className="print:text-lg">{t(activeReport.labelKey)}</h2>
+        <p className="print:text-[12px] print:text-muted">{t('reports.generated', { date: new Date().toLocaleString() })}</p>
       </div>
       {error ? <ErrorBanner message={error} /> : null}
       {downloadError ? <ErrorBanner message={downloadError} /> : null}

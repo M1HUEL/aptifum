@@ -101,7 +101,7 @@ function journalColumns(t: TFunction, openEntry: (entry: JournalEntry) => void):
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => openEntry(row)}>
             {t('common.view')}
           </Button>
@@ -137,7 +137,7 @@ function periodColumns(t: TFunction, onClose: (period: AccountingPeriod) => void
       header: t('common.actions'),
       render: (row) =>
         row.status === 'open' ? (
-          <div className="table-actions">
+          <div className="flex justify-end gap-1.5">
             <Button variant="danger" size="sm" onClick={() => onClose(row)}>
               {t('accounting.closePeriod')}
             </Button>
@@ -284,7 +284,7 @@ export function AccountingPage() {
         subtitle={t('accounting.subtitle')}
         action={<Button onClick={openCreate}>{t('accounting.newJournalEntry')}</Button>}
       />
-      <div className="tabs">
+      <div className="mb-4 flex gap-1">
         <button type="button" className={tab === 'entries' ? 'tab tab-active' : 'tab'} onClick={() => setTab('entries')}>
           {t('accounting.journalEntries')}
         </button>
@@ -324,24 +324,24 @@ export function AccountingPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={t('accounting.newJournalEntry')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="je-date">{t('fields.entryDate')} *</label>
-                <input id="je-date" type="date" {...register('entryDate')} />
-                {errors.entryDate ? <div className="field-error">{errors.entryDate.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="je-date" type="date" {...register('entryDate')} />
+                {errors.entryDate ? <div className="text-[12px] font-normal text-danger">{errors.entryDate.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="je-description">{t('fields.description')}</label>
-                <input id="je-description" {...register('description')} />
-                {errors.description ? <div className="field-error">{errors.description.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="je-description" {...register('description')} />
+                {errors.description ? <div className="text-[12px] font-normal text-danger">{errors.description.message}</div> : null}
               </div>
             </div>
-            <div className="invoice-items">
+            <div className="mb-3 rounded-ui border border-border p-3">
               {lines.map((_, index) => (
-                <div className="invoice-item" key={index}>
-                  <div className="field">
+                <div className="grid grid-cols-[3fr_1fr_1.5fr_1fr_auto] items-start gap-2.5" key={index}>
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-account-${index}`}>{t('tables.account')}</label>
-                    <select id={`je-line-account-${index}`} {...register(`lines.${index}.accountCode`)}>
+                    <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id={`je-line-account-${index}`} {...register(`lines.${index}.accountCode`)}>
                       <option value="">{t('accounting.selectAccount')}</option>
                       {accounts.map((account) => (
                         <option key={account.id} value={account.code}>
@@ -350,9 +350,9 @@ export function AccountingPage() {
                       ))}
                     </select>
                   </div>
-                  <div className="field">
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-debit-${index}`}>{t('fields.debit')}</label>
-                    <input
+                    <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       id={`je-line-debit-${index}`}
                       type="number"
                       min="0"
@@ -360,12 +360,12 @@ export function AccountingPage() {
                       {...register(`lines.${index}.debit`)}
                     />
                     {errors.lines?.[index]?.debit ? (
-                      <div className="field-error">{errors.lines[index]?.debit?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">{errors.lines[index]?.debit?.message}</div>
                     ) : null}
                   </div>
-                  <div className="field">
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-credit-${index}`}>{t('fields.credit')}</label>
-                    <input
+                    <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       id={`je-line-credit-${index}`}
                       type="number"
                       min="0"
@@ -373,17 +373,17 @@ export function AccountingPage() {
                       {...register(`lines.${index}.credit`)}
                     />
                     {errors.lines?.[index]?.credit ? (
-                      <div className="field-error">{errors.lines[index]?.credit?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">{errors.lines[index]?.credit?.message}</div>
                     ) : null}
                   </div>
-                  <div className="field">
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-memo-${index}`}>{t('fields.memo')}</label>
-                    <input id={`je-line-memo-${index}`} {...register(`lines.${index}.description`)} />
+                    <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id={`je-line-memo-${index}`} {...register(`lines.${index}.description`)} />
                     {errors.lines?.[index]?.description ? (
-                      <div className="field-error">{errors.lines[index]?.description?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">{errors.lines[index]?.description?.message}</div>
                     ) : null}
                   </div>
-                  <div className="invoice-item-remove">
+                  <div className="pt-6">
                     {lines.length > 2 ? (
                       <Button variant="ghost" size="sm" type="button" onClick={() => removeLine(index)}>
                         {t('common.remove')}
@@ -396,7 +396,7 @@ export function AccountingPage() {
             <Button variant="ghost" size="sm" type="button" onClick={addLine}>
               {t('common.addLine')}
             </Button>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('accounting.posting') : t('accounting.postEntry')}
@@ -411,7 +411,7 @@ export function AccountingPage() {
           <DialogHeader title={t('accounting.entry', { number: viewing?.number ?? '' })} />
           {viewing ? (
             <>
-              <p className="modal-message">
+              <p className="text-muted">
                 {viewing.description ?? t('accounting.noDescription')} · {formatDate(viewing.entryDate)} ·{' '}
                 <Badge tone={entryStatusTone(viewing.status)}>{viewing.status}</Badge>
               </p>

@@ -176,7 +176,7 @@ export function LeadPanel() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           {row.status !== 'converted' ? (
             <Button variant="ghost" size="sm" onClick={() => setConverting(row)}>
               {t('crm.convert')}
@@ -208,8 +208,8 @@ export function LeadPanel() {
         title={t('crm.leadsTitle')}
         subtitle={t('crm.leadsSubtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </button>
             <Button onClick={openCreate}>{t('crm.newLead')}</Button>
@@ -233,35 +233,35 @@ export function LeadPanel() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingId ? t('crm.editLead') : t('crm.newLead')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-contact">
-                  {t('fields.contactName')}<span className="field-required"> *</span>
+                  {t('fields.contactName')}<span className="text-danger"> *</span>
                 </label>
-                <input id="lead-contact" {...register('contactName')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-contact" {...register('contactName')} />
                 {errors.contactName ? (
-                  <div className="field-error">{errors.contactName.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{errors.contactName.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-company">{t('crm.company')}</label>
-                <input id="lead-company" {...register('companyName')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-company" {...register('companyName')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-email">{t('fields.email')}</label>
-                <input id="lead-email" type="email" {...register('email')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-email" type="email" {...register('email')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-phone">{t('fields.phone')}</label>
-                <input id="lead-phone" {...register('phone')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-phone" {...register('phone')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-source">{t('crm.source')}</label>
-                <input id="lead-source" {...register('source')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-source" {...register('source')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-status">{t('common.status')}</label>
-                <select id="lead-status" {...register('status')}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-status" {...register('status')}>
                   {leadStatuses.map((status) => (
                     <option key={status} value={status}>
                       {status}
@@ -269,20 +269,20 @@ export function LeadPanel() {
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-amount">{t('fields.estimatedAmount')}</label>
-                <input id="lead-amount" type="number" min="0" step="0.01" {...register('estimatedAmount')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-amount" type="number" min="0" step="0.01" {...register('estimatedAmount')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-currency">{t('fields.currency')}</label>
-                <input id="lead-currency" maxLength={3} {...register('currency')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-currency" maxLength={3} {...register('currency')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-notes">{t('fields.notes')}</label>
-                <textarea id="lead-notes" rows={3} {...register('notes')} />
+                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="lead-notes" rows={3} {...register('notes')} />
               </div>
             </div>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createLead')}
@@ -295,10 +295,10 @@ export function LeadPanel() {
       <Dialog open={converting !== null} onOpenChange={(isOpen) => !convertBusy && !isOpen && setConverting(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader title={t('crm.convertLeadTitle', { number: converting?.number })} />
-          <p className="modal-message">{t('crm.convertLeadMessage', { name: converting?.contactName })}</p>
-          <div className="field">
+          <p className="text-muted">{t('crm.convertLeadMessage', { name: converting?.contactName })}</p>
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="convert-code">{t('crm.customerCode')}</label>
-            <input id="convert-code" value={customerCode} onChange={(event) => setCustomerCode(event.target.value)} />
+            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="convert-code" value={customerCode} onChange={(event) => setCustomerCode(event.target.value)} />
           </div>
           <DialogFooter>
             <Button variant="default" type="button" disabled={convertBusy} onClick={() => void confirmConvert()}>

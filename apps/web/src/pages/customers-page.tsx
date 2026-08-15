@@ -235,7 +235,7 @@ export function CustomersPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row: Customer) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
             {t('common.edit')}
           </Button>
@@ -260,8 +260,13 @@ export function CustomersPage() {
         title={t('customers.title')}
         subtitle={t('customers.subtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={t('common.export')}
+              onClick={handleExport}
+            >
               {t('common.export')}
             </button>
             <Button onClick={openCreate}>{t('customers.newCustomer')}</Button>
@@ -271,12 +276,16 @@ export function CustomersPage() {
       {error ? <ErrorBanner message={error} /> : null}
       <Toolbar as="form" onSubmit={(event) => void submitSearch(event)}>
         <input
+          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           type="search"
           placeholder={t('customers.searchByTradeName')}
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <button type="submit" className="btn">
+        <button
+          type="submit"
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+        >
           {t('common.search')}
         </button>
       </Toolbar>
@@ -286,12 +295,17 @@ export function CustomersPage() {
           {data.data.length === 0 ? (
             <EmptyState message={t('customers.noCustomers')} />
           ) : (
-            <div className="table-wrap">
-              <table className="data-table">
+            <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
+              <table className="w-full border-collapse [&_tr:last-child>td]:border-b-0">
                 <thead>
                   <tr>
                     {columns.map((col) => (
-                      <th key={col.key}>{col.header}</th>
+                      <th
+                        key={col.key}
+                        className="sticky top-0 z-[1] whitespace-nowrap border-b border-border bg-bg px-[14px] py-2.5 text-left text-[12px] uppercase tracking-[0.04em] text-muted"
+                      >
+                        {col.header}
+                      </th>
                     ))}
                   </tr>
                 </thead>
@@ -299,7 +313,10 @@ export function CustomersPage() {
                   {data.data.map((row) => (
                     <tr key={row.id}>
                       {columns.map((col) => (
-                        <td key={col.key}>
+                        <td
+                          key={col.key}
+                          className="max-w-[260px] overflow-hidden whitespace-nowrap border-b border-border px-[14px] py-2.5 text-left text-ellipsis last:text-right"
+                        >
                           {col.render ? col.render(row) : String((row as unknown as Record<string, unknown>)[col.key] ?? '')}
                         </td>
                       ))}
@@ -317,55 +334,55 @@ export function CustomersPage() {
         <DialogContent>
           <DialogHeader title={editingId ? t('customers.editCustomer') : t('customers.newCustomer')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-code">{t('fields.code')} *</label>
-                <input id="customer-code" {...register('code')} />
-                {errors.code ? <div className="field-error">{errors.code.message}</div> : null}
+                <input id="customer-code" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('code')} />
+                {errors.code ?               <div className="text-[12px] font-normal text-danger">{errors.code.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-trade">{t('fields.tradeName')} *</label>
-                <input id="customer-trade" {...register('tradeName')} />
-                {errors.tradeName ? <div className="field-error">{errors.tradeName.message}</div> : null}
+                <input id="customer-trade" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('tradeName')} />
+                {errors.tradeName ?               <div className="text-[12px] font-normal text-danger">{errors.tradeName.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-legal">{t('fields.legalName')}</label>
-                <input id="customer-legal" {...register('legalName')} />
+                <input id="customer-legal" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('legalName')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-tax">{t('fields.taxId')}</label>
-                <input id="customer-tax" {...register('taxId')} />
+                <input id="customer-tax" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('taxId')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-email">{t('fields.email')}</label>
-                <input id="customer-email" type="email" {...register('email')} />
-                {errors.email ? <div className="field-error">{errors.email.message}</div> : null}
+                <input id="customer-email" type="email" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('email')} />
+                {errors.email ?               <div className="text-[12px] font-normal text-danger">{errors.email.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-phone">{t('fields.phone')}</label>
-                <input id="customer-phone" {...register('phone')} />
+                <input id="customer-phone" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('phone')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-currency">{t('fields.currency')}</label>
-                <input id="customer-currency" maxLength={3} {...register('currency')} />
+                <input id="customer-currency" maxLength={3} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('currency')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-credit">{t('fields.creditLimit')}</label>
-                <input id="customer-credit" type="number" min="0" step="0.01" {...register('creditLimit')} />
-                {errors.creditLimit ? <div className="field-error">{errors.creditLimit.message}</div> : null}
+                <input id="customer-credit" type="number" min="0" step="0.01" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('creditLimit')} />
+                {errors.creditLimit ?               <div className="text-[12px] font-normal text-danger">{errors.creditLimit.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-price">{t('fields.priceCategory')}</label>
-                <input id="customer-price" placeholder={t('customers.priceCategoryPlaceholder')} {...register('priceCategory')} />
+                <input id="customer-price" placeholder={t('customers.priceCategoryPlaceholder')} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('priceCategory')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-address">{t('fields.address')}</label>
-                <textarea id="customer-address" rows={2} {...register('address')} />
+                <textarea id="customer-address" rows={2} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('address')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-state">{t('customers.stateUs')}</label>
-                <div className="field-hint">{t('customers.stateHint')}</div>
-                <select id="customer-state" {...register('state')}>
+                <div className="text-[12px] font-normal text-muted">{t('customers.stateHint')}</div>
+                <select id="customer-state" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('state')}>
                   <option value="">{t('customers.noState')}</option>
                   {Object.entries(core.US_STATES).map(([code, info]) => (
                     <option key={code} value={code}>
@@ -374,7 +391,7 @@ export function CustomersPage() {
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('customers.taxStatus')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox id="customer-tax-exempt" checked={taxExempt} onCheckedChange={(checked) => setValue('taxExempt', checked === true)} />
@@ -383,7 +400,7 @@ export function CustomersPage() {
                   </label>
                 </div>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox id="customer-active" checked={active} onCheckedChange={(checked) => setValue('active', checked === true)} />
@@ -393,7 +410,7 @@ export function CustomersPage() {
                 </div>
               </div>
             </div>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('customers.createCustomer')}

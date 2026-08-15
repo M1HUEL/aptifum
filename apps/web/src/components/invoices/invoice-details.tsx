@@ -61,10 +61,10 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
         {error ? <ErrorBanner message={error} /> : null}
         {!loading && viewing ? (
           <div>
-            <div className="detail-grid">
+            <div className="mb-2 grid grid-cols-2 gap-x-4 gap-y-3">
               <div className="detail-item">
-                <div className="detail-label">{t('common.status')}</div>
-                <div className="detail-value">
+                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('common.status')}</div>
+                <div className="mt-0.5 block">
                   <Badge
                     tone={viewing.status === 'issued' ? 'success' : viewing.status === 'draft' ? 'neutral' : 'danger'}
                   >
@@ -73,61 +73,61 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
                 </div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">{t('fields.customer')}</div>
-                <div className="detail-value">{viewing.customer?.tradeName ?? '—'}</div>
+                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.customer')}</div>
+                <div className="mt-0.5 block">{viewing.customer?.tradeName ?? '—'}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">{t('tables.issueDate')}</div>
-                <div className="detail-value">{formatDate(viewing.issueDate)}</div>
+                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.issueDate')}</div>
+                <div className="mt-0.5 block">{formatDate(viewing.issueDate)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">{t('fields.dueDate')}</div>
-                <div className="detail-value">{viewing.dueDate ? formatDate(viewing.dueDate) : '—'}</div>
+                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.dueDate')}</div>
+                <div className="mt-0.5 block">{viewing.dueDate ? formatDate(viewing.dueDate) : '—'}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">{t('fields.subtotal')}</div>
-                <div className="detail-value num">{formatMoney(viewing.subtotal)}</div>
+                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.subtotal')}</div>
+                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.subtotal)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">{t('fields.discount')}</div>
-                <div className="detail-value num">{formatMoney(viewing.discount)}</div>
+                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.discount')}</div>
+                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.discount)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">{t('fields.tax')}</div>
-                <div className="detail-value num">{formatMoney(viewing.tax)}</div>
+                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.tax')}</div>
+                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.tax)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">{t('tables.total')}</div>
-                <div className="detail-value num">{formatMoney(viewing.total)}</div>
+                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.total')}</div>
+                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.total)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">{t('invoices.paid')}</div>
-                <div className="detail-value num">{formatMoney(viewing.paidAmount)}</div>
+                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('invoices.paid')}</div>
+                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.paidAmount)}</div>
               </div>
               <div className="detail-item">
-                <div className="detail-label">{t('invoices.balanceDue')}</div>
-                <div className="detail-value num">{formatMoney(viewing.balanceDue)}</div>
+                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('invoices.balanceDue')}</div>
+                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.balanceDue)}</div>
               </div>
             </div>
-            <div className="data-table-wrap">
-              <table className="data-table">
+            <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
+              <table className="w-full border-collapse">
                 <thead>
                   <tr>
                     <th>{t('fields.product')}</th>
-                    <th className="num">{t('fields.qty')}</th>
-                    <th className="num">{t('fields.unitPrice')}</th>
-                    <th className="num">{t('fields.tax')}</th>
-                    <th className="num">{t('invoices.lineTotal')}</th>
+                    <th className="text-right tabular-nums">{t('fields.qty')}</th>
+                    <th className="text-right tabular-nums">{t('fields.unitPrice')}</th>
+                    <th className="text-right tabular-nums">{t('fields.tax')}</th>
+                    <th className="text-right tabular-nums">{t('invoices.lineTotal')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(viewing.items ?? []).map((item) => (
                     <tr key={item.id}>
                       <td>{item.description ?? item.product?.name ?? item.productId}</td>
-                      <td className="num">{item.quantity}</td>
-                      <td className="num">{formatMoney(item.unitPrice)}</td>
-                      <td className="num">{formatMoney(item.taxAmount)}</td>
-                      <td className="num">{formatMoney(item.lineTotal)}</td>
+                      <td className="text-right tabular-nums">{item.quantity}</td>
+                      <td className="text-right tabular-nums">{formatMoney(item.unitPrice)}</td>
+                      <td className="text-right tabular-nums">{formatMoney(item.taxAmount)}</td>
+                      <td className="text-right tabular-nums">{formatMoney(item.lineTotal)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -135,14 +135,14 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
             </div>
             {(viewing.payments ?? []).length > 0 ? (
               <>
-                <h4 className="detail-section-title">{t('invoices.payments')}</h4>
-                <div className="data-table-wrap">
-                  <table className="data-table">
+                <h4 className="mb-2 mt-4 text-[14px]">{t('invoices.payments')}</h4>
+                <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
+                  <table className="w-full border-collapse">
                     <thead>
                       <tr>
                         <th>{t('tables.date')}</th>
                         <th>{t('invoices.method')}</th>
-                        <th className="num">{t('fields.amount')}</th>
+                        <th className="text-right tabular-nums">{t('fields.amount')}</th>
                         <th>{t('invoices.reference')}</th>
                       </tr>
                     </thead>
@@ -151,7 +151,7 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
                         <tr key={payment.id}>
                           <td>{formatDate(payment.receivedAt)}</td>
                           <td>{payment.method}</td>
-                          <td className="num">{formatMoney(payment.amount)}</td>
+                          <td className="text-right tabular-nums">{formatMoney(payment.amount)}</td>
                           <td>{payment.reference ?? '—'}</td>
                         </tr>
                       ))}
@@ -160,9 +160,9 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
                 </div>
               </>
             ) : null}
-            {viewing.notes ? <div className="detail-notes">{viewing.notes}</div> : null}
-            <div className="detail-section-title-row">
-              <h4 className="detail-section-title">{t('invoices.cfdi')}</h4>
+            {viewing.notes ? <div className="mt-2">{viewing.notes}</div> : null}
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="mb-2 mt-4 text-[14px]">{t('invoices.cfdi')}</h4>
               <Button variant="ghost" size="sm" onClick={() => void downloadPdf(viewing)}>
                 {t('common.pdf')}
               </Button>
@@ -174,14 +174,14 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
             </div>
             {cfdiLoading ? <LoadingBlock /> : null}
             {!cfdiLoading && cfdi ? (
-              <div className="detail-grid">
+              <div className="mb-2 grid grid-cols-2 gap-x-4 gap-y-3">
                 <div className="detail-item">
-                  <div className="detail-label">{t('invoices.uuid')}</div>
-                  <div className="detail-value">{cfdi.uuid}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('invoices.uuid')}</div>
+                  <div className="mt-0.5 block">{cfdi.uuid}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('common.status')}</div>
-                  <div className="detail-value">
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('common.status')}</div>
+                  <div className="mt-0.5 block">
                     <Badge
                       tone={cfdi.status === 'stamped' ? 'success' : cfdi.status === 'pending' ? 'neutral' : 'danger'}
                     >
@@ -190,16 +190,16 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
                   </div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('tables.total')}</div>
-                  <div className="detail-value num">{formatMoney(cfdi.total)}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.total')}</div>
+                  <div className="mt-0.5 text-right tabular-nums">{formatMoney(cfdi.total)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('invoices.stamped')}</div>
-                  <div className="detail-value">{cfdi.stampedAt ? formatDate(cfdi.stampedAt) : '—'}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('invoices.stamped')}</div>
+                  <div className="mt-0.5 block">{cfdi.stampedAt ? formatDate(cfdi.stampedAt) : '—'}</div>
                 </div>
               </div>
             ) : null}
-            {!cfdiLoading && !cfdi ? <p className="detail-notes">{t('invoices.noCfdi')}</p> : null}
+            {!cfdiLoading && !cfdi ? <p className="mt-2">{t('invoices.noCfdi')}</p> : null}
           </div>
         ) : null}
         <DialogFooter>

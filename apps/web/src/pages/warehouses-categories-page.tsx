@@ -355,7 +355,7 @@ export function WarehousesCategoriesPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => void loadLocations(row)}>
             {t('warehouses.locations')}
           </Button>
@@ -384,7 +384,7 @@ export function WarehousesCategoriesPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => openCategory(row)}>
             {t('common.edit')}
           </Button>
@@ -416,8 +416,8 @@ export function WarehousesCategoriesPage() {
         title={t('warehouses.title')}
         subtitle={t('warehouses.subtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </button>
             <Button onClick={() => (tab === 'warehouses' ? openWarehouse() : openCategory())}>
@@ -427,7 +427,7 @@ export function WarehousesCategoriesPage() {
         }
       />
 
-      <div className="tabs">
+      <div className="mb-4 flex gap-1">
         <button type="button" className={tab === 'warehouses' ? 'tab tab-active' : 'tab'} onClick={() => setTab('warehouses')}>
           {t('warehouses.warehouses')}
         </button>
@@ -472,22 +472,22 @@ export function WarehousesCategoriesPage() {
         <DialogContent>
           <DialogHeader title={editingWhId ? t('warehouses.editWarehouse') : t('warehouses.newWarehouseTitle')} />
           <form onSubmit={(event) => void submitWarehouse(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="wh-code">{t('fields.code')} *</label>
-                <input id="wh-code" {...registerWh('code')} />
-                {whErrors.code ? <div className="field-error">{whErrors.code.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="wh-code" {...registerWh('code')} />
+                {whErrors.code ? <div className="text-[12px] font-normal text-danger">{whErrors.code.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="wh-name">{t('fields.name')} *</label>
-                <input id="wh-name" {...registerWh('name')} />
-                {whErrors.name ? <div className="field-error">{whErrors.name.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="wh-name" {...registerWh('name')} />
+                {whErrors.name ? <div className="text-[12px] font-normal text-danger">{whErrors.name.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="wh-address">{t('fields.address')}</label>
-                <textarea id="wh-address" rows={2} {...registerWh('address')} />
+                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="wh-address" rows={2} {...registerWh('address')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
@@ -501,7 +501,7 @@ export function WarehousesCategoriesPage() {
                 </div>
               </div>
             </div>
-            {whError ? <div className="error-banner">{whError}</div> : null}
+            {whError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{whError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={whSaving}>
                 {whSaving ? t('common.saving') : editingWhId ? t('common.saveChanges') : t('warehouses.createWarehouse')}
@@ -518,7 +518,7 @@ export function WarehousesCategoriesPage() {
           {locationsError ? <ErrorBanner message={locationsError} /> : null}
           {!locationsLoading && !locationsError ? (
             <>
-              <div className="table-actions" style={{ marginBottom: '1rem' }}>
+              <div className="flex justify-end gap-1.5" style={{ marginBottom: '1rem' }}>
                 <Button size="sm" onClick={() => openLocation()}>
                   {t('warehouses.addLocation')}
                 </Button>
@@ -526,8 +526,8 @@ export function WarehousesCategoriesPage() {
               {locations.length === 0 ? (
                 <EmptyState message={t('warehouses.noLocations')} />
               ) : (
-                <div className="data-table-wrap">
-                  <table className="data-table">
+                <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
+                  <table className="w-full border-collapse">
                     <thead>
                       <tr>
                         <th>{t('fields.code')}</th>
@@ -547,7 +547,7 @@ export function WarehousesCategoriesPage() {
                             </Badge>
                           </td>
                           <td>
-                            <div className="table-actions">
+                            <div className="flex justify-end gap-1.5">
                               <Button variant="ghost" size="sm" onClick={() => openLocation(location)}>
                                 {t('common.edit')}
                               </Button>
@@ -566,7 +566,7 @@ export function WarehousesCategoriesPage() {
               )}
             </>
           ) : null}
-          <div className="modal-footer">
+          <div className="flex shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
             <Button variant="ghost" onClick={() => setLocationsFor(null)}>
               {t('common.close')}
             </Button>
@@ -578,18 +578,18 @@ export function WarehousesCategoriesPage() {
         <DialogContent>
           <DialogHeader title={editingLocId ? t('warehouses.editLocation') : t('warehouses.addLocationTitle')} />
           <form onSubmit={(event) => void submitLocation(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="loc-code">{t('fields.code')} *</label>
-                <input id="loc-code" {...registerLoc('code')} />
-                {locErrors.code ? <div className="field-error">{locErrors.code.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="loc-code" {...registerLoc('code')} />
+                {locErrors.code ? <div className="text-[12px] font-normal text-danger">{locErrors.code.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="loc-name">{t('fields.name')} *</label>
-                <input id="loc-name" {...registerLoc('name')} />
-                {locErrors.name ? <div className="field-error">{locErrors.name.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="loc-name" {...registerLoc('name')} />
+                {locErrors.name ? <div className="text-[12px] font-normal text-danger">{locErrors.name.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
@@ -603,7 +603,7 @@ export function WarehousesCategoriesPage() {
                 </div>
               </div>
             </div>
-            {locError ? <div className="error-banner">{locError}</div> : null}
+            {locError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{locError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={locSaving}>
                 {locSaving ? t('common.saving') : editingLocId ? t('common.saveChanges') : t('warehouses.addLocationTitle')}
@@ -617,13 +617,13 @@ export function WarehousesCategoriesPage() {
         <DialogContent>
           <DialogHeader title={editingCatId ? t('warehouses.editCategory') : t('warehouses.newCategoryTitle')} />
           <form onSubmit={(event) => void submitCategory(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="cat-name">{t('fields.name')} *</label>
-                <input id="cat-name" {...registerCat('name')} />
-                {catErrors.name ? <div className="field-error">{catErrors.name.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="cat-name" {...registerCat('name')} />
+                {catErrors.name ? <div className="text-[12px] font-normal text-danger">{catErrors.name.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="cat-parent">{t('tables.parent')}</label>
                 <Controller
                   control={controlCat}
@@ -642,7 +642,7 @@ export function WarehousesCategoriesPage() {
                   )}
                 />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
@@ -656,7 +656,7 @@ export function WarehousesCategoriesPage() {
                 </div>
               </div>
             </div>
-            {catError ? <div className="error-banner">{catError}</div> : null}
+            {catError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{catError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={catSaving}>
                 {catSaving ? t('common.saving') : editingCatId ? t('common.saveChanges') : t('warehouses.createCategory')}

@@ -88,11 +88,11 @@ export function PaymentFormModal({
       <DialogContent>
         <DialogHeader title={t('invoices.paymentFor', { number: invoice?.number })} />
         <form onSubmit={(event) => void submit(event)}>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-method">
-              {t('invoices.method')} <span className="field-required">*</span>
+              {t('invoices.method')} <span className="text-danger">*</span>
             </label>
-            <select id="payment-method" {...register('method')}>
+            <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="payment-method" {...register('method')}>
               {paymentMethods.map((method) => (
                 <option key={method} value={method}>
                   {method}
@@ -100,29 +100,29 @@ export function PaymentFormModal({
               ))}
             </select>
           </div>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-amount">
-              {t('fields.amount')} <span className="field-required">*</span>
+              {t('fields.amount')} <span className="text-danger">*</span>
             </label>
             {invoice ? (
-              <div className="field-hint">{t('invoices.balanceDueHint', { amount: formatMoney(invoice.balanceDue) })}</div>
+              <div className="text-[12px] font-normal text-muted">{t('invoices.balanceDueHint', { amount: formatMoney(invoice.balanceDue) })}</div>
             ) : null}
-            <input id="payment-amount" type="number" min="0.01" step="0.01" {...register('amount')} />
-            {errors.amount ? <div className="field-error">{errors.amount.message}</div> : null}
+            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="payment-amount" type="number" min="0.01" step="0.01" {...register('amount')} />
+            {errors.amount ? <div className="text-[12px] font-normal text-danger">{errors.amount.message}</div> : null}
           </div>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-date">{t('invoices.receivedAt')}</label>
-            <input id="payment-date" type="date" {...register('receivedAt')} />
+            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="payment-date" type="date" {...register('receivedAt')} />
           </div>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-reference">{t('invoices.reference')}</label>
-            <input id="payment-reference" {...register('reference')} />
+            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="payment-reference" {...register('reference')} />
           </div>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-notes">{t('fields.notes')}</label>
-            <textarea id="payment-notes" rows={2} {...register('notes')} />
+            <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="payment-notes" rows={2} {...register('notes')} />
           </div>
-          {formError ? <div className="error-banner">{formError}</div> : null}
+          {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
           <DialogFooter>
             <Button variant="default" type="submit" disabled={busy}>
               {busy ? t('invoices.recording') : t('invoices.recordPayment')}

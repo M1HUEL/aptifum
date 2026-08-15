@@ -214,8 +214,13 @@ function StockTab() {
 
   return (
     <>
-      <div className="toolbar">
-        <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+      <div className="mb-4 flex gap-2.5">
+        <button
+          type="button"
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label={t('common.export')}
+          onClick={handleExport}
+        >
           {t('common.export')}
         </button>
       </div>
@@ -294,11 +299,16 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
 
   return (
     <>
-      <div className="toolbar">
-        <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+      <div className="mb-4 flex gap-2.5">
+        <button
+          type="button"
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label={t('common.export')}
+          onClick={handleExport}
+        >
           {t('common.export')}
         </button>
-        <select value={filters.movementType} onChange={(event) => setFilter('movementType', event.target.value)}>
+        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={filters.movementType} onChange={(event) => setFilter('movementType', event.target.value)}>
           <option value="">{t('stock.allTypes')}</option>
           {movementTypes.map((type) => (
             <option key={type} value={type}>
@@ -306,7 +316,7 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
             </option>
           ))}
         </select>
-        <select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
+        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
           <option value="">{t('stock.allWarehouses')}</option>
           {warehouses.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
@@ -314,8 +324,8 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
             </option>
           ))}
         </select>
-        <input type="date" value={filters.from} onChange={(event) => setFilter('from', event.target.value)} />
-        <input type="date" value={filters.to} onChange={(event) => setFilter('to', event.target.value)} />
+        <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" type="date" value={filters.from} onChange={(event) => setFilter('from', event.target.value)} />
+        <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" type="date" value={filters.to} onChange={(event) => setFilter('to', event.target.value)} />
         {hasFilters ? (
           <Button variant="ghost" onClick={resetFilters}>
             {t('stock.clearFilters')}
@@ -391,8 +401,13 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
 
   return (
     <>
-      <div className="toolbar">
-        <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+      <div className="mb-4 flex gap-2.5">
+        <button
+          type="button"
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label={t('common.export')}
+          onClick={handleExport}
+        >
           {t('common.export')}
         </button>
         <StatusSelect
@@ -406,7 +421,7 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
             { value: 'expired', label: t('stock.expired') },
           ]}
         />
-        <select value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
+        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={filters.warehouseId} onChange={(event) => setFilter('warehouseId', event.target.value)}>
           <option value="">{t('stock.allWarehouses')}</option>
           {warehouses.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
@@ -596,20 +611,36 @@ export function StockPage() {
         subtitle={t('stock.subtitle')}
         action={<Button onClick={openModal}>{t('stock.newMovement')}</Button>}
       />
-      <div className="tabs">
-        <button type="button" className={tab === 'stock' ? 'tab tab-active' : 'tab'} onClick={() => changeTab('stock')}>
+      <div className="mb-4 flex gap-1">
+        <button
+          type="button"
+          className={
+            tab === 'stock'
+              ? 'cursor-pointer rounded-ui border border-primary bg-primary px-4 py-2 font-semibold text-white'
+              : 'cursor-pointer rounded-ui border border-border bg-surface px-4 py-2 font-semibold text-muted'
+          }
+          onClick={() => changeTab('stock')}
+        >
           {t('stock.stockLevels')}
         </button>
         <button
           type="button"
-          className={tab === 'movements' ? 'tab tab-active' : 'tab'}
+          className={
+            tab === 'movements'
+              ? 'cursor-pointer rounded-ui border border-primary bg-primary px-4 py-2 font-semibold text-white'
+              : 'cursor-pointer rounded-ui border border-border bg-surface px-4 py-2 font-semibold text-muted'
+          }
           onClick={() => changeTab('movements')}
         >
           {t('stock.movements')}
         </button>
         <button
           type="button"
-          className={tab === 'lots' ? 'tab tab-active' : 'tab'}
+          className={
+            tab === 'lots'
+              ? 'cursor-pointer rounded-ui border border-primary bg-primary px-4 py-2 font-semibold text-white'
+              : 'cursor-pointer rounded-ui border border-border bg-surface px-4 py-2 font-semibold text-muted'
+          }
           onClick={() => changeTab('lots')}
         >
           {t('stock.lots')}
@@ -623,10 +654,10 @@ export function StockPage() {
         <DialogContent>
           <DialogHeader title={t('stock.newStockMovement')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-product">{t('fields.product')} *</label>
-                <select id="movement-product" {...register('productId')}>
+                <select id="movement-product" className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('productId')}>
                   <option value="">{t('stock.selectProduct')}</option>
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
@@ -634,9 +665,9 @@ export function StockPage() {
                     </option>
                   ))}
                 </select>
-                {errors.productId ? <div className="field-error">{errors.productId.message}</div> : null}
+                {errors.productId ?                 <div className="text-[12px] font-normal text-danger">{errors.productId.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-warehouse">{t('fields.warehouse')} *</label>
                 <Controller
                   control={control}
@@ -654,12 +685,12 @@ export function StockPage() {
                     />
                   )}
                 />
-                {errors.warehouseId ? <div className="field-error">{errors.warehouseId.message}</div> : null}
+                {errors.warehouseId ?                 <div className="text-[12px] font-normal text-danger">{errors.warehouseId.message}</div> : null}
               </div>
               {locations.length > 0 ? (
-                <div className="field">
+                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor="movement-location">{t('stock.location')}</label>
-                  <select id="movement-location" {...register('locationId')}>
+                  <select id="movement-location" className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('locationId')}>
                     <option value="">{t('stock.noLocation')}</option>
                     {locations.map((location) => (
                       <option key={location.id} value={location.id}>
@@ -669,9 +700,9 @@ export function StockPage() {
                   </select>
                 </div>
               ) : null}
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-type">{t('tables.type')} *</label>
-                <select id="movement-type" {...register('movementType')}>
+                <select id="movement-type" className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('movementType')}>
                   {movementTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
@@ -679,45 +710,46 @@ export function StockPage() {
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-quantity">{t('fields.quantity')} *</label>
                 <input
                   id="movement-quantity"
                   type="number"
                   min="0.0001"
                   step="any"
+                  className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   {...register('quantity')}
                 />
                 {selectedStock ? (
-                  <div className="muted" style={{ marginTop: 6 }}>
+                  <div className="text-[12px] text-muted" style={{ marginTop: 6 }}>
                     {t('stock.available', { quantity: formatNumber(selectedStock.quantity) })}
                     {selectedStock.reservedQuantity > 0
                       ? t('stock.reservedInfo', { quantity: formatNumber(selectedStock.reservedQuantity) })
                       : ''}
                   </div>
                 ) : null}
-                {errors.quantity ? <div className="field-error">{errors.quantity.message}</div> : null}
+                {errors.quantity ?                 <div className="text-[12px] font-normal text-danger">{errors.quantity.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-cost">{t('fields.unitCost')}</label>
-                <input id="movement-cost" type="number" min="0" step="0.01" {...register('unitCost')} />
-                {errors.unitCost ? <div className="field-error">{errors.unitCost.message}</div> : null}
+                <input id="movement-cost" type="number" min="0" step="0.01" className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('unitCost')} />
+                {errors.unitCost ?                 <div className="text-[12px] font-normal text-danger">{errors.unitCost.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-lot">{t('fields.lotNumber')}</label>
-                <input id="movement-lot" placeholder={t('stock.lotPlaceholder')} {...register('lotNumber')} />
-                {errors.lotNumber ? <div className="field-error">{errors.lotNumber.message}</div> : null}
+                <input id="movement-lot" placeholder={t('stock.lotPlaceholder')} className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('lotNumber')} />
+                {errors.lotNumber ?                 <div className="text-[12px] font-normal text-danger">{errors.lotNumber.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-expiry">{t('fields.expiryDate')}</label>
-                <input id="movement-expiry" type="date" {...register('expiryDate')} />
+                <input id="movement-expiry" type="date" className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('expiryDate')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-notes">{t('fields.notes')}</label>
-                <textarea id="movement-notes" rows={2} {...register('notes')} />
+                <textarea id="movement-notes" rows={2} className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('notes')} />
               </div>
             </div>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('stock.recording') : t('stock.recordMovement')}

@@ -475,7 +475,7 @@ export function AttendanceLeavesPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => openAttendance(row)}>
             {t('common.edit')}
           </Button>
@@ -499,7 +499,7 @@ export function AttendanceLeavesPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           {row.status === 'pending' ? (
             <>
               {can('hr:approve') ? (
@@ -551,12 +551,12 @@ export function AttendanceLeavesPage() {
         title={t('hr.attendanceTitle')}
         subtitle={t('hr.attendanceSubtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </button>
             {tab === 'attendance' ? (
-              <div className="table-actions">
+              <div className="flex justify-end gap-1.5">
                 <Button variant="ghost" onClick={openClock}>
                   {t('hr.clockInOut')}
                 </Button>
@@ -569,7 +569,7 @@ export function AttendanceLeavesPage() {
         }
       />
 
-      <div className="tabs">
+      <div className="mb-4 flex gap-1">
         <button type="button" className={tab === 'attendance' ? 'tab tab-active' : 'tab'} onClick={() => setTab('attendance')}>
           {t('hr.attendanceTab')}
         </button>
@@ -581,8 +581,8 @@ export function AttendanceLeavesPage() {
       {tab === 'attendance' ? (
         <>
           {attError ? <ErrorBanner message={attError} /> : null}
-          <form className="search-form" onSubmit={(event) => void submitAttFilters(event)}>
-            <select
+          <form className="mb-4 flex gap-2.5" onSubmit={(event) => void submitAttFilters(event)}>
+            <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               value={attFilterInput.employeeId}
               onChange={(event) => setAttFilterInput((current) => ({ ...current, employeeId: event.target.value }))}
             >
@@ -593,12 +593,12 @@ export function AttendanceLeavesPage() {
                 </option>
               ))}
             </select>
-            <input
+            <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               type="date"
               value={attFilterInput.from}
               onChange={(event) => setAttFilterInput((current) => ({ ...current, from: event.target.value }))}
             />
-            <input
+            <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               type="date"
               value={attFilterInput.to}
               onChange={(event) => setAttFilterInput((current) => ({ ...current, to: event.target.value }))}
@@ -612,7 +612,7 @@ export function AttendanceLeavesPage() {
                 ...attendanceStatuses.map((status) => ({ value: status, label: status })),
               ]}
             />
-            <button type="submit" className="btn">
+            <button type="submit" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50">
               {t('common.search')}
             </button>
           </form>
@@ -631,8 +631,8 @@ export function AttendanceLeavesPage() {
       ) : (
         <>
           {leaveError ? <ErrorBanner message={leaveError} /> : null}
-          <form className="search-form" onSubmit={(event) => void submitLeaveFilters(event)}>
-            <select
+          <form className="mb-4 flex gap-2.5" onSubmit={(event) => void submitLeaveFilters(event)}>
+            <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               value={leaveFilterInput.employeeId}
               onChange={(event) => setLeaveFilterInput((current) => ({ ...current, employeeId: event.target.value }))}
             >
@@ -652,7 +652,7 @@ export function AttendanceLeavesPage() {
                 ...leaveStatuses.map((status) => ({ value: status, label: status })),
               ]}
             />
-            <select
+            <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               value={leaveFilterInput.leaveType}
               onChange={(event) => setLeaveFilterInput((current) => ({ ...current, leaveType: event.target.value }))}
             >
@@ -663,7 +663,7 @@ export function AttendanceLeavesPage() {
                 </option>
               ))}
             </select>
-            <button type="submit" className="btn">
+            <button type="submit" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50">
               {t('common.search')}
             </button>
           </form>
@@ -685,9 +685,9 @@ export function AttendanceLeavesPage() {
         <DialogContent>
           <DialogHeader title={t('hr.clockInOut')} />
           <form onSubmit={(event) => void submitClock(event)}>
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="clock-employee">
-                {t('fields.employee')}<span className="field-required"> *</span>
+                {t('fields.employee')}<span className="text-danger"> *</span>
               </label>
               <Controller
                 control={controlClock}
@@ -703,23 +703,23 @@ export function AttendanceLeavesPage() {
                 )}
               />
               {clockErrors.employeeId ? (
-                <div className="field-error">{clockErrors.employeeId.message}</div>
+                <div className="text-[12px] font-normal text-danger">{clockErrors.employeeId.message}</div>
               ) : null}
             </div>
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="clock-action">
-                {t('hr.action')}<span className="field-required"> *</span>
+                {t('hr.action')}<span className="text-danger"> *</span>
               </label>
-              <select id="clock-action" {...registerClock('action')}>
+              <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="clock-action" {...registerClock('action')}>
                 <option value="in">{t('hr.clockIn')}</option>
                 <option value="out">{t('hr.clockOut')}</option>
               </select>
             </div>
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="clock-at">{t('hr.at')}</label>
-              <input id="clock-at" type="datetime-local" {...registerClock('at')} />
+              <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="clock-at" type="datetime-local" {...registerClock('at')} />
             </div>
-            {clockError ? <div className="error-banner">{clockError}</div> : null}
+            {clockError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{clockError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={clockBusy}>
                 {clockBusy ? t('hr.recording') : t('hr.record')}
@@ -733,10 +733,10 @@ export function AttendanceLeavesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingAttId ? t('hr.editAttendance') : t('hr.createAttendance')} />
           <form onSubmit={(event) => void submitAttendance(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="att-employee">
-                  {t('fields.employee')}<span className="field-required"> *</span>
+                  {t('fields.employee')}<span className="text-danger"> *</span>
                 </label>
                 <Controller
                   control={controlAtt}
@@ -752,29 +752,29 @@ export function AttendanceLeavesPage() {
                   )}
                 />
                 {attErrors.employeeId ? (
-                  <div className="field-error">{attErrors.employeeId.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{attErrors.employeeId.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="att-date">
-                  {t('fields.workDate')}<span className="field-required"> *</span>
+                  {t('fields.workDate')}<span className="text-danger"> *</span>
                 </label>
-                <input id="att-date" type="date" {...registerAtt('workDate')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="att-date" type="date" {...registerAtt('workDate')} />
                 {attErrors.workDate ? (
-                  <div className="field-error">{attErrors.workDate.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{attErrors.workDate.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="att-in">{t('hr.clockIn')}</label>
-                <input id="att-in" type="datetime-local" {...registerAtt('clockInAt')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="att-in" type="datetime-local" {...registerAtt('clockInAt')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="att-out">{t('hr.clockOut')}</label>
-                <input id="att-out" type="datetime-local" {...registerAtt('clockOutAt')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="att-out" type="datetime-local" {...registerAtt('clockOutAt')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="att-status">{t('common.status')}</label>
-                <select id="att-status" {...registerAtt('status')}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="att-status" {...registerAtt('status')}>
                   {attendanceStatuses.map((status) => (
                     <option key={status} value={status}>
                       {status}
@@ -783,11 +783,11 @@ export function AttendanceLeavesPage() {
                 </select>
               </div>
             </div>
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="att-notes">{t('fields.notes')}</label>
-              <textarea id="att-notes" rows={2} {...registerAtt('notes')} />
+              <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="att-notes" rows={2} {...registerAtt('notes')} />
             </div>
-            {attFormError ? <div className="error-banner">{attFormError}</div> : null}
+            {attFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{attFormError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={attSaving}>
                 {attSaving ? t('common.saving') : editingAttId ? t('common.saveChanges') : t('hr.createAttendance')}
@@ -801,10 +801,10 @@ export function AttendanceLeavesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingLeaveId ? t('hr.editLeave') : t('hr.createLeave')} />
           <form onSubmit={(event) => void submitLeave(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="leave-employee">
-                  {t('fields.employee')}<span className="field-required"> *</span>
+                  {t('fields.employee')}<span className="text-danger"> *</span>
                 </label>
                 <Controller
                   control={controlLeave}
@@ -820,14 +820,14 @@ export function AttendanceLeavesPage() {
                   )}
                 />
                 {leaveErrors.employeeId ? (
-                  <div className="field-error">{leaveErrors.employeeId.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{leaveErrors.employeeId.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="leave-type">
-                  {t('tables.type')}<span className="field-required"> *</span>
+                  {t('tables.type')}<span className="text-danger"> *</span>
                 </label>
-                <select id="leave-type" {...registerLeave('leaveType')}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="leave-type" {...registerLeave('leaveType')}>
                   {leaveTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
@@ -835,37 +835,37 @@ export function AttendanceLeavesPage() {
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="leave-start">
-                  {t('fields.startDate')}<span className="field-required"> *</span>
+                  {t('fields.startDate')}<span className="text-danger"> *</span>
                 </label>
-                <input id="leave-start" type="date" {...registerLeave('startDate')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="leave-start" type="date" {...registerLeave('startDate')} />
                 {leaveErrors.startDate ? (
-                  <div className="field-error">{leaveErrors.startDate.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{leaveErrors.startDate.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="leave-end">
-                  {t('fields.endDate')}<span className="field-required"> *</span>
+                  {t('fields.endDate')}<span className="text-danger"> *</span>
                 </label>
-                <input id="leave-end" type="date" {...registerLeave('endDate')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="leave-end" type="date" {...registerLeave('endDate')} />
                 {leaveErrors.endDate ? (
-                  <div className="field-error">{leaveErrors.endDate.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{leaveErrors.endDate.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="leave-days">{t('fields.days')}</label>
-                <input id="leave-days" type="number" min="1" max="365" {...registerLeave('days')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="leave-days" type="number" min="1" max="365" {...registerLeave('days')} />
                 {leaveErrors.days ? (
-                  <div className="field-error">{leaveErrors.days.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{leaveErrors.days.message}</div>
                 ) : null}
               </div>
             </div>
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="leave-reason">{t('fields.reason')}</label>
-              <textarea id="leave-reason" rows={2} {...registerLeave('reason')} />
+              <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="leave-reason" rows={2} {...registerLeave('reason')} />
             </div>
-            {leaveFormError ? <div className="error-banner">{leaveFormError}</div> : null}
+            {leaveFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{leaveFormError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={leaveSaving}>
                 {leaveSaving ? t('common.saving') : editingLeaveId ? t('common.saveChanges') : t('hr.createLeave')}

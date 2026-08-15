@@ -173,7 +173,7 @@ export function InvoicesPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => setViewing(row)}>
             {t('common.view')}
           </Button>
@@ -201,8 +201,13 @@ export function InvoicesPage() {
         title={t('invoices.title')}
         subtitle={t('invoices.subtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={t('common.export')}
+              onClick={handleExport}
+            >
               {t('common.export')}
             </button>
             <Button onClick={() => setInvoiceOpen(true)}>{t('invoices.newInvoice')}</Button>
@@ -211,6 +216,7 @@ export function InvoicesPage() {
       />
       <Toolbar as="form" onSubmit={(event) => void submitSearch(event)}>
         <input
+          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           type="search"
           placeholder={t('invoices.searchByNumber')}
           value={input}
@@ -227,12 +233,15 @@ export function InvoicesPage() {
             { value: 'cancelled', label: t('invoices.cancelled') },
           ]}
         />
-        <select value={typeFilter} onChange={(event) => handleTypeChange(event.target.value)}>
+        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" value={typeFilter} onChange={(event) => handleTypeChange(event.target.value)}>
           <option value="">{t('invoices.allTypes')}</option>
           <option value="invoice">{t('invoices.invoice')}</option>
           <option value="credit_note">{t('invoices.creditNote')}</option>
         </select>
-        <button type="submit" className="btn">
+        <button
+          type="submit"
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+        >
           {t('common.search')}
         </button>
       </Toolbar>

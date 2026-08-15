@@ -286,7 +286,7 @@ export function SalesOrdersPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => void openView(row)}>
             {t('common.view')}
           </Button>
@@ -333,22 +333,28 @@ export function SalesOrdersPage() {
         title={t('salesOrders.title')}
         subtitle={t('salesOrders.subtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={t('common.export')}
+              onClick={handleExport}
+            >
               {t('common.export')}
             </button>
             <Button onClick={openCreate}>{t('salesOrders.newOrder')}</Button>
           </div>
         }
       />
-      <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
+      <form className="mb-4 flex gap-2.5" onSubmit={(event) => void submitSearch(event)}>
         <input
+          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           type="search"
           placeholder={t('salesOrders.searchByNumber')}
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <select
+        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text"
           value={kindFilter}
           onChange={(event) => {
             setKindFilter(event.target.value);
@@ -374,7 +380,10 @@ export function SalesOrdersPage() {
             { value: 'cancelled', label: t('salesOrders.cancelled') },
           ]}
         />
-        <button type="submit" className="btn">
+        <button
+          type="submit"
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+        >
           {t('common.search')}
         </button>
       </form>
@@ -395,15 +404,15 @@ export function SalesOrdersPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={t('salesOrders.newOrder')} />
           <form onSubmit={(event) => void submitCreate(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-kind">{t('fields.kind')} *</label>
-                <select id="so-kind" {...register('kind')}>
+                <select id="so-kind" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('kind')}>
                   <option value="order">{t('salesOrders.order')}</option>
                   <option value="quote">{t('salesOrders.quote')}</option>
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-customer">{t('fields.customer')} *</label>
                 <Controller
                   control={control}
@@ -418,11 +427,11 @@ export function SalesOrdersPage() {
                     />
                   )}
                 />
-                {errors.customerId ? <div className="field-error">{errors.customerId.message}</div> : null}
+                {errors.customerId ? <div className="text-[12px] font-normal text-danger">{errors.customerId.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-warehouse">{t('fields.warehouse')} *</label>
-                <select id="so-warehouse" {...register('warehouseId')}>
+                <select id="so-warehouse" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('warehouseId')}>
                   <option value="">{t('salesOrders.selectWarehouse')}</option>
                   {warehouses.map((warehouse) => (
                     <option key={warehouse.id} value={warehouse.id}>
@@ -430,26 +439,26 @@ export function SalesOrdersPage() {
                     </option>
                   ))}
                 </select>
-                {errors.warehouseId ? <div className="field-error">{errors.warehouseId.message}</div> : null}
+                {errors.warehouseId ? <div className="text-[12px] font-normal text-danger">{errors.warehouseId.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-issue">{t('fields.issueDate')}</label>
-                <input id="so-issue" type="date" {...register('issueDate')} />
+                <input id="so-issue" type="date" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('issueDate')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-due">{t('fields.dueDate')}</label>
-                <input id="so-due" type="date" {...register('dueDate')} />
+                <input id="so-due" type="date" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('dueDate')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-discount">{t('fields.discount')}</label>
-                <input id="so-discount" type="number" min="0" step="0.01" {...register('discount')} />
-                {errors.discount ? <div className="field-error">{errors.discount.message}</div> : null}
+                <input id="so-discount" type="number" min="0" step="0.01" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('discount')} />
+                {errors.discount ? <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div> : null}
               </div>
             </div>
-            <div className="invoice-items">
+            <div className="mb-3 rounded-ui border border-border p-3">
               {items.map((_, index) => (
-                <div className="invoice-item" key={index}>
-                  <div className="field">
+                <div className="grid grid-cols-[3fr_1fr_1.5fr_1fr_auto] items-start gap-2.5" key={index}>
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`so-item-product-${index}`}>{t('fields.product')}</label>
                     <Controller
                       control={control}
@@ -465,20 +474,21 @@ export function SalesOrdersPage() {
                       )}
                     />
                   </div>
-                  <div className="field">
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`so-item-qty-${index}`}>{t('fields.qty')}</label>
                     <input
                       id={`so-item-qty-${index}`}
                       type="number"
                       min="0.0001"
                       step="any"
+                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       {...register(`items.${index}.quantity`)}
                     />
                     {errors.items?.[index]?.quantity ? (
-                      <div className="field-error">{errors.items[index]?.quantity?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.quantity?.message}</div>
                     ) : null}
                   </div>
-                  <div className="field">
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`so-item-price-${index}`}>{t('fields.unitPrice')}</label>
                     <input
                       id={`so-item-price-${index}`}
@@ -486,13 +496,14 @@ export function SalesOrdersPage() {
                       min="0"
                       step="0.01"
                       placeholder={t('salesOrders.salePricePlaceholder')}
+                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       {...register(`items.${index}.unitPrice`)}
                     />
                     {errors.items?.[index]?.unitPrice ? (
-                      <div className="field-error">{errors.items[index]?.unitPrice?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.unitPrice?.message}</div>
                     ) : null}
                   </div>
-                  <div className="field">
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`so-item-tax-${index}`}>{t('fields.taxRate')} %</label>
                     <input
                       id={`so-item-tax-${index}`}
@@ -501,26 +512,28 @@ export function SalesOrdersPage() {
                       max="100"
                       step="0.01"
                       placeholder={t('salesOrders.taxPlaceholder')}
+                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       {...register(`items.${index}.taxRate`)}
                     />
                     {errors.items?.[index]?.taxRate ? (
-                      <div className="field-error">{errors.items[index]?.taxRate?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.taxRate?.message}</div>
                     ) : null}
                   </div>
-                  <div className="field">
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`so-item-discount-${index}`}>{t('fields.discount')}</label>
                     <input
                       id={`so-item-discount-${index}`}
                       type="number"
                       min="0"
                       step="0.01"
+                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       {...register(`items.${index}.discount`)}
                     />
                     {errors.items?.[index]?.discount ? (
-                      <div className="field-error">{errors.items[index]?.discount?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.discount?.message}</div>
                     ) : null}
                   </div>
-                  <div className="invoice-item-remove">
+                  <div className="pt-6">
                     {items.length > 1 ? (
                       <Button variant="ghost" size="sm" type="button" onClick={() => removeItem(index)}>
                         {t('common.remove')}
@@ -533,11 +546,11 @@ export function SalesOrdersPage() {
             <Button variant="ghost" size="sm" type="button" onClick={addItem}>
               {t('common.addLine')}
             </Button>
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="so-notes">{t('fields.notes')}</label>
-              <textarea id="so-notes" rows={2} {...register('notes')} />
+              <textarea id="so-notes" rows={2} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('notes')} />
             </div>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('common.saving') : t('salesOrders.createOrder')}
@@ -553,75 +566,75 @@ export function SalesOrdersPage() {
           {viewLoading ? <LoadingBlock /> : null}
           {!viewLoading && viewing ? (
             <div>
-              <div className="detail-grid">
+              <div className="mb-2 grid grid-cols-2 gap-x-4 gap-y-3">
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.kind')}</div>
-                  <div className="detail-value">{viewing.kind}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.kind')}</div>
+                  <div className="mt-0.5 block">{viewing.kind}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('common.status')}</div>
-                  <div className="detail-value">
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('common.status')}</div>
+                  <div className="mt-0.5 block">
                     <Badge tone={statusTone(viewing.status)}>{viewing.status}</Badge>
                   </div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.customer')}</div>
-                  <div className="detail-value">{viewing.customer?.tradeName ?? '—'}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.customer')}</div>
+                  <div className="mt-0.5 block">{viewing.customer?.tradeName ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.warehouse')}</div>
-                  <div className="detail-value">{viewing.warehouse?.name ?? '—'}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.warehouse')}</div>
+                  <div className="mt-0.5 block">{viewing.warehouse?.name ?? '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.issueDate')}</div>
-                  <div className="detail-value">{formatDate(viewing.issueDate)}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.issueDate')}</div>
+                  <div className="mt-0.5 block">{formatDate(viewing.issueDate)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.dueDate')}</div>
-                  <div className="detail-value">{viewing.dueDate ? formatDate(viewing.dueDate) : '—'}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.dueDate')}</div>
+                  <div className="mt-0.5 block">{viewing.dueDate ? formatDate(viewing.dueDate) : '—'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.subtotal')}</div>
-                  <div className="detail-value num">{formatMoney(viewing.subtotal)}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.subtotal')}</div>
+                  <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.subtotal)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.discount')}</div>
-                  <div className="detail-value num">{formatMoney(viewing.discount)}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.discount')}</div>
+                  <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.discount)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.tax')}</div>
-                  <div className="detail-value num">{formatMoney(viewing.tax)}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.tax')}</div>
+                  <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.tax)}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">{t('fields.total')}</div>
-                  <div className="detail-value num">{formatMoney(viewing.total)}</div>
+                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.total')}</div>
+                  <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.total)}</div>
                 </div>
               </div>
-              <div className="data-table-wrap">
-                <table className="data-table">
+              <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
+                <table className="w-full border-collapse">
                   <thead>
                     <tr>
                       <th>{t('fields.product')}</th>
-                      <th className="num">{t('fields.qty')}</th>
-                      <th className="num">{t('fields.unitPrice')}</th>
-                      <th className="num">{t('fields.tax')}</th>
-                      <th className="num">{t('salesOrders.lineTotal')}</th>
+                      <th className="text-right tabular-nums">{t('fields.qty')}</th>
+                      <th className="text-right tabular-nums">{t('fields.unitPrice')}</th>
+                      <th className="text-right tabular-nums">{t('fields.tax')}</th>
+                      <th className="text-right tabular-nums">{t('salesOrders.lineTotal')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {(viewing.items ?? []).map((item) => (
                       <tr key={item.id}>
                         <td>{item.description ?? item.product?.name ?? item.productId}</td>
-                        <td className="num">{item.quantity}</td>
-                        <td className="num">{formatMoney(item.unitPrice)}</td>
-                        <td className="num">{formatMoney(item.taxAmount)}</td>
-                        <td className="num">{formatMoney(item.lineTotal)}</td>
+                        <td className="text-right tabular-nums">{item.quantity}</td>
+                        <td className="text-right tabular-nums">{formatMoney(item.unitPrice)}</td>
+                        <td className="text-right tabular-nums">{formatMoney(item.taxAmount)}</td>
+                        <td className="text-right tabular-nums">{formatMoney(item.lineTotal)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              {viewing.notes ? <div className="detail-notes">{viewing.notes}</div> : null}
+              {viewing.notes ? <div className="mt-2">{viewing.notes}</div> : null}
             </div>
           ) : null}
           <DialogFooter>

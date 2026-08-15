@@ -56,7 +56,7 @@ export function CrmPage() {
 
   return (
     <>
-      <div className="tabs">
+      <div className="mb-4 flex gap-1">
         {visibleTabs.map((item) => (
           <button
             key={item.key}

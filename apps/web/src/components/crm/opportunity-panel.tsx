@@ -181,7 +181,7 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           {row.stage !== 'won' && row.stage !== 'lost' ? (
             <>
               <Button
@@ -226,8 +226,8 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
         title={t('crm.opportunitiesTitle')}
         subtitle={t('crm.opportunitiesSubtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </button>
             <Button onClick={openCreate}>{t('crm.newOpportunity')}</Button>
@@ -251,17 +251,17 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingId ? t('crm.editOpportunity') : t('crm.newOpportunity')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-name">
-                  {t('fields.name')}<span className="field-required"> *</span>
+                  {t('fields.name')}<span className="text-danger"> *</span>
                 </label>
-                <input id="opp-name" {...register('name')} />
-                {errors.name ? <div className="field-error">{errors.name.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-name" {...register('name')} />
+                {errors.name ? <div className="text-[12px] font-normal text-danger">{errors.name.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-customer">{t('fields.customer')}</label>
-                <select id="opp-customer" {...register('customerId')}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-customer" {...register('customerId')}>
                   <option value="">{t('crm.none')}</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
@@ -270,9 +270,9 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-stage">{t('crm.stage')}</label>
-                <select id="opp-stage" {...register('stage')}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-stage" {...register('stage')}>
                   {stages.map((stage) => (
                     <option key={stage} value={stage}>
                       {stage}
@@ -280,28 +280,28 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-amount">{t('fields.amount')}</label>
-                <input id="opp-amount" type="number" min="0" step="0.01" {...register('amount')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-amount" type="number" min="0" step="0.01" {...register('amount')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-currency">{t('fields.currency')}</label>
-                <input id="opp-currency" maxLength={3} {...register('currency')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-currency" maxLength={3} {...register('currency')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-probability">{t('crm.probabilityPercent')}</label>
-                <input id="opp-probability" type="number" min="0" max="100" step="1" {...register('probability')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-probability" type="number" min="0" max="100" step="1" {...register('probability')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-close">{t('crm.expectedCloseDate')}</label>
-                <input id="opp-close" type="date" {...register('expectedCloseDate')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-close" type="date" {...register('expectedCloseDate')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-notes">{t('fields.notes')}</label>
-                <textarea id="opp-notes" rows={3} {...register('notes')} />
+                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="opp-notes" rows={3} {...register('notes')} />
               </div>
             </div>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createOpportunity')}

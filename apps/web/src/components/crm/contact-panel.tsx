@@ -165,7 +165,7 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
             {t('common.edit')}
           </Button>
@@ -192,8 +192,8 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
         title={t('crm.contactsTitle')}
         subtitle={t('crm.contactsSubtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </button>
             <Button onClick={openCreate}>{t('crm.newContact')}</Button>
@@ -217,17 +217,17 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingId ? t('crm.editContact') : t('crm.newContact')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-name">
-                  {t('fields.fullName')}<span className="field-required"> *</span>
+                  {t('fields.fullName')}<span className="text-danger"> *</span>
                 </label>
-                <input id="contact-name" {...register('fullName')} />
-                {errors.fullName ? <div className="field-error">{errors.fullName.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-name" {...register('fullName')} />
+                {errors.fullName ? <div className="text-[12px] font-normal text-danger">{errors.fullName.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-customer">{t('fields.customer')}</label>
-                <select id="contact-customer" {...register('customerId')}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-customer" {...register('customerId')}>
                   <option value="">{t('crm.none')}</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>
@@ -236,31 +236,31 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-title">{t('crm.title')}</label>
-                <input id="contact-title" {...register('title')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-title" {...register('title')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-email">{t('fields.email')}</label>
-                <input id="contact-email" type="email" {...register('email')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-email" type="email" {...register('email')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-phone">{t('fields.phone')}</label>
-                <input id="contact-phone" {...register('phone')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-phone" {...register('phone')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-mobile">{t('crm.mobile')}</label>
-                <input id="contact-mobile" {...register('mobile')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-mobile" {...register('mobile')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-address">{t('fields.address')}</label>
-                <textarea id="contact-address" rows={2} {...register('address')} />
+                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-address" rows={2} {...register('address')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-notes">{t('fields.notes')}</label>
-                <textarea id="contact-notes" rows={2} {...register('notes')} />
+                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="contact-notes" rows={2} {...register('notes')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
@@ -274,7 +274,7 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
                 </div>
               </div>
             </div>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createContact')}

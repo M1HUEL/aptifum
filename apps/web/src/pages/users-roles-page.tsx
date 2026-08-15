@@ -349,9 +349,9 @@ export function UsersRolesPage() {
       header: t('usersRoles.roles'),
       render: (row) =>
         row.roles.length === 0 ? (
-          <span className="muted">{t('common.none')}</span>
+          <span className="text-[12px] text-muted">{t('common.none')}</span>
         ) : (
-          <div className="badge-group">
+          <div className="flex flex-wrap gap-1">
             {row.roles.map((role) => (
               <Badge key={role.id} tone={role.isSystem ? 'info' : 'success'}>
                 {role.name}
@@ -378,7 +378,7 @@ export function UsersRolesPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => openEditUser(row)}>
             {t('common.edit')}
           </Button>
@@ -394,11 +394,11 @@ export function UsersRolesPage() {
       key: 'permissions',
       header: t('usersRoles.permissions'),
       render: (row) => {
-        if (row.permissions.length === 0) return <span className="muted">{t('common.none')}</span>;
+        if (row.permissions.length === 0) return <span className="text-[12px] text-muted">{t('common.none')}</span>;
         if (row.permissions.includes(ALL_PERMISSIONS)) {
           return <Badge tone="info">{t('usersRoles.allPermissions')}</Badge>;
         }
-        return <span className="muted">{row.permissions.join(', ')}</span>;
+        return <span className="text-[12px] text-muted">{row.permissions.join(', ')}</span>;
       },
     },
     {
@@ -414,7 +414,7 @@ export function UsersRolesPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => openEditRole(row)}>
             {t('common.edit')}
           </Button>
@@ -447,9 +447,9 @@ export function UsersRolesPage() {
   };
 
   const rolePermissionRows = PERMISSION_MODULES.map((module) => (
-    <div key={module} className="permission-group">
-      <div className="permission-module">{module}</div>
-      <div className="permission-checks">
+    <div key={module} className="flex items-center gap-3 border-b border-border py-1 last:border-b-0">
+      <div className="w-[120px] shrink-0 text-[12px] font-semibold uppercase tracking-wide text-muted">{module}</div>
+      <div className="flex flex-wrap gap-x-4 gap-y-2.5">
         {PERMISSION_ACTIONS.map((action) => {
           const value = `${module}:${action}`;
           return (
@@ -471,8 +471,8 @@ export function UsersRolesPage() {
         title={t('usersRoles.title')}
         subtitle={t('usersRoles.subtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </button>
             {tab === 'users' ? (
@@ -484,7 +484,7 @@ export function UsersRolesPage() {
         }
       />
 
-      <div className="tabs">
+      <div className="mb-4 flex gap-1">
         <button type="button" className={tab === 'users' ? 'tab tab-active' : 'tab'} onClick={() => setTab('users')}>
           {t('usersRoles.users')}
         </button>
@@ -530,23 +530,23 @@ export function UsersRolesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingUserId ? t('usersRoles.editUser') : t('usersRoles.newUser')} />
           <form onSubmit={(event) => void submitUser(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="usr-email">{t('fields.email')} *</label>
-                <input
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   id="usr-email"
                   type="email"
                   disabled={editingUserId !== null}
                   {...registerUser('email')}
                 />
-                {userErrors.email ? <div className="field-error">{userErrors.email.message}</div> : null}
+                {userErrors.email ? <div className="text-[12px] font-normal text-danger">{userErrors.email.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="usr-name">{t('fields.name')}</label>
-                <input id="usr-name" {...registerUser('name')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="usr-name" {...registerUser('name')} />
               </div>
               {!editingUserId ? (
-                <div className="field">
+                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label>{t('usersRoles.invitation')}</label>
                   <div className="mt-1 flex items-center gap-2">
                     <Checkbox
@@ -560,12 +560,12 @@ export function UsersRolesPage() {
                   </div>
                 </div>
               ) : null}
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="usr-password">
                   {editingUserId ? t('usersRoles.newPasswordOptional') : t('usersRoles.password')}
                   {!editingUserId && !userInvite ? ' *' : ''}
                 </label>
-                <input
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   id="usr-password"
                   type="password"
                   placeholder={editingUserId ? t('usersRoles.leaveBlank') : userInvite ? t('usersRoles.setByInvite') : ''}
@@ -573,10 +573,10 @@ export function UsersRolesPage() {
                   {...registerUser('password')}
                 />
                 {userErrors.password ? (
-                  <div className="field-error">{userErrors.password.message}</div>
+                  <div className="text-[12px] font-normal text-danger">{userErrors.password.message}</div>
                 ) : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
@@ -589,12 +589,12 @@ export function UsersRolesPage() {
                   </label>
                 </div>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('usersRoles.roles')}</label>
                 {roles.length === 0 ? (
-                  <div className="muted">{t('usersRoles.noRolesAvailable')}</div>
+                  <div className="text-[12px] text-muted">{t('usersRoles.noRolesAvailable')}</div>
                 ) : (
-                  <div className="permission-checks">
+                  <div className="flex flex-wrap gap-x-4 gap-y-2.5">
                     {roles.map((role) => (
                       <div key={role.id} className="flex items-center gap-1.5">
                         <Checkbox
@@ -611,7 +611,7 @@ export function UsersRolesPage() {
                 )}
               </div>
             </div>
-            {userFormError ? <div className="error-banner">{userFormError}</div> : null}
+            {userFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{userFormError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={userSaving}>
                 {userSaving ? t('common.saving') : editingUserId ? t('common.saveChanges') : t('usersRoles.createUser')}
@@ -633,18 +633,18 @@ export function UsersRolesPage() {
         <DialogContent>
           <DialogHeader title={t('usersRoles.invitationSent')} />
           {inviteEmailSent ? (
-            <div className="success-banner">
+            <div className="mb-4 rounded-ui border border-success/40 bg-success-bg px-[14px] py-2.5 text-success">
               {t('usersRoles.inviteEmailBody', { email: watchUser('email').trim() || t('usersRoles.theUser') })}
             </div>
           ) : (
             <>
-              <div className="success-banner">
+              <div className="mb-4 rounded-ui border border-success/40 bg-success-bg px-[14px] py-2.5 text-success">
                 {t('usersRoles.demoInviteBody', { email: watchUser('email') || t('usersRoles.theUser') })}
               </div>
-              <input readOnly value={inviteLink ?? ''} />
+              <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" readOnly value={inviteLink ?? ''} />
             </>
           )}
-          <div className="modal-footer">
+          <div className="flex shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
             <Button
               variant="ghost"
               onClick={() => {
@@ -657,7 +657,7 @@ export function UsersRolesPage() {
             {inviteLink ? (
               <button
                 type="button"
-                className="btn btn-primary"
+                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-primary bg-primary px-[14px] py-2 text-sm font-semibold text-white select-none hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={() => {
                   if (inviteLink) {
                     void navigator.clipboard?.writeText(inviteLink);
@@ -676,17 +676,17 @@ export function UsersRolesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingRoleId ? t('usersRoles.editRole') : t('usersRoles.newRole')} />
           <form onSubmit={(event) => void submitRole(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="role-name">{t('fields.name')} *</label>
-                <input id="role-name" {...registerRole('name')} />
-                {roleErrors.name ? <div className="field-error">{roleErrors.name.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="role-name" {...registerRole('name')} />
+                {roleErrors.name ? <div className="text-[12px] font-normal text-danger">{roleErrors.name.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="role-description">{t('fields.description')}</label>
-                <textarea id="role-description" rows={2} {...registerRole('description')} />
+                <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="role-description" rows={2} {...registerRole('description')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('usersRoles.permissions')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
@@ -707,7 +707,7 @@ export function UsersRolesPage() {
                 {rolePermissionRows}
               </div>
             </div>
-            {roleFormError ? <div className="error-banner">{roleFormError}</div> : null}
+            {roleFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{roleFormError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={roleSaving}>
                 {roleSaving ? t('common.saving') : editingRoleId ? t('common.saveChanges') : t('usersRoles.createRole')}

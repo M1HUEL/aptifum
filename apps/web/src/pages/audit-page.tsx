@@ -93,10 +93,10 @@ const columns = (t: TFunction): Column<AuditLogEntry>[] => [
       const before = shortJson(row.before);
       const after = shortJson(row.after);
       const detail = after ?? before;
-      if (!detail) return <span className="muted">—</span>;
+      if (!detail) return <span className="text-[12px] text-muted">—</span>;
       const title = `${before ? `${t('audit.before')} ${before}\n` : ''}${t('audit.after')} ${after ?? ''}`;
       return (
-        <span className="muted" title={title}>
+        <span className="text-[12px] text-muted" title={title}>
           <code>{detail}</code>
         </span>
       );
@@ -154,14 +154,14 @@ export function AuditPage() {
         title={t('audit.title')}
         subtitle={t('audit.subtitle')}
         action={
-          <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
             {t('common.export')}
           </button>
         }
       />
 
-      <div className="toolbar">
-        <select
+      <div className="mb-4 flex gap-2.5">
+        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           value={filters.module}
           onChange={(event) => setFilter('module', event.target.value)}
         >
@@ -172,7 +172,7 @@ export function AuditPage() {
             </option>
           ))}
         </select>
-        <select
+        <select className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           value={filters.action}
           onChange={(event) => setFilter('action', event.target.value)}
         >
@@ -183,12 +183,12 @@ export function AuditPage() {
             </option>
           ))}
         </select>
-        <input
+        <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           type="date"
           value={filters.from}
           onChange={(event) => setFilter('from', event.target.value)}
         />
-        <input
+        <input className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           type="date"
           value={filters.to}
           onChange={(event) => setFilter('to', event.target.value)}

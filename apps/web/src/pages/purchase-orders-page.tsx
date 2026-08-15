@@ -339,7 +339,7 @@ export function PurchaseOrdersPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           {row.status === 'draft' ? (
             <>
               <Button
@@ -379,16 +379,22 @@ export function PurchaseOrdersPage() {
         title={t('purchaseOrders.title')}
         subtitle={t('purchaseOrders.subtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={t('common.export')}
+              onClick={handleExport}
+            >
               {t('common.export')}
             </button>
             <Button onClick={openCreate}>{t('purchaseOrders.newOrder')}</Button>
           </div>
         }
       />
-      <form className="search-form" onSubmit={(event) => void submitSearch(event)}>
+      <form className="mb-4 flex gap-2.5" onSubmit={(event) => void submitSearch(event)}>
         <input
+          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           type="search"
           placeholder={t('purchaseOrders.searchByNumber')}
           value={input}
@@ -409,7 +415,10 @@ export function PurchaseOrdersPage() {
             { value: 'cancelled', label: t('purchaseOrders.cancelled') },
           ]}
         />
-        <button type="submit" className="btn">
+        <button
+          type="submit"
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+        >
           {t('common.search')}
         </button>
       </form>
@@ -430,8 +439,8 @@ export function PurchaseOrdersPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={t('purchaseOrders.newOrder')} />
           <form onSubmit={(event) => void submitCreate(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="po-supplier">{t('purchaseOrders.supplier')} *</label>
                 <Controller
                   control={control}
@@ -446,11 +455,11 @@ export function PurchaseOrdersPage() {
                     />
                   )}
                 />
-                {errors.supplierId ? <div className="field-error">{errors.supplierId.message}</div> : null}
+                {errors.supplierId ? <div className="text-[12px] font-normal text-danger">{errors.supplierId.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="po-warehouse">{t('fields.warehouse')} *</label>
-                <select id="po-warehouse" {...register('warehouseId')}>
+                <select id="po-warehouse" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('warehouseId')}>
                   <option value="">{t('purchaseOrders.selectWarehouse')}</option>
                   {warehouses.map((warehouse) => (
                     <option key={warehouse.id} value={warehouse.id}>
@@ -458,22 +467,22 @@ export function PurchaseOrdersPage() {
                     </option>
                   ))}
                 </select>
-                {errors.warehouseId ? <div className="field-error">{errors.warehouseId.message}</div> : null}
+                {errors.warehouseId ? <div className="text-[12px] font-normal text-danger">{errors.warehouseId.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="po-expected">{t('purchaseOrders.expectedAt')}</label>
-                <input id="po-expected" type="date" {...register('expectedAt')} />
+                <input id="po-expected" type="date" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('expectedAt')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="po-discount">{t('fields.discount')}</label>
-                <input id="po-discount" type="number" min="0" step="0.01" {...register('discount')} />
-                {errors.discount ? <div className="field-error">{errors.discount.message}</div> : null}
+                <input id="po-discount" type="number" min="0" step="0.01" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('discount')} />
+                {errors.discount ? <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div> : null}
               </div>
             </div>
-            <div className="invoice-items">
+            <div className="mb-3 rounded-ui border border-border p-3">
               {items.map((_, index) => (
-                <div className="invoice-item" key={index}>
-                  <div className="field">
+                <div className="grid grid-cols-[3fr_1fr_1.5fr_1fr_auto] items-start gap-2.5" key={index}>
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`po-item-product-${index}`}>{t('fields.product')}</label>
                     <Controller
                       control={control}
@@ -489,20 +498,21 @@ export function PurchaseOrdersPage() {
                       )}
                     />
                   </div>
-                  <div className="field">
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`po-item-qty-${index}`}>{t('fields.qty')}</label>
                     <input
                       id={`po-item-qty-${index}`}
                       type="number"
                       min="0.0001"
                       step="any"
+                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       {...register(`items.${index}.quantity`)}
                     />
                     {errors.items?.[index]?.quantity ? (
-                      <div className="field-error">{errors.items[index]?.quantity?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.quantity?.message}</div>
                     ) : null}
                   </div>
-                  <div className="field">
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`po-item-cost-${index}`}>{t('fields.unitCost')}</label>
                     <input
                       id={`po-item-cost-${index}`}
@@ -510,13 +520,14 @@ export function PurchaseOrdersPage() {
                       min="0"
                       step="0.01"
                       placeholder={t('purchaseOrders.purchasePricePlaceholder')}
+                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       {...register(`items.${index}.unitCost`)}
                     />
                     {errors.items?.[index]?.unitCost ? (
-                      <div className="field-error">{errors.items[index]?.unitCost?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.unitCost?.message}</div>
                     ) : null}
                   </div>
-                  <div className="field">
+                  <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`po-item-tax-${index}`}>{t('fields.taxRate')} %</label>
                     <input
                       id={`po-item-tax-${index}`}
@@ -525,13 +536,14 @@ export function PurchaseOrdersPage() {
                       max="100"
                       step="0.01"
                       placeholder={t('purchaseOrders.taxPlaceholder')}
+                      className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                       {...register(`items.${index}.taxRate`)}
                     />
                     {errors.items?.[index]?.taxRate ? (
-                      <div className="field-error">{errors.items[index]?.taxRate?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.taxRate?.message}</div>
                     ) : null}
                   </div>
-                  <div className="invoice-item-remove">
+                  <div className="pt-6">
                     {items.length > 1 ? (
                       <Button variant="ghost" size="sm" type="button" onClick={() => removeItem(index)}>
                         {t('common.remove')}
@@ -544,11 +556,11 @@ export function PurchaseOrdersPage() {
             <Button variant="ghost" size="sm" type="button" onClick={addItem}>
               {t('common.addLine')}
             </Button>
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="po-notes">{t('fields.notes')}</label>
-              <textarea id="po-notes" rows={2} {...register('notes')} />
+              <textarea id="po-notes" rows={2} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('notes')} />
             </div>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('common.saving') : t('purchaseOrders.createOrder')}
@@ -566,24 +578,24 @@ export function PurchaseOrdersPage() {
           <DialogHeader title={t('purchaseOrders.receiveTitle', { number: receiving?.number ?? '' })} />
           <form onSubmit={(event) => void submitReceive(event)}>
             {receiving ? (
-              <div className="invoice-items">
+              <div className="mb-3 rounded-ui border border-border p-3">
                 {receiving.items.map((item: PurchaseOrderItem, index) => {
                   const maxReceive = Math.max(0, item.quantity - item.receivedQuantity);
                   return (
-                    <div className="invoice-item" key={item.id}>
-                      <div className="field">
+                    <div className="grid grid-cols-[3fr_1fr_1.5fr_1fr_auto] items-start gap-2.5" key={item.id}>
+                      <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                         <label>{t('fields.product')}</label>
-                        <input value={item.description ?? item.productId} readOnly />
+                        <input value={item.description ?? item.productId} readOnly className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
                       </div>
-                      <div className="field">
+                      <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                         <label>{t('purchaseOrders.ordered')}</label>
-                        <input value={String(item.quantity)} readOnly />
+                        <input value={String(item.quantity)} readOnly className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
                       </div>
-                      <div className="field">
+                      <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                         <label>{t('purchaseOrders.received')}</label>
-                        <input value={String(item.receivedQuantity)} readOnly />
+                        <input value={String(item.receivedQuantity)} readOnly className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" />
                       </div>
-                      <div className="field">
+                      <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                         <label htmlFor={`receive-qty-${item.id}`}>{t('purchaseOrders.toReceive')}</label>
                         <input
                           id={`receive-qty-${item.id}`}
@@ -591,20 +603,21 @@ export function PurchaseOrdersPage() {
                           min="0"
                           max={maxReceive}
                           step="any"
+                          className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                           {...receiveRegister(`items.${index}.quantity`)}
                         />
                       </div>
-                      <div className="invoice-item-remove" />
+                      <div className="pt-6" />
                     </div>
                   );
                 })}
               </div>
             ) : null}
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="receive-notes">{t('fields.notes')}</label>
-              <textarea id="receive-notes" rows={2} {...receiveRegister('notes')} />
+              <textarea id="receive-notes" rows={2} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...receiveRegister('notes')} />
             </div>
-            {receiveError ? <div className="error-banner">{receiveError}</div> : null}
+            {receiveError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{receiveError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={receiveBusy || !receiving}>
                 {receiveBusy ? t('purchaseOrders.receiving') : t('purchaseOrders.recordReceipt')}

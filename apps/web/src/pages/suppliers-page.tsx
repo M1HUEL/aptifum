@@ -239,7 +239,7 @@ export function SuppliersPage() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
             {t('common.edit')}
           </Button>
@@ -264,8 +264,13 @@ export function SuppliersPage() {
         title={t('suppliers.title')}
         subtitle={t('suppliers.subtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={t('common.export')}
+              onClick={handleExport}
+            >
               {t('common.export')}
             </button>
             <Button onClick={openCreate}>{t('suppliers.newSupplier')}</Button>
@@ -275,12 +280,16 @@ export function SuppliersPage() {
       {error ? <ErrorBanner message={error} /> : null}
       <Toolbar as="form" onSubmit={(event) => void submitSearch(event)}>
         <input
+          className="max-w-[320px] flex-1 w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           type="search"
           placeholder={t('suppliers.searchPlaceholder')}
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <button type="submit" className="btn">
+        <button
+          type="submit"
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+        >
           {t('common.search')}
         </button>
       </Toolbar>
@@ -300,52 +309,52 @@ export function SuppliersPage() {
         <DialogContent>
           <DialogHeader title={editingId ? t('suppliers.editSupplier') : t('suppliers.newSupplier')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-code">{t('fields.code')} *</label>
-                <input id="supplier-code" {...register('code')} />
-                {errors.code ? <div className="field-error">{errors.code.message}</div> : null}
+                <input id="supplier-code" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('code')} />
+                {errors.code ?               <div className="text-[12px] font-normal text-danger">{errors.code.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-trade">{t('suppliers.tradeName')} *</label>
-                <input id="supplier-trade" {...register('tradeName')} />
-                {errors.tradeName ? <div className="field-error">{errors.tradeName.message}</div> : null}
+                <input id="supplier-trade" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('tradeName')} />
+                {errors.tradeName ?               <div className="text-[12px] font-normal text-danger">{errors.tradeName.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-legal">{t('fields.legalName')}</label>
-                <input id="supplier-legal" {...register('legalName')} />
+                <input id="supplier-legal" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('legalName')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-tax">{t('fields.taxId')}</label>
-                <input id="supplier-tax" {...register('taxId')} />
+                <input id="supplier-tax" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('taxId')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-email">{t('fields.email')}</label>
-                <input id="supplier-email" type="email" {...register('email')} />
-                {errors.email ? <div className="field-error">{errors.email.message}</div> : null}
+                <input id="supplier-email" type="email" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('email')} />
+                {errors.email ?               <div className="text-[12px] font-normal text-danger">{errors.email.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-phone">{t('fields.phone')}</label>
-                <input id="supplier-phone" {...register('phone')} />
+                <input id="supplier-phone" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('phone')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-currency">{t('fields.currency')}</label>
-                <input id="supplier-currency" maxLength={3} {...register('currency')} />
+                <input id="supplier-currency" maxLength={3} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('currency')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-terms">{t('suppliers.paymentTerms')}</label>
-                <input id="supplier-terms" placeholder={t('suppliers.paymentTermsPlaceholder')} {...register('paymentTerms')} />
+                <input id="supplier-terms" placeholder={t('suppliers.paymentTermsPlaceholder')} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('paymentTerms')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-credit">{t('fields.creditLimit')}</label>
-                <input id="supplier-credit" type="number" min="0" step="0.01" {...register('creditLimit')} />
-                {errors.creditLimit ? <div className="field-error">{errors.creditLimit.message}</div> : null}
+                <input id="supplier-credit" type="number" min="0" step="0.01" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('creditLimit')} />
+                {errors.creditLimit ?               <div className="text-[12px] font-normal text-danger">{errors.creditLimit.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-address">{t('fields.address')}</label>
-                <textarea id="supplier-address" rows={2} {...register('address')} />
+                <textarea id="supplier-address" rows={2} className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('address')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
                   <Checkbox
@@ -359,7 +368,7 @@ export function SuppliersPage() {
                 </div>
               </div>
             </div>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('suppliers.createSupplier')}

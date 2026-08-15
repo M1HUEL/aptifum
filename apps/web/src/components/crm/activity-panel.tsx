@@ -187,7 +187,7 @@ export function ActivityPanel() {
       key: 'actions',
       header: t('common.actions'),
       render: (row) => (
-        <div className="table-actions">
+        <div className="flex justify-end gap-1.5">
           {!row.completedAt ? (
             <Button variant="ghost" size="sm" onClick={() => setCompleteTarget(row)}>
               {t('crm.complete')}
@@ -219,8 +219,8 @@ export function ActivityPanel() {
         title={t('crm.activitiesTitle')}
         subtitle={t('crm.activitiesSubtitle')}
         action={
-          <div className="page-header-actions">
-            <button type="button" className="btn" aria-label={t('common.export')} onClick={handleExport}>
+          <div className="flex justify-end gap-2">
+            <button type="button" className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2 text-sm font-semibold text-text select-none hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </button>
             <Button onClick={openCreate}>{t('crm.newActivity')}</Button>
@@ -244,12 +244,12 @@ export function ActivityPanel() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingId ? t('crm.editActivity') : t('crm.newActivity')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="form-grid">
-              <div className="field">
+            <div className="grid grid-cols-2 gap-x-4">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-type">
-                  {t('crm.type')}<span className="field-required"> *</span>
+                  {t('crm.type')}<span className="text-danger"> *</span>
                 </label>
-                <select id="activity-type" {...register('activityType')}>
+                <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-type" {...register('activityType')}>
                   {activityTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
@@ -257,39 +257,39 @@ export function ActivityPanel() {
                   ))}
                 </select>
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-subject">
-                  {t('fields.subject')}<span className="field-required"> *</span>
+                  {t('fields.subject')}<span className="text-danger"> *</span>
                 </label>
-                <input id="activity-subject" {...register('subject')} />
-                {errors.subject ? <div className="field-error">{errors.subject.message}</div> : null}
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-subject" {...register('subject')} />
+                {errors.subject ? <div className="text-[12px] font-normal text-danger">{errors.subject.message}</div> : null}
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-due">{t('crm.dueAt')}</label>
-                <input id="activity-due" type="datetime-local" {...register('dueAt')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-due" type="datetime-local" {...register('dueAt')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-completed">{t('crm.completedAt')}</label>
-                <input id="activity-completed" type="datetime-local" {...register('completedAt')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-completed" type="datetime-local" {...register('completedAt')} />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-ref-type">{t('crm.referenceType')}</label>
-                <input
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
                   id="activity-ref-type"
                   placeholder={t('crm.referenceTypePlaceholder')}
                   {...register('referenceType')}
                 />
               </div>
-              <div className="field">
+              <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-ref-id">{t('crm.referenceId')}</label>
-                <input id="activity-ref-id" {...register('referenceId')} />
+                <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-ref-id" {...register('referenceId')} />
               </div>
             </div>
-            <div className="field">
+            <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="activity-description">{t('fields.description')}</label>
-              <textarea id="activity-description" rows={3} {...register('description')} />
+              <textarea className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="activity-description" rows={3} {...register('description')} />
             </div>
-            {formError ? <div className="error-banner">{formError}</div> : null}
+            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createActivity')}

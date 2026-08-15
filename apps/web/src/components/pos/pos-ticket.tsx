@@ -61,11 +61,11 @@ export function PosTicket({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="card pos-ticket">
-      <h3 className="card-title">{t('pos.ticket')}</h3>
-      <div className="field">
+    <div className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">
+      <h3 className="mb-3.5 text-[15px]">{t('pos.ticket')}</h3>
+      <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
         <label htmlFor="pos-customer">{t('fields.customer')}</label>
-        <select id="pos-customer" value={customerId} onChange={(event) => onCustomerChange(event.target.value)}>
+        <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="pos-customer" value={customerId} onChange={(event) => onCustomerChange(event.target.value)}>
           <option value="">{t('pos.walkInCustomer')}</option>
           {customers.map((customer) => (
             <option key={customer.id} value={customer.id}>
@@ -74,10 +74,10 @@ export function PosTicket({
           ))}
         </select>
       </div>
-      <div className="pos-currency-row">
-        <div className="field">
+      <div className="mb-3 grid grid-cols-2 gap-2.5 max-[480px]:grid-cols-1">
+        <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
           <label htmlFor="pos-currency">{t('pos.saleCurrency')}</label>
-          <select id="pos-currency" value={saleCurrency} onChange={(event) => onCurrencyChange(event.target.value)}>
+          <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="pos-currency" value={saleCurrency} onChange={(event) => onCurrencyChange(event.target.value)}>
             {SALE_CURRENCIES.map((currency) => (
               <option key={currency} value={currency}>
                 {currency}
@@ -86,11 +86,11 @@ export function PosTicket({
           </select>
         </div>
         {saleCurrency !== FUNCTIONAL_CURRENCY ? (
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="pos-rate">
               {t('pos.exchangeRate', { base: FUNCTIONAL_CURRENCY, quote: saleCurrency })}
             </label>
-            <input
+            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               id="pos-rate"
               type="number"
               min="0.000001"
@@ -101,18 +101,18 @@ export function PosTicket({
           </div>
         ) : null}
       </div>
-      <div className="pos-lines">
+      <div className="mb-3 max-h-[320px] overflow-auto rounded-ui border border-border p-2">
         {ticket.length === 0 ? (
           <EmptyState message={t('pos.tapProductToAdd')} />
         ) : (
           ticket.map((line, index) => (
-            <div className="pos-line" key={`${line.productId}:${line.variantId ?? ''}`}>
-              <div className="pos-line-info">
-                <div className="pos-line-name">{line.name}</div>
-                <div className="pos-line-meta">{line.sku}</div>
+            <div className="grid grid-cols-[1fr_60px_80px_52px_86px_28px] items-center gap-1.5 border-b border-border px-1 py-1.5 last:border-b-0" key={`${line.productId}:${line.variantId ?? ''}`}>
+              <div className="min-w-0">
+                <div className="truncate font-semibold">{line.name}</div>
+                <div className="text-[12px] text-muted">{line.sku}</div>
               </div>
               <input
-                className="pos-qty"
+                className="w-full min-w-0 text-right"
                 type="number"
                 min="0.0001"
                 step="any"
@@ -121,7 +121,7 @@ export function PosTicket({
                 onChange={(event) => onLineFieldChange(index, 'quantity', event.target.value)}
               />
               <input
-                className="pos-price"
+                className="w-full min-w-0 text-right"
                 type="number"
                 min="0"
                 step="0.01"
@@ -130,7 +130,7 @@ export function PosTicket({
                 onChange={(event) => onLineFieldChange(index, 'unitPrice', event.target.value)}
               />
               <input
-                className="pos-tax"
+                className="w-full min-w-0 text-right"
                 type="number"
                 min="0"
                 max="100"
@@ -140,12 +140,12 @@ export function PosTicket({
                 value={line.taxRate}
                 onChange={(event) => onLineFieldChange(index, 'taxRate', event.target.value)}
               />
-              <span className="pos-line-total num">
+              <span className="text-right font-semibold tabular-nums">
                 {formatMoney(Number(line.quantity) * Number(line.unitPrice || 0), saleCurrency)}
               </span>
               <button
                 type="button"
-                className="btn btn-sm btn-ghost pos-line-remove"
+                className="cursor-pointer rounded-ui border border-white/20 bg-transparent px-1.5 py-0.5 text-[12px] font-semibold text-sidebar-text hover:bg-white/10"
                 aria-label={t('pos.removeLine', { name: line.name })}
                 onClick={() => onRemoveLine(index)}
               >
@@ -155,9 +155,9 @@ export function PosTicket({
           ))
         )}
       </div>
-      <div className="field">
+      <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
         <label htmlFor="pos-discount">{t('fields.discount')}</label>
-        <input
+        <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
           id="pos-discount"
           type="number"
           min="0"
@@ -166,29 +166,29 @@ export function PosTicket({
           onChange={(event) => onDiscountChange(event.target.value)}
         />
       </div>
-      <div className="pos-totals">
-        <div className="pos-total-row">
+      <div className="mb-3.5 flex flex-col gap-1.5">
+        <div className="flex justify-between text-muted">
           <span>{t('fields.subtotal')}</span>
-          <span className="num">{formatMoney(totals.subtotal, saleCurrency)}</span>
+          <span className="text-right tabular-nums">{formatMoney(totals.subtotal, saleCurrency)}</span>
         </div>
-        <div className="pos-total-row">
+        <div className="flex justify-between text-muted">
           <span>{t('fields.discount')}</span>
-          <span className="num">−{formatMoney(totals.discount, saleCurrency)}</span>
+          <span className="text-right tabular-nums">−{formatMoney(totals.discount, saleCurrency)}</span>
         </div>
-        <div className="pos-total-row">
+        <div className="flex justify-between text-muted">
           <span>{t('fields.tax')}</span>
-          <span className="num">{formatMoney(totals.tax, saleCurrency)}</span>
+          <span className="text-right tabular-nums">{formatMoney(totals.tax, saleCurrency)}</span>
         </div>
-        <div className="pos-total-row pos-total-grand">
+        <div className="mt-1 flex justify-between border-t border-border pt-2 pb-2 text-[18px] font-bold text-text">
           <span>{t('tables.total')}</span>
-          <span className="num">{formatMoney(totals.total, saleCurrency)}</span>
+          <span className="text-right tabular-nums">{formatMoney(totals.total, saleCurrency)}</span>
         </div>
       </div>
-      {!warehouseId ? <div className="error-banner">{t('pos.selectWarehouseToStart')}</div> : null}
-      {checkoutError ? <div className="error-banner">{checkoutError}</div> : null}
+      {!warehouseId ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{t('pos.selectWarehouseToStart')}</div> : null}
+      {checkoutError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{checkoutError}</div> : null}
       <button
         type="button"
-        className="btn btn-primary btn-block pos-charge"
+        className="mt-1 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-ui border border-primary bg-primary px-3 py-3 text-[15px] font-semibold text-white select-none hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
         disabled={charging || ticket.length === 0 || !warehouseId}
         onClick={onSubmitCharge}
       >

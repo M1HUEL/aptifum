@@ -47,11 +47,11 @@ export function PosPaymentModal({
       <DialogContent className="max-w-sm">
         <DialogHeader title={t('invoices.paymentFor', { number: invoice?.number })} />
         <form onSubmit={onSubmit}>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-method">
-              {t('invoices.method')}<span className="field-required"> *</span>
+              {t('invoices.method')}<span className="text-danger"> *</span>
             </label>
-            <select
+            <select className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               id="payment-method"
               value={form.method}
               onChange={(event) => onFormChange('method', event.target.value)}
@@ -63,11 +63,11 @@ export function PosPaymentModal({
               ))}
             </select>
           </div>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-amount">
-              {t('fields.amount')}<span className="field-required"> *</span>
+              {t('fields.amount')}<span className="text-danger"> *</span>
             </label>
-            <input
+            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               id="payment-amount"
               type="number"
               min="0.01"
@@ -76,30 +76,30 @@ export function PosPaymentModal({
               onChange={(event) => onFormChange('amount', event.target.value)}
             />
             {invoice ? (
-              <div className="field-hint">
+              <div className="text-[12px] font-normal text-muted">
                 {t('pos.totalDue', { amount: formatMoney(invoice.total, invoice.currency) })}
                 {invoice.currency !== FUNCTIONAL_CURRENCY ? t('pos.rateSuffix', { rate: invoice.exchangeRate }) : ''}
               </div>
             ) : null}
           </div>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-date">{t('invoices.receivedAt')}</label>
-            <input
+            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               id="payment-date"
               type="date"
               value={form.receivedAt}
               onChange={(event) => onFormChange('receivedAt', event.target.value)}
             />
           </div>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="payment-reference">{t('invoices.reference')}</label>
-            <input
+            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               id="payment-reference"
               value={form.reference}
               onChange={(event) => onFormChange('reference', event.target.value)}
             />
           </div>
-          {error ? <div className="error-banner">{error}</div> : null}
+          {error ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{error}</div> : null}
           <DialogFooter>
             <Button variant="default" type="submit" disabled={busy}>
               {busy ? t('invoices.recording') : t('invoices.recordPayment')}
