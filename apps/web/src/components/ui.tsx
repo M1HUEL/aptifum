@@ -45,15 +45,6 @@ export function formatDate(value: string | null | undefined, locale?: string): s
   return date.toLocaleDateString(resolvedLocale, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-export function Card({ title, children }: { title?: string; children: ReactNode }) {
-  return (
-    <div className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">
-      {title ? <h3 className="mb-3.5 text-[15px]">{title}</h3> : null}
-      {children}
-    </div>
-  );
-}
-
 export function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-ui border border-border bg-surface p-4 shadow-(--shadow)">

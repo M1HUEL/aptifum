@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import i18n from '../i18n';
 import {
   Badge,
-  Card,
   DataTable,
   EmptyState,
   ErrorBanner,
@@ -16,6 +15,7 @@ import {
   TableSkeleton,
   type Column,
 } from './ui';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 beforeAll(async () => {
   await i18n.changeLanguage('en');
@@ -49,8 +49,15 @@ describe('PageHeader', () => {
 });
 
 describe('Card', () => {
-  it('renders an optional title', () => {
-    render(<Card title="Revenue">content</Card>);
+  it('renders an optional title and content', () => {
+    render(
+      <Card>
+        <CardHeader>
+          <CardTitle>Revenue</CardTitle>
+        </CardHeader>
+        <CardContent>content</CardContent>
+      </Card>,
+    );
     expect(screen.getByText('Revenue')).toBeInTheDocument();
     expect(screen.getByText('content')).toBeInTheDocument();
   });

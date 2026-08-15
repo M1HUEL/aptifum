@@ -18,7 +18,6 @@ import type { AlertsReport, DashboardReport, Paginated, ProductSalesRow, SalesSu
 import { useApiQuery } from '../api/hooks';
 import {
   Badge,
-  Card,
   ErrorBanner,
   formatDate,
   formatMoney,
@@ -28,6 +27,7 @@ import {
   Input,
   Select,
 } from '../components/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 
 const groupOptions = [
   { value: 'day', labelKey: 'dashboard.groups.day' },
@@ -249,7 +249,11 @@ export function DashboardPage() {
       ) : null}
 
       {alerts ? (
-        <Card title={t('dashboard.alerts')}>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.alerts')}</CardTitle>
+          </CardHeader>
+          <CardContent>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-[18px]">
             <AlertSection
               title={t('dashboard.lowStock')}
@@ -302,11 +306,16 @@ export function DashboardPage() {
               ))}
             </AlertSection>
           </div>
+          </CardContent>
         </Card>
       ) : null}
 
       <div className="mb-4 grid grid-cols-2 gap-4 max-[900px]:grid-cols-1 max-[480px]:grid-cols-2">
-        <Card title={t('dashboard.salesTrend')}>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.salesTrend')}</CardTitle>
+          </CardHeader>
+          <CardContent>
           <div className="mb-2.5 flex justify-end">
             <Select value={groupBy} onChange={(event) => setGroupBy(event.target.value)}>
               {groupOptions.map((option) => (
@@ -345,9 +354,14 @@ export function DashboardPage() {
               </ResponsiveContainer>
             </div>
           ) : null}
+          </CardContent>
         </Card>
 
-        <Card title={t('dashboard.topProducts')}>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.topProducts')}</CardTitle>
+          </CardHeader>
+          <CardContent>
           {topProducts.length === 0 ? (
             <p className="text-muted">{t('dashboard.noSalesData')}</p>
           ) : (
@@ -373,16 +387,22 @@ export function DashboardPage() {
               </ResponsiveContainer>
             </div>
           )}
+          </CardContent>
         </Card>
       </div>
 
       {report ? (
-        <Card title={t('dashboard.operationalHealth')}>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.operationalHealth')}</CardTitle>
+          </CardHeader>
+          <CardContent>
           <div className="flex flex-col gap-2.5">
             <StatusRow label={t('dashboard.stat.openPurchaseOrders')} count={report.openPurchaseOrders} />
             <StatusRow label={t('dashboard.productionOrdersInProgress')} count={report.productionInProgress} />
             <StatusRow label={t('dashboard.stat.lowStockProducts')} count={report.lowStockProducts} warnThreshold={1} />
           </div>
+          </CardContent>
         </Card>
       ) : null}
     </>
