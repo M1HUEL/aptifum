@@ -33,6 +33,7 @@ import {
   Pagination,
   TableSkeleton,
 } from '../components/ui';
+import { Factory, ListTree } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
@@ -528,7 +529,7 @@ export function ProductionPage() {
           {boms ? (
             <>
               {boms.data.length === 0 ? (
-                <EmptyState message={t('production.noBomsYet')} />
+                <EmptyState message={t('production.noBomsYet')} icon={<ListTree className="size-6" />} />
               ) : (
                 <DataTable columns={bomColumns} rows={boms.data} rowKey={(row) => row.id} />
               )}
@@ -543,7 +544,7 @@ export function ProductionPage() {
           {orders ? (
             <>
               {orders.data.length === 0 ? (
-                <EmptyState message={t('production.noProductionOrdersYet')} />
+                <EmptyState message={t('production.noProductionOrdersYet')} icon={<Factory className="size-6" />} />
               ) : (
                 <DataTable columns={orderColumns} rows={orders.data} rowKey={(row) => row.id} />
               )}
@@ -557,7 +558,7 @@ export function ProductionPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingBomId ? t('production.editBom') : t('production.newBomTitle')} />
           <form onSubmit={(event) => void submitBom(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="bom-name">{t('fields.name')} *</label>
                 <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="bom-name" {...registerBom('name')} />
@@ -611,7 +612,7 @@ export function ProductionPage() {
             </div>
             <div className="mb-2 mt-4 font-semibold">{t('production.componentLines')}</div>
             {bomLines.map((line, index) => (
-              <div className="grid grid-cols-2 gap-x-4 [grid-template-columns:3fr_1fr_1fr]" key={index}>
+              <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 [grid-template-columns:3fr_1fr_1fr]" key={index}>
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`bomline-${index}-product`}>{t('production.component')}</label>
                   <SearchableSelect
@@ -669,7 +670,7 @@ export function ProductionPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingOrderId ? t('production.editProductionOrder') : t('production.newProductionOrderTitle')} />
           <form onSubmit={(event) => void submitOrder(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-product">{t('fields.product')} *</label>
                 <Controller
@@ -764,7 +765,7 @@ export function ProductionPage() {
           <DialogHeader title={t('production.order', { number: viewing?.number ?? '' })} />
           {viewing ? (
             <>
-              <div className="mb-2 grid grid-cols-2 gap-x-4 gap-y-3">
+              <div className="mb-2 grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 gap-y-3">
                 <div>
                   <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.product')}</span>
                   <span className="mt-0.5 block">

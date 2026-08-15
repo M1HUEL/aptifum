@@ -34,6 +34,7 @@ import {
   StatusSelect,
   TableSkeleton,
 } from '../components/ui';
+import { CalendarCheck, CalendarOff } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
@@ -620,7 +621,7 @@ export function AttendanceLeavesPage() {
           {attData ? (
             <>
               {attData.data.length === 0 ? (
-                <EmptyState message={t('hr.noAttendanceRecords')} />
+                <EmptyState message={t('hr.noAttendanceRecords')} icon={<CalendarCheck className="size-6" />} />
               ) : (
                 <DataTable columns={attendanceColumns} rows={attData.data} rowKey={(row) => row.id} />
               )}
@@ -671,7 +672,7 @@ export function AttendanceLeavesPage() {
           {leaveData ? (
             <>
               {leaveData.data.length === 0 ? (
-                <EmptyState message={t('hr.noLeaves')} />
+                <EmptyState message={t('hr.noLeaves')} icon={<CalendarOff className="size-6" />} />
               ) : (
                 <DataTable columns={leaveColumns} rows={leaveData.data} rowKey={(row) => row.id} />
               )}
@@ -733,7 +734,7 @@ export function AttendanceLeavesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingAttId ? t('hr.editAttendance') : t('hr.createAttendance')} />
           <form onSubmit={(event) => void submitAttendance(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="att-employee">
                   {t('fields.employee')}<span className="text-danger"> *</span>
@@ -801,7 +802,7 @@ export function AttendanceLeavesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingLeaveId ? t('hr.editLeave') : t('hr.createLeave')} />
           <form onSubmit={(event) => void submitLeave(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="leave-employee">
                   {t('fields.employee')}<span className="text-danger"> *</span>

@@ -16,6 +16,7 @@ import {
   TableSkeleton,
   Toolbar,
 } from '../components/ui';
+import { Users } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -293,7 +294,7 @@ export function CustomersPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('customers.noCustomers')} />
+            <EmptyState message={t('customers.noCustomers')} icon={<Users className="size-6" />} />
           ) : (
             <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
               <table className="w-full border-collapse [&_tr:last-child>td]:border-b-0">
@@ -334,7 +335,7 @@ export function CustomersPage() {
         <DialogContent>
           <DialogHeader title={editingId ? t('customers.editCustomer') : t('customers.newCustomer')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-code">{t('fields.code')} *</label>
                 <input id="customer-code" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('code')} />

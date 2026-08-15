@@ -15,6 +15,7 @@ import {
   Pagination,
   TableSkeleton,
 } from '../components/ui';
+import { ListOrdered } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
@@ -245,7 +246,7 @@ export function ChartAccountsPage() {
       />
       {error ? <ErrorBanner message={error} /> : null}
       {loading && accounts.length === 0 ? <TableSkeleton columns={columns.length} /> : null}
-      {!loading && accounts.length === 0 && !error ? <EmptyState message={t('accounts.noAccounts')} /> : null}
+      {!loading && accounts.length === 0 && !error ? <EmptyState message={t('accounts.noAccounts')} icon={<ListOrdered className="size-6" />} /> : null}
       {accounts.length > 0 ? (
         <>
           <DataTable columns={columns} rows={accounts} rowKey={(row) => row.id} />
@@ -257,7 +258,7 @@ export function ChartAccountsPage() {
         <DialogContent>
           <DialogHeader title={editingId ? t('accounts.editAccount') : t('accounts.newAccountTitle')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="acc-code">{t('fields.code')} *</label>
                 <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="acc-code" disabled={editingId !== null} {...register('code')} />

@@ -34,6 +34,7 @@ import {
   StatusSelect,
   TableSkeleton,
 } from '../components/ui';
+import { ShoppingBag } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
@@ -427,7 +428,7 @@ export function PurchaseOrdersPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('purchaseOrders.noOrders')} />
+            <EmptyState message={t('purchaseOrders.noOrders')} icon={<ShoppingBag className="size-6" />} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -439,7 +440,7 @@ export function PurchaseOrdersPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={t('purchaseOrders.newOrder')} />
           <form onSubmit={(event) => void submitCreate(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="po-supplier">{t('purchaseOrders.supplier')} *</label>
                 <Controller

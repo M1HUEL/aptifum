@@ -2,6 +2,7 @@ import { type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Paginated, PosProduct, Warehouse } from '../../api/types';
 import { Badge, EmptyState, ErrorBanner, formatMoney, LoadingBlock, Pagination } from '../ui';
+import { Package } from 'lucide-react';
 
 export function PosCatalog({
   warehouses,
@@ -60,7 +61,7 @@ export function PosCatalog({
       {error ? <ErrorBanner message={error} /> : null}
       {loading ? <LoadingBlock /> : null}
       {!loading && catalog && catalog.data.length === 0 ? (
-        <EmptyState message={t('pos.noProducts')} />
+        <EmptyState message={t('pos.noProducts')} icon={<Package className="size-6" />} />
       ) : null}
       {!loading && catalog && catalog.data.length > 0 ? (
         <>

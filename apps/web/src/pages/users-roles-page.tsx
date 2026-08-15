@@ -22,6 +22,7 @@ import {
   Pagination,
   TableSkeleton,
 } from '../components/ui';
+import { ShieldCheck, Users } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
@@ -500,7 +501,7 @@ export function UsersRolesPage() {
           {userData ? (
             <>
               {userData.data.length === 0 ? (
-                <EmptyState message={t('usersRoles.noUsers')} />
+                <EmptyState message={t('usersRoles.noUsers')} icon={<Users className="size-6" />} />
               ) : (
                 <DataTable columns={userColumns} rows={userData.data} rowKey={(row) => row.id} />
               )}
@@ -519,7 +520,7 @@ export function UsersRolesPage() {
           {rolesError ? <ErrorBanner message={rolesError} /> : null}
           {rolesLoading && roles.length === 0 ? <TableSkeleton columns={roleColumns.length} /> : null}
           {!rolesLoading && roles.length === 0 && !rolesError ? (
-            <EmptyState message={t('usersRoles.noRoles')} />
+            <EmptyState message={t('usersRoles.noRoles')} icon={<ShieldCheck className="size-6" />} />
           ) : (
             <DataTable columns={roleColumns} rows={roles} rowKey={(row) => row.id} />
           )}
@@ -530,7 +531,7 @@ export function UsersRolesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingUserId ? t('usersRoles.editUser') : t('usersRoles.newUser')} />
           <form onSubmit={(event) => void submitUser(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="usr-email">{t('fields.email')} *</label>
                 <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
@@ -676,7 +677,7 @@ export function UsersRolesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingRoleId ? t('usersRoles.editRole') : t('usersRoles.newRole')} />
           <form onSubmit={(event) => void submitRole(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="role-name">{t('fields.name')} *</label>
                 <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="role-name" {...registerRole('name')} />

@@ -17,6 +17,7 @@ import {
   TableSkeleton,
   Toolbar,
 } from '../components/ui';
+import { FileText } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
@@ -250,7 +251,7 @@ export function InvoicesPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('invoices.noInvoices')} />
+            <EmptyState message={t('invoices.noInvoices')} icon={<FileText className="size-6" />} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}

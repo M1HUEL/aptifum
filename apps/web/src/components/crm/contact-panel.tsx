@@ -16,6 +16,7 @@ import {
   Pagination,
   TableSkeleton,
 } from '../ui';
+import { Contact } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
@@ -205,7 +206,7 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('crm.noContacts')} />
+            <EmptyState message={t('crm.noContacts')} icon={<Contact className="size-6" />} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -217,7 +218,7 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingId ? t('crm.editContact') : t('crm.newContact')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-name">
                   {t('fields.fullName')}<span className="text-danger"> *</span>

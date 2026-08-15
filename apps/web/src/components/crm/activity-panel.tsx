@@ -16,6 +16,7 @@ import {
   Pagination,
   TableSkeleton,
 } from '../ui';
+import { Activity } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { useToast } from '../toast';
@@ -232,7 +233,7 @@ export function ActivityPanel() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('crm.noActivities')} />
+            <EmptyState message={t('crm.noActivities')} icon={<Activity className="size-6" />} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -244,7 +245,7 @@ export function ActivityPanel() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={editingId ? t('crm.editActivity') : t('crm.newActivity')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-type">
                   {t('crm.type')}<span className="text-danger"> *</span>

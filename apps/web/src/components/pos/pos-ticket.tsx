@@ -1,6 +1,7 @@
 import type { Customer } from '../../api/types';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, formatMoney } from '../ui';
+import { ShoppingCart } from 'lucide-react';
 
 export interface PosLine {
   productId: string;
@@ -103,7 +104,7 @@ export function PosTicket({
       </div>
       <div className="mb-3 max-h-[320px] overflow-auto rounded-ui border border-border p-2">
         {ticket.length === 0 ? (
-          <EmptyState message={t('pos.tapProductToAdd')} />
+          <EmptyState message={t('pos.tapProductToAdd')} icon={<ShoppingCart className="size-6" />} />
         ) : (
           ticket.map((line, index) => (
             <div className="grid grid-cols-[1fr_60px_80px_52px_86px_28px] items-center gap-1.5 border-b border-border px-1 py-1.5 last:border-b-0" key={`${line.productId}:${line.variantId ?? ''}`}>

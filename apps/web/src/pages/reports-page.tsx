@@ -12,6 +12,7 @@ import {
   LoadingBlock,
   PageHeader,
 } from '../components/ui';
+import { BarChart3 } from 'lucide-react';
 
 type Shape = 'list' | 'single' | 'financial';
 
@@ -234,7 +235,7 @@ export function ReportsPage() {
       {loading ? <LoadingBlock /> : null}
       {!loading && rows ? (
         rows.length === 0 ? (
-          <EmptyState message={t('reports.noData')} />
+          <EmptyState message={t('reports.noData')} icon={<BarChart3 className="size-6" />} />
         ) : (
           <DataTable
             columns={buildColumns(rows)}

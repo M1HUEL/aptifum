@@ -31,6 +31,7 @@ import {
   StatusSelect,
   TableSkeleton,
 } from '../components/ui';
+import { Boxes, History } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
@@ -229,7 +230,7 @@ function StockTab() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('stock.noStockRecords')} />
+            <EmptyState message={t('stock.noStockRecords')} icon={<Boxes className="size-6" />} />
           ) : (
             <DataTable columns={stockColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -337,7 +338,7 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('stock.noMovementsMatch')} />
+            <EmptyState message={t('stock.noMovementsMatch')} icon={<History className="size-6" />} />
           ) : (
             <DataTable columns={movementColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -440,7 +441,7 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('stock.noLotsMatch')} />
+            <EmptyState message={t('stock.noLotsMatch')} icon={<Boxes className="size-6" />} />
           ) : (
             <DataTable columns={lotColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -654,7 +655,7 @@ export function StockPage() {
         <DialogContent>
           <DialogHeader title={t('stock.newStockMovement')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-product">{t('fields.product')} *</label>
                 <select id="movement-product" className="rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('productId')}>

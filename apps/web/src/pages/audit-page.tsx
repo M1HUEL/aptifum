@@ -12,6 +12,7 @@ import {
   Pagination,
   TableSkeleton,
 } from '../components/ui';
+import { ScrollText } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
@@ -205,7 +206,7 @@ export function AuditPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('audit.noAuditEntries')} />
+            <EmptyState message={t('audit.noAuditEntries')} icon={<ScrollText className="size-6" />} />
           ) : (
             <DataTable columns={columns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}

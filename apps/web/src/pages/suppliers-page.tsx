@@ -19,6 +19,7 @@ import {
   TableSkeleton,
   Toolbar,
 } from '../components/ui';
+import { Truck } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
@@ -297,7 +298,7 @@ export function SuppliersPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('suppliers.noSuppliersFound')} />
+            <EmptyState message={t('suppliers.noSuppliersFound')} icon={<Truck className="size-6" />} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -309,7 +310,7 @@ export function SuppliersPage() {
         <DialogContent>
           <DialogHeader title={editingId ? t('suppliers.editSupplier') : t('suppliers.newSupplier')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-code">{t('fields.code')} *</label>
                 <input id="supplier-code" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('code')} />

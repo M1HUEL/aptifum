@@ -21,6 +21,7 @@ import {
   PageHeader,
   Pagination,
 } from '../components/ui';
+import { CalendarRange, FileSpreadsheet } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
@@ -162,7 +163,7 @@ function JournalEntriesTab({ onOpenEntry }: { onOpenEntry: (entry: JournalEntry)
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('accounting.noJournalEntries')} />
+            <EmptyState message={t('accounting.noJournalEntries')} icon={<FileSpreadsheet className="size-6" />} />
           ) : (
             <DataTable
               columns={journalColumns(t, onOpenEntry)}
@@ -301,7 +302,7 @@ export function AccountingPage() {
           {periods ? (
             <>
               {periods.data.length === 0 ? (
-                <EmptyState message={t('accounting.noAccountingPeriods')} />
+                <EmptyState message={t('accounting.noAccountingPeriods')} icon={<CalendarRange className="size-6" />} />
               ) : (
                 <DataTable
                   columns={periodColumns(t, setClosingPeriod)}
@@ -324,7 +325,7 @@ export function AccountingPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={t('accounting.newJournalEntry')} />
           <form onSubmit={(event) => void submit(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="je-date">{t('fields.entryDate')} *</label>
                 <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="je-date" type="date" {...register('entryDate')} />

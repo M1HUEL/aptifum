@@ -25,6 +25,7 @@ import {
   Pagination,
   TableSkeleton,
 } from '../components/ui';
+import { MapPin, Tags, Warehouse as WarehouseIcon } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
@@ -443,7 +444,7 @@ export function WarehousesCategoriesPage() {
           {warehouseData ? (
             <>
               {warehouseData.data.length === 0 ? (
-                <EmptyState message={t('warehouses.noWarehouses')} />
+                <EmptyState message={t('warehouses.noWarehouses')} icon={<WarehouseIcon className="size-6" />} />
               ) : (
                 <DataTable columns={warehouseColumns} rows={warehouseData.data} rowKey={(row) => row.id} />
               )}
@@ -458,7 +459,7 @@ export function WarehousesCategoriesPage() {
           {categoryData ? (
             <>
               {categoryData.data.length === 0 ? (
-                <EmptyState message={t('warehouses.noCategories')} />
+                <EmptyState message={t('warehouses.noCategories')} icon={<Tags className="size-6" />} />
               ) : (
                 <DataTable columns={categoryColumns} rows={categoryData.data} rowKey={(row) => row.id} />
               )}
@@ -472,7 +473,7 @@ export function WarehousesCategoriesPage() {
         <DialogContent>
           <DialogHeader title={editingWhId ? t('warehouses.editWarehouse') : t('warehouses.newWarehouseTitle')} />
           <form onSubmit={(event) => void submitWarehouse(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="wh-code">{t('fields.code')} *</label>
                 <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="wh-code" {...registerWh('code')} />
@@ -524,7 +525,7 @@ export function WarehousesCategoriesPage() {
                 </Button>
               </div>
               {locations.length === 0 ? (
-                <EmptyState message={t('warehouses.noLocations')} />
+                <EmptyState message={t('warehouses.noLocations')} icon={<MapPin className="size-6" />} />
               ) : (
                 <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
                   <table className="w-full border-collapse">
@@ -578,7 +579,7 @@ export function WarehousesCategoriesPage() {
         <DialogContent>
           <DialogHeader title={editingLocId ? t('warehouses.editLocation') : t('warehouses.addLocationTitle')} />
           <form onSubmit={(event) => void submitLocation(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="loc-code">{t('fields.code')} *</label>
                 <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="loc-code" {...registerLoc('code')} />
@@ -617,7 +618,7 @@ export function WarehousesCategoriesPage() {
         <DialogContent>
           <DialogHeader title={editingCatId ? t('warehouses.editCategory') : t('warehouses.newCategoryTitle')} />
           <form onSubmit={(event) => void submitCategory(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="cat-name">{t('fields.name')} *</label>
                 <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" id="cat-name" {...registerCat('name')} />

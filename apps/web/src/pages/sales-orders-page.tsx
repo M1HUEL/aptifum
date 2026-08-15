@@ -29,6 +29,7 @@ import {
   StatusSelect,
   TableSkeleton,
 } from '../components/ui';
+import { ClipboardList } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
@@ -392,7 +393,7 @@ export function SalesOrdersPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('salesOrders.noOrders')} />
+            <EmptyState message={t('salesOrders.noOrders')} icon={<ClipboardList className="size-6" />} />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -404,7 +405,7 @@ export function SalesOrdersPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader title={t('salesOrders.newOrder')} />
           <form onSubmit={(event) => void submitCreate(event)}>
-            <div className="grid grid-cols-2 gap-x-4">
+            <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-kind">{t('fields.kind')} *</label>
                 <select id="so-kind" className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15" {...register('kind')}>
@@ -566,7 +567,7 @@ export function SalesOrdersPage() {
           {viewLoading ? <LoadingBlock /> : null}
           {!viewLoading && viewing ? (
             <div>
-              <div className="mb-2 grid grid-cols-2 gap-x-4 gap-y-3">
+              <div className="mb-2 grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 gap-y-3">
                 <div className="detail-item">
                   <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.kind')}</div>
                   <div className="mt-0.5 block">{viewing.kind}</div>
