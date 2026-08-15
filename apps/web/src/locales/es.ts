@@ -25,6 +25,8 @@ const es = {
     inactive: 'Inactivo',
     none: 'Ninguno',
     confirm: 'Confirmar',
+    sortAscending: 'Ordenar {{column}} ascendente',
+    sortDescending: 'Ordenar {{column}} descendente',
     pdf: 'PDF',
     payment: 'Pago',
     paymentTerm: 'Pago',

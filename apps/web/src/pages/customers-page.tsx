@@ -8,6 +8,7 @@ import type { components } from '../api/schema';
 import type { Customer } from '../api/types';
 import { customerFormSchema, type CustomerFormValues } from '../api/schemas';
 import {
+  DataTable,
   EmptyState,
   ErrorBanner,
   formatMoney,
@@ -18,6 +19,8 @@ import {
   Input,
   Select,
   Textarea,
+  type Column,
+  type DataTableSort,
 } from '../components/ui';
 import { Users } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
@@ -109,6 +112,11 @@ export function CustomersPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Customer | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [sort, setSort] = useState<DataTableSort | null>(() => {
+    const key = searchParams.get('sort');
+    const dir = searchParams.get('order');
+    return key && (dir === 'asc' || dir === 'desc') ? { key, dir } : null;
+  });
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
 
@@ -137,6 +145,9 @@ export function CustomersPage() {
     setQuery(urlQuery);
     setPage(parsePageNumber(searchParams.get('page')));
     setLimit(parseLimitNumber(searchParams.get('limit')));
+    const sortKey = searchParams.get('sort');
+    const sortDir = searchParams.get('order');
+    setSort(sortKey && (sortDir === 'asc' || sortDir === 'desc') ? { key: sortKey, dir: sortDir } : null);
   }, [searchParams]);
 
   const taxExempt = watch('taxExempt');
@@ -174,6 +185,19 @@ export function CustomersPage() {
     const params = new URLSearchParams(searchParams);
     params.set('limit', String(next));
     params.set('page', '1');
+    setSearchParams(params);
+  };
+
+  const handleSortChange = (next: DataTableSort | null) => {
+    setSort(next);
+    const params = new URLSearchParams(searchParams);
+    if (next) {
+      params.set('sort', next.key);
+      params.set('order', next.dir);
+    } else {
+      params.delete('sort');
+      params.delete('order');
+    }
     setSearchParams(params);
   };
 
@@ -225,11 +249,11 @@ export function CustomersPage() {
     );
   };
 
-  const columns = [
+  const columns: Column<Customer>[] = [
     { key: 'code', header: t('fields.code') },
     { key: 'tradeName', header: t('fields.tradeName') },
-    { key: 'taxId', header: t('fields.taxId'), render: (row: Customer) => row.taxId ?? 'â€”' },
-    { key: 'email', header: t('fields.email'), render: (row: Customer) => row.email ?? 'â€”' },
+    { key: 'taxId', header: t('fields.taxId'), render: (row: Customer) => row.taxId ?? '—' },
+    { key: 'email', header: t('fields.email'), render: (row: Customer) => row.email ?? '—' },
     { key: 'creditLimit', header: t('fields.creditLimit'), render: (row: Customer) => formatMoney(row.creditLimit) },
     {
       key: 'active',
@@ -237,6 +261,7 @@ export function CustomersPage() {
       render: (row: Customer) => (
         <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>
       ),
+      sortValue: (row: Customer) => (row.active ? 1 : 0),
     },
     {
       key: 'actions',
@@ -303,36 +328,13 @@ export function CustomersPage() {
           {data.data.length === 0 ? (
             <EmptyState message={t('customers.noCustomers')} icon={<Users className="size-6" />} />
           ) : (
-            <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
-              <table className="w-full border-collapse [&_tr:last-child>td]:border-b-0">
-                <thead>
-                  <tr>
-                    {columns.map((col) => (
-                      <th
-                        key={col.key}
-                        className="sticky top-0 z-[1] whitespace-nowrap border-b border-border bg-bg px-[14px] py-2.5 text-left text-[12px] uppercase tracking-[0.04em] text-muted"
-                      >
-                        {col.header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.data.map((row) => (
-                    <tr key={row.id}>
-                      {columns.map((col) => (
-                        <td
-                          key={col.key}
-                          className="max-w-[260px] overflow-hidden whitespace-nowrap border-b border-border px-[14px] py-2.5 text-left text-ellipsis last:text-right"
-                        >
-                          {col.render ? col.render(row) : String((row as unknown as Record<string, unknown>)[col.key] ?? '')}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={columns}
+              rows={data.data}
+              rowKey={(row) => row.id}
+              sort={sort}
+              onSortChange={handleSortChange}
+            />
           )}
           <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} onLimit={handleLimitChange} />
         </>

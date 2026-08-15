@@ -23,6 +23,7 @@ import {
   Toolbar,
   Input,
   Textarea,
+  type DataTableSort,
 } from '../components/ui';
 import { Package } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -109,6 +110,11 @@ export function ProductsPage() {
   const [viewError, setViewError] = useState<string | null>(null);
   const [stock, setStock] = useState<ProductStock[]>([]);
   const [importOpen, setImportOpen] = useState(false);
+  const [sort, setSort] = useState<DataTableSort | null>(() => {
+    const key = searchParams.get('sort');
+    const dir = searchParams.get('order');
+    return key && (dir === 'asc' || dir === 'desc') ? { key, dir } : null;
+  });
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
 
@@ -144,6 +150,9 @@ export function ProductsPage() {
     setQuery(urlQuery);
     setPage(parsePageNumber(searchParams.get('page')));
     setLimit(parseLimitNumber(searchParams.get('limit')));
+    const sortKey = searchParams.get('sort');
+    const sortDir = searchParams.get('order');
+    setSort(sortKey && (sortDir === 'asc' || sortDir === 'desc') ? { key: sortKey, dir: sortDir } : null);
   }, [searchParams]);
 
   const createMutation = useApiMutation<CreateProductDto>('/api/v1/inventory/products', 'POST');
@@ -196,6 +205,19 @@ export function ProductsPage() {
     const params = new URLSearchParams(searchParams);
     params.set('limit', String(next));
     params.set('page', '1');
+    setSearchParams(params);
+  };
+
+  const handleSortChange = (next: DataTableSort | null) => {
+    setSort(next);
+    const params = new URLSearchParams(searchParams);
+    if (next) {
+      params.set('sort', next.key);
+      params.set('order', next.dir);
+    } else {
+      params.delete('sort');
+      params.delete('order');
+    }
     setSearchParams(params);
   };
 
@@ -271,7 +293,8 @@ export function ProductsPage() {
     {
       key: 'category',
       header: t('products.category'),
-      render: (row) => row.category?.name ?? 'â€”',
+      render: (row) => row.category?.name ?? '—',
+      sortValue: (row) => row.category?.name ?? '',
     },
     {
       key: 'salePrice',
@@ -286,6 +309,7 @@ export function ProductsPage() {
           {row.enabled ? t('products.enabled') : t('products.disabled')}
         </Badge>
       ),
+      sortValue: (row) => (row.enabled ? 1 : 0),
     },
     {
       key: 'actions',
@@ -355,7 +379,13 @@ export function ProductsPage() {
           {data.data.length === 0 ? (
             <EmptyState message={t('products.noProducts')} icon={<Package className="size-6" />} />
           ) : (
-            <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
+            <DataTable
+              columns={columns}
+              rows={data.data}
+              rowKey={(row) => row.id}
+              sort={sort}
+              onSortChange={handleSortChange}
+            />
           )}
           <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} onLimit={handleLimitChange} />
         </>

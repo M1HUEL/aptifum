@@ -7,6 +7,7 @@ import {
   Badge,
   type Column,
   DataTable,
+  type DataTableSort,
   EmptyState,
   ErrorBanner,
   formatDate,
@@ -55,6 +56,11 @@ export function InvoicesPage() {
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [payingInvoice, setPayingInvoice] = useState<Invoice | null>(null);
   const [viewing, setViewing] = useState<Invoice | null>(null);
+  const [sort, setSort] = useState<DataTableSort | null>(() => {
+    const key = searchParams.get('sort');
+    const dir = searchParams.get('order');
+    return key && (dir === 'asc' || dir === 'desc') ? { key, dir } : null;
+  });
   const toast = useToast();
 
   const { data, error, reload } = usePagedQuery<Invoice>({
@@ -73,6 +79,9 @@ export function InvoicesPage() {
     setTypeFilter(searchParams.get('type') ?? '');
     setPage(parsePageNumber(searchParams.get('page')));
     setLimit(parseLimitNumber(searchParams.get('limit')));
+    const sortKey = searchParams.get('sort');
+    const sortDir = searchParams.get('order');
+    setSort(sortKey && (sortDir === 'asc' || sortDir === 'desc') ? { key: sortKey, dir: sortDir } : null);
   }, [searchParams]);
 
   useEffect(() => {
@@ -122,6 +131,19 @@ export function InvoicesPage() {
     setSearchParams(params);
   };
 
+  const handleSortChange = (next: DataTableSort | null) => {
+    setSort(next);
+    const params = new URLSearchParams(searchParams);
+    if (next) {
+      params.set('sort', next.key);
+      params.set('order', next.dir);
+    } else {
+      params.delete('sort');
+      params.delete('order');
+    }
+    setSearchParams(params);
+  };
+
   const handleStatusChange = (value: string) => {
     setStatusFilter(value);
     setPage(1);
@@ -159,7 +181,12 @@ export function InvoicesPage() {
         <Badge tone={row.type === 'invoice' ? 'info' : 'warning'}>{row.type.replace('_', ' ')}</Badge>
       ),
     },
-    { key: 'customer', header: t('tables.customer'), render: (row) => row.customer.tradeName },
+    {
+      key: 'customer',
+      header: t('tables.customer'),
+      render: (row) => row.customer.tradeName,
+      sortValue: (row) => row.customer.tradeName,
+    },
     { key: 'issueDate', header: t('tables.issueDate'), render: (row) => formatDate(row.issueDate) },
     {
       key: 'status',
@@ -253,7 +280,7 @@ export function InvoicesPage() {
           {data.data.length === 0 ? (
             <EmptyState message={t('invoices.noInvoices')} icon={<FileText className="size-6" />} />
           ) : (
-            <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
+            <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} sort={sort} onSortChange={handleSortChange} />
           )}
           <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} onLimit={handleLimitChange} />
         </>

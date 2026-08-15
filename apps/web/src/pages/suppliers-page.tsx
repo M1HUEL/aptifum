@@ -11,6 +11,7 @@ import {
   Badge,
   type Column,
   DataTable,
+  type DataTableSort,
   EmptyState,
   ErrorBanner,
   formatMoney,
@@ -103,6 +104,11 @@ export function SuppliersPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Supplier | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [sort, setSort] = useState<DataTableSort | null>(() => {
+    const key = searchParams.get('sort');
+    const dir = searchParams.get('order');
+    return key && (dir === 'asc' || dir === 'desc') ? { key, dir } : null;
+  });
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
 
@@ -133,6 +139,9 @@ export function SuppliersPage() {
     setQuery(urlQuery);
     setPage(parsePageNumber(searchParams.get('page')));
     setLimit(parseLimitNumber(searchParams.get('limit')));
+    const sortKey = searchParams.get('sort');
+    const sortDir = searchParams.get('order');
+    setSort(sortKey && (sortDir === 'asc' || sortDir === 'desc') ? { key: sortKey, dir: sortDir } : null);
   }, [searchParams]);
 
   const createMutation = useApiMutation<CreateSupplierDto>('/api/v1/purchasing/suppliers', 'POST');
@@ -173,6 +182,19 @@ export function SuppliersPage() {
     const params = new URLSearchParams(searchParams);
     params.set('limit', String(next));
     params.set('page', '1');
+    setSearchParams(params);
+  };
+
+  const handleSortChange = (next: DataTableSort | null) => {
+    setSort(next);
+    const params = new URLSearchParams(searchParams);
+    if (next) {
+      params.set('sort', next.key);
+      params.set('order', next.dir);
+    } else {
+      params.delete('sort');
+      params.delete('order');
+    }
     setSearchParams(params);
   };
 
@@ -240,6 +262,7 @@ export function SuppliersPage() {
       render: (row) => (
         <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>
       ),
+      sortValue: (row) => (row.active ? 1 : 0),
     },
     {
       key: 'actions',
@@ -306,7 +329,7 @@ export function SuppliersPage() {
           {data.data.length === 0 ? (
             <EmptyState message={t('suppliers.noSuppliersFound')} icon={<Truck className="size-6" />} />
           ) : (
-            <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
+            <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} sort={sort} onSortChange={handleSortChange} />
           )}
           <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} onLimit={handleLimitChange} />
         </>

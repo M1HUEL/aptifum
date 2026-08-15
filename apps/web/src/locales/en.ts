@@ -27,6 +27,8 @@ const en: Translation = {
     inactive: 'Inactive',
     none: 'None',
     confirm: 'Confirm',
+    sortAscending: 'Sort {{column}} ascending',
+    sortDescending: 'Sort {{column}} descending',
     pdf: 'PDF',
     payment: 'Payment',
     paymentTerm: 'Payment',
