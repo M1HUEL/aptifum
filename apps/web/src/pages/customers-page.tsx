@@ -24,6 +24,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { useApiInvalidation, useApiMutation } from '../api/hooks';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
@@ -422,19 +423,15 @@ export function CustomersPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleting !== null} onOpenChange={(open) => !deleteBusy && !open && setDeleting(null)}>
-        <DialogContent>
-          <DialogHeader
-            title={t('customers.deactivateCustomerTitle')}
-            description={t('customers.deactivateCustomerMessage', { name: deleting?.tradeName ?? '' })}
-          />
-          <DialogFooter>
-            <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDelete()}>
-              {deleteBusy ? t('common.working') : t('customers.deactivate')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !deleteBusy && !open && setDeleting(null)}
+        title={t('customers.deactivateCustomerTitle')}
+        description={t('customers.deactivateCustomerMessage', { name: deleting?.tradeName ?? '' })}
+        confirmLabel={t('customers.deactivate')}
+        busy={deleteBusy}
+        onConfirm={() => void confirmDelete()}
+      />
     </>
   );
 }

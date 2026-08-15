@@ -24,6 +24,7 @@ import {
 import { Target } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
+import { ConfirmDialog } from '../ui/confirm-dialog';
 import { useToast } from '../toast';
 import { usePagedQuery } from '../../hooks/use-paged-query';
 import { exportRowsToCsv } from '../../lib/csv';
@@ -315,19 +316,15 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleting !== null} onOpenChange={(isOpen) => !deletingBusy && !isOpen && setDeleting(null)}>
-        <DialogContent>
-          <DialogHeader
-            title={t('crm.deleteOpportunityTitle')}
-            description={t('crm.deleteOpportunityMessage', { name: deleting?.name })}
-          />
-          <DialogFooter>
-            <Button variant="danger" type="button" disabled={deletingBusy} onClick={() => void confirmDelete()}>
-              {deletingBusy ? t('common.working') : t('common.delete')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(isOpen) => !deletingBusy && !isOpen && setDeleting(null)}
+        title={t('crm.deleteOpportunityTitle')}
+        description={t('crm.deleteOpportunityMessage', { name: deleting?.name })}
+        confirmLabel={t('common.delete')}
+        busy={deletingBusy}
+        onConfirm={() => void confirmDelete()}
+      />
     </>
   );
 }

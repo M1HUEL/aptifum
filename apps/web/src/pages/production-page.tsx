@@ -40,6 +40,7 @@ import { Factory, ListTree } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
@@ -877,22 +878,15 @@ export function ProductionPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
+      <ConfirmDialog
         open={deletingBom !== null}
         onOpenChange={(open) => !deleteBomBusy && !open && setDeletingBom(null)}
-      >
-        <DialogContent>
-          <DialogHeader
-            title={t('production.deleteBomTitle')}
-            description={t('production.deleteBomMessage', { name: deletingBom?.name ?? '' })}
-          />
-          <DialogFooter>
-            <Button variant="danger" type="button" disabled={deleteBomBusy} onClick={() => void confirmDeleteBom()}>
-              {deleteBomBusy ? t('common.working') : t('common.delete')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t('production.deleteBomTitle')}
+        description={t('production.deleteBomMessage', { name: deletingBom?.name ?? '' })}
+        confirmLabel={t('common.delete')}
+        busy={deleteBomBusy}
+        onConfirm={() => void confirmDeleteBom()}
+      />
     </>
   );
 }

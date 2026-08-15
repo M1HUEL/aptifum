@@ -22,6 +22,7 @@ import { ListOrdered } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
@@ -333,22 +334,15 @@ export function ChartAccountsPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
+      <ConfirmDialog
         open={deleting !== null}
         onOpenChange={(open) => !deleteBusy && !open && setDeleting(null)}
-      >
-        <DialogContent>
-          <DialogHeader
-            title={t('accounts.deleteAccount')}
-            description={t('accounts.deleteAccountMessage', { account: `${deleting?.code} · ${deleting?.name}` })}
-          />
-          <DialogFooter>
-            <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDelete()}>
-              {deleteBusy ? t('common.working') : t('common.delete')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t('accounts.deleteAccount')}
+        description={t('accounts.deleteAccountMessage', { account: `${deleting?.code} · ${deleting?.name}` })}
+        confirmLabel={t('common.delete')}
+        busy={deleteBusy}
+        onConfirm={() => void confirmDelete()}
+      />
     </>
   );
 }

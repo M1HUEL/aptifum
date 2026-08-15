@@ -28,6 +28,7 @@ import { Package } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
@@ -551,19 +552,15 @@ export function ProductsPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleting !== null} onOpenChange={(open) => !deleteBusy && !open && setDeleting(null)}>
-        <DialogContent>
-          <DialogHeader
-            title={t('products.deactivateProductTitle')}
-            description={t('products.deactivateProductMessage', { name: deleting?.name ?? '' })}
-          />
-          <DialogFooter>
-            <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDelete()}>
-              {deleteBusy ? t('common.working') : t('products.deactivate')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !deleteBusy && !open && setDeleting(null)}
+        title={t('products.deactivateProductTitle')}
+        description={t('products.deactivateProductMessage', { name: deleting?.name ?? '' })}
+        confirmLabel={t('products.deactivate')}
+        busy={deleteBusy}
+        onConfirm={() => void confirmDelete()}
+      />
     </>
   );
 }

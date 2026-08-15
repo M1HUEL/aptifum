@@ -31,6 +31,7 @@ import { MapPin, Tags, Warehouse as WarehouseIcon } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
@@ -669,56 +670,34 @@ export function WarehousesCategoriesPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
+      <ConfirmDialog
         open={deletingWh !== null}
         onOpenChange={(open) => !whDeleteBusy && !open && setDeletingWh(null)}
-      >
-        <DialogContent>
-          <DialogHeader
-            title={t('warehouses.deactivateWarehouseTitle')}
-            description={t('warehouses.deactivateWarehouseMessage', { name: deletingWh?.name ?? '' })}
-          />
-          <DialogFooter>
-            <Button variant="danger" type="button" disabled={whDeleteBusy} onClick={() => void confirmDeleteWh()}>
-              {whDeleteBusy ? t('common.working') : t('warehouses.deactivate')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t('warehouses.deactivateWarehouseTitle')}
+        description={t('warehouses.deactivateWarehouseMessage', { name: deletingWh?.name ?? '' })}
+        confirmLabel={t('warehouses.deactivate')}
+        busy={whDeleteBusy}
+        onConfirm={() => void confirmDeleteWh()}
+      />
 
-      <Dialog
+      <ConfirmDialog
         open={deletingCat !== null}
         onOpenChange={(open) => !open && setDeletingCat(null)}
-      >
-        <DialogContent>
-          <DialogHeader
-            title={t('warehouses.deleteCategoryTitle')}
-            description={t('warehouses.deleteCategoryMessage', { name: deletingCat?.name ?? '' })}
-          />
-          <DialogFooter>
-            <Button variant="danger" type="button" onClick={() => void confirmDeleteCat()}>
-              {t('common.delete')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t('warehouses.deleteCategoryTitle')}
+        description={t('warehouses.deleteCategoryMessage', { name: deletingCat?.name ?? '' })}
+        confirmLabel={t('common.delete')}
+        onConfirm={() => void confirmDeleteCat()}
+      />
 
-      <Dialog
+      <ConfirmDialog
         open={deletingLoc !== null}
         onOpenChange={(open) => !locDeleteBusy && !open && setDeletingLoc(null)}
-      >
-        <DialogContent>
-          <DialogHeader
-            title={t('warehouses.deactivateLocationTitle')}
-            description={t('warehouses.deactivateLocationMessage', { name: deletingLoc?.name ?? '' })}
-          />
-          <DialogFooter>
-            <Button variant="danger" type="button" disabled={locDeleteBusy} onClick={() => void confirmDeleteLoc()}>
-              {locDeleteBusy ? t('common.working') : t('warehouses.deactivate')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t('warehouses.deactivateLocationTitle')}
+        description={t('warehouses.deactivateLocationMessage', { name: deletingLoc?.name ?? '' })}
+        confirmLabel={t('warehouses.deactivate')}
+        busy={locDeleteBusy}
+        onConfirm={() => void confirmDeleteLoc()}
+      />
     </>
   );
 }

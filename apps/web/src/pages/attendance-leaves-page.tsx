@@ -40,6 +40,7 @@ import {
 import { CalendarCheck, CalendarOff } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
 import { usePermission } from '../auth/auth-context';
 import { useToast } from '../components/toast';
@@ -879,38 +880,26 @@ export function AttendanceLeavesPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deletingAtt !== null} onOpenChange={(open) => !deleteBusy && !open && setDeletingAtt(null)}>
-        <DialogContent>
-          <DialogHeader
-            title={t('hr.deleteAttendanceTitle')}
-            description={t('hr.deleteAttendanceMessage', {
-              name: deletingAtt ? employeeName(deletingAtt.employee) : '',
-            })}
-          />
-          <DialogFooter>
-            <Button variant="danger" type="button" disabled={deleteBusy} onClick={() => void confirmDeleteAtt()}>
-              {deleteBusy ? t('common.working') : t('common.delete')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={deletingAtt !== null}
+        onOpenChange={(open) => !deleteBusy && !open && setDeletingAtt(null)}
+        title={t('hr.deleteAttendanceTitle')}
+        description={t('hr.deleteAttendanceMessage', {
+          name: deletingAtt ? employeeName(deletingAtt.employee) : '',
+        })}
+        confirmLabel={t('common.delete')}
+        busy={deleteBusy}
+        onConfirm={() => void confirmDeleteAtt()}
+      />
 
-      <Dialog
+      <ConfirmDialog
         open={deletingLeave !== null}
         onOpenChange={(open) => !open && setDeletingLeave(null)}
-      >
-        <DialogContent>
-          <DialogHeader
-            title={t('hr.deleteLeaveTitle')}
-            description={t('hr.deleteLeaveMessage', { type: deletingLeave?.leaveType })}
-          />
-          <DialogFooter>
-            <Button variant="danger" type="button" onClick={() => void confirmDeleteLeave()}>
-              {t('common.delete')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t('hr.deleteLeaveTitle')}
+        description={t('hr.deleteLeaveMessage', { type: deletingLeave?.leaveType })}
+        confirmLabel={t('common.delete')}
+        onConfirm={() => void confirmDeleteLeave()}
+      />
     </>
   );
 }

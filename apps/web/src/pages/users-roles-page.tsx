@@ -28,6 +28,7 @@ import { ShieldCheck, Users } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { useToast } from '../components/toast';
 import { exportRowsToCsv } from '../lib/csv';
 
@@ -720,19 +721,15 @@ export function UsersRolesPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
+      <ConfirmDialog
         open={deletingRole !== null}
         onOpenChange={(open) => !roleDeleteBusy && !open && setDeletingRole(null)}
-      >
-        <DialogContent>
-          <DialogHeader title={t('usersRoles.deleteRoleTitle')} description={t('usersRoles.deleteRoleMessage', { name: deletingRole?.name ?? '' })} />
-          <DialogFooter>
-            <Button variant="danger" type="button" disabled={roleDeleteBusy} onClick={() => void confirmDeleteRole()}>
-              {roleDeleteBusy ? t('common.working') : t('common.delete')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t('usersRoles.deleteRoleTitle')}
+        description={t('usersRoles.deleteRoleMessage', { name: deletingRole?.name ?? '' })}
+        confirmLabel={t('common.delete')}
+        busy={roleDeleteBusy}
+        onConfirm={() => void confirmDeleteRole()}
+      />
     </>
   );
 }
