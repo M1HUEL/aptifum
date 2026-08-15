@@ -46,10 +46,10 @@ export function LoginPage() {
   };
 
   return (
-    <div className="login-page">
-      <div className="login-card">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#121a2b] via-[#1e2a44] to-primary">
+      <div className="w-[360px] rounded-xl bg-surface p-8 shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
         <svg
-          className="login-logo"
+          className="mx-auto mb-3 block"
           aria-hidden="true"
           width="44"
           height="44"
@@ -59,12 +59,12 @@ export function LoginPage() {
           <rect width="44" height="44" rx="10" fill="#2f5fe6" />
           <path d="M22 9 L36 35 H29.5 L22 19 L14.5 35 H8 Z" fill="#ffffff" />
         </svg>
-        <h1 className="login-title">Aptifum ERP</h1>
-        <p className="login-subtitle">{t('auth.signInSubtitle')}</p>
+        <h1 className="mb-1 text-[22px]">Aptifum ERP</h1>
+        <p className="mb-[22px] text-muted">{t('auth.signInSubtitle')}</p>
         <form onSubmit={(event) => void handleSubmit(event)}>
-          <label className="field">
+          <label className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <span>{t('fields.email')}</span>
-            <input
+            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               type="email"
               autoComplete="username"
               required
@@ -72,9 +72,9 @@ export function LoginPage() {
               onChange={(event) => setEmail(event.target.value)}
             />
           </label>
-          <label className="field">
+          <label className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <span>{t('fields.password')}</span>
-            <input
+            <input className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
               type="password"
               autoComplete="current-password"
               required
@@ -82,13 +82,21 @@ export function LoginPage() {
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
-          {notice ? <div className="success-banner">{notice}</div> : null}
-          {error ? <div className="error-banner">{error}</div> : null}
-          <button type="submit" className="btn btn-primary btn-block" disabled={submitting}>
+          {notice ? (
+            <div className="mb-4 rounded-ui border border-success/40 bg-success-bg px-[14px] py-2.5 text-success">{notice}</div>
+          ) : null}
+          {error ? (
+            <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{error}</div>
+          ) : null}
+          <button
+            type="submit"
+            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-primary bg-primary px-[14px] py-2 text-sm font-semibold text-white select-none hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 w-full"
+            disabled={submitting}
+          >
             {submitting ? t('auth.signingIn') : t('auth.loginTitle')}
           </button>
         </form>
-        <p className="login-subtitle">
+        <p className="mb-[22px] text-muted">
           <Link to="/forgot-password">{t('auth.forgotPassword')}</Link>
         </p>
       </div>

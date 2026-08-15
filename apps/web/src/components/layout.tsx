@@ -16,21 +16,25 @@ export function Layout() {
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="app-shell">
-      <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
-        <div className="sidebar-brand">Aptifum</div>
-        <nav className="sidebar-nav">
+    <div className="flex min-h-screen">
+      <aside
+        className={`sticky top-0 z-50 flex h-screen w-[220px] shrink-0 flex-col bg-sidebar text-sidebar-text transition-transform duration-200 max-[900px]:fixed max-[900px]:left-0 max-[900px]:top-0 max-[900px]:z-50 max-[900px]:-translate-x-full print:hidden${sidebarOpen ? ' max-[900px]:translate-x-0' : ''}`}
+      >
+        <div className="px-5 pb-4 pt-5 text-lg font-bold text-white">Aptifum</div>
+        <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain p-2 pb-3 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.2)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb]:bg-white/20">
           {NAV_GROUPS.map((group) => {
             const groupItems = visibleItems.filter((item) => item.group === group.key);
             if (groupItems.length === 0) return null;
             return (
               <div key={group.key}>
-                <div className="sidebar-group-label">{t(group.labelKey)}</div>
+                <div className="px-[14px] pt-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-sidebar-text opacity-55">{t(group.labelKey)}</div>
                 {groupItems.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+                    className={({ isActive }) =>
+                      `block rounded-ui px-[14px] py-[9px] font-medium text-sidebar-text no-underline${isActive ? ' bg-primary text-white hover:bg-primary' : ' hover:bg-white/10 hover:text-white'}`
+                    }
                     onClick={closeSidebar}
                   >
                     {t(item.labelKey)}
@@ -40,10 +44,10 @@ export function Layout() {
             );
           })}
         </nav>
-        <div className="sidebar-footer">
+        <div className="flex shrink-0 flex-col gap-2.5 border-t border-white/10 p-3">
           <button
             type="button"
-            className="btn btn-ghost"
+            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={toggleTheme}
             aria-label={t('layout.toggleTheme')}
           >
@@ -76,22 +80,26 @@ export function Layout() {
               </svg>
             )}
           </button>
-          <div className="sidebar-user">
-            <div className="sidebar-user-name">{user?.name || user?.email}</div>
-            <div className="sidebar-user-role">
+          <div className="min-w-0">
+            <div className="truncate font-semibold text-white">{user?.name || user?.email}</div>
+            <div className="text-[12px] text-sidebar-text">
               {user?.roles.map((role) => role.name).join(', ')}
             </div>
           </div>
-          <button type="button" className="btn btn-ghost" onClick={() => void logout()}>
+          <button
+            type="button"
+            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-white/20 bg-transparent px-[14px] py-2 text-sm font-semibold text-sidebar-text select-none hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => void logout()}
+          >
             {t('layout.signOut')}
           </button>
         </div>
       </aside>
-      {sidebarOpen ? <div className="sidebar-overlay" onClick={closeSidebar} /> : null}
-      <main className="main-content">
+      {sidebarOpen ? <div className="hidden max-[900px]:fixed max-[900px]:inset-0 max-[900px]:z-40 max-[900px]:block max-[900px]:bg-black/40" onClick={closeSidebar} /> : null}
+      <main className="max-w-[1100px] flex-1 px-8 py-7 max-[900px]:px-4 max-[900px]:py-5 print:max-w-full print:p-0">
         <button
           type="button"
-          className="btn sidebar-toggle"
+          className="hidden cursor-pointer items-center justify-center rounded-ui border border-border bg-surface px-[14px] py-2 font-semibold text-text select-none hover:bg-hover max-[900px]:fixed max-[900px]:left-3 max-[900px]:top-3 max-[900px]:z-50 max-[900px]:inline-flex print:hidden"
           onClick={() => setSidebarOpen((open) => !open)}
           aria-label={t('layout.toggleSidebar')}
           aria-expanded={sidebarOpen}

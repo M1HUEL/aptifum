@@ -70,21 +70,31 @@ export function ProfilePage() {
       <PageHeader title={t('profile.title')} subtitle={t('profile.subtitle')} />
 
       <form onSubmit={(event) => void submit(event)}>
-        <div className="form-grid">
-          <div className="field">
+        <div className="grid grid-cols-2 gap-x-4">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="profile-email">{t('fields.email')}</label>
-            <input id="profile-email" type="email" value={user.email} disabled />
+            <input
+              id="profile-email"
+              type="email"
+              value={user.email}
+              disabled
+              className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            />
           </div>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="profile-name">{t('fields.name')}</label>
-            <input id="profile-name" {...register('name')} />
-            {errors.name ? <div className="field-error">{errors.name.message}</div> : null}
+            <input
+              id="profile-name"
+              {...register('name')}
+              className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            />
+            {errors.name ? <div className="text-[12px] font-normal text-danger">{errors.name.message}</div> : null}
           </div>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label>{t('usersRoles.roles')}</label>
-            <div className="badge-group">
+            <div className="flex flex-wrap gap-1">
               {user.roles.length === 0 ? (
-                <span className="muted">{t('common.none')}</span>
+                <span className="text-[12px] text-muted">{t('common.none')}</span>
               ) : (
                 user.roles.map((role) => (
                   <Badge key={role.name} tone="info">
@@ -96,32 +106,43 @@ export function ProfilePage() {
           </div>
         </div>
 
-        <h3 className="muted" style={{ marginTop: '1.5rem' }}>
+        <h3 className="text-[12px] text-muted" style={{ marginTop: '1.5rem' }}>
           {t('profile.changePassword')}
         </h3>
-        <div className="form-grid" style={{ marginTop: '0.5rem' }}>
-          <div className="field">
+        <div className="grid grid-cols-2 gap-x-4" style={{ marginTop: '0.5rem' }}>
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="profile-current">{t('fields.currentPassword')}</label>
-            <input id="profile-current" type="password" {...register('currentPassword')} />
+            <input
+              id="profile-current"
+              type="password"
+              {...register('currentPassword')}
+              className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            />
             {errors.currentPassword ? (
-              <div className="field-error">{errors.currentPassword.message}</div>
+              <div className="text-[12px] font-normal text-danger">{errors.currentPassword.message}</div>
             ) : null}
           </div>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="profile-new">{t('fields.newPassword')}</label>
             <input
               id="profile-new"
               type="password"
               placeholder={t('profile.passwordHint')}
               {...register('newPassword')}
+              className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
             />
-            {errors.newPassword ? <div className="field-error">{errors.newPassword.message}</div> : null}
+            {errors.newPassword ? <div className="text-[12px] font-normal text-danger">{errors.newPassword.message}</div> : null}
           </div>
-          <div className="field">
+          <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="profile-confirm">{t('fields.confirmPassword')}</label>
-            <input id="profile-confirm" type="password" {...register('confirmPassword')} />
+            <input
+              id="profile-confirm"
+              type="password"
+              {...register('confirmPassword')}
+              className="w-full rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15"
+            />
             {errors.confirmPassword ? (
-              <div className="field-error">{errors.confirmPassword.message}</div>
+              <div className="text-[12px] font-normal text-danger">{errors.confirmPassword.message}</div>
             ) : null}
           </div>
         </div>
