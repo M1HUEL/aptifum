@@ -258,7 +258,7 @@ export function CsvImportDialog({ open, onOpenChange, type, onImported }: CsvImp
 
         <DialogFooter>
           <Button
-            variant="secondary"
+            variant="outline"
             type="button"
             disabled={busy}
             onClick={() => onOpenChange(false)}

@@ -203,7 +203,7 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
           </div>
         ) : null}
         <DialogFooter>
-          <Button variant="secondary" type="button" onClick={onClose}>
+          <Button variant="outline" type="button" onClick={onClose}>
             {t('common.close')}
           </Button>
         </DialogFooter>

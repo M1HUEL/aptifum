@@ -46,7 +46,7 @@ export function PosSuccess({
         <Button variant="ghost" onClick={() => onDownloadPdf(sale)}>
           {t('common.downloadPdf')}
         </Button>
-        <Button variant="secondary" asChild>
+        <Button variant="outline" asChild>
           <Link to="/invoices">{t('pos.viewInvoices')}</Link>
         </Button>
         <Button onClick={onReset}>{t('pos.newSale')}</Button>

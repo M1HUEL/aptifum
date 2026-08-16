@@ -63,7 +63,7 @@ function DialogFooter({ children }: { children: ReactNode }) {
   return (
     <div className="mt-6 flex justify-end gap-2">
       <DialogPrimitive.Close asChild>
-        <Button variant="secondary">{t('common.cancel')}</Button>
+        <Button variant="outline">{t('common.cancel')}</Button>
       </DialogPrimitive.Close>
       {children}
     </div>

@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-primary text-white hover:bg-primary-dark',
-        secondary: 'border border-border bg-surface text-text hover:bg-hover',
+        secondary: 'border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15',
         outline:
           'border border-border bg-transparent text-text hover:bg-hover',
         ghost: 'border border-border bg-surface text-text hover:bg-hover',

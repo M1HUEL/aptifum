@@ -449,7 +449,7 @@ export function AccountingPage() {
             </>
           ) : null}
           <DialogFooter>
-            <Button variant="secondary" type="button" onClick={() => setViewing(null)}>
+            <Button variant="outline" type="button" onClick={() => setViewing(null)}>
               {t('common.close')}
             </Button>
           </DialogFooter>
