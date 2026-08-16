@@ -11,8 +11,8 @@ const DialogClose = DialogPrimitive.Close;
 
 const DialogContent = forwardRef<
   ElementRef<typeof DialogPrimitive.Content>,
-  ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+  ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { hideClose?: boolean }
+>(({ className, children, hideClose = false, ...props }, ref) => {
   const { t } = useTranslation();
   return (
     <DialogPrimitive.Portal>
@@ -25,15 +25,17 @@ const DialogContent = forwardRef<
         )}
         {...props}
       >
-        <DialogPrimitive.Close asChild>
-          <button
-            type="button"
-            aria-label={t('common.close')}
-            className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-hover hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-          <X className="size-4" aria-hidden="true" />
-          </button>
-        </DialogPrimitive.Close>
+        {!hideClose ? (
+          <DialogPrimitive.Close asChild>
+            <button
+              type="button"
+              aria-label={t('common.close')}
+              className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-hover hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+            <X className="size-4" aria-hidden="true" />
+            </button>
+          </DialogPrimitive.Close>
+        ) : null}
         {children}
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>

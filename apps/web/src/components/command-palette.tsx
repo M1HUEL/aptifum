@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FileText, Package, Search, Users, type LucideIcon } from 'lucide-react';
+import { FileText, Package, Search, Users, X, type LucideIcon } from 'lucide-react';
 import { apiFetch } from '../api/client';
 import type { Customer, Invoice, Paginated, Product } from '../api/types';
 import { usePermission } from '../auth/auth-context';
 import { ROUTE_GUARDS } from '../auth/route-permissions';
-import { Dialog, DialogContent } from './ui/dialog';
+import { Dialog, DialogClose, DialogContent } from './ui/dialog';
 
 interface PaletteItem {
   key: string;
@@ -194,8 +194,8 @@ export function CommandPalette({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-0">
-        <div className="flex items-center gap-2.5 border-b border-border pl-5 pr-4">
+      <DialogContent hideClose className="max-w-lg p-0">
+        <div className="flex items-center gap-1.5 border-b border-border pl-5 pr-2">
           <Search className="size-4 shrink-0 text-muted" aria-hidden="true" />
           <input
             value={query}
@@ -206,6 +206,15 @@ export function CommandPalette({
             className="h-12 w-full bg-transparent text-sm text-text outline-none placeholder:text-muted"
             aria-label={t('commandPalette.placeholder')}
           />
+          <DialogClose asChild>
+            <button
+              type="button"
+              aria-label={t('common.close')}
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-hover hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          </DialogClose>
         </div>
         <div ref={listRef} className="max-h-[320px] overflow-y-auto p-2">
           {groups.length === 0 ? (
