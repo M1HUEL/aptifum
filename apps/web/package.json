@@ -9,6 +9,7 @@
     "lint": "eslint src tests --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "gen:api": "pnpm --filter @aptifum/api swagger:export && openapi-typescript ../api/swagger.json -o src/api/schema.ts",
     "test:e2e": "playwright test"
@@ -49,6 +50,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^4.5.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "jsdom": "^30.0.1",
     "openapi-typescript": "^7.13.0",
     "typescript": "^5.8.0",
