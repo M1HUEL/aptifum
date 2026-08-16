@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { applyTheme, getInitialTheme } from './theme';
+import { applyTheme, getInitialTheme } from '../../src/lib/theme';
 
 describe('theme', () => {
   let matchMediaMock: {

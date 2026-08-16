@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { RequirePermission } from './require-permission';
+import { RequirePermission } from '../../src/auth/require-permission';
 
-vi.mock('./auth-context', () => ({
+vi.mock('../../src/auth/auth-context', () => ({
   usePermission: () => (permission: string) => permission === 'allowed-permission',
 }));
 

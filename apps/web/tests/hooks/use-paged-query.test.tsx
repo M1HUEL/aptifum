@@ -2,14 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import type { Paginated } from '../api/types';
-import { usePagedQuery } from './use-paged-query';
+import type { Paginated } from '../../src/api/types';
+import { usePagedQuery } from '../../src/hooks/use-paged-query';
 
-vi.mock('../api/client', () => ({
+vi.mock('../../src/api/client', () => ({
   apiFetch: vi.fn(),
 }));
 
-import { apiFetch } from '../api/client';
+import { apiFetch } from '../../src/api/client';
 
 const mockedFetch = vi.mocked(apiFetch);
 

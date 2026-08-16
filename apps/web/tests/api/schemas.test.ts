@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { customerFormSchema, productFormSchema, profileFormSchema } from './schemas';
+import { customerFormSchema, productFormSchema, profileFormSchema } from '../../src/api/schemas';
 
 describe('customerFormSchema', () => {
   it('accepts a minimal valid customer', () => {

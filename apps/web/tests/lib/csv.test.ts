@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Column } from '../components/ui';
-import { exportRowsToCsv } from './csv';
+import type { Column } from '../../src/components/ui';
+import { exportRowsToCsv } from '../../src/lib/csv';
 
 interface ReportRow {
   name: string;

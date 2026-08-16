@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import i18n from '../i18n';
+import i18n from '../../src/i18n';
 import {
   Badge,
   DataTable,
@@ -14,8 +14,8 @@ import {
   StatusSelect,
   TableSkeleton,
   type Column,
-} from './ui';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+} from '../../src/components/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '../../src/components/ui/card';
 
 beforeAll(async () => {
   await i18n.changeLanguage('en');

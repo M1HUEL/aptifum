@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatMoney } from './ui';
+import { formatDate, formatMoney } from '../../src/components/ui';
 
 describe('formatMoney', () => {
   it('formats USD by default', () => {

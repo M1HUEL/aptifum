@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import i18n from '../../i18n';
-import { SearchableSelect } from './searchable-select';
+import i18n from '../../../src/i18n';
+import { SearchableSelect } from '../../../src/components/ui/searchable-select';
 
 const options = [
   { value: '1', label: 'Laptop Dell' },
