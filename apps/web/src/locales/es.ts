@@ -223,6 +223,7 @@ const es = {
   },
   errors: {
     somethingWentWrong: 'Algo salió mal',
+    somethingWentWrongDescription: 'Ocurrió un error inesperado. Vuelve a intentarlo y, si el problema persiste, contacta con el administrador.',
     tryAgain: 'Intentar de nuevo',
     unauthorized: 'Tu sesión expiró. Inicia sesión de nuevo.',
     forbidden: 'No tienes permiso para realizar esta acción.',

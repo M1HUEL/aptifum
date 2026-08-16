@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { TriangleAlert } from 'lucide-react';
 import i18n from '../i18n';
+import { Button } from './ui/button';
 
 interface Props {
   children: ReactNode;
@@ -23,16 +25,15 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.error) {
       return (
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-center">
-          <h1 className="m-0 text-5xl font-bold text-primary">{i18n.t('errors.somethingWentWrong')}</h1>
-          <p className="text-[12px] text-muted">{this.state.error.message}</p>
-          <button
-            type="button"
-            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-ui border border-primary bg-primary px-[14px] py-2 text-sm font-semibold text-white select-none hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => this.setState({ error: null })}
-          >
-            {i18n.t('errors.tryAgain')}
-          </button>
+        <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+          <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
+            <TriangleAlert className="size-8 text-primary" aria-hidden="true" />
+          </div>
+          <h1 className="m-0 text-3xl font-bold text-text">{i18n.t('errors.somethingWentWrong')}</h1>
+          <p className="m-0 max-w-[420px] text-sm text-muted">
+            {i18n.t('errors.somethingWentWrongDescription')}
+          </p>
+          <Button onClick={() => this.setState({ error: null })}>{i18n.t('errors.tryAgain')}</Button>
         </div>
       );
     }

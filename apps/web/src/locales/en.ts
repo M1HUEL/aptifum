@@ -225,6 +225,7 @@ const en: Translation = {
   },
   errors: {
     somethingWentWrong: 'Something went wrong',
+    somethingWentWrongDescription: 'An unexpected error occurred. Please try again, and if the problem persists, contact the administrator.',
     tryAgain: 'Try again',
     unauthorized: 'Your session expired. Please sign in again.',
     forbidden: "You don't have permission to perform this action.",
