@@ -195,7 +195,7 @@ export function CommandPalette({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-0">
-        <div className="flex items-center gap-2.5 border-b border-border px-4">
+        <div className="flex items-center gap-2.5 border-b border-border pl-5 pr-4">
           <Search className="size-4 shrink-0 text-muted" aria-hidden="true" />
           <input
             value={query}
@@ -244,7 +244,7 @@ export function CommandPalette({
             ))
           )}
         </div>
-        <div className="flex items-center gap-3 border-t border-border px-4 py-2 text-[11px] text-muted">
+        <div className="flex items-center gap-3 border-t border-border pl-5 pr-4 py-2 text-[11px] text-muted">
           <span className="inline-flex items-center gap-1">
             <kbd className="rounded-ui border border-border bg-bg px-1.5 py-0.5 text-[11px] text-text">N</kbd>
             {t('commandPalette.hintNew')}

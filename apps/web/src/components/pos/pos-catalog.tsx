@@ -2,6 +2,7 @@ import { type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Paginated, PosProduct, Warehouse } from '../../api/types';
 import { Badge, EmptyState, ErrorBanner, formatMoney, LoadingBlock, Pagination , Input, Select } from '../ui';
+import { Card } from '../ui/card';
 import { Package } from 'lucide-react';
 import { Button } from '../ui/button';
 
@@ -68,22 +69,27 @@ export function PosCatalog({
         <>
           <div className="mb-3.5 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2.5">
             {catalog.data.map((product) => (
-              <button
+              <Card
+                asChild
                 key={product.id}
-                type="button"
-                className="flex min-h-[96px] flex-col items-start gap-1 p-3 text-left hover:border-primary hover:shadow-[0_0_0_3px_rgba(47,95,230,0.15)]"
-                disabled={product.availableStock <= 0}
-                onClick={() => onAddProduct(product)}
+                className="mb-0 cursor-pointer p-3 transition-colors hover:border-primary hover:shadow-[0_0_0_3px_rgba(47,95,230,0.15)]"
               >
-                <span className="font-semibold leading-[1.25]">{product.name}</span>
-                <span className="text-[12px] text-muted">{product.sku}</span>
-                <span className="mt-1 font-bold">{formatMoney(product.salePrice)}</span>
-                <Badge tone={product.availableStock > 0 ? 'success' : 'neutral'}>
-                  {product.availableStock > 0
-                    ? t('pos.inStock', { count: product.availableStock })
-                    : t('pos.outOfStock')}
-                </Badge>
-              </button>
+                <button
+                  type="button"
+                  className="flex min-h-[96px] flex-col items-start gap-1 text-left disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={product.availableStock <= 0}
+                  onClick={() => onAddProduct(product)}
+                >
+                  <span className="font-semibold leading-[1.25]">{product.name}</span>
+                  <span className="text-[12px] text-muted">{product.sku}</span>
+                  <span className="mt-1 font-bold">{formatMoney(product.salePrice)}</span>
+                  <Badge tone={product.availableStock > 0 ? 'success' : 'neutral'}>
+                    {product.availableStock > 0
+                      ? t('pos.inStock', { count: product.availableStock })
+                      : t('pos.outOfStock')}
+                  </Badge>
+                </button>
+              </Card>
             ))}
           </div>
           <Pagination
