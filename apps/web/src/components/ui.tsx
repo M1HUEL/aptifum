@@ -248,7 +248,8 @@ export function DataTable<T>({
   }, [rows, activeSort, columns]);
 
   const toggleSort = (col: Column<T>) => {
-    if (!isSortable(rows[0], col)) return;
+    const first = rows[0];
+    if (!first || !isSortable(first, col)) return;
     let next: DataTableSort | null;
     if (activeSort?.key !== col.key) {
       next = { key: col.key, dir: 'asc' };
@@ -276,7 +277,8 @@ export function DataTable<T>({
         <thead>
           <tr>
             {columns.map((col) => {
-              const sortable = isSortable(rows[0], col);
+              const first = rows[0];
+              const sortable = !!first && isSortable(first, col);
               const active = activeSort?.key === col.key;
               const dir = activeSort?.dir;
               return (

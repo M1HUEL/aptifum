@@ -168,13 +168,13 @@ function flattenFinancial(report: ReportDef, payload: Json, t: TFunction): Row[]
 export function ReportsPage() {
   const { t } = useTranslation();
   const can = usePermission();
-  const [reportId, setReportId] = useState(REPORTS[0].id);
+  const [reportId, setReportId] = useState(REPORTS[0]!.id);
   const [rows, setRows] = useState<Row[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
-  const activeReport = REPORTS.find((report) => report.id === reportId) ?? REPORTS[0];
+  const activeReport = REPORTS.find((report) => report.id === reportId) ?? REPORTS[0]!;
 
   const load = useCallback(
     async (id: string) => {

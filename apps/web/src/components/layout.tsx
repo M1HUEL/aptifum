@@ -68,10 +68,12 @@ const ROUTE_ICONS: Record<string, LucideIcon> = {
 function userInitials(name: string | null, email: string): string {
   if (name) {
     const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    const first = parts[0];
+    const second = parts[1];
+    if (first && second) {
+      return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
     }
-    return parts[0]?.slice(0, 2).toUpperCase() ?? '?';
+    return first?.slice(0, 2).toUpperCase() ?? '?';
   }
   return email.slice(0, 2).toUpperCase();
 }
