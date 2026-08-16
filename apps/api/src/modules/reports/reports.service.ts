@@ -823,6 +823,26 @@ export class ReportsService {
       from === monthStart && to === today
         ? statement
         : await this.incomeStatement(tenantId, { from, to });
+    const msPerDay = 86_400_000;
+    const rangeDays =
+      Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / msPerDay) + 1;
+    const prevToDate = new Date(Date.parse(`${from}T00:00:00Z`) - msPerDay);
+    const prevFromDate = new Date(Date.parse(`${from}T00:00:00Z`) - rangeDays * msPerDay);
+    const prevFrom = prevFromDate.toISOString().slice(0, 10);
+    const prevTo = prevToDate.toISOString().slice(0, 10);
+    const [salesPrevRange]: Array<{ total: number }> = await this.dataSource.query(
+      `SELECT COALESCE(SUM(i.total), 0) AS total FROM invoices i
+        WHERE i.tenant_id = $1 AND i.deleted_at IS NULL AND i.status = 'issued'
+          AND i.type = 'invoice' AND i.issue_date >= $2 AND i.issue_date <= $3`,
+      [tenantId, prevFrom, prevTo],
+    );
+    const [rangeInvoicesPrev]: Array<{ total: number }> = await this.dataSource.query(
+      `SELECT COUNT(*) AS total FROM invoices i
+        WHERE i.tenant_id = $1 AND i.deleted_at IS NULL AND i.status = 'issued'
+          AND i.issue_date >= $2 AND i.issue_date <= $3`,
+      [tenantId, prevFrom, prevTo],
+    );
+    const prevStatement = await this.incomeStatement(tenantId, { from: prevFrom, to: prevTo });
     return {
       asOf: today,
       salesToday: round2(Number(salesToday?.total ?? 0)),
@@ -831,6 +851,9 @@ export class ReportsService {
       salesRange: round2(Number(salesRange?.total ?? 0)),
       rangeInvoices: Number(rangeInvoices?.total ?? 0),
       netIncomeRange: rangeStatement.netIncome,
+      salesPreviousRange: round2(Number(salesPrevRange?.total ?? 0)),
+      rangeInvoicesPrevious: Number(rangeInvoicesPrev?.total ?? 0),
+      netIncomePreviousRange: prevStatement.netIncome,
       receivables: round2(Number(receivables?.total ?? 0)),
       payables: round2(Number(payables?.total ?? 0)),
       inventoryValue: round2(Number(inventoryValue?.total ?? 0)),
