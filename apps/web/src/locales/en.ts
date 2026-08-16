@@ -765,6 +765,7 @@ const en: Translation = {
   purchaseOrders: {
     title: 'Purchase orders',
     subtitle: 'Procurement',
+    order: 'Purchase order',
     newOrder: 'New purchase order',
     supplier: 'Supplier',
     searchByNumber: 'Search by number…',

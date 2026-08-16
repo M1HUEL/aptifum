@@ -28,6 +28,7 @@ import {
 import { Package } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
+import { DetailTable, SectionHeading } from '../components/ui/detail-table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
@@ -532,46 +533,31 @@ export function ProductsPage() {
           {viewError ? <ErrorBanner message={viewError} /> : null}
           {!viewLoading && viewing ? (
             <div>
-              <div className="mb-2 grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 gap-y-3">
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.sku')}</div>
-                  <div className="mt-0.5 block">{viewing.sku}</div>
+              <DetailTable
+                rows={[
+                  { label: t('fields.sku'), value: viewing.sku },
+                  {
+                    label: t('common.status'),
+                    value: (
+                      <Badge tone={viewing.enabled ? 'success' : 'neutral'}>
+                        {viewing.enabled ? t('products.enabled') : t('products.disabled')}
+                      </Badge>
+                    ),
+                  },
+                  { label: t('products.category'), value: viewing.category?.name ?? '—' },
+                  { label: t('fields.brand'), value: viewing.brand ?? '—' },
+                  { label: t('fields.unitOfMeasure'), value: viewing.unitOfMeasure ?? '—' },
+                  { label: t('fields.barcode'), value: viewing.barcode ?? '—' },
+                  { label: t('fields.purchasePrice'), value: formatMoney(viewing.purchasePrice) },
+                  { label: t('fields.salePrice'), value: formatMoney(viewing.salePrice) },
+                ]}
+              />
+              {viewing.description ? (
+                <div className="mt-5 rounded-ui border border-border bg-bg p-3 text-sm text-text">
+                  {viewing.description}
                 </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('common.status')}</div>
-                  <div className="mt-0.5 block">
-                    <Badge tone={viewing.enabled ? 'success' : 'neutral'}>
-                      {viewing.enabled ? t('products.enabled') : t('products.disabled')}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('products.category')}</div>
-                  <div className="mt-0.5 block">{viewing.category?.name ?? 'â€”'}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.brand')}</div>
-                  <div className="mt-0.5 block">{viewing.brand ?? 'â€”'}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.unitOfMeasure')}</div>
-                  <div className="mt-0.5 block">{viewing.unitOfMeasure ?? 'â€”'}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.barcode')}</div>
-                  <div className="mt-0.5 block">{viewing.barcode ?? 'â€”'}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.purchasePrice')}</div>
-                  <div className="mt-0.5 block text-right tabular-nums">{formatMoney(viewing.purchasePrice)}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.salePrice')}</div>
-                  <div className="mt-0.5 block text-right tabular-nums">{formatMoney(viewing.salePrice)}</div>
-                </div>
-              </div>
-              {viewing.description ? <div className="mt-2">{viewing.description}</div> : null}
-              <h4 className="mb-2 mt-4 text-[14px]">{t('products.stockByWarehouse')}</h4>
+              ) : null}
+              <SectionHeading>{t('products.stockByWarehouse')}</SectionHeading>
               {stock.length === 0 ? (
                 <p className="text-muted">{t('products.noStockRecorded')}</p>
               ) : (

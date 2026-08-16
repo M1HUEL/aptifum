@@ -763,6 +763,7 @@ const es = {
   purchaseOrders: {
     title: 'Órdenes de compra',
     subtitle: 'Compras',
+    order: 'Orden de compra',
     newOrder: 'Nueva orden de compra',
     supplier: 'Proveedor',
     searchByNumber: 'Buscar por número…',

@@ -1,9 +1,10 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError, downloadFile } from '../../api/client';
 import type { CfdiDocument, Invoice } from '../../api/types';
 import { Badge, ErrorBanner, formatDate, formatMoney, LoadingBlock } from '../ui';
 import { Button } from '../ui/button';
+import { DetailTable, SectionHeading } from '../ui/detail-table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { useToast } from '../toast';
 
@@ -25,38 +26,6 @@ function statusTone(status: string): 'success' | 'neutral' | 'danger' {
     default:
       return 'danger';
   }
-}
-
-function SectionHeading({ children }: { children: ReactNode }) {
-  return (
-    <h4 className="mb-2 mt-5 flex items-center gap-2 border-t border-border pt-4 text-[14px] font-semibold text-text">
-      {children}
-    </h4>
-  );
-}
-
-interface DetailRow {
-  label: string;
-  value: ReactNode;
-}
-
-function DetailTable({ rows }: { rows: DetailRow[] }) {
-  return (
-    <div className="mb-3.5 overflow-hidden rounded-ui border border-border bg-surface shadow-(--shadow)">
-      <table className="w-full border-collapse [&_tr:last-child>td]:border-b-0">
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={index}>
-              <td className="w-[45%] whitespace-nowrap border-b border-border px-[14px] py-2.5 align-top text-[12px] uppercase tracking-[0.04em] text-muted">
-                {row.label}
-              </td>
-              <td className="border-b border-border px-[14px] py-2.5 align-top text-right tabular-nums">{row.value}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
 }
 
 export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | null; onClose: () => void }) {

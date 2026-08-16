@@ -41,6 +41,7 @@ import { ShoppingBag } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
+import { PurchaseOrderDetailsModal } from '../components/purchasing/purchase-order-details';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
@@ -115,6 +116,7 @@ export function PurchaseOrdersPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [receiving, setReceiving] = useState<PurchaseOrder | null>(null);
   const [receiveError, setReceiveError] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<PurchaseOrder | null>(null);
   const [statusAction, setStatusAction] = useState<{
     id: string;
     action: 'approve' | 'cancel';
@@ -353,6 +355,9 @@ export function PurchaseOrdersPage() {
       header: t('common.actions'),
       render: (row) => (
         <div className="flex justify-end gap-1.5">
+          <Button variant="ghost" size="sm" onClick={() => setViewing(row)}>
+            {t('common.view')}
+          </Button>
           {row.status === 'draft' ? (
             <>
               <Button
@@ -650,6 +655,8 @@ export function PurchaseOrdersPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <PurchaseOrderDetailsModal order={viewing} onClose={() => setViewing(null)} />
     </>
   );
 }

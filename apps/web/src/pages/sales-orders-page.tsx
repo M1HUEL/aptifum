@@ -34,6 +34,7 @@ import {
 } from '../components/ui';
 import { ClipboardList } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { DetailTable, SectionHeading } from '../components/ui/detail-table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
@@ -590,75 +591,76 @@ export function SalesOrdersPage() {
           {viewLoading ? <LoadingBlock /> : null}
           {!viewLoading && viewing ? (
             <div>
-              <div className="mb-2 grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 gap-y-3">
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.kind')}</div>
-                  <div className="mt-0.5 block">{viewing.kind}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('common.status')}</div>
-                  <div className="mt-0.5 block">
-                    <Badge tone={statusTone(viewing.status)}>{viewing.status}</Badge>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.customer')}</div>
-                  <div className="mt-0.5 block">{viewing.customer?.tradeName ?? '—'}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.warehouse')}</div>
-                  <div className="mt-0.5 block">{viewing.warehouse?.name ?? '—'}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.issueDate')}</div>
-                  <div className="mt-0.5 block">{formatDate(viewing.issueDate)}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.dueDate')}</div>
-                  <div className="mt-0.5 block">{viewing.dueDate ? formatDate(viewing.dueDate) : '—'}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.subtotal')}</div>
-                  <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.subtotal)}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.discount')}</div>
-                  <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.discount)}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.tax')}</div>
-                  <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.tax)}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.total')}</div>
-                  <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.total)}</div>
-                </div>
-              </div>
+              <DetailTable
+                rows={[
+                  {
+                    label: t('fields.kind'),
+                    value: (
+                      <Badge tone={viewing.kind === 'order' ? 'info' : 'neutral'}>
+                        {t(`salesOrders.${viewing.kind}`)}
+                      </Badge>
+                    ),
+                  },
+                  {
+                    label: t('common.status'),
+                    value: <Badge tone={statusTone(viewing.status)}>{t(`salesOrders.${viewing.status}`)}</Badge>,
+                  },
+                  { label: t('fields.customer'), value: viewing.customer?.tradeName ?? '—' },
+                  { label: t('fields.warehouse'), value: viewing.warehouse?.name ?? '—' },
+                  { label: t('fields.issueDate'), value: formatDate(viewing.issueDate) },
+                  { label: t('fields.dueDate'), value: viewing.dueDate ? formatDate(viewing.dueDate) : '—' },
+                  { label: t('fields.subtotal'), value: formatMoney(viewing.subtotal) },
+                  { label: t('fields.discount'), value: formatMoney(viewing.discount) },
+                  { label: t('fields.tax'), value: formatMoney(viewing.tax) },
+                  { label: t('fields.total'), value: formatMoney(viewing.total) },
+                ]}
+              />
+              <SectionHeading>{t('invoices.items')}</SectionHeading>
               <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr>
-                      <th>{t('fields.product')}</th>
-                      <th className="text-right tabular-nums">{t('fields.qty')}</th>
-                      <th className="text-right tabular-nums">{t('fields.unitPrice')}</th>
-                      <th className="text-right tabular-nums">{t('fields.tax')}</th>
-                      <th className="text-right tabular-nums">{t('salesOrders.lineTotal')}</th>
+                      <th className="h-10 bg-bg px-[14px] text-left align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                        {t('fields.product')}
+                      </th>
+                      <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                        {t('fields.qty')}
+                      </th>
+                      <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                        {t('fields.unitPrice')}
+                      </th>
+                      <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                        {t('fields.tax')}
+                      </th>
+                      <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                        {t('salesOrders.lineTotal')}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {(viewing.items ?? []).map((item) => (
-                      <tr key={item.id}>
-                        <td>{item.description ?? item.product?.name ?? item.productId}</td>
-                        <td className="text-right tabular-nums">{item.quantity}</td>
-                        <td className="text-right tabular-nums">{formatMoney(item.unitPrice)}</td>
-                        <td className="text-right tabular-nums">{formatMoney(item.taxAmount)}</td>
-                        <td className="text-right tabular-nums">{formatMoney(item.lineTotal)}</td>
+                      <tr key={item.id} className="border-t border-border">
+                        <td className="px-[14px] py-2.5 align-middle">
+                          {item.description ?? item.product?.name ?? item.productId}
+                        </td>
+                        <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{item.quantity}</td>
+                        <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">
+                          {formatMoney(item.unitPrice)}
+                        </td>
+                        <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">
+                          {formatMoney(item.taxAmount)}
+                        </td>
+                        <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">
+                          {formatMoney(item.lineTotal)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              {viewing.notes ? <div className="mt-2">{viewing.notes}</div> : null}
+              {viewing.notes ? (
+                <div className="mt-5 rounded-ui border border-border bg-bg p-3 text-sm text-text">{viewing.notes}</div>
+              ) : null}
             </div>
           ) : null}
           <DialogFooter cancelLabel={t('common.close')} />
