@@ -46,7 +46,7 @@
     "@nestjs/testing": "^11.1.28",
     "@types/express": "^5.0.6",
     "@types/ms": "^2.1.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.2.0",
     "@types/nodemailer": "^8.0.1",
     "@types/pdfkit": "^0.17.6",
     "@types/supertest": "^6.0.2",
