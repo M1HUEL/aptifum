@@ -274,6 +274,9 @@ export interface DashboardReport {
   salesRange: number;
   rangeInvoices: number;
   netIncomeRange: number;
+  salesPreviousRange: number;
+  rangeInvoicesPrevious: number;
+  netIncomePreviousRange: number;
   receivables: number;
   payables: number;
   inventoryValue: number;

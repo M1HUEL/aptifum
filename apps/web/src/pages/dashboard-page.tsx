@@ -73,6 +73,13 @@ function rangeFor(preset: string): { from: string; to: string } {
   return { from: start.toISOString().slice(0, 10), to: toStr };
 }
 
+function trendPct(current: number, previous: number): number | null {
+  if (previous === 0) {
+    return current === 0 ? null : current > 0 ? 100 : -100;
+  }
+  return ((current - previous) / Math.abs(previous)) * 100;
+}
+
 function StatusRow({
   label,
   count,
@@ -135,6 +142,11 @@ export function DashboardPage() {
     return rangeFor(preset);
   }, [preset, customFrom, customTo]);
 
+  const rangeDays = useMemo(
+    () => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000) + 1,
+    [from, to],
+  );
+
   const reportParams = useMemo(() => {
     const params = new URLSearchParams({ from, to });
     if (warehouseId) params.set('warehouseId', warehouseId);
@@ -176,12 +188,15 @@ export function DashboardPage() {
     : null;
 
   const rangeLabel = t(`dashboard.ranges.${preset}`);
+  const salesTrend = report ? trendPct(report.salesRange, report.salesPreviousRange) : null;
+  const netIncomeTrend = report ? trendPct(report.netIncomeRange, report.netIncomePreviousRange) : null;
+  const invoicesTrend = report ? trendPct(report.rangeInvoices, report.rangeInvoicesPrevious) : null;
 
   return (
     <>
       <PageHeader
         title={t('nav.dashboard')}
-        subtitle={`${rangeLabel} · ${formatDate(from)} → ${formatDate(to)}`}
+        subtitle={`${rangeLabel} · ${formatDate(from)} → ${formatDate(to)} · ${t('dashboard.vsPrevious', { days: rangeDays })}`}
       />
       <div className="mb-4 flex gap-2.5">
         <Select value={preset} onChange={(event) => setPreset(event.target.value)}>
@@ -227,9 +242,9 @@ export function DashboardPage() {
       {report ? (
         <>
           <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3.5">
-            <StatCard label={t('dashboard.stat.revenuePeriod')} value={formatMoney(report.salesRange)} />
-            <StatCard label={t('dashboard.stat.netIncomePeriod')} value={formatMoney(report.netIncomeRange)} />
-            <StatCard label={t('dashboard.stat.invoicesPeriod')} value={String(report.rangeInvoices)} />
+            <StatCard label={t('dashboard.stat.revenuePeriod')} value={formatMoney(report.salesRange)} trend={salesTrend} />
+            <StatCard label={t('dashboard.stat.netIncomePeriod')} value={formatMoney(report.netIncomeRange)} trend={netIncomeTrend} />
+            <StatCard label={t('dashboard.stat.invoicesPeriod')} value={String(report.rangeInvoices)} trend={invoicesTrend} />
             <StatCard label={t('dashboard.stat.salesToday')} value={formatMoney(report.salesToday)} />
             <StatCard label={t('dashboard.stat.salesThisMonth')} value={formatMoney(report.salesMonth)} />
             <StatCard label={t('dashboard.stat.netIncomeMonth')} value={formatMoney(report.netIncomeMonth)} />

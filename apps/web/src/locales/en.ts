@@ -258,6 +258,7 @@ const en: Translation = {
       all: 'All time',
       custom: 'Custom',
     },
+    vsPrevious: 'vs previous {{days}} days',
     stat: {
       revenuePeriod: 'Revenue (period)',
       netIncomePeriod: 'Net income (period)',

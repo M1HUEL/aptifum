@@ -1,6 +1,6 @@
 import { useMemo, useState, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDown, ArrowUp, ArrowUpDown, Inbox } from 'lucide-react';
+import { ArrowDown, ArrowDownRight, ArrowUp, ArrowUpDown, ArrowUpRight, Inbox } from 'lucide-react';
 import { cn } from '../lib/cn';
 import i18n from '../i18n';
 
@@ -45,10 +45,32 @@ export function formatDate(value: string | null | undefined, locale?: string): s
   return date.toLocaleDateString(resolvedLocale, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-export function StatCard({ label, value }: { label: string; value: string }) {
+export function StatCard({
+  label,
+  value,
+  trend,
+}: {
+  label: string;
+  value: string;
+  trend?: number | null;
+}) {
+  const hasTrend = trend !== undefined && trend !== null && Number.isFinite(trend);
+  const trendUp = (trend ?? 0) >= 0;
   return (
     <div className="rounded-ui border border-border bg-surface p-4 shadow-(--shadow)">
-      <div className="mb-1.5 text-[12px] uppercase tracking-[0.04em] text-muted">{label}</div>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <span className="text-[12px] uppercase tracking-[0.04em] text-muted">{label}</span>
+        {hasTrend ? (
+          <span
+            className={`inline-flex items-center gap-0.5 text-[12px] font-semibold ${
+              trendUp ? 'text-success' : 'text-danger'
+            }`}
+          >
+            {trendUp ? <ArrowUpRight className="size-3.5" /> : <ArrowDownRight className="size-3.5" />}
+            {Math.abs(trend!).toFixed(1)}%
+          </span>
+        ) : null}
+      </div>
       <div className="text-xl font-bold">{value}</div>
     </div>
   );

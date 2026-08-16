@@ -256,6 +256,7 @@ const es = {
       all: 'Todo el tiempo',
       custom: 'Personalizado',
     },
+    vsPrevious: 'vs. los {{days}} días anteriores',
     stat: {
       revenuePeriod: 'Ingresos (período)',
       netIncomePeriod: 'Ingreso neto (período)',
