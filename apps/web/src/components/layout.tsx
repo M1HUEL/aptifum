@@ -134,9 +134,17 @@ export function Layout() {
             type="button"
             className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-ui text-sidebar-text transition-colors select-none hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             onClick={isMobile ? () => setSidebarOpen(true) : () => setCollapsed((value) => !value)}
-            aria-label={isMobile ? t('layout.toggleSidebar') : collapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')}
+            aria-label={
+              isMobile ? t('layout.toggleSidebar') : collapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')
+            }
           >
-            {isMobile ? <Menu className="size-6" /> : effectiveCollapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}
+            {isMobile ? (
+              <Menu className="size-6" />
+            ) : effectiveCollapsed ? (
+              <PanelLeftOpen className="size-5" />
+            ) : (
+              <PanelLeftClose className="size-5" />
+            )}
           </button>
           <div className="flex size-8 shrink-0 items-center justify-center rounded-ui bg-primary font-bold text-white">
             A
@@ -189,7 +197,11 @@ export function Layout() {
           <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain p-2 pb-3 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.2)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb]:bg-white/20">
             {visibleGroups.map((group, index) => (
               <div key={group.key}>
-                {!effectiveCollapsed ? <div className="px-[14px] pt-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-sidebar-text opacity-55">{t(group.labelKey)}</div> : null}
+                {!effectiveCollapsed ? (
+                  <div className="px-[14px] pt-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-sidebar-text opacity-55">
+                    {t(group.labelKey)}
+                  </div>
+                ) : null}
                 {group.items.map((item) => {
                   const ItemIcon = ROUTE_ICONS[item.to] ?? Building2;
                   return (
@@ -204,7 +216,12 @@ export function Layout() {
                     >
                       {({ isActive }) => (
                         <>
-                          {isActive ? <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-white" aria-hidden="true" /> : null}
+                          {isActive ? (
+                            <span
+                              className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-white"
+                              aria-hidden="true"
+                            />
+                          ) : null}
                           <ItemIcon className="size-4 shrink-0" />
                           {!effectiveCollapsed ? <span className="truncate">{t(item.labelKey)}</span> : null}
                         </>
@@ -212,7 +229,9 @@ export function Layout() {
                     </NavLink>
                   );
                 })}
-                {effectiveCollapsed && index < visibleGroups.length - 1 ? <div className="mx-3 my-2 border-t border-white/10" /> : null}
+                {effectiveCollapsed && index < visibleGroups.length - 1 ? (
+                  <div className="mx-3 my-2 border-t border-white/10" />
+                ) : null}
               </div>
             ))}
           </nav>
@@ -260,7 +279,11 @@ export function Layout() {
             </button>
           </div>
         </aside>
-        <div className={`fixed inset-0 z-40 hidden bg-black/40 transition-opacity duration-200 max-[900px]:block${sidebarOpen ? ' opacity-100' : ' pointer-events-none opacity-0'}`} onClick={closeSidebar} aria-hidden={!sidebarOpen} />
+        <div
+          className={`fixed inset-0 z-40 hidden bg-black/40 transition-opacity duration-200 max-[900px]:block${sidebarOpen ? ' opacity-100' : ' pointer-events-none opacity-0'}`}
+          onClick={closeSidebar}
+          aria-hidden={!sidebarOpen}
+        />
         <main className="min-w-0 flex-1 px-8 py-7 max-[900px]:px-4 max-[900px]:py-5 print:p-0">
           <Outlet />
         </main>

@@ -4,9 +4,7 @@ import {
   confirmSalesOrder,
   createCustomer,
   createProduct,
-  createPurchaseOrder,
   createSalesOrder,
-  createSupplier,
   createWarehouse,
   seedAuth,
   selectSearchable,
@@ -94,10 +92,7 @@ test('issues an invoice for a confirmed order, records a payment, and searches b
   await expect(searchedRow).toBeVisible();
 });
 
-test('creates a supplier and purchase order in the UI, then approves and receives goods', async ({
-  context,
-  page,
-}) => {
+test('creates a supplier and purchase order in the UI, then approves and receives goods', async ({ context, page }) => {
   const { accessToken } = await seedAuth(context);
 
   const suffix = Date.now();

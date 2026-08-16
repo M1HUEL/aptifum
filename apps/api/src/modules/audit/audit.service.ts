@@ -20,9 +20,7 @@ export interface AuditEntry {
 
 @Injectable()
 export class AuditService {
-  constructor(
-    @InjectRepository(AuditLog) private readonly auditRepo: Repository<AuditLog>,
-  ) {}
+  constructor(@InjectRepository(AuditLog) private readonly auditRepo: Repository<AuditLog>) {}
 
   async record(entry: AuditEntry): Promise<void> {
     await this.auditRepo.save(this.auditRepo.create({ ...entry }));

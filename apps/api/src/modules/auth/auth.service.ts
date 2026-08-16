@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomUUID } from 'node:crypto';
@@ -88,14 +84,7 @@ export class AuthService {
     if (!matches) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    await this.recordAuth(
-      AuditAction.LOGIN,
-      'login',
-      user.id,
-      user.defaultTenantId,
-      ctx,
-      { email: user.email },
-    );
+    await this.recordAuth(AuditAction.LOGIN, 'login', user.id, user.defaultTenantId, ctx, { email: user.email });
     return this.issueTokens(user.id, user.email, user.defaultTenantId, ctx);
   }
 
@@ -123,13 +112,7 @@ export class AuthService {
 
     session.revokedAt = new Date();
     await this.sessionsRepo.save(session);
-    const { refreshToken } = await this.createSession(
-      user.id,
-      user.email,
-      user.tenantId,
-      session.familyId,
-      ctx,
-    );
+    const { refreshToken } = await this.createSession(user.id, user.email, user.tenantId, session.familyId, ctx);
     const accessToken = await this.signAccess(user.id, user.email, user.tenantId);
     return { accessToken, refreshToken, user };
   }
@@ -141,13 +124,7 @@ export class AuthService {
       if (session && !session.revokedAt) {
         await this.revokeFamily(session.familyId);
       }
-      await this.recordAuth(
-        AuditAction.LOGIN,
-        'logout',
-        payload.sub,
-        payload.tenantId,
-        ctx,
-      );
+      await this.recordAuth(AuditAction.LOGIN, 'logout', payload.sub, payload.tenantId, ctx);
     } catch {
       // idempotent: invalid or already-revoked tokens are ignored
     }
@@ -171,13 +148,7 @@ export class AuthService {
       secret: this.config.env.JWT_ACCESS_SECRET,
       expiresIn: this.config.env.PASSWORD_RESET_TTL as StringValue,
     });
-    await this.recordAuth(
-      AuditAction.UPDATE,
-      'password-reset-request',
-      user.id,
-      user.defaultTenantId,
-      ctx,
-    );
+    await this.recordAuth(AuditAction.UPDATE, 'password-reset-request', user.id, user.defaultTenantId, ctx);
     if (this.emailService.isConfigured()) {
       try {
         await this.sendPasswordResetEmail(user, resetToken);
@@ -204,27 +175,15 @@ export class AuthService {
     });
   }
 
-  async resetPassword(
-    dto: ResetPasswordDto,
-    ctx?: RequestContext,
-  ): Promise<{ success: boolean }> {
+  async resetPassword(dto: ResetPasswordDto, ctx?: RequestContext): Promise<{ success: boolean }> {
     const payload = await this.verifyPasswordResetToken(dto.token);
     const user = await this.usersService.getProfile(payload.sub).catch(() => null);
     if (!user || !user.active) {
       throw new BadRequestException('Invalid or expired reset token');
     }
     await this.usersService.setPassword(user.id, dto.newPassword);
-    await this.sessionsRepo.update(
-      { userId: user.id, revokedAt: IsNull() },
-      { revokedAt: new Date() },
-    );
-    await this.recordAuth(
-      AuditAction.UPDATE,
-      'password-reset',
-      user.id,
-      user.tenantId,
-      ctx,
-    );
+    await this.sessionsRepo.update({ userId: user.id, revokedAt: IsNull() }, { revokedAt: new Date() });
+    await this.recordAuth(AuditAction.UPDATE, 'password-reset', user.id, user.tenantId, ctx);
     return { success: true };
   }
 
@@ -243,13 +202,7 @@ export class AuthService {
       secret: this.config.env.JWT_ACCESS_SECRET,
       expiresIn: this.config.env.INVITE_TTL as StringValue,
     });
-    await this.recordAuth(
-      AuditAction.UPDATE,
-      'user-invite',
-      user.id,
-      user.tenantId,
-      ctx,
-    );
+    await this.recordAuth(AuditAction.UPDATE, 'user-invite', user.id, user.tenantId, ctx);
     if (this.emailService.isConfigured()) {
       try {
         await this.sendInviteEmail(user, inviteToken);
@@ -261,10 +214,7 @@ export class AuthService {
     return { user, inviteToken };
   }
 
-  private async sendInviteEmail(
-    user: UserProfile,
-    inviteToken: string,
-  ): Promise<void> {
+  private async sendInviteEmail(user: UserProfile, inviteToken: string): Promise<void> {
     const link = `${this.config.env.APP_URL}/accept-invite?token=${encodeURIComponent(inviteToken)}`;
     await this.emailService.sendMail({
       to: user.email,
@@ -276,35 +226,19 @@ export class AuthService {
     });
   }
 
-  async acceptInvite(
-    dto: AcceptInviteDto,
-    ctx?: RequestContext,
-  ): Promise<{ success: boolean }> {
+  async acceptInvite(dto: AcceptInviteDto, ctx?: RequestContext): Promise<{ success: boolean }> {
     const payload = await this.verifySignedToken(dto.token, 'invite');
     const user = await this.usersService.getProfile(payload.sub).catch(() => null);
     if (!user || !user.active) {
       throw new BadRequestException('Invalid or expired invite token');
     }
     await this.usersService.setPassword(user.id, dto.newPassword);
-    await this.sessionsRepo.update(
-      { userId: user.id, revokedAt: IsNull() },
-      { revokedAt: new Date() },
-    );
-    await this.recordAuth(
-      AuditAction.UPDATE,
-      'invite-accepted',
-      user.id,
-      user.tenantId,
-      ctx,
-    );
+    await this.sessionsRepo.update({ userId: user.id, revokedAt: IsNull() }, { revokedAt: new Date() });
+    await this.recordAuth(AuditAction.UPDATE, 'invite-accepted', user.id, user.tenantId, ctx);
     return { success: true };
   }
 
-  async updateProfile(
-    userId: string,
-    dto: UpdateProfileDto,
-    ctx?: RequestContext,
-  ): Promise<UserProfile> {
+  async updateProfile(userId: string, dto: UpdateProfileDto, ctx?: RequestContext): Promise<UserProfile> {
     if (dto.name !== undefined && dto.name.trim()) {
       await this.usersService.updateName(userId, dto.name.trim());
     }
@@ -365,11 +299,7 @@ export class AuthService {
     return { accessToken, refreshToken, user };
   }
 
-  private async signAccess(
-    userId: string,
-    email: string,
-    tenantId: string | null,
-  ): Promise<string> {
+  private async signAccess(userId: string, email: string, tenantId: string | null): Promise<string> {
     const payload: AccessTokenPayload = { sub: userId, email, tenantId };
     return this.jwtService.signAsync(payload, {
       secret: this.config.env.JWT_ACCESS_SECRET,
@@ -435,10 +365,7 @@ export class AuthService {
     }
   }
 
-  private async verifySignedToken(
-    token: string,
-    type: SignedTokenPayload['type'],
-  ): Promise<SignedTokenPayload> {
+  private async verifySignedToken(token: string, type: SignedTokenPayload['type']): Promise<SignedTokenPayload> {
     try {
       const payload = await this.jwtService.verifyAsync<SignedTokenPayload>(token, {
         secret: this.config.env.JWT_ACCESS_SECRET,
@@ -457,10 +384,7 @@ export class AuthService {
   }
 
   private async revokeFamily(familyId: string): Promise<void> {
-    await this.sessionsRepo.update(
-      { familyId, revokedAt: IsNull() },
-      { revokedAt: new Date() },
-    );
+    await this.sessionsRepo.update({ familyId, revokedAt: IsNull() }, { revokedAt: new Date() });
   }
 
   private hashToken(token: string): string {

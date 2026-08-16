@@ -17,10 +17,7 @@ export class PurchaseOrdersController {
   @Get('receipts')
   @RequirePermissions(permission(ModuleName.PURCHASING, 'read'))
   @ApiOperation({ summary: 'List goods receipts' })
-  listReceipts(
-    @CurrentUser() user: { tenantId: string | null },
-    @Query() { page, limit }: PaginationQueryDto,
-  ) {
+  listReceipts(@CurrentUser() user: { tenantId: string | null }, @Query() { page, limit }: PaginationQueryDto) {
     return this.purchaseOrdersService.listReceipts(user.tenantId, Number(page), Math.min(Number(limit), 100));
   }
 

@@ -7,9 +7,7 @@ import { AuthService } from '../src/modules/auth/auth.service';
 import { UsersService } from '../src/modules/users/users.service';
 import { ConfigService } from '../src/config/config.module';
 
-function buildAuthService(
-  jwtOverrides: Partial<{ signAsync: unknown; verifyAsync: unknown }> = {},
-) {
+function buildAuthService(jwtOverrides: Partial<{ signAsync: unknown; verifyAsync: unknown }> = {}) {
   const usersService = {
     create: vi.fn<(input: Record<string, unknown>) => Promise<UserProfile>>(),
     findByEmailWithPassword: vi.fn<(email: string) => Promise<User | null>>(),
@@ -83,9 +81,7 @@ describe('AuthService', () => {
     const { service, usersService } = buildAuthService();
     usersService.findByEmailWithPassword.mockResolvedValue(null);
 
-    await expect(
-      service.login({ email: 'ghost@aptifum.dev', password: 'password123' }),
-    ).rejects.toThrow();
+    await expect(service.login({ email: 'ghost@aptifum.dev', password: 'password123' })).rejects.toThrow();
   });
 
   it('rejects login with wrong password', async () => {
@@ -100,9 +96,9 @@ describe('AuthService', () => {
       defaultTenantId: null,
     } as User);
 
-    await expect(
-      service.login({ email: 'user@aptifum.dev', password: 'wrong-password' }),
-    ).rejects.toThrow('Invalid credentials');
+    await expect(service.login({ email: 'user@aptifum.dev', password: 'wrong-password' })).rejects.toThrow(
+      'Invalid credentials',
+    );
   });
 
   it('issues token pair on successful login', async () => {
@@ -188,10 +184,7 @@ describe('AuthService', () => {
 
     await service.login({ email: 'user@aptifum.dev', password: 'correct-horse' });
 
-    expect(sessionsRepo.update).toHaveBeenCalledWith(
-      { id: In(['s1']) },
-      { revokedAt: expect.any(Date) },
-    );
+    expect(sessionsRepo.update).toHaveBeenCalledWith({ id: In(['s1']) }, { revokedAt: expect.any(Date) });
   });
 
   it('updates the profile name and records the change in the audit log', async () => {
@@ -230,9 +223,9 @@ describe('AuthService', () => {
   it('rejects a password change without the current password', async () => {
     const { service } = buildAuthService();
 
-    await expect(
-      service.updateProfile('u1', { newPassword: 'new-secret-pass' }),
-    ).rejects.toThrow('Current password is required');
+    await expect(service.updateProfile('u1', { newPassword: 'new-secret-pass' })).rejects.toThrow(
+      'Current password is required',
+    );
   });
 
   it('changes the password when the current password matches', async () => {
@@ -252,11 +245,7 @@ describe('AuthService', () => {
       newPassword: 'new-secret-pass',
     });
 
-    expect(usersService.changePassword).toHaveBeenCalledWith(
-      'u1',
-      'correct-horse',
-      'new-secret-pass',
-    );
+    expect(usersService.changePassword).toHaveBeenCalledWith('u1', 'correct-horse', 'new-secret-pass');
   });
 
   it('returns a reset token for an existing user', async () => {
@@ -318,9 +307,9 @@ describe('AuthService', () => {
       verifyAsync: vi.fn(async () => ({ sub: 'u1', type: 'refresh', jti: 'x' })),
     });
 
-    await expect(
-      service.resetPassword({ token: 'bad-token', newPassword: 'new-secret-pass' }),
-    ).rejects.toThrow('Invalid or expired token');
+    await expect(service.resetPassword({ token: 'bad-token', newPassword: 'new-secret-pass' })).rejects.toThrow(
+      'Invalid or expired token',
+    );
   });
 
   it('invites a user without a password and returns an invite token', async () => {
@@ -337,12 +326,8 @@ describe('AuthService', () => {
     const result = await service.inviteUser({ email: 'invited@aptifum.dev' });
 
     expect(result.inviteToken).toBe('signed-token');
-    expect(usersService.create).toHaveBeenCalledWith(
-      expect.objectContaining({ email: 'invited@aptifum.dev' }),
-    );
-    expect(usersService.create).toHaveBeenCalledWith(
-      expect.not.objectContaining({ password: expect.anything() }),
-    );
+    expect(usersService.create).toHaveBeenCalledWith(expect.objectContaining({ email: 'invited@aptifum.dev' }));
+    expect(usersService.create).toHaveBeenCalledWith(expect.not.objectContaining({ password: expect.anything() }));
     expect(jwtService.signAsync).toHaveBeenCalledWith(
       expect.objectContaining({ sub: 'u-invited', type: 'invite' }),
       expect.objectContaining({ expiresIn: '72h' }),
@@ -384,8 +369,8 @@ describe('AuthService', () => {
       verifyAsync: vi.fn(async () => ({ sub: 'u1', type: 'password_reset', jti: 'x' })),
     });
 
-    await expect(
-      service.acceptInvite({ token: 'bad-token', newPassword: 'new-secret-pass' }),
-    ).rejects.toThrow('Invalid or expired token');
+    await expect(service.acceptInvite({ token: 'bad-token', newPassword: 'new-secret-pass' })).rejects.toThrow(
+      'Invalid or expired token',
+    );
   });
 });

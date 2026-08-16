@@ -85,9 +85,7 @@ describe('EmailNotificationsService', () => {
     await service.handle(
       event({ eventType: 'credit_note.issued', payload: { number: 'CN-000001', customerId: 'c1', total: 30 } }),
     );
-    expect(email.sendMail).toHaveBeenCalledWith(
-      expect.objectContaining({ subject: 'Credit note CN-000001 issued' }),
-    );
+    expect(email.sendMail).toHaveBeenCalledWith(expect.objectContaining({ subject: 'Credit note CN-000001 issued' }));
   });
 
   it('skips when the customer has no email', async () => {
@@ -153,17 +151,21 @@ describe('EmailNotificationsService', () => {
   it('sends an overdue receivable reminder to the customer', async () => {
     const email = { isConfigured: vi.fn(() => true), sendMail: vi.fn(() => Promise.resolve(true)) };
     const invoicesRepo = {
-      findOneBy: vi.fn().mockResolvedValue({ id: 'inv-1', number: 'INV-000001', customerId: 'c1', total: 200, balanceDue: 200 }),
+      findOneBy: vi
+        .fn()
+        .mockResolvedValue({ id: 'inv-1', number: 'INV-000001', customerId: 'c1', total: 200, balanceDue: 200 }),
     };
     const customersRepo = {
       findOneBy: vi.fn().mockResolvedValue({ id: 'c1', email: 'bob@example.com', tradeName: 'Bob Co' }),
     };
     const service = buildService(email, { customers: customersRepo, invoices: invoicesRepo });
-    await service.handle(
-      event({ eventType: 'reminder.ar_overdue', payload: { invoiceId: 'inv-1', daysOverdue: 5 } }),
-    );
+    await service.handle(event({ eventType: 'reminder.ar_overdue', payload: { invoiceId: 'inv-1', daysOverdue: 5 } }));
     expect(invoicesRepo.findOneBy).toHaveBeenCalledWith({ id: 'inv-1', tenantId: TENANT });
-    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as { to: string; subject: string; text: string };
+    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as {
+      to: string;
+      subject: string;
+      text: string;
+    };
     expect(message.to).toBe('bob@example.com');
     expect(message.subject).toBe('Payment reminder: invoice INV-000001 is overdue');
     expect(message.text).toContain('5 day(s) overdue');
@@ -178,11 +180,11 @@ describe('EmailNotificationsService', () => {
     const suppliersRepo = {
       findOneBy: vi.fn().mockResolvedValue({ id: 's1', tradeName: 'Acme Supplies' }),
     };
-    const dataSource = { query: vi.fn().mockResolvedValue([{ email: 'ap@example.com' }, { email: 'boss@example.com' }]) };
+    const dataSource = {
+      query: vi.fn().mockResolvedValue([{ email: 'ap@example.com' }, { email: 'boss@example.com' }]),
+    };
     const service = buildService(email, { supplierBills: supplierBillsRepo, suppliers: suppliersRepo }, dataSource);
-    await service.handle(
-      event({ eventType: 'reminder.ap_overdue', payload: { billId: 'sb-1', daysOverdue: 3 } }),
-    );
+    await service.handle(event({ eventType: 'reminder.ap_overdue', payload: { billId: 'sb-1', daysOverdue: 3 } }));
     expect(supplierBillsRepo.findOneBy).toHaveBeenCalledWith({ id: 'sb-1', tenantId: TENANT });
     expect(dataSource.query).toHaveBeenCalledWith(expect.any(String), [TENANT, JSON.stringify(['purchasing:read'])]);
     const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as { to: string; subject: string };
@@ -217,7 +219,11 @@ describe('EmailNotificationsService', () => {
     );
     expect(ordersRepo.findOneBy).toHaveBeenCalledWith({ id: 'po-1', tenantId: TENANT });
     expect(dataSource.query).toHaveBeenCalledWith(expect.any(String), [TENANT, JSON.stringify(['purchasing:write'])]);
-    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as { to: string; subject: string; text: string };
+    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as {
+      to: string;
+      subject: string;
+      text: string;
+    };
     expect(message.to).toBe('approver@example.com');
     expect(message.subject).toBe('Purchase order PO-000001 awaiting approval');
     expect(message.text).toContain('800.00');

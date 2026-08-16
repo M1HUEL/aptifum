@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'node:crypto';
@@ -49,20 +44,12 @@ export class UsersService {
     });
     const saved = await this.usersRepo.save(user);
     if (input.tenantId) {
-      await this.usersRepo
-        .createQueryBuilder()
-        .relation(User, 'tenants')
-        .of(saved.id)
-        .add(input.tenantId);
+      await this.usersRepo.createQueryBuilder().relation(User, 'tenants').of(saved.id).add(input.tenantId);
     }
     if (input.roleName) {
       const role = await this.rolesRepo.findOneBy({ name: input.roleName });
       if (role) {
-        await this.usersRepo
-          .createQueryBuilder()
-          .relation(User, 'roles')
-          .of(saved.id)
-          .add(role.id);
+        await this.usersRepo.createQueryBuilder().relation(User, 'roles').of(saved.id).add(role.id);
       }
     }
     if (input.roleIds?.length) {
@@ -95,9 +82,7 @@ export class UsersService {
     }
     await this.usersRepo.save(user);
     if (input.roleIds) {
-      const roles = input.roleIds.length
-        ? await this.rolesRepo.findBy({ id: In(input.roleIds) })
-        : [];
+      const roles = input.roleIds.length ? await this.rolesRepo.findBy({ id: In(input.roleIds) }) : [];
       await this.usersRepo
         .createQueryBuilder()
         .relation(User, 'roles')

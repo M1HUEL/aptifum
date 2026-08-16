@@ -40,16 +40,11 @@ const dateOffset = (days: number): string => {
   return d.toISOString().slice(0, 10);
 };
 
-const backdate = async (
-  manager: EntityManager,
-  table: string,
-  id: string,
-  date: string,
-): Promise<void> => {
-  await manager.query(
-    `UPDATE ${table} SET created_at = $1::timestamptz, updated_at = $1::timestamptz WHERE id = $2`,
-    [`${date}T12:00:00.000Z`, id],
-  );
+const backdate = async (manager: EntityManager, table: string, id: string, date: string): Promise<void> => {
+  await manager.query(`UPDATE ${table} SET created_at = $1::timestamptz, updated_at = $1::timestamptz WHERE id = $2`, [
+    `${date}T12:00:00.000Z`,
+    id,
+  ]);
 };
 
 interface SaleLineInput {
@@ -69,11 +64,7 @@ interface Ctx {
   backdates: Array<{ table: string; id: string; date: string }>;
 }
 
-const toInvoiceItems = (
-  manager: EntityManager,
-  ctx: Ctx,
-  lines: SaleLineInput[],
-): InvoiceItem[] =>
+const toInvoiceItems = (manager: EntityManager, ctx: Ctx, lines: SaleLineInput[]): InvoiceItem[] =>
   lines.map((line) => {
     const unitPrice = line.unitPrice ?? line.product.salePrice;
     const quantity = line.quantity;
@@ -90,11 +81,7 @@ const toInvoiceItems = (
     });
   });
 
-const toOrderItems = (
-  manager: EntityManager,
-  ctx: Ctx,
-  lines: SaleLineInput[],
-): SalesOrderItem[] =>
+const toOrderItems = (manager: EntityManager, ctx: Ctx, lines: SaleLineInput[]): SalesOrderItem[] =>
   lines.map((line) => {
     const unitPrice = line.unitPrice ?? line.product.salePrice;
     const quantity = line.quantity;
@@ -119,9 +106,7 @@ const applyOutbound = async (
   quantity: number,
   referenceId: string,
 ): Promise<number> => {
-  const stock = await manager
-    .getRepository(ProductStock)
-    .findOneBy({ tenantId: ctx.tenantId, productId, warehouseId });
+  const stock = await manager.getRepository(ProductStock).findOneBy({ tenantId: ctx.tenantId, productId, warehouseId });
   const unitCost = stock?.averageCost ?? 0;
   await applyStockMovement(manager, {
     tenantId: ctx.tenantId,
@@ -157,18 +142,11 @@ const applyReturn = async (
     referenceType: 'credit_note',
     referenceId: creditNoteId,
   });
-  const stock = await manager
-    .getRepository(ProductStock)
-    .findOneBy({ tenantId: ctx.tenantId, productId, warehouseId });
+  const stock = await manager.getRepository(ProductStock).findOneBy({ tenantId: ctx.tenantId, productId, warehouseId });
   return stock?.averageCost ?? 0;
 };
 
-const postSaleEntry = async (
-  manager: EntityManager,
-  ctx: Ctx,
-  invoice: Invoice,
-  cogs: number,
-): Promise<void> => {
+const postSaleEntry = async (manager: EntityManager, ctx: Ctx, invoice: Invoice, cogs: number): Promise<void> => {
   const lines: JournalLineInput[] =
     invoice.type === InvoiceType.CREDIT_NOTE
       ? [
@@ -201,9 +179,7 @@ const postSaleEntry = async (
   await postJournalEntry(manager, ctx.tenantId, {
     entryDate: invoice.issueDate,
     description:
-      invoice.type === InvoiceType.CREDIT_NOTE
-        ? `Credit note ${invoice.number}`
-        : `Invoice ${invoice.number}`,
+      invoice.type === InvoiceType.CREDIT_NOTE ? `Credit note ${invoice.number}` : `Invoice ${invoice.number}`,
     referenceType: invoice.type === InvoiceType.CREDIT_NOTE ? 'credit_note' : 'invoice',
     referenceId: invoice.id,
     currency: invoice.currency,
@@ -222,11 +198,7 @@ const createInvoice = async (
     notes?: string;
   },
 ): Promise<Invoice> => {
-  const { number, seriesId } = await nextDocumentNumber(
-    manager,
-    ctx.tenantId,
-    DocumentSeriesKind.INVOICE,
-  );
+  const { number, seriesId } = await nextDocumentNumber(manager, ctx.tenantId, DocumentSeriesKind.INVOICE);
   const items = toInvoiceItems(manager, ctx, opts.lines);
   const totals = computeTotals(items, 0);
   const invoice = manager.getRepository(Invoice).create({
@@ -250,14 +222,7 @@ const createInvoice = async (
   const saved = await manager.getRepository(Invoice).save(invoice);
   let cogs = 0;
   for (const line of opts.lines) {
-    const avgCost = await applyOutbound(
-      manager,
-      ctx,
-      line.product.id,
-      ctx.mainWarehouse.id,
-      line.quantity,
-      saved.id,
-    );
+    const avgCost = await applyOutbound(manager, ctx, line.product.id, ctx.mainWarehouse.id, line.quantity, saved.id);
     cogs = round2(cogs + line.quantity * avgCost);
   }
   await postSaleEntry(manager, ctx, saved, cogs);
@@ -313,11 +278,7 @@ const createCreditNote = async (
   lines: SaleLineInput[],
   issueOffset: number,
 ): Promise<Invoice> => {
-  const { number, seriesId } = await nextDocumentNumber(
-    manager,
-    ctx.tenantId,
-    DocumentSeriesKind.CREDIT_NOTE,
-  );
+  const { number, seriesId } = await nextDocumentNumber(manager, ctx.tenantId, DocumentSeriesKind.CREDIT_NOTE);
   const items = toInvoiceItems(manager, ctx, lines);
   const totals = computeTotals(items, 0);
   const creditNote = manager.getRepository(Invoice).create({
@@ -341,14 +302,7 @@ const createCreditNote = async (
   const saved = await manager.getRepository(Invoice).save(creditNote);
   let cogs = 0;
   for (const line of lines) {
-    const avgCost = await applyReturn(
-      manager,
-      ctx,
-      line.product.id,
-      original.warehouseId,
-      line.quantity,
-      saved.id,
-    );
+    const avgCost = await applyReturn(manager, ctx, line.product.id, original.warehouseId, line.quantity, saved.id);
     cogs = round2(cogs + line.quantity * avgCost);
   }
   await postSaleEntry(manager, ctx, saved, cogs);
@@ -401,11 +355,7 @@ const createInvoiceFromOrder = async (
   order: SalesOrder,
   issueOffset: number,
 ): Promise<Invoice> => {
-  const { number, seriesId } = await nextDocumentNumber(
-    manager,
-    ctx.tenantId,
-    DocumentSeriesKind.INVOICE,
-  );
+  const { number, seriesId } = await nextDocumentNumber(manager, ctx.tenantId, DocumentSeriesKind.INVOICE);
   const items = order.items.map((item) =>
     manager.getRepository(InvoiceItem).create({
       tenantId: ctx.tenantId,
@@ -441,14 +391,7 @@ const createInvoiceFromOrder = async (
   const saved = await manager.getRepository(Invoice).save(invoice);
   let cogs = 0;
   for (const item of order.items) {
-    const avgCost = await applyOutbound(
-      manager,
-      ctx,
-      item.productId,
-      order.warehouseId,
-      item.quantity,
-      saved.id,
-    );
+    const avgCost = await applyOutbound(manager, ctx, item.productId, order.warehouseId, item.quantity, saved.id);
     cogs = round2(cogs + item.quantity * avgCost);
   }
   await postSaleEntry(manager, ctx, saved, cogs);
@@ -469,11 +412,7 @@ const createPurchaseOrder = async (
     notes?: string;
   },
 ): Promise<PurchaseOrder> => {
-  const { number } = await nextDocumentNumber(
-    manager,
-    ctx.tenantId,
-    DocumentSeriesKind.PURCHASE_ORDER,
-  );
+  const { number } = await nextDocumentNumber(manager, ctx.tenantId, DocumentSeriesKind.PURCHASE_ORDER);
   const items = opts.lines.map((line) => {
     const unitCost = line.unitCost ?? line.product.purchasePrice;
     return manager.getRepository(PurchaseOrderItem).create({
@@ -522,11 +461,7 @@ const receivePurchaseOrder = async (
   order: PurchaseOrder,
   receivedOffset: number,
 ): Promise<GoodsReceipt> => {
-  const { number } = await nextDocumentNumber(
-    manager,
-    ctx.tenantId,
-    DocumentSeriesKind.GOODS_RECEIPT,
-  );
+  const { number } = await nextDocumentNumber(manager, ctx.tenantId, DocumentSeriesKind.GOODS_RECEIPT);
   const receiptItems = order.items.map((item) =>
     manager.getRepository(GoodsReceiptItem).create({
       tenantId: ctx.tenantId,
@@ -602,7 +537,8 @@ export async function seedDemoTransactions(overrides: DataSourceOverrides = {}):
     const orderRepo = ds.getRepository(SalesOrder);
     const invoiceRepo = ds.getRepository(Invoice);
     const poRepo = ds.getRepository(PurchaseOrder);
-    const hasTransactions = (await orderRepo.countBy({ tenantId: tenant.id })) > 0 ||
+    const hasTransactions =
+      (await orderRepo.countBy({ tenantId: tenant.id })) > 0 ||
       (await invoiceRepo.countBy({ tenantId: tenant.id })) > 0 ||
       (await poRepo.countBy({ tenantId: tenant.id })) > 0;
     if (hasTransactions) {
@@ -806,9 +742,7 @@ export async function seedDemoTransactions(overrides: DataSourceOverrides = {}):
       results.invoices += 1;
 
       results.creditNotes += 1;
-      await createCreditNote(manager, ctx, inv3, [
-        { product: bySku('OFF-002'), quantity: 5 },
-      ], -2);
+      await createCreditNote(manager, ctx, inv3, [{ product: bySku('OFF-002'), quantity: 5 }], -2);
 
       results.purchaseOrders += 1;
       await createPurchaseOrder(manager, ctx, {
@@ -848,10 +782,13 @@ export async function seedDemoTransactions(overrides: DataSourceOverrides = {}):
           tenantId: ctx.tenantId,
           sku: 'FBT-005',
           name: 'Sparkling Water 12-pack',
-          categoryId: (await manager.getRepository(Category).findOneBy({
-            tenantId: ctx.tenantId,
-            name: 'Food & Beverage',
-          }))?.id ?? null,
+          categoryId:
+            (
+              await manager.getRepository(Category).findOneBy({
+                tenantId: ctx.tenantId,
+                name: 'Food & Beverage',
+              })
+            )?.id ?? null,
           brand: 'ClearSpring',
           unitOfMeasure: 'case',
           purchasePrice: 5.4,

@@ -4,14 +4,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
 import type { components } from '../api/schema';
-import type {
-  AttendanceRecord,
-  AttendanceStatus,
-  Employee,
-  Leave,
-  LeaveStatus,
-  Paginated,
-} from '../api/types';
+import type { AttendanceRecord, AttendanceStatus, Employee, Leave, LeaveStatus, Paginated } from '../api/types';
 import {
   attendanceFormSchema,
   clockFormSchema,
@@ -291,10 +284,7 @@ export function AttendanceLeavesPage() {
 
   const clockMutation = useApiMutation<ClockAttendanceDto>('/api/v1/hr/attendance/clock', 'POST');
   const createAttMutation = useApiMutation<CreateAttendanceDto>('/api/v1/hr/attendance', 'POST');
-  const updateAttMutation = useApiMutation<UpdateAttendanceDto>(
-    `/api/v1/hr/attendance/${editingAttId ?? ''}`,
-    'PATCH',
-  );
+  const updateAttMutation = useApiMutation<UpdateAttendanceDto>(`/api/v1/hr/attendance/${editingAttId ?? ''}`, 'PATCH');
   const deleteAttMutation = useApiMutationVoid(`/api/v1/hr/attendance/${deletingAtt?.id ?? ''}`, 'DELETE');
 
   const createLeaveMutation = useApiMutation<CreateLeaveDto>('/api/v1/hr/leaves', 'POST');
@@ -316,9 +306,7 @@ export function AttendanceLeavesPage() {
     if (!leaveActionTarget) return;
     leaveActionMutation.mutate(undefined, {
       onSuccess: () => {
-        toast.toast(
-          leaveActionTarget.action === 'approve' ? t('hr.leaveApproved') : t('hr.leaveRejected'),
-        );
+        toast.toast(leaveActionTarget.action === 'approve' ? t('hr.leaveApproved') : t('hr.leaveRejected'));
         void loadLeaves(leavePage, leaveLimit, leaveFilters);
       },
       onError: (err) => {
@@ -459,12 +447,14 @@ export function AttendanceLeavesPage() {
     {
       key: 'clockInAt',
       header: t('hr.clockIn'),
-      render: (row) => (row.clockInAt ? new Date(row.clockInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'),
+      render: (row) =>
+        row.clockInAt ? new Date(row.clockInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
     },
     {
       key: 'clockOutAt',
       header: t('hr.clockOut'),
-      render: (row) => (row.clockOutAt ? new Date(row.clockOutAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'),
+      render: (row) =>
+        row.clockOutAt ? new Date(row.clockOutAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
     },
     {
       key: 'workedMinutes',
@@ -498,7 +488,11 @@ export function AttendanceLeavesPage() {
     { key: 'startDate', header: t('hr.start'), render: (row) => formatDate(row.startDate) },
     { key: 'endDate', header: t('hr.end'), render: (row) => formatDate(row.endDate) },
     { key: 'days', header: t('fields.days'), render: (row) => row.days },
-    { key: 'status', header: t('common.status'), render: (row) => <Badge tone={leaveTone(row.status)}>{row.status}</Badge> },
+    {
+      key: 'status',
+      header: t('common.status'),
+      render: (row) => <Badge tone={leaveTone(row.status)}>{row.status}</Badge>,
+    },
     { key: 'reason', header: t('fields.reason'), render: (row) => row.reason ?? '—' },
     {
       key: 'actions',
@@ -509,10 +503,18 @@ export function AttendanceLeavesPage() {
             <>
               {can('hr:approve') ? (
                 <>
-                  <Button variant="ghost" size="sm" onClick={() => setLeaveActionTarget({ leave: row, action: 'approve' })}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setLeaveActionTarget({ leave: row, action: 'approve' })}
+                  >
                     {t('hr.approve')}
                   </Button>
-                  <Button variant="danger" size="sm" onClick={() => setLeaveActionTarget({ leave: row, action: 'reject' })}>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setLeaveActionTarget({ leave: row, action: 'reject' })}
+                  >
                     {t('hr.reject')}
                   </Button>
                 </>
@@ -575,7 +577,11 @@ export function AttendanceLeavesPage() {
       />
 
       <div className="mb-4 flex gap-1">
-        <button type="button" className={tab === 'attendance' ? 'tab tab-active' : 'tab'} onClick={() => setTab('attendance')}>
+        <button
+          type="button"
+          className={tab === 'attendance' ? 'tab tab-active' : 'tab'}
+          onClick={() => setTab('attendance')}
+        >
           {t('hr.attendanceTab')}
         </button>
         <button type="button" className={tab === 'leaves' ? 'tab tab-active' : 'tab'} onClick={() => setTab('leaves')}>
@@ -617,9 +623,7 @@ export function AttendanceLeavesPage() {
                 ...attendanceStatuses.map((status) => ({ value: status, label: status })),
               ]}
             />
-            <Button type="submit">
-              {t('common.search')}
-            </Button>
+            <Button type="submit">{t('common.search')}</Button>
           </form>
           {attLoading && !attData ? <TableSkeleton columns={attendanceColumns.length} /> : null}
           {attData ? (
@@ -633,7 +637,13 @@ export function AttendanceLeavesPage() {
               ) : (
                 <DataTable columns={attendanceColumns} rows={attData.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={attData.meta.page} limit={attData.meta.limit} total={attData.meta.total} onPage={setAttPage} onLimit={handleAttLimitChange} />
+              <Pagination
+                page={attData.meta.page}
+                limit={attData.meta.limit}
+                total={attData.meta.total}
+                onPage={setAttPage}
+                onLimit={handleAttLimitChange}
+              />
             </>
           ) : null}
         </>
@@ -672,9 +682,7 @@ export function AttendanceLeavesPage() {
                 </option>
               ))}
             </Select>
-            <Button type="submit">
-              {t('common.search')}
-            </Button>
+            <Button type="submit">{t('common.search')}</Button>
           </form>
           {leaveLoading && !leaveData ? <TableSkeleton columns={leaveColumns.length} /> : null}
           {leaveData ? (
@@ -688,7 +696,13 @@ export function AttendanceLeavesPage() {
               ) : (
                 <DataTable columns={leaveColumns} rows={leaveData.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={leaveData.meta.page} limit={leaveData.meta.limit} total={leaveData.meta.total} onPage={setLeavePage} onLimit={handleLeaveLimitChange} />
+              <Pagination
+                page={leaveData.meta.page}
+                limit={leaveData.meta.limit}
+                total={leaveData.meta.total}
+                onPage={setLeavePage}
+                onLimit={handleLeaveLimitChange}
+              />
             </>
           ) : null}
         </>
@@ -700,7 +714,8 @@ export function AttendanceLeavesPage() {
           <form onSubmit={(event) => void submitClock(event)}>
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="clock-employee">
-                {t('fields.employee')}<span className="text-danger"> *</span>
+                {t('fields.employee')}
+                <span className="text-danger"> *</span>
               </label>
               <Controller
                 control={controlClock}
@@ -721,7 +736,8 @@ export function AttendanceLeavesPage() {
             </div>
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="clock-action">
-                {t('hr.action')}<span className="text-danger"> *</span>
+                {t('hr.action')}
+                <span className="text-danger"> *</span>
               </label>
               <Select className="w-full" id="clock-action" {...registerClock('action')}>
                 <option value="in">{t('hr.clockIn')}</option>
@@ -732,7 +748,11 @@ export function AttendanceLeavesPage() {
               <label htmlFor="clock-at">{t('hr.at')}</label>
               <Input className="w-full" id="clock-at" type="datetime-local" {...registerClock('at')} />
             </div>
-            {clockError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{clockError}</div> : null}
+            {clockError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {clockError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={clockBusy} loading={clockBusy}>
                 {clockBusy ? t('hr.recording') : t('hr.record')}
@@ -749,7 +769,8 @@ export function AttendanceLeavesPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="att-employee">
-                  {t('fields.employee')}<span className="text-danger"> *</span>
+                  {t('fields.employee')}
+                  <span className="text-danger"> *</span>
                 </label>
                 <Controller
                   control={controlAtt}
@@ -770,7 +791,8 @@ export function AttendanceLeavesPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="att-date">
-                  {t('fields.workDate')}<span className="text-danger"> *</span>
+                  {t('fields.workDate')}
+                  <span className="text-danger"> *</span>
                 </label>
                 <Input className="w-full" id="att-date" type="date" {...registerAtt('workDate')} />
                 {attErrors.workDate ? (
@@ -800,7 +822,11 @@ export function AttendanceLeavesPage() {
               <label htmlFor="att-notes">{t('fields.notes')}</label>
               <Textarea className="w-full" id="att-notes" rows={2} {...registerAtt('notes')} />
             </div>
-            {attFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{attFormError}</div> : null}
+            {attFormError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {attFormError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={attSaving} loading={attSaving}>
                 {attSaving ? t('common.saving') : editingAttId ? t('common.saveChanges') : t('hr.createAttendance')}
@@ -817,7 +843,8 @@ export function AttendanceLeavesPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="leave-employee">
-                  {t('fields.employee')}<span className="text-danger"> *</span>
+                  {t('fields.employee')}
+                  <span className="text-danger"> *</span>
                 </label>
                 <Controller
                   control={controlLeave}
@@ -838,7 +865,8 @@ export function AttendanceLeavesPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="leave-type">
-                  {t('tables.type')}<span className="text-danger"> *</span>
+                  {t('tables.type')}
+                  <span className="text-danger"> *</span>
                 </label>
                 <Select className="w-full" id="leave-type" {...registerLeave('leaveType')}>
                   {leaveTypes.map((type) => (
@@ -850,7 +878,8 @@ export function AttendanceLeavesPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="leave-start">
-                  {t('fields.startDate')}<span className="text-danger"> *</span>
+                  {t('fields.startDate')}
+                  <span className="text-danger"> *</span>
                 </label>
                 <Input className="w-full" id="leave-start" type="date" {...registerLeave('startDate')} />
                 {leaveErrors.startDate ? (
@@ -859,7 +888,8 @@ export function AttendanceLeavesPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="leave-end">
-                  {t('fields.endDate')}<span className="text-danger"> *</span>
+                  {t('fields.endDate')}
+                  <span className="text-danger"> *</span>
                 </label>
                 <Input className="w-full" id="leave-end" type="date" {...registerLeave('endDate')} />
                 {leaveErrors.endDate ? (
@@ -878,7 +908,11 @@ export function AttendanceLeavesPage() {
               <label htmlFor="leave-reason">{t('fields.reason')}</label>
               <Textarea className="w-full" id="leave-reason" rows={2} {...registerLeave('reason')} />
             </div>
-            {leaveFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{leaveFormError}</div> : null}
+            {leaveFormError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {leaveFormError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={leaveSaving} loading={leaveSaving}>
                 {leaveSaving ? t('common.saving') : editingLeaveId ? t('common.saveChanges') : t('hr.createLeave')}

@@ -1,6 +1,6 @@
 import type { Customer } from '../../api/types';
 import { useTranslation } from 'react-i18next';
-import { EmptyState, formatMoney , Input, Select } from '../ui';
+import { EmptyState, formatMoney, Input, Select } from '../ui';
 import { ShoppingCart } from 'lucide-react';
 
 export interface PosLine {
@@ -66,7 +66,12 @@ export function PosTicket({
       <h3 className="mb-3.5 text-[15px]">{t('pos.ticket')}</h3>
       <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
         <label htmlFor="pos-customer">{t('fields.customer')}</label>
-        <Select className="w-full" id="pos-customer" value={customerId} onChange={(event) => onCustomerChange(event.target.value)}>
+        <Select
+          className="w-full"
+          id="pos-customer"
+          value={customerId}
+          onChange={(event) => onCustomerChange(event.target.value)}
+        >
           <option value="">{t('pos.walkInCustomer')}</option>
           {customers.map((customer) => (
             <option key={customer.id} value={customer.id}>
@@ -78,7 +83,12 @@ export function PosTicket({
       <div className="mb-3 grid grid-cols-2 gap-2.5 max-[480px]:grid-cols-1">
         <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
           <label htmlFor="pos-currency">{t('pos.saleCurrency')}</label>
-          <Select className="w-full" id="pos-currency" value={saleCurrency} onChange={(event) => onCurrencyChange(event.target.value)}>
+          <Select
+            className="w-full"
+            id="pos-currency"
+            value={saleCurrency}
+            onChange={(event) => onCurrencyChange(event.target.value)}
+          >
             {SALE_CURRENCIES.map((currency) => (
               <option key={currency} value={currency}>
                 {currency}
@@ -91,7 +101,8 @@ export function PosTicket({
             <label htmlFor="pos-rate">
               {t('pos.exchangeRate', { base: FUNCTIONAL_CURRENCY, quote: saleCurrency })}
             </label>
-            <Input className="w-full"
+            <Input
+              className="w-full"
               id="pos-rate"
               type="number"
               min="0.000001"
@@ -107,7 +118,10 @@ export function PosTicket({
           <EmptyState message={t('pos.tapProductToAdd')} icon={<ShoppingCart className="size-6" />} />
         ) : (
           ticket.map((line, index) => (
-            <div className="grid grid-cols-[1fr_60px_80px_52px_86px_28px] items-center gap-1.5 border-b border-border px-1 py-1.5 last:border-b-0" key={`${line.productId}:${line.variantId ?? ''}`}>
+            <div
+              className="grid grid-cols-[1fr_60px_80px_52px_86px_28px] items-center gap-1.5 border-b border-border px-1 py-1.5 last:border-b-0"
+              key={`${line.productId}:${line.variantId ?? ''}`}
+            >
               <div className="min-w-0">
                 <div className="truncate font-semibold">{line.name}</div>
                 <div className="text-[12px] text-muted">{line.sku}</div>
@@ -158,7 +172,8 @@ export function PosTicket({
       </div>
       <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
         <label htmlFor="pos-discount">{t('fields.discount')}</label>
-        <Input className="w-full"
+        <Input
+          className="w-full"
           id="pos-discount"
           type="number"
           min="0"
@@ -185,8 +200,16 @@ export function PosTicket({
           <span className="text-right tabular-nums">{formatMoney(totals.total, saleCurrency)}</span>
         </div>
       </div>
-      {!warehouseId ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{t('pos.selectWarehouseToStart')}</div> : null}
-      {checkoutError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{checkoutError}</div> : null}
+      {!warehouseId ? (
+        <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+          {t('pos.selectWarehouseToStart')}
+        </div>
+      ) : null}
+      {checkoutError ? (
+        <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+          {checkoutError}
+        </div>
+      ) : null}
       <button
         type="button"
         className="mt-1 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-ui border border-primary bg-primary px-3 py-3 text-[15px] font-semibold text-white select-none hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"

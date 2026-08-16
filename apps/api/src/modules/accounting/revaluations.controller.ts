@@ -14,10 +14,7 @@ export class RevaluationsController {
   @Post()
   @RequirePermissions(permission(ModuleName.ACCOUNTING, 'write'))
   @ApiOperation({ summary: 'Revalue open foreign-currency balances' })
-  run(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @Body() dto: CreateRevaluationDto,
-  ) {
+  run(@CurrentUser() user: { tenantId: string | null; id: string }, @Body() dto: CreateRevaluationDto) {
     return this.revaluationsService.run(user.tenantId, user.id, dto);
   }
 }

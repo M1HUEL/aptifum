@@ -164,9 +164,7 @@ describe('Vertical flow: sales -> accounting -> reports (e2e)', () => {
       .get('/api/v1/sales/invoices')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
-    const open = (invoice.body.data as Array<{ id: string; total: number }>).find(
-      (i) => i.total === 43.2,
-    );
+    const open = (invoice.body.data as Array<{ id: string; total: number }>).find((i) => i.total === 43.2);
     expect(open).toBeDefined();
 
     await request(app.getHttpServer())
@@ -291,9 +289,7 @@ describe('Vertical flow: sales -> accounting -> reports (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
     expect(byType.body.data.length).toBeGreaterThan(0);
-    expect(
-      byType.body.data.every((m: { movementType: string }) => m.movementType === 'inbound'),
-    ).toBe(true);
+    expect(byType.body.data.every((m: { movementType: string }) => m.movementType === 'inbound')).toBe(true);
 
     const byWarehouse = await request(app.getHttpServer())
       .get('/api/v1/inventory/movements')
@@ -301,9 +297,7 @@ describe('Vertical flow: sales -> accounting -> reports (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
     expect(byWarehouse.body.data.length).toBeGreaterThan(0);
-    expect(
-      byWarehouse.body.data.every((m: { warehouseId: string }) => m.warehouseId === warehouse.id),
-    ).toBe(true);
+    expect(byWarehouse.body.data.every((m: { warehouseId: string }) => m.warehouseId === warehouse.id)).toBe(true);
 
     const invalid = await request(app.getHttpServer())
       .get('/api/v1/inventory/movements')

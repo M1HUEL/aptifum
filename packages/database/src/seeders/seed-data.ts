@@ -42,11 +42,7 @@ export const DEFAULT_ROLES: Record<RoleName, string[]> = {
     p(ModuleName.PRODUCTION, 'read'),
     p(ModuleName.PRODUCTION, 'write'),
   ],
-  [RoleName.HR]: [
-    p(ModuleName.HR, 'read'),
-    p(ModuleName.HR, 'write'),
-    p(ModuleName.HR, 'approve'),
-  ],
+  [RoleName.HR]: [p(ModuleName.HR, 'read'), p(ModuleName.HR, 'write'), p(ModuleName.HR, 'approve')],
 };
 
 export const DEFAULT_SERIES: Record<DocumentSeriesKind, string> = {
@@ -74,24 +70,30 @@ export const DEFAULT_ACCOUNTS: Array<{
   { code: '1200', name: 'Inventory', type: AccountType.ASSET, normalBalance: AccountNormalBalance.DEBIT },
   { code: '2000', name: 'Accounts payable', type: AccountType.LIABILITY, normalBalance: AccountNormalBalance.CREDIT },
   { code: '2001', name: 'Payroll payable', type: AccountType.LIABILITY, normalBalance: AccountNormalBalance.CREDIT },
-  { code: '2002', name: 'Withholdings and deductions payable', type: AccountType.LIABILITY, normalBalance: AccountNormalBalance.CREDIT },
+  {
+    code: '2002',
+    name: 'Withholdings and deductions payable',
+    type: AccountType.LIABILITY,
+    normalBalance: AccountNormalBalance.CREDIT,
+  },
   { code: '2100', name: 'Sales tax payable', type: AccountType.LIABILITY, normalBalance: AccountNormalBalance.CREDIT },
   { code: '3000', name: 'Retained earnings', type: AccountType.EQUITY, normalBalance: AccountNormalBalance.CREDIT },
   { code: '4000', name: 'Sales revenue', type: AccountType.REVENUE, normalBalance: AccountNormalBalance.CREDIT },
   { code: '4100', name: 'Sales returns', type: AccountType.REVENUE, normalBalance: AccountNormalBalance.DEBIT },
-  { code: '4200', name: 'Foreign exchange gain', type: AccountType.REVENUE, normalBalance: AccountNormalBalance.CREDIT },
+  {
+    code: '4200',
+    name: 'Foreign exchange gain',
+    type: AccountType.REVENUE,
+    normalBalance: AccountNormalBalance.CREDIT,
+  },
   { code: '5000', name: 'Cost of goods sold', type: AccountType.EXPENSE, normalBalance: AccountNormalBalance.DEBIT },
   { code: '6000', name: 'Payroll expense', type: AccountType.EXPENSE, normalBalance: AccountNormalBalance.DEBIT },
   { code: '6100', name: 'Foreign exchange loss', type: AccountType.EXPENSE, normalBalance: AccountNormalBalance.DEBIT },
 ];
 
 export const DEFAULT_TAX_PRESETS: Record<string, Array<{ name: string; rate: number; kind: TaxKind }>> = {
-  US: [
-    { name: 'Sales Tax', rate: 0.08, kind: TaxKind.SALES },
-  ],
-  MX: [
-    { name: 'IVA', rate: 0.16, kind: TaxKind.SALES },
-  ],
+  US: [{ name: 'Sales Tax', rate: 0.08, kind: TaxKind.SALES }],
+  MX: [{ name: 'IVA', rate: 0.16, kind: TaxKind.SALES }],
 };
 
 export const DEFAULT_US_SALES_TAX_CONFIG = {

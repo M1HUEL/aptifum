@@ -38,17 +38,7 @@ import { SuppliersService } from './suppliers.service';
     ]),
     ExchangeRatesModule,
   ],
-  controllers: [
-    SuppliersController,
-    PurchaseOrdersController,
-    SupplierBillsController,
-    SupplierPaymentsController,
-  ],
-  providers: [
-    SuppliersService,
-    PurchaseOrdersService,
-    SupplierBillsService,
-    SupplierPaymentsService,
-  ],
+  controllers: [SuppliersController, PurchaseOrdersController, SupplierBillsController, SupplierPaymentsController],
+  providers: [SuppliersService, PurchaseOrdersService, SupplierBillsService, SupplierPaymentsService],
 })
 export class PurchasingModule {}

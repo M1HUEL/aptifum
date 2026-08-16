@@ -99,9 +99,7 @@ export class SupplierBillsService {
           quantity: line.quantity,
           unitPrice: line.unitPrice,
           taxRate: line.taxRate ?? 0,
-          lineTotal: round2(
-            line.quantity * line.unitPrice + line.quantity * line.unitPrice * (line.taxRate ?? 0),
-          ),
+          lineTotal: round2(line.quantity * line.unitPrice + line.quantity * line.unitPrice * (line.taxRate ?? 0)),
         }),
       );
       const totals = computeTotals(dto.items);
@@ -149,17 +147,10 @@ export class SupplierBillsService {
           where: { id: bill.receiptId, tenantId },
           relations: { items: true },
         });
-        receivedAmount = round2(
-          (receipt?.items ?? []).reduce((sum, item) => sum + item.quantity * item.unitCost, 0),
-        );
+        receivedAmount = round2((receipt?.items ?? []).reduce((sum, item) => sum + item.quantity * item.unitCost, 0));
       }
       const functional = await this.functionalCurrency(manager, tenantId);
-      const rate = await this.exchangeRates.resolveRate(
-        tenantId,
-        functional,
-        bill.currency,
-        bill.billDate,
-      );
+      const rate = await this.exchangeRates.resolveRate(tenantId, functional, bill.currency, bill.billDate);
       bill.number = number;
       bill.status = SupplierBillStatus.ISSUED;
       bill.issuedAt = new Date();
@@ -229,11 +220,7 @@ export class SupplierBillsService {
     return tenant?.defaultCurrency ?? 'USD';
   }
 
-  private async billView(
-    manager: EntityManager,
-    id: string,
-    tenantId: string,
-  ): Promise<SupplierBill> {
+  private async billView(manager: EntityManager, id: string, tenantId: string): Promise<SupplierBill> {
     return manager.getRepository(SupplierBill).findOne({
       where: { id, tenantId },
       relations: { supplier: true, items: true },

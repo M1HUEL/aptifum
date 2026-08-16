@@ -17,10 +17,7 @@ export class ProductionOrdersController {
   @Get()
   @RequirePermissions(permission(ModuleName.PRODUCTION, 'read'))
   @ApiOperation({ summary: 'List production orders' })
-  list(
-    @CurrentUser() user: { tenantId: string | null },
-    @Query() { page, limit }: PaginationQueryDto,
-  ) {
+  list(@CurrentUser() user: { tenantId: string | null }, @Query() { page, limit }: PaginationQueryDto) {
     return this.ordersService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100));
   }
 

@@ -107,11 +107,13 @@ export function SettingsPage() {
       {!loading ? (
         <>
           <section className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">
-            <h2 className="mb-1 text-[17px] font-bold tracking-[-0.01em] text-text">
-              {t('settings.preferences')}
-            </h2>
+            <h2 className="mb-1 text-[17px] font-bold tracking-[-0.01em] text-text">{t('settings.preferences')}</h2>
             <p className="text-[12px] text-muted">{t('settings.languageDescription')}</p>
-            <div className="mt-3 inline-flex rounded-ui border border-border bg-bg p-1" role="group" aria-label={t('settings.language')}>
+            <div
+              className="mt-3 inline-flex rounded-ui border border-border bg-bg p-1"
+              role="group"
+              aria-label={t('settings.language')}
+            >
               <button
                 type="button"
                 className={`cursor-pointer rounded-ui px-4 py-1.5 text-sm font-semibold select-none transition-colors ${language === 'es' ? 'bg-primary text-white' : 'text-text hover:bg-hover'}`}
@@ -131,70 +133,68 @@ export function SettingsPage() {
             </div>
           </section>
           <section className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">
-            <h2 className="mb-1 text-[17px] font-bold tracking-[-0.01em] text-text">
-              {t('settings.usSalesTax')}
-            </h2>
-          {country && country !== 'US' ? (
-            <p className="text-[12px] text-muted">
-              {t('settings.usOnlyNoteStart')}
-              <strong>{country}</strong>
-              {t('settings.usOnlyNoteEnd')}
-            </p>
-          ) : null}
-          <p className="text-[12px] text-muted">{t('settings.nexusInstructions')}</p>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('settings.nexus')}</TableHead>
-                <TableHead>{t('settings.state')}</TableHead>
-                <TableHead className="text-right">{t('settings.defaultRate')}</TableHead>
-                <TableHead>{t('settings.overridePercent')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Object.entries(catalog)
-                .sort(([a], [b]) => a.localeCompare(b))
-                .map(([code, info]) => (
-                  <TableRow key={code}>
-                    <TableCell>
-                      <Checkbox
-                        aria-label={t('settings.nexusInCode', { code })}
-                        checked={nexus.has(code)}
-                        onCheckedChange={() => toggleNexus(code)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {code} — {info.name}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge tone="info">{formatPercent(info.rate)}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {nexus.has(code) ? (
-                        <input
-                          className="h-9 w-24 rounded-md border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                          aria-label={t('settings.overrideRateFor', { code })}
-                          type="number"
-                          min="0"
-                          max="50"
-                          step="0.01"
-                          placeholder={String(info.rate * 100)}
-                          value={overrides[code] ?? ''}
-                          onChange={(event) => setOverride(code, event.target.value)}
+            <h2 className="mb-1 text-[17px] font-bold tracking-[-0.01em] text-text">{t('settings.usSalesTax')}</h2>
+            {country && country !== 'US' ? (
+              <p className="text-[12px] text-muted">
+                {t('settings.usOnlyNoteStart')}
+                <strong>{country}</strong>
+                {t('settings.usOnlyNoteEnd')}
+              </p>
+            ) : null}
+            <p className="text-[12px] text-muted">{t('settings.nexusInstructions')}</p>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('settings.nexus')}</TableHead>
+                  <TableHead>{t('settings.state')}</TableHead>
+                  <TableHead className="text-right">{t('settings.defaultRate')}</TableHead>
+                  <TableHead>{t('settings.overridePercent')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Object.entries(catalog)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([code, info]) => (
+                    <TableRow key={code}>
+                      <TableCell>
+                        <Checkbox
+                          aria-label={t('settings.nexusInCode', { code })}
+                          checked={nexus.has(code)}
+                          onCheckedChange={() => toggleNexus(code)}
                         />
-                      ) : (
-                        <span className="text-[12px] text-muted">—</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-          <div className="mt-4">
-            <Button onClick={() => void save()} disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? t('common.saving') : t('settings.saveSettings')}
-            </Button>
-          </div>
+                      </TableCell>
+                      <TableCell>
+                        {code} — {info.name}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge tone="info">{formatPercent(info.rate)}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {nexus.has(code) ? (
+                          <input
+                            className="h-9 w-24 rounded-md border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            aria-label={t('settings.overrideRateFor', { code })}
+                            type="number"
+                            min="0"
+                            max="50"
+                            step="0.01"
+                            placeholder={String(info.rate * 100)}
+                            value={overrides[code] ?? ''}
+                            onChange={(event) => setOverride(code, event.target.value)}
+                          />
+                        ) : (
+                          <span className="text-[12px] text-muted">—</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+            <div className="mt-4">
+              <Button onClick={() => void save()} disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? t('common.saving') : t('settings.saveSettings')}
+              </Button>
+            </div>
           </section>
         </>
       ) : null}
@@ -203,5 +203,5 @@ export function SettingsPage() {
 }
 
 function formatPercent(rate: number): string {
-  return `${(rate * 100).toFixed(rate * 100 % 1 === 0 ? 0 : 2)}%`;
+  return `${(rate * 100).toFixed((rate * 100) % 1 === 0 ? 0 : 2)}%`;
 }

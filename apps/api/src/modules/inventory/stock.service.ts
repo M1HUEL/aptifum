@@ -121,13 +121,7 @@ export class StockService {
     return { data, meta: { page, limit, total } };
   }
 
-  async listPosProducts(
-    tenantId: string | null,
-    warehouseId: string,
-    page: number,
-    limit: number,
-    q?: string,
-  ) {
+  async listPosProducts(tenantId: string | null, warehouseId: string, page: number, limit: number, q?: string) {
     this.assertTenant(tenantId);
     const warehouse = await this.warehousesRepo.findOneBy({ id: warehouseId, tenantId });
     if (!warehouse) {
@@ -154,12 +148,7 @@ export class StockService {
     return { data, meta: { page, limit, total } };
   }
 
-  private async posCatalogRows(
-    tenantId: string,
-    warehouseId: string,
-    q: string | undefined,
-    variantsOnly: boolean,
-  ) {
+  private async posCatalogRows(tenantId: string, warehouseId: string, q: string | undefined, variantsOnly: boolean) {
     const builder = this.productsRepo.createQueryBuilder('product');
     builder
       .select('product.id', 'id')
@@ -175,10 +164,7 @@ export class StockService {
       .addSelect('product.unit_of_measure', 'unitOfMeasure')
       .addSelect('product.category_id', 'categoryId')
       .addSelect(variantsOnly ? 'variant.sale_price' : 'product.sale_price', 'salePrice')
-      .addSelect(
-        '(COALESCE(stock.quantity, 0) - COALESCE(stock.reserved_quantity, 0))',
-        'availableStock',
-      )
+      .addSelect('(COALESCE(stock.quantity, 0) - COALESCE(stock.reserved_quantity, 0))', 'availableStock')
       .where('product.tenant_id = :tenantId', { tenantId });
     if (variantsOnly) {
       builder.innerJoin(ProductVariant, 'variant', 'variant.product_id = product.id');
@@ -211,12 +197,7 @@ export class StockService {
     return builder.getRawMany();
   }
 
-  async listMovements(
-    tenantId: string | null,
-    page: number,
-    limit: number,
-    filters?: ListMovementFilters,
-  ) {
+  async listMovements(tenantId: string | null, page: number, limit: number, filters?: ListMovementFilters) {
     const where: Record<string, unknown> = tenantId ? { tenantId } : {};
     if (filters?.productId) {
       where.productId = filters.productId;
@@ -247,11 +228,7 @@ export class StockService {
     return { data: rows, meta: { page, limit, total } };
   }
 
-  async createMovement(
-    tenantId: string | null,
-    userId: string | null,
-    dto: CreateMovementDto,
-  ) {
+  async createMovement(tenantId: string | null, userId: string | null, dto: CreateMovementDto) {
     this.assertTenant(tenantId);
     await this.assertStockContext(tenantId, dto.productId, dto.warehouseId);
     if (dto.variantId) {
@@ -301,11 +278,7 @@ export class StockService {
     }
   }
 
-  async createTransfer(
-    tenantId: string | null,
-    userId: string | null,
-    dto: CreateTransferDto,
-  ) {
+  async createTransfer(tenantId: string | null, userId: string | null, dto: CreateTransferDto) {
     this.assertTenant(tenantId);
     if (dto.fromWarehouseId === dto.toWarehouseId) {
       throw new BadRequestException('Origin and destination warehouses must differ');
@@ -362,11 +335,7 @@ export class StockService {
     }
   }
 
-  private async assertStockContext(
-    tenantId: string,
-    productId: string,
-    warehouseId: string,
-  ) {
+  private async assertStockContext(tenantId: string, productId: string, warehouseId: string) {
     const where = { tenantId };
     const product = await this.productsRepo.findOneBy({ id: productId, ...where });
     if (!product) {

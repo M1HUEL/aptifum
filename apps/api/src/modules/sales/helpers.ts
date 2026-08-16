@@ -1,9 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { DocumentSeriesKind } from '@aptifum/core';
-import {
-  DocumentSeriesNotFoundError,
-  nextDocumentNumber as dbNextDocumentNumber,
-} from '@aptifum/database';
+import { DocumentSeriesNotFoundError, nextDocumentNumber as dbNextDocumentNumber } from '@aptifum/database';
 import { EntityManager } from 'typeorm';
 
 export { computeTotals, round2, today } from '@aptifum/core';

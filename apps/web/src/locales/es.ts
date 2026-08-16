@@ -202,7 +202,8 @@ const es = {
     forgotPassword: '¿Olvidó su contraseña?',
     sending: 'Enviando…',
     sendResetLink: 'Enviar enlace de restablecimiento',
-    resetLinkGenerated: 'Se generó un enlace de restablecimiento. El modo demo no tiene servidor de correo, así que use el enlace siguiente:',
+    resetLinkGenerated:
+      'Se generó un enlace de restablecimiento. El modo demo no tiene servidor de correo, así que use el enlace siguiente:',
     openResetLink: 'Abrir enlace de restablecimiento',
     resetLinkSent: 'Si existe una cuenta con ese correo, se le enviará un enlace de restablecimiento.',
     backToSignIn: 'Volver a iniciar sesión',
@@ -223,7 +224,8 @@ const es = {
   },
   errors: {
     somethingWentWrong: 'Algo salió mal',
-    somethingWentWrongDescription: 'Ocurrió un error inesperado. Vuelve a intentarlo y, si el problema persiste, contacta con el administrador.',
+    somethingWentWrongDescription:
+      'Ocurrió un error inesperado. Vuelve a intentarlo y, si el problema persiste, contacta con el administrador.',
     tryAgain: 'Intentar de nuevo',
     unauthorized: 'Tu sesión expiró. Inicia sesión de nuevo.',
     forbidden: 'No tienes permiso para realizar esta acción.',
@@ -1028,8 +1030,7 @@ const es = {
     dropHint: 'Arrastra y suelta un archivo CSV aquí o haz clic para seleccionarlo',
     requiredColumns: 'Columnas obligatorias',
     optionalColumns: 'Columnas opcionales',
-    duplicateSkipped:
-      'Las filas con datos que ya existen se omiten (p. ej. un SKU o código repetido).',
+    duplicateSkipped: 'Las filas con datos que ya existen se omiten (p. ej. un SKU o código repetido).',
     importButton: 'Importar',
     importing: 'Importando…',
     rowsTotal: '{{count}} filas',

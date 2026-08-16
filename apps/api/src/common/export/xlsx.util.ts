@@ -25,10 +25,7 @@ export async function toXlsxBuffer(rows: Array<Record<string, unknown>>): Promis
         pattern: 'solid',
         fgColor: { argb: 'FFDCE6F1' },
       };
-      const maxLength = Math.max(
-        key.length,
-        ...rows.map((row) => String(row[key] ?? '').length),
-      );
+      const maxLength = Math.max(key.length, ...rows.map((row) => String(row[key] ?? '').length));
       sheet.getColumn(index + 1).width = Math.min(Math.max(maxLength + 2, 10), MAX_COLUMN_WIDTH);
     });
   }
@@ -55,8 +52,7 @@ export async function sectionsToXlsxBuffer(
 
 export function setXlsxHeaders(res: Response, filename: string): void {
   res.set({
-    'Content-Type':
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'Content-Disposition': `attachment; filename="${filename}"`,
   });
 }

@@ -7,10 +7,7 @@ const PRODUCT_ID = '00000000-0000-4000-8000-000000000002';
 const VARIANT_ID = '00000000-0000-4000-8000-000000000003';
 
 function buildService(repos: Record<string, Record<string, unknown>>) {
-  return new ProductVariantsService(
-    (repos.variants ?? {}) as never,
-    (repos.products ?? {}) as never,
-  );
+  return new ProductVariantsService((repos.variants ?? {}) as never, (repos.products ?? {}) as never);
 }
 
 function product(sku = 'SKU-PARENT') {
@@ -66,9 +63,7 @@ describe('ProductVariantsService', () => {
       const service = buildService({
         variants: { findOne: vi.fn().mockResolvedValue(null) },
       });
-      await expect(service.findOne(TENANT, PRODUCT_ID, VARIANT_ID)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne(TENANT, PRODUCT_ID, VARIANT_ID)).rejects.toThrow(NotFoundException);
     });
 
     it('returns the variant when found', async () => {
@@ -86,27 +81,21 @@ describe('ProductVariantsService', () => {
   describe('create', () => {
     it('requires a tenant', async () => {
       const service = buildService({});
-      await expect(
-        service.create(null, PRODUCT_ID, { sku: 'SKU-RED' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.create(null, PRODUCT_ID, { sku: 'SKU-RED' })).rejects.toThrow(BadRequestException);
     });
 
     it('throws NotFound when the product does not exist', async () => {
       const service = buildService({
         products: { findOne: vi.fn().mockResolvedValue(null) },
       });
-      await expect(
-        service.create(TENANT, PRODUCT_ID, { sku: 'SKU-RED' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.create(TENANT, PRODUCT_ID, { sku: 'SKU-RED' })).rejects.toThrow(NotFoundException);
     });
 
     it('rejects a sku that matches the product sku', async () => {
       const products = { findOne: vi.fn().mockResolvedValue(product('SKU-PARENT')) };
       const variants = { findOne: vi.fn().mockResolvedValue(null) };
       const service = buildService({ products, variants });
-      await expect(
-        service.create(TENANT, PRODUCT_ID, { sku: 'SKU-PARENT' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.create(TENANT, PRODUCT_ID, { sku: 'SKU-PARENT' })).rejects.toThrow(BadRequestException);
     });
 
     it('rejects a sku already used by another variant', async () => {
@@ -115,9 +104,7 @@ describe('ProductVariantsService', () => {
         findOne: vi.fn().mockResolvedValue(variant({ id: 'other' })),
       };
       const service = buildService({ products, variants });
-      await expect(
-        service.create(TENANT, PRODUCT_ID, { sku: 'SKU-RED' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.create(TENANT, PRODUCT_ID, { sku: 'SKU-RED' })).rejects.toThrow(BadRequestException);
     });
 
     it('saves a new variant with defaults', async () => {
@@ -203,9 +190,7 @@ describe('ProductVariantsService', () => {
     it('throws NotFound when the variant does not exist', async () => {
       const variants = { findOne: vi.fn().mockResolvedValue(null) };
       const service = buildService({ variants });
-      await expect(service.remove(TENANT, PRODUCT_ID, VARIANT_ID)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.remove(TENANT, PRODUCT_ID, VARIANT_ID)).rejects.toThrow(NotFoundException);
     });
   });
 });

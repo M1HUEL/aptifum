@@ -17,10 +17,7 @@ export class CategoriesController {
   @Get()
   @RequirePermissions(permission(ModuleName.INVENTORY, 'read'))
   @ApiOperation({ summary: 'List categories' })
-  list(
-    @CurrentUser() user: { tenantId: string | null },
-    @Query() { page, limit }: PaginationQueryDto,
-  ) {
+  list(@CurrentUser() user: { tenantId: string | null }, @Query() { page, limit }: PaginationQueryDto) {
     return this.categoriesService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100));
   }
 

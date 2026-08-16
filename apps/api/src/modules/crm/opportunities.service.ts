@@ -90,10 +90,8 @@ export class OpportunitiesService {
       amount: dto.amount ?? opportunity.amount,
       currency: dto.currency ?? opportunity.currency,
       probability: dto.probability ?? opportunity.probability,
-      expectedCloseDate:
-        dto.expectedCloseDate === undefined ? opportunity.expectedCloseDate : dto.expectedCloseDate,
-      assignedUserId:
-        dto.assignedUserId === undefined ? opportunity.assignedUserId : dto.assignedUserId,
+      expectedCloseDate: dto.expectedCloseDate === undefined ? opportunity.expectedCloseDate : dto.expectedCloseDate,
+      assignedUserId: dto.assignedUserId === undefined ? opportunity.assignedUserId : dto.assignedUserId,
       notes: dto.notes === undefined ? opportunity.notes : dto.notes,
     });
     return this.opportunitiesRepo.save(opportunity);

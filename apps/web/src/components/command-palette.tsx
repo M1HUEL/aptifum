@@ -22,13 +22,7 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
   return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 };
 
-export function CommandPalette({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
+export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const can = usePermission();
@@ -228,9 +222,13 @@ export function CommandPalette({
                   {group}
                 </div>
                 {groupItems.map((item, localIndex) => {
-                  const index = groups
-                    .slice(0, groups.findIndex((g) => g.group === group))
-                    .reduce((acc, g) => acc + g.items.length, 0) + localIndex;
+                  const index =
+                    groups
+                      .slice(
+                        0,
+                        groups.findIndex((g) => g.group === group),
+                      )
+                      .reduce((acc, g) => acc + g.items.length, 0) + localIndex;
                   const ItemIcon = item.icon;
                   return (
                     <button

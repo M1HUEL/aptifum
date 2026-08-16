@@ -12,9 +12,7 @@ export interface UsSalesTaxView {
 
 @Injectable()
 export class UsSalesTaxService {
-  constructor(
-    @InjectRepository(Tenant) private readonly tenantsRepo: Repository<Tenant>,
-  ) {}
+  constructor(@InjectRepository(Tenant) private readonly tenantsRepo: Repository<Tenant>) {}
 
   async getConfig(tenantId: string | null): Promise<UsSalesTaxView & { country: string }> {
     const tenant = await this.requireTenant(tenantId);
@@ -30,9 +28,7 @@ export class UsSalesTaxService {
     const tenant = await this.requireTenant(tenantId);
     const current = this.read(tenant);
     const nexusStates = this.normalizeStates(dto.nexusStates ?? current.nexusStates);
-    const rates = dto.rates
-      ? this.normalizeRates(dto.rates, nexusStates)
-      : (current.rates ?? {});
+    const rates = dto.rates ? this.normalizeRates(dto.rates, nexusStates) : (current.rates ?? {});
     tenant.config = { ...tenant.config, usSalesTax: { nexusStates, rates } };
     await this.tenantsRepo.save(tenant);
     return { nexusStates, rates };

@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Post,
-  Put,
-  Query,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import {
@@ -47,10 +37,7 @@ export class TaxController {
   @Put('settings')
   @RequirePermissions(permission(ModuleName.TAX, 'write'))
   @ApiOperation({ summary: 'Update CFDI settings for the current tenant' })
-  updateSettings(
-    @CurrentUser() user: AuthUser,
-    @Body() dto: UpdateCfdiSettingsDto,
-  ) {
+  updateSettings(@CurrentUser() user: AuthUser, @Body() dto: UpdateCfdiSettingsDto) {
     return this.cfdi.updateSettings(user.tenantId, dto);
   }
 
@@ -69,41 +56,28 @@ export class TaxController {
   @Get('cfdi/invoices/:invoiceId')
   @RequirePermissions(permission(ModuleName.TAX, 'read'))
   @ApiOperation({ summary: 'Get CFDI for an invoice' })
-  getByInvoice(
-    @CurrentUser() user: AuthUser,
-    @Param('invoiceId', new ParseUUIDPipe()) invoiceId: string,
-  ) {
+  getByInvoice(@CurrentUser() user: AuthUser, @Param('invoiceId', new ParseUUIDPipe()) invoiceId: string) {
     return this.cfdi.getByInvoice(user.tenantId, invoiceId);
   }
 
   @Post('cfdi/invoices/:invoiceId/generate')
   @RequirePermissions(permission(ModuleName.TAX, 'write'))
   @ApiOperation({ summary: 'Generate a CFDI for an invoice (idempotent)' })
-  generate(
-    @CurrentUser() user: AuthUser,
-    @Param('invoiceId', new ParseUUIDPipe()) invoiceId: string,
-  ) {
+  generate(@CurrentUser() user: AuthUser, @Param('invoiceId', new ParseUUIDPipe()) invoiceId: string) {
     return this.cfdi.generateForInvoice(user.tenantId as string, invoiceId, user.id);
   }
 
   @Get('cfdi/:id')
   @RequirePermissions(permission(ModuleName.TAX, 'read'))
   @ApiOperation({ summary: 'Get a CFDI document' })
-  getOne(
-    @CurrentUser() user: AuthUser,
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  getOne(@CurrentUser() user: AuthUser, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.cfdi.findOne(user.tenantId, id);
   }
 
   @Get('cfdi/:id/xml')
   @RequirePermissions(permission(ModuleName.TAX, 'read'))
   @ApiOperation({ summary: 'Download CFDI XML' })
-  async getXml(
-    @CurrentUser() user: AuthUser,
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Res() res: Response,
-  ) {
+  async getXml(@CurrentUser() user: AuthUser, @Param('id', new ParseUUIDPipe()) id: string, @Res() res: Response) {
     const { xml, uuid } = await this.cfdi.getXml(user.tenantId, id);
     res.set({
       'Content-Type': 'application/xml; charset=utf-8',
@@ -115,10 +89,7 @@ export class TaxController {
   @Put('cfdi/:id/cancel')
   @RequirePermissions(permission(ModuleName.TAX, 'write'))
   @ApiOperation({ summary: 'Cancel a CFDI (demo: no PAC cancellation)' })
-  cancel(
-    @CurrentUser() user: AuthUser,
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  cancel(@CurrentUser() user: AuthUser, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.cfdi.cancel(user.tenantId, user.id ?? null, id);
   }
 
@@ -145,10 +116,7 @@ export class TaxController {
   @Put('us-sales-tax')
   @RequirePermissions(permission(ModuleName.TAX, 'write'))
   @ApiOperation({ summary: 'Update US sales tax (nexus) configuration' })
-  updateUsSalesTax(
-    @CurrentUser() user: AuthUser,
-    @Body() dto: UpdateUsSalesTaxDto,
-  ) {
+  updateUsSalesTax(@CurrentUser() user: AuthUser, @Body() dto: UpdateUsSalesTaxDto) {
     return this.usSalesTax.updateConfig(user.tenantId, dto);
   }
 

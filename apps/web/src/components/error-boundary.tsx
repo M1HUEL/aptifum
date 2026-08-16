@@ -30,9 +30,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <TriangleAlert className="size-8 text-primary" aria-hidden="true" />
           </div>
           <h1 className="m-0 text-3xl font-bold text-text">{i18n.t('errors.somethingWentWrong')}</h1>
-          <p className="m-0 max-w-[420px] text-sm text-muted">
-            {i18n.t('errors.somethingWentWrongDescription')}
-          </p>
+          <p className="m-0 max-w-[420px] text-sm text-muted">{i18n.t('errors.somethingWentWrongDescription')}</p>
           <Button onClick={() => this.setState({ error: null })}>{i18n.t('errors.tryAgain')}</Button>
         </div>
       );

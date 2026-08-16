@@ -43,12 +43,7 @@ export class AuthController {
   @Throttle({ default: { limit: loginThrottleLimit, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email and password' })
-  login(
-    @Body() dto: LoginDto,
-    @Ip() ip?: string,
-    @Headers('user-agent') userAgent?: string,
-    @Req() req?: Request,
-  ) {
+  login(@Body() dto: LoginDto, @Ip() ip?: string, @Headers('user-agent') userAgent?: string, @Req() req?: Request) {
     return this.authService.login(dto, this.context(ip, userAgent, req));
   }
 
@@ -57,12 +52,7 @@ export class AuthController {
   @Throttle({ default: { limit: 60, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Rotate access/refresh tokens' })
-  refresh(
-    @Body() dto: RefreshDto,
-    @Ip() ip?: string,
-    @Headers('user-agent') userAgent?: string,
-    @Req() req?: Request,
-  ) {
+  refresh(@Body() dto: RefreshDto, @Ip() ip?: string, @Headers('user-agent') userAgent?: string, @Req() req?: Request) {
     return this.authService.refresh(dto, this.context(ip, userAgent, req));
   }
 
@@ -79,11 +69,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request a password reset token (demo: returns the token)' })
-  forgotPassword(
-    @Body() dto: ForgotPasswordDto,
-    @Ip() ip?: string,
-    @Req() req?: Request,
-  ) {
+  forgotPassword(@Body() dto: ForgotPasswordDto, @Ip() ip?: string, @Req() req?: Request) {
     return this.authService.requestPasswordReset(dto, this.context(ip, undefined, req));
   }
 
@@ -92,11 +78,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Set a new password using a reset token' })
-  resetPassword(
-    @Body() dto: ResetPasswordDto,
-    @Ip() ip?: string,
-    @Req() req?: Request,
-  ) {
+  resetPassword(@Body() dto: ResetPasswordDto, @Ip() ip?: string, @Req() req?: Request) {
     return this.authService.resetPassword(dto, this.context(ip, undefined, req));
   }
 
@@ -122,11 +104,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Set a password and activate a user from an invite token' })
-  acceptInvite(
-    @Body() dto: AcceptInviteDto,
-    @Ip() ip?: string,
-    @Req() req?: Request,
-  ) {
+  acceptInvite(@Body() dto: AcceptInviteDto, @Ip() ip?: string, @Req() req?: Request) {
     return this.authService.acceptInvite(dto, this.context(ip, undefined, req));
   }
 
@@ -138,12 +116,7 @@ export class AuthController {
 
   @Patch('me')
   @ApiOperation({ summary: 'Update own profile (name, password)' })
-  updateMe(
-    @CurrentUser() user: AuthUser,
-    @Body() dto: UpdateProfileDto,
-    @Ip() ip?: string,
-    @Req() req?: Request,
-  ) {
+  updateMe(@CurrentUser() user: AuthUser, @Body() dto: UpdateProfileDto, @Ip() ip?: string, @Req() req?: Request) {
     return this.authService.updateProfile(user.id, dto, this.context(ip, undefined, req));
   }
 

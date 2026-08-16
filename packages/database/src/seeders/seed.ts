@@ -39,7 +39,7 @@ export async function seed(overrides: DataSourceOverrides = {}): Promise<void> {
       tenant.country = 'US';
       await tenantRepo.save(tenant);
     }
-    if (tenant.country === 'US' && !(tenant.config?.usSalesTax)) {
+    if (tenant.country === 'US' && !tenant.config?.usSalesTax) {
       tenant.config = { ...tenant.config, usSalesTax: DEFAULT_US_SALES_TAX_CONFIG };
       await tenantRepo.save(tenant);
     }
@@ -48,9 +48,7 @@ export async function seed(overrides: DataSourceOverrides = {}): Promise<void> {
     for (const name of Object.values(RoleName)) {
       let role = await roleRepo.findOneBy({ name });
       if (!role) {
-        role = await roleRepo.save(
-          roleRepo.create({ name, permissions: DEFAULT_ROLES[name], isSystem: true }),
-        );
+        role = await roleRepo.save(roleRepo.create({ name, permissions: DEFAULT_ROLES[name], isSystem: true }));
       } else {
         role.permissions = DEFAULT_ROLES[name];
         await roleRepo.save(role);
@@ -62,10 +60,7 @@ export async function seed(overrides: DataSourceOverrides = {}): Promise<void> {
       throw new Error('Admin role was not created');
     }
 
-    for (const [kind, prefix] of Object.entries(DEFAULT_SERIES) as [
-      DocumentSeriesKind,
-      string,
-    ][]) {
+    for (const [kind, prefix] of Object.entries(DEFAULT_SERIES) as [DocumentSeriesKind, string][]) {
       const existing = await seriesRepo.findOneBy({
         tenantId: tenant.id,
         kind,

@@ -162,11 +162,7 @@ export class RemindersService {
     return true;
   }
 
-  private async wasRemindedToday(
-    eventType: string,
-    tenantId: string,
-    aggregateId: string,
-  ): Promise<boolean> {
+  private async wasRemindedToday(eventType: string, tenantId: string, aggregateId: string): Promise<boolean> {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const count = await this.outboxEventsRepo.count({

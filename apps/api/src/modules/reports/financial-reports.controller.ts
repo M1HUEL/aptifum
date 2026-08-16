@@ -14,11 +14,7 @@ import {
   PdfFinancialSection,
   rangeText,
 } from '../../common/pdf/pdf.util';
-import {
-  BalanceSheetQueryDto,
-  DateRangeQueryDto,
-  IncomeStatementQueryDto,
-} from './dto/reports-query.dto';
+import { BalanceSheetQueryDto, DateRangeQueryDto, IncomeStatementQueryDto } from './dto/reports-query.dto';
 
 @ApiTags('reports')
 @Controller('reports/financial')

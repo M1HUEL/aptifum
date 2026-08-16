@@ -5,12 +5,7 @@ import type { Customer, Paginated, PosProduct, Warehouse } from '../api/types';
 import { PageHeader } from '../components/ui';
 import { useToast } from '../components/toast';
 import { PosCatalog } from '../components/pos/pos-catalog';
-import {
-  FUNCTIONAL_CURRENCY,
-  PosTicket,
-  type PosLine,
-  type PosTotals,
-} from '../components/pos/pos-ticket';
+import { FUNCTIONAL_CURRENCY, PosTicket, type PosLine, type PosTotals } from '../components/pos/pos-ticket';
 import { PosPaymentModal, type InvoiceLike, type PaymentForm } from '../components/pos/pos-payment';
 import { PosSuccess, type CompletedSale } from '../components/pos/pos-success';
 
@@ -105,9 +100,7 @@ export function PosPage() {
 
   const addProduct = (product: PosProduct) => {
     setTicket((current) => {
-      const existing = current.find(
-        (line) => line.productId === product.id && line.variantId === product.variantId,
-      );
+      const existing = current.find((line) => line.productId === product.id && line.variantId === product.variantId);
       if (existing) {
         return current.map((line) =>
           line.productId === product.id && line.variantId === product.variantId
@@ -139,16 +132,12 @@ export function PosPage() {
   };
 
   const totals: PosTotals = useMemo(() => {
-    const subtotal = round2(
-      ticket.reduce((sum, line) => sum + Number(line.quantity) * Number(line.unitPrice || 0), 0),
-    );
+    const subtotal = round2(ticket.reduce((sum, line) => sum + Number(line.quantity) * Number(line.unitPrice || 0), 0));
     const tax = round2(
       ticket.reduce(
         (sum, line) =>
           sum +
-          Number(line.quantity) *
-            Number(line.unitPrice || 0) *
-            (line.taxRate === '' ? 0 : Number(line.taxRate) / 100),
+          Number(line.quantity) * Number(line.unitPrice || 0) * (line.taxRate === '' ? 0 : Number(line.taxRate) / 100),
         0,
       ),
     );
@@ -162,9 +151,7 @@ export function PosPage() {
       setSaleRate('1');
       return;
     }
-    apiFetch<{ rate?: number } | null>(
-      `/api/v1/exchange-rates/latest?base=${FUNCTIONAL_CURRENCY}&quote=${currency}`,
-    )
+    apiFetch<{ rate?: number } | null>(`/api/v1/exchange-rates/latest?base=${FUNCTIONAL_CURRENCY}&quote=${currency}`)
       .then((result) => {
         if (result && typeof result.rate === 'number') setSaleRate(String(result.rate));
       })
@@ -250,8 +237,7 @@ export function PosPage() {
             method: paymentForm.method,
             amount: Number(paymentForm.amount),
             currency: pendingInvoice.currency !== FUNCTIONAL_CURRENCY ? pendingInvoice.currency : undefined,
-            exchangeRate:
-              pendingInvoice.currency !== FUNCTIONAL_CURRENCY ? pendingInvoice.exchangeRate : undefined,
+            exchangeRate: pendingInvoice.currency !== FUNCTIONAL_CURRENCY ? pendingInvoice.exchangeRate : undefined,
             receivedAt: paymentForm.receivedAt || undefined,
             reference: paymentForm.reference.trim() || undefined,
           }),
@@ -298,10 +284,7 @@ export function PosPage() {
 
   return (
     <>
-      <PageHeader
-        title={t('pos.title')}
-        subtitle={t('pos.subtitle')}
-      />
+      <PageHeader title={t('pos.title')} subtitle={t('pos.subtitle')} />
       <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-5 max-[900px]:grid-cols-1">
         <PosCatalog
           warehouses={warehouses}

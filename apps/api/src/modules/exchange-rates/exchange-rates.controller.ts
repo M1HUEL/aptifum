@@ -21,12 +21,7 @@ export class ExchangeRatesController {
     @Query('base') base?: string,
     @Query('quote') quote?: string,
   ) {
-    return this.exchangeRates.findAll(
-      user.tenantId,
-      Number(page),
-      Math.min(Number(limit), 100),
-      { base, quote },
-    );
+    return this.exchangeRates.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100), { base, quote });
   }
 
   @Get('latest')
@@ -51,10 +46,7 @@ export class ExchangeRatesController {
   @Delete(':id')
   @RequirePermissions(permission(ModuleName.ACCOUNTING, 'write'))
   @ApiOperation({ summary: 'Delete an exchange rate' })
-  remove(
-    @CurrentUser() user: { tenantId: string | null },
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  remove(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.exchangeRates.remove(user.tenantId, id);
   }
 }

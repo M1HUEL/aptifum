@@ -100,10 +100,7 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
   });
 
   const createMutation = useApiMutation<CreateOpportunityDto>('/api/v1/crm/opportunities', 'POST');
-  const updateMutation = useApiMutation<UpdateOpportunityDto>(
-    `/api/v1/crm/opportunities/${editingId ?? ''}`,
-    'PATCH',
-  );
+  const updateMutation = useApiMutation<UpdateOpportunityDto>(`/api/v1/crm/opportunities/${editingId ?? ''}`, 'PATCH');
   const deleteMutation = useApiMutationVoid(`/api/v1/crm/opportunities/${deleting?.id ?? ''}`, 'DELETE');
   const stageActionMutation = useApiMutationVoid(
     stageAction ? `/api/v1/crm/opportunities/${stageAction.id}/${stageAction.action}` : '/api/v1/crm/opportunities',
@@ -189,18 +186,10 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
         <div className="flex justify-end gap-1.5">
           {row.stage !== 'won' && row.stage !== 'lost' ? (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setStageAction({ id: row.id, action: 'mark-won' })}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setStageAction({ id: row.id, action: 'mark-won' })}>
                 {t('crm.won')}
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setStageAction({ id: row.id, action: 'mark-lost' })}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setStageAction({ id: row.id, action: 'mark-lost' })}>
                 {t('crm.lost')}
               </Button>
             </>
@@ -248,7 +237,13 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={() => {}}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
 
@@ -259,7 +254,8 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-name">
-                  {t('fields.name')}<span className="text-danger"> *</span>
+                  {t('fields.name')}
+                  <span className="text-danger"> *</span>
                 </label>
                 <Input className="w-full" id="opp-name" {...register('name')} />
                 {errors.name ? <div className="text-[12px] font-normal text-danger">{errors.name.message}</div> : null}
@@ -295,7 +291,15 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-probability">{t('crm.probabilityPercent')}</label>
-                <Input className="w-full" id="opp-probability" type="number" min="0" max="100" step="1" {...register('probability')} />
+                <Input
+                  className="w-full"
+                  id="opp-probability"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  {...register('probability')}
+                />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="opp-close">{t('crm.expectedCloseDate')}</label>
@@ -306,7 +310,11 @@ export function OpportunityPanel({ customers }: { customers: Customer[] }) {
                 <Textarea className="w-full" id="opp-notes" rows={3} {...register('notes')} />
               </div>
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createOpportunity')}

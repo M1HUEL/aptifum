@@ -113,11 +113,7 @@ export class BomsService {
     return { id };
   }
 
-  private async validateLines(
-    tenantId: string,
-    finishedProductId: string,
-    lines: Array<{ productId: string }>,
-  ) {
+  private async validateLines(tenantId: string, finishedProductId: string, lines: Array<{ productId: string }>) {
     if (lines.some((line) => line.productId === finishedProductId)) {
       throw new BadRequestException('A BOM component cannot be the finished product itself');
     }

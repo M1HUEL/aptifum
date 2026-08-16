@@ -41,7 +41,12 @@ export async function seedAuth(context: BrowserContext): Promise<AuthTokens> {
   return tokens;
 }
 
-export async function login(page: Page, email: string, password: string, expectedUrl: RegExp = /\/dashboard/): Promise<void> {
+export async function login(
+  page: Page,
+  email: string,
+  password: string,
+  expectedUrl: RegExp = /\/dashboard/,
+): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(password);

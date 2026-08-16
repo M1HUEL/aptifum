@@ -44,10 +44,7 @@ export class AttendanceController {
   @Post('clock')
   @RequirePermissions(permission(ModuleName.HR, 'write'))
   @ApiOperation({ summary: 'Clock in or out an employee' })
-  clock(
-    @CurrentUser() user: { tenantId: string | null; id?: string },
-    @Body() dto: ClockAttendanceDto,
-  ) {
+  clock(@CurrentUser() user: { tenantId: string | null; id?: string }, @Body() dto: ClockAttendanceDto) {
     return this.attendanceService.clock(user.tenantId, user.id ?? null, dto);
   }
 

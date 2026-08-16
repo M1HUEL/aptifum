@@ -8,9 +8,7 @@ export function useLanguage(): {
   setLanguage: (language: Language) => void;
   toggleLanguage: () => void;
 } {
-  const [language, setLanguageState] = useState<Language>(
-    i18n.language.startsWith('es') ? 'es' : 'en',
-  );
+  const [language, setLanguageState] = useState<Language>(i18n.language.startsWith('es') ? 'es' : 'en');
 
   const setLanguage = useCallback((next: Language) => {
     setLanguageState(next);
@@ -21,10 +19,7 @@ export function useLanguage(): {
   const toggleLanguage = useCallback(() => {
     setLanguageState((current) => (current === 'es' ? 'en' : 'es'));
     void i18n.changeLanguage(i18n.language.startsWith('es') ? 'en' : 'es');
-    window.localStorage.setItem(
-      LANGUAGE_STORAGE_KEY,
-      i18n.language.startsWith('es') ? 'en' : 'es',
-    );
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, i18n.language.startsWith('es') ? 'en' : 'es');
   }, []);
 
   return { language, setLanguage, toggleLanguage };

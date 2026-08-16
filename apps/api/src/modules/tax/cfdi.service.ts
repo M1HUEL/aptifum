@@ -2,15 +2,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { CfdiStatus } from '@aptifum/core';
-import {
-  CfdiCertificate,
-  CfdiDocument,
-  Customer,
-  Invoice,
-  InvoiceItem,
-  OutboxEvent,
-  Tenant,
-} from '@aptifum/database';
+import { CfdiCertificate, CfdiDocument, Customer, Invoice, InvoiceItem, OutboxEvent, Tenant } from '@aptifum/database';
 import { buildCfdi, CfdiInvoiceInput } from './cfdi-builder.util';
 import { DemoCertificate, generateDemoCertificate } from './certificate.util';
 import type { UpdateCfdiSettingsDto } from './dto/update-cfdi-settings.dto';
@@ -193,7 +185,12 @@ export class CfdiService {
 
   async getXml(tenantId: string | null, id: string) {
     const cfdi = await this.findOne(tenantId, id);
-    return { id: cfdi.id, number: cfdi.serie && cfdi.folio ? `${cfdi.serie}-${cfdi.folio}` : cfdi.uuid, uuid: cfdi.uuid, xml: cfdi.xml };
+    return {
+      id: cfdi.id,
+      number: cfdi.serie && cfdi.folio ? `${cfdi.serie}-${cfdi.folio}` : cfdi.uuid,
+      uuid: cfdi.uuid,
+      xml: cfdi.xml,
+    };
   }
 
   async cancel(tenantId: string | null, userId: string | null, id: string) {
@@ -254,12 +251,7 @@ export class CfdiService {
     return [toDemo(emisor), toDemo(pac)];
   }
 
-  private async loadOrCreateCert(
-    tenantId: string,
-    kind: string,
-    rfc: string,
-    name: string,
-  ): Promise<CfdiCertificate> {
+  private async loadOrCreateCert(tenantId: string, kind: string, rfc: string, name: string): Promise<CfdiCertificate> {
     const existing = await this.certRepo.findOneBy({ tenantId, kind, active: true });
     if (existing) {
       return existing;
@@ -288,24 +280,23 @@ export class CfdiService {
       enabled: stored.enabled ?? DEFAULT_SETTINGS.enabled,
       paymentForm: stored.paymentForm ?? DEFAULT_SETTINGS.paymentForm,
       paymentMethod: stored.paymentMethod ?? DEFAULT_SETTINGS.paymentMethod,
-      placeOfExpedition:
-        stored.placeOfExpedition ??
-        tenant.fiscalAddress?.zip ??
-        DEFAULT_SETTINGS.placeOfExpedition,
+      placeOfExpedition: stored.placeOfExpedition ?? tenant.fiscalAddress?.zip ?? DEFAULT_SETTINGS.placeOfExpedition,
     };
   }
 
   private toInvoiceInput(invoice: Invoice): CfdiInvoiceInput {
-    const items = (invoice.items ?? []).map((item: InvoiceItem & { product?: { sku?: string; unitOfMeasure?: string } }) => ({
-      description: item.description,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      taxRate: item.taxRate,
-      taxAmount: item.taxAmount,
-      lineTotal: item.lineTotal,
-      sku: item.product?.sku ?? null,
-      uom: item.product?.unitOfMeasure ?? null,
-    }));
+    const items = (invoice.items ?? []).map(
+      (item: InvoiceItem & { product?: { sku?: string; unitOfMeasure?: string } }) => ({
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        taxRate: item.taxRate,
+        taxAmount: item.taxAmount,
+        lineTotal: item.lineTotal,
+        sku: item.product?.sku ?? null,
+        uom: item.product?.unitOfMeasure ?? null,
+      }),
+    );
     return {
       number: invoice.number,
       type: invoice.type,

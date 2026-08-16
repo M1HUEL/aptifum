@@ -100,10 +100,7 @@ export function ChartAccountsPage() {
   const accounts = data?.data ?? [];
 
   const createMutation = useApiMutation<CreateAccountDto>('/api/v1/accounting/accounts', 'POST');
-  const updateMutation = useApiMutation<UpdateAccountDto>(
-    `/api/v1/accounting/accounts/${editingId ?? ''}`,
-    'PATCH',
-  );
+  const updateMutation = useApiMutation<UpdateAccountDto>(`/api/v1/accounting/accounts/${editingId ?? ''}`, 'PATCH');
   const deleteMutation = useApiMutation<Record<string, never>, unknown>(
     `/api/v1/accounting/accounts/${deleting?.id ?? ''}`,
     'DELETE',
@@ -208,7 +205,9 @@ export function ChartAccountsPage() {
       key: 'active',
       header: t('common.status'),
       render: (row) => (
-        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>
+        <Badge tone={row.active ? 'success' : 'neutral'}>
+          {row.active ? t('common.active') : t('common.inactive')}
+        </Badge>
       ),
     },
     {
@@ -263,7 +262,13 @@ export function ChartAccountsPage() {
       {accounts.length > 0 ? (
         <>
           <DataTable columns={columns} rows={accounts} rowKey={(row) => row.id} />
-          <Pagination page={data?.meta.page ?? page} limit={data?.meta.limit ?? limit} total={data?.meta.total ?? 0} onPage={setPage} onLimit={handleLimitChange} />
+          <Pagination
+            page={data?.meta.page ?? page}
+            limit={data?.meta.limit ?? limit}
+            total={data?.meta.total ?? 0}
+            onPage={setPage}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
 
@@ -333,7 +338,11 @@ export function ChartAccountsPage() {
                 </div>
               </div>
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('accounts.createAccount')}

@@ -59,20 +59,14 @@ export class LeavesController {
   @Post(':id/approve')
   @RequirePermissions(permission(ModuleName.HR, 'approve'))
   @ApiOperation({ summary: 'Approve a leave request' })
-  approve(
-    @CurrentUser() user: { tenantId: string | null; id?: string },
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  approve(@CurrentUser() user: { tenantId: string | null; id?: string }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.leavesService.approve(user.tenantId, id, user.id ?? null);
   }
 
   @Post(':id/reject')
   @RequirePermissions(permission(ModuleName.HR, 'approve'))
   @ApiOperation({ summary: 'Reject a leave request' })
-  reject(
-    @CurrentUser() user: { tenantId: string | null; id?: string },
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  reject(@CurrentUser() user: { tenantId: string | null; id?: string }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.leavesService.reject(user.tenantId, id, user.id ?? null);
   }
 

@@ -1,11 +1,4 @@
-import {
-  IsDateString,
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUUID,
-  MaxLength,
-} from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import { ActivityType } from '@aptifum/core';
 
 export class UpdateActivityDto {

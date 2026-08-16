@@ -502,10 +502,7 @@ export class ReportsService {
         days61to90: round2(Number(row.days_61_90)),
         days90plus: round2(Number(row.days_90_plus)),
         totalOutstanding: round2(
-          Math.max(
-            0,
-            Number(row.current) + Number(row.days_31_60) + Number(row.days_61_90) + Number(row.days_90_plus),
-          ),
+          Math.max(0, Number(row.current) + Number(row.days_31_60) + Number(row.days_61_90) + Number(row.days_90_plus)),
         ),
       };
     });
@@ -522,10 +519,7 @@ export class ReportsService {
     return { asOf: this.today(), data, totals };
   }
 
-  async incomeStatement(
-    tenantId: string | null,
-    opts: { periodId?: string; from?: string; to?: string },
-  ) {
+  async incomeStatement(tenantId: string | null, opts: { periodId?: string; from?: string; to?: string }) {
     this.assertTenant(tenantId);
     const { where, params } = this.buildPeriodFilter(tenantId, opts);
     const rows: AggregatedAccountRow[] = await this.dataSource.query(
@@ -600,7 +594,10 @@ export class ReportsService {
     const netIncome = statement.netIncome;
 
     const equity = {
-      accounts: [...equityAccounts, { code: '', name: 'Net income (current period)', type: 'equity', balance: netIncome }],
+      accounts: [
+        ...equityAccounts,
+        { code: '', name: 'Net income (current period)', type: 'equity', balance: netIncome },
+      ],
       total: round2(equityAccounts.reduce((sum, a) => sum + a.balance, 0) + netIncome),
     };
     const totalLiabilitiesAndEquity = round2(liabilities + equity.total);
@@ -627,9 +624,8 @@ export class ReportsService {
     if (dateClause) {
       where.push(dateClause);
     }
-    const rows: Array<{ period: string; debit: number; credit: number }> =
-      await this.dataSource.query(
-        `SELECT to_char(je.entry_date, 'YYYY-MM') AS period,
+    const rows: Array<{ period: string; debit: number; credit: number }> = await this.dataSource.query(
+      `SELECT to_char(je.entry_date, 'YYYY-MM') AS period,
                 COALESCE(SUM(jl.debit), 0) AS debit,
                 COALESCE(SUM(jl.credit), 0) AS credit
            FROM journal_entry_lines jl
@@ -638,8 +634,8 @@ export class ReportsService {
           WHERE ${where.join(' AND ')}
           GROUP BY to_char(je.entry_date, 'YYYY-MM')
           ORDER BY to_char(je.entry_date, 'YYYY-MM')`,
-        params,
-      );
+      params,
+    );
 
     let openingBalance = 0;
     if (opts.from) {
@@ -820,12 +816,9 @@ export class ReportsService {
     );
     const statement = await this.incomeStatement(tenantId, { from: monthStart, to: today });
     const rangeStatement =
-      from === monthStart && to === today
-        ? statement
-        : await this.incomeStatement(tenantId, { from, to });
+      from === monthStart && to === today ? statement : await this.incomeStatement(tenantId, { from, to });
     const msPerDay = 86_400_000;
-    const rangeDays =
-      Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / msPerDay) + 1;
+    const rangeDays = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / msPerDay) + 1;
     const prevToDate = new Date(Date.parse(`${from}T00:00:00Z`) - msPerDay);
     const prevFromDate = new Date(Date.parse(`${from}T00:00:00Z`) - rangeDays * msPerDay);
     const prevFrom = prevFromDate.toISOString().slice(0, 10);
@@ -981,9 +974,7 @@ export class ReportsService {
   private accountBalance(row: AggregatedAccountRow): number {
     const debit = round2(Number(row.debit));
     const credit = round2(Number(row.credit));
-    return row.normal_balance === AccountNormalBalance.DEBIT
-      ? round2(debit - credit)
-      : round2(credit - debit);
+    return row.normal_balance === AccountNormalBalance.DEBIT ? round2(debit - credit) : round2(credit - debit);
   }
 
   private total(accounts: Array<{ balance: number }>): number {
@@ -1025,11 +1016,7 @@ export class ReportsService {
     return { where: `jl.tenant_id = $1${clause ? ` AND ${clause}` : ''}`, params };
   }
 
-  private buildDateClause(
-    column: string,
-    opts: { from?: string; to?: string },
-    params: unknown[],
-  ): string {
+  private buildDateClause(column: string, opts: { from?: string; to?: string }, params: unknown[]): string {
     const parts: string[] = [];
     if (opts.from) {
       params.push(opts.from);
@@ -1042,11 +1029,7 @@ export class ReportsService {
     return parts.join(' AND ');
   }
 
-  private buildWarehouseClause(
-    column: string,
-    warehouseId: string | undefined,
-    params: unknown[],
-  ): string {
+  private buildWarehouseClause(column: string, warehouseId: string | undefined, params: unknown[]): string {
     if (!warehouseId) {
       return '';
     }
@@ -1064,4 +1047,3 @@ export class ReportsService {
     }
   }
 }
-

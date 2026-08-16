@@ -13,13 +13,7 @@ function statusTone(status: PurchaseOrder['status']): BadgeTone {
   return 'neutral';
 }
 
-export function PurchaseOrderDetailsModal({
-  order,
-  onClose,
-}: {
-  order: PurchaseOrder | null;
-  onClose: () => void;
-}) {
+export function PurchaseOrderDetailsModal({ order, onClose }: { order: PurchaseOrder | null; onClose: () => void }) {
   const { t } = useTranslation();
   const [detail, setDetail] = useState<PurchaseOrder | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,7 +49,10 @@ export function PurchaseOrderDetailsModal({
                 { label: t('purchaseOrders.supplier'), value: viewing.supplier?.tradeName ?? '—' },
                 { label: t('fields.warehouse'), value: viewing.warehouse?.name ?? '—' },
                 { label: t('tables.issueDate'), value: formatDate(viewing.issueDate) },
-                { label: t('purchaseOrders.expectedAt'), value: viewing.expectedAt ? formatDate(viewing.expectedAt) : '—' },
+                {
+                  label: t('purchaseOrders.expectedAt'),
+                  value: viewing.expectedAt ? formatDate(viewing.expectedAt) : '—',
+                },
                 { label: t('fields.subtotal'), value: formatMoney(viewing.subtotal) },
                 { label: t('fields.discount'), value: formatMoney(viewing.discount) },
                 { label: t('fields.tax'), value: formatMoney(viewing.tax) },
@@ -87,11 +84,17 @@ export function PurchaseOrderDetailsModal({
                 <tbody>
                   {(viewing.items ?? []).map((item) => (
                     <tr key={item.id} className="border-t border-border">
-                      <td className="px-[14px] py-2.5 align-middle">{item.description ?? item.product?.name ?? item.productId}</td>
+                      <td className="px-[14px] py-2.5 align-middle">
+                        {item.description ?? item.product?.name ?? item.productId}
+                      </td>
                       <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{item.quantity}</td>
-                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{formatMoney(item.unitCost)}</td>
+                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">
+                        {formatMoney(item.unitCost)}
+                      </td>
                       <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{item.receivedQuantity}</td>
-                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{formatMoney(item.lineTotal)}</td>
+                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">
+                        {formatMoney(item.lineTotal)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

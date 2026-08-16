@@ -117,15 +117,17 @@ export function WarehousesCategoriesPage() {
   const [catError, setCatError] = useState<string | null>(null);
   const [deletingCat, setDeletingCat] = useState<Category | null>(null);
 
-  const {
-    data: warehouseData,
-    error: warehouseError,
-  } = usePagedQuery<Warehouse>({ path: '/api/v1/inventory/warehouses', page: 1, limit });
+  const { data: warehouseData, error: warehouseError } = usePagedQuery<Warehouse>({
+    path: '/api/v1/inventory/warehouses',
+    page: 1,
+    limit,
+  });
 
-  const {
-    data: categoryData,
-    error: categoryError,
-  } = usePagedQuery<Category>({ path: '/api/v1/inventory/categories', page: 1, limit });
+  const { data: categoryData, error: categoryError } = usePagedQuery<Category>({
+    path: '/api/v1/inventory/categories',
+    page: 1,
+    limit,
+  });
 
   const warehouseForm = useForm<WarehouseFormValues>({
     resolver: zodResolver(warehouseFormSchema),
@@ -356,7 +358,11 @@ export function WarehousesCategoriesPage() {
     {
       key: 'active',
       header: t('common.status'),
-      render: (row) => <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>,
+      render: (row) => (
+        <Badge tone={row.active ? 'success' : 'neutral'}>
+          {row.active ? t('common.active') : t('common.inactive')}
+        </Badge>
+      ),
     },
     {
       key: 'actions',
@@ -385,7 +391,11 @@ export function WarehousesCategoriesPage() {
     {
       key: 'active',
       header: t('common.status'),
-      render: (row) => <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>,
+      render: (row) => (
+        <Badge tone={row.active ? 'success' : 'neutral'}>
+          {row.active ? t('common.active') : t('common.inactive')}
+        </Badge>
+      ),
     },
     {
       key: 'actions',
@@ -435,10 +445,18 @@ export function WarehousesCategoriesPage() {
       />
 
       <div className="mb-4 flex gap-1">
-        <button type="button" className={tab === 'warehouses' ? 'tab tab-active' : 'tab'} onClick={() => setTab('warehouses')}>
+        <button
+          type="button"
+          className={tab === 'warehouses' ? 'tab tab-active' : 'tab'}
+          onClick={() => setTab('warehouses')}
+        >
           {t('warehouses.warehouses')}
         </button>
-        <button type="button" className={tab === 'categories' ? 'tab tab-active' : 'tab'} onClick={() => setTab('categories')}>
+        <button
+          type="button"
+          className={tab === 'categories' ? 'tab tab-active' : 'tab'}
+          onClick={() => setTab('categories')}
+        >
           {t('warehouses.categories')}
         </button>
       </div>
@@ -458,7 +476,13 @@ export function WarehousesCategoriesPage() {
               ) : (
                 <DataTable columns={warehouseColumns} rows={warehouseData.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={warehouseData.meta.page} limit={warehouseData.meta.limit} total={warehouseData.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
+              <Pagination
+                page={warehouseData.meta.page}
+                limit={warehouseData.meta.limit}
+                total={warehouseData.meta.total}
+                onPage={() => {}}
+                onLimit={handleLimitChange}
+              />
             </>
           ) : null}
         </>
@@ -477,7 +501,13 @@ export function WarehousesCategoriesPage() {
               ) : (
                 <DataTable columns={categoryColumns} rows={categoryData.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={categoryData.meta.page} limit={categoryData.meta.limit} total={categoryData.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
+              <Pagination
+                page={categoryData.meta.page}
+                limit={categoryData.meta.limit}
+                total={categoryData.meta.total}
+                onPage={() => {}}
+                onLimit={handleLimitChange}
+              />
             </>
           ) : null}
         </>
@@ -491,12 +521,16 @@ export function WarehousesCategoriesPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="wh-code">{t('fields.code')} *</label>
                 <Input className="w-full" id="wh-code" {...registerWh('code')} />
-                {whErrors.code ? <div className="text-[12px] font-normal text-danger">{whErrors.code.message}</div> : null}
+                {whErrors.code ? (
+                  <div className="text-[12px] font-normal text-danger">{whErrors.code.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="wh-name">{t('fields.name')} *</label>
                 <Input className="w-full" id="wh-name" {...registerWh('name')} />
-                {whErrors.name ? <div className="text-[12px] font-normal text-danger">{whErrors.name.message}</div> : null}
+                {whErrors.name ? (
+                  <div className="text-[12px] font-normal text-danger">{whErrors.name.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="wh-address">{t('fields.address')}</label>
@@ -516,10 +550,18 @@ export function WarehousesCategoriesPage() {
                 </div>
               </div>
             </div>
-            {whError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{whError}</div> : null}
+            {whError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {whError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={whSaving} loading={whSaving}>
-                {whSaving ? t('common.saving') : editingWhId ? t('common.saveChanges') : t('warehouses.createWarehouse')}
+                {whSaving
+                  ? t('common.saving')
+                  : editingWhId
+                    ? t('common.saveChanges')
+                    : t('warehouses.createWarehouse')}
               </Button>
             </DialogFooter>
           </form>
@@ -605,12 +647,16 @@ export function WarehousesCategoriesPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="loc-code">{t('fields.code')} *</label>
                 <Input className="w-full" id="loc-code" {...registerLoc('code')} />
-                {locErrors.code ? <div className="text-[12px] font-normal text-danger">{locErrors.code.message}</div> : null}
+                {locErrors.code ? (
+                  <div className="text-[12px] font-normal text-danger">{locErrors.code.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="loc-name">{t('fields.name')} *</label>
                 <Input className="w-full" id="loc-name" {...registerLoc('name')} />
-                {locErrors.name ? <div className="text-[12px] font-normal text-danger">{locErrors.name.message}</div> : null}
+                {locErrors.name ? (
+                  <div className="text-[12px] font-normal text-danger">{locErrors.name.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
@@ -626,10 +672,18 @@ export function WarehousesCategoriesPage() {
                 </div>
               </div>
             </div>
-            {locError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{locError}</div> : null}
+            {locError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {locError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={locSaving} loading={locSaving}>
-                {locSaving ? t('common.saving') : editingLocId ? t('common.saveChanges') : t('warehouses.addLocationTitle')}
+                {locSaving
+                  ? t('common.saving')
+                  : editingLocId
+                    ? t('common.saveChanges')
+                    : t('warehouses.addLocationTitle')}
               </Button>
             </DialogFooter>
           </form>
@@ -644,7 +698,9 @@ export function WarehousesCategoriesPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="cat-name">{t('fields.name')} *</label>
                 <Input className="w-full" id="cat-name" {...registerCat('name')} />
-                {catErrors.name ? <div className="text-[12px] font-normal text-danger">{catErrors.name.message}</div> : null}
+                {catErrors.name ? (
+                  <div className="text-[12px] font-normal text-danger">{catErrors.name.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="cat-parent">{t('tables.parent')}</label>
@@ -655,10 +711,7 @@ export function WarehousesCategoriesPage() {
                     <SearchableSelect
                       value={field.value}
                       onChange={field.onChange}
-                      options={[
-                        { value: '', label: t('warehouses.root') },
-                        ...categoryOptions,
-                      ]}
+                      options={[{ value: '', label: t('warehouses.root') }, ...categoryOptions]}
                       placeholder={t('warehouses.root')}
                       ariaLabel={t('tables.parent')}
                     />
@@ -679,10 +732,18 @@ export function WarehousesCategoriesPage() {
                 </div>
               </div>
             </div>
-            {catError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{catError}</div> : null}
+            {catError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {catError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={catSaving} loading={catSaving}>
-                {catSaving ? t('common.saving') : editingCatId ? t('common.saveChanges') : t('warehouses.createCategory')}
+                {catSaving
+                  ? t('common.saving')
+                  : editingCatId
+                    ? t('common.saveChanges')
+                    : t('warehouses.createCategory')}
               </Button>
             </DialogFooter>
           </form>

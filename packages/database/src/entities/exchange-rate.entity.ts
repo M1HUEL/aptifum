@@ -3,12 +3,7 @@ import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
 
 @Entity('exchange_rates')
-@Unique('UQ_exchange_rates_tenant_pair_date', [
-  'tenantId',
-  'baseCurrency',
-  'quoteCurrency',
-  'rateDate',
-])
+@Unique('UQ_exchange_rates_tenant_pair_date', ['tenantId', 'baseCurrency', 'quoteCurrency', 'rateDate'])
 export class ExchangeRate extends TenantBaseEntity {
   @Index('IDX_exchange_rates_tenant_pair_date')
   @Column({ name: 'base_currency', length: 3 })

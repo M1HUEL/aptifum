@@ -85,40 +85,50 @@ describe('buildCfdi', () => {
 
   it('builds the cadena original in CFDI 4.0 attribute order', () => {
     const built = buildCfdi(invoice, tenant, customer, emisorCert, pacCert);
-    const certBase64 = emisorCert.certificatePem
-      .replace(/-----(BEGIN|END) [^-]*-----/g, '')
-      .replace(/\s+/g, '');
-    const expected = [
-      '4.0',
-      'INV',
-      '000001',
-      built.xml.match(/Fecha="([^"]+)"/)?.[1] ?? '',
-      '',
-      '99',
-      emisorCert.serialNumber,
-      certBase64,
-      '100.00',
-      '',
-      'MXN',
-      '',
-      '116.00',
-      'I',
-      '01',
-      'PUE',
-      '06600',
-      '',
-    ].join('|') + '|';
+    const certBase64 = emisorCert.certificatePem.replace(/-----(BEGIN|END) [^-]*-----/g, '').replace(/\s+/g, '');
+    const expected =
+      [
+        '4.0',
+        'INV',
+        '000001',
+        built.xml.match(/Fecha="([^"]+)"/)?.[1] ?? '',
+        '',
+        '99',
+        emisorCert.serialNumber,
+        certBase64,
+        '100.00',
+        '',
+        'MXN',
+        '',
+        '116.00',
+        'I',
+        '01',
+        'PUE',
+        '06600',
+        '',
+      ].join('|') + '|';
     expect(built.cadenaOriginal).toBe(expected);
   });
 
   it('produces a verifiable Sello over the cadena original', () => {
     const built = buildCfdi(invoice, tenant, customer, emisorCert, pacCert);
-    const verifier = verify('RSA-SHA256', Buffer.from(built.cadenaOriginal, 'utf8'), createPublicKey(emisorCert.certificatePem), Buffer.from(built.sello, 'base64'));
+    const verifier = verify(
+      'RSA-SHA256',
+      Buffer.from(built.cadenaOriginal, 'utf8'),
+      createPublicKey(emisorCert.certificatePem),
+      Buffer.from(built.sello, 'base64'),
+    );
     expect(verifier).toBe(true);
   });
 
   it('uses TipoDeComprobante E for credit notes', () => {
-    const built = buildCfdi({ ...invoice, type: 'credit_note', number: 'NC-000001' }, tenant, customer, emisorCert, pacCert);
+    const built = buildCfdi(
+      { ...invoice, type: 'credit_note', number: 'NC-000001' },
+      tenant,
+      customer,
+      emisorCert,
+      pacCert,
+    );
     expect(built.serie).toBe('NC');
     expect(built.xml).toContain('TipoDeComprobante="E"');
   });
@@ -135,13 +145,7 @@ describe('buildCfdi', () => {
   });
 
   it('falls back to generic RFCs when missing', () => {
-    const built = buildCfdi(
-      invoice,
-      { ...tenant, rfc: '' },
-      { ...customer, rfc: '' },
-      emisorCert,
-      pacCert,
-    );
+    const built = buildCfdi(invoice, { ...tenant, rfc: '' }, { ...customer, rfc: '' }, emisorCert, pacCert);
     expect(built.xml).toContain('Rfc="XEXX010101000"');
     expect(built.xml).toContain('Rfc="XAXX010101000"');
     expect(built.xml).toContain('UsoCFDI="G03"');

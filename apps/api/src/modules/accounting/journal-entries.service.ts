@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { JournalEntryStatus, today } from '@aptifum/core';
@@ -69,7 +64,7 @@ export class JournalEntriesService {
             accountCode: line.accountCode,
             debit: line.debit,
             credit: line.credit,
-      description: line.description ?? undefined,
+            description: line.description ?? undefined,
           })),
         }),
       );

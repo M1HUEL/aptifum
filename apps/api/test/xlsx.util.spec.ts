@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Response } from 'express';
 import ExcelJS from 'exceljs';
-import {
-  sectionsToXlsxBuffer,
-  setXlsxHeaders,
-  toXlsxBuffer,
-} from '../src/common/export/xlsx.util';
+import { sectionsToXlsxBuffer, setXlsxHeaders, toXlsxBuffer } from '../src/common/export/xlsx.util';
 
 function loadWorkbook(data: Uint8Array): Promise<ExcelJS.Workbook> {
   const workbook = new ExcelJS.Workbook();

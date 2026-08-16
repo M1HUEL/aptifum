@@ -7,9 +7,7 @@ import { UpdateDepartmentDto } from './dto/update-department.dto';
 
 @Injectable()
 export class DepartmentsService {
-  constructor(
-    @InjectRepository(Department) private readonly departmentsRepo: Repository<Department>,
-  ) {}
+  constructor(@InjectRepository(Department) private readonly departmentsRepo: Repository<Department>) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<Department> {
     return tenantId ? { tenantId } : {};
@@ -53,8 +51,7 @@ export class DepartmentsService {
     Object.assign(department, {
       code: dto.code ?? department.code,
       name: dto.name ?? department.name,
-      managerEmployeeId:
-        dto.managerEmployeeId === undefined ? department.managerEmployeeId : dto.managerEmployeeId,
+      managerEmployeeId: dto.managerEmployeeId === undefined ? department.managerEmployeeId : dto.managerEmployeeId,
       active: dto.active ?? department.active,
     });
     return this.departmentsRepo.save(department);

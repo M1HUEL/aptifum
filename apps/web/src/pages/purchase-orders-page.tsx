@@ -161,11 +161,7 @@ export function PurchaseOrdersPage() {
     defaultValues: emptyReceipt,
   });
 
-  const {
-    register: receiveRegister,
-    handleSubmit: receiveHandleSubmit,
-    reset: resetReceive,
-  } = receiveForm;
+  const { register: receiveRegister, handleSubmit: receiveHandleSubmit, reset: resetReceive } = receiveForm;
 
   useEffect(() => {
     let cancelled = false;
@@ -186,10 +182,7 @@ export function PurchaseOrdersPage() {
     };
   }, []);
 
-  const createMutation = useApiMutation<CreatePurchaseOrderDto>(
-    '/api/v1/purchasing/purchase-orders',
-    'POST',
-  );
+  const createMutation = useApiMutation<CreatePurchaseOrderDto>('/api/v1/purchasing/purchase-orders', 'POST');
   const receiveMutation = useApiMutation<CreateGoodsReceiptDto>(
     `/api/v1/purchasing/purchase-orders/${receiving?.id ?? ''}/receipts`,
     'POST',
@@ -248,7 +241,10 @@ export function PurchaseOrdersPage() {
   };
 
   const removeItem = (index: number) => {
-    setValue('items', items.filter((_, i) => i !== index));
+    setValue(
+      'items',
+      items.filter((_, i) => i !== index),
+    );
   };
 
   const submitCreate = handleSubmit((values) => {
@@ -398,12 +394,7 @@ export function PurchaseOrdersPage() {
         subtitle={t('purchaseOrders.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <Button
-              variant="secondary"
-              type="button"
-              aria-label={t('common.export')}
-              onClick={handleExport}
-            >
+            <Button variant="secondary" type="button" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </Button>
             <Button onClick={openCreate}>{t('purchaseOrders.newOrder')}</Button>
@@ -433,11 +424,7 @@ export function PurchaseOrdersPage() {
             { value: 'cancelled', label: t('purchaseOrders.cancelled') },
           ]}
         />
-        <Button
-          type="submit"
-        >
-          {t('common.search')}
-        </Button>
+        <Button type="submit">{t('common.search')}</Button>
       </form>
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
@@ -460,7 +447,13 @@ export function PurchaseOrdersPage() {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={setPage}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
 
@@ -485,7 +478,9 @@ export function PurchaseOrdersPage() {
                     />
                   )}
                 />
-                {errors.supplierId ? <div className="text-[12px] font-normal text-danger">{errors.supplierId.message}</div> : null}
+                {errors.supplierId ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.supplierId.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="po-warehouse">{t('fields.warehouse')} *</label>
@@ -497,7 +492,9 @@ export function PurchaseOrdersPage() {
                     </option>
                   ))}
                 </Select>
-                {errors.warehouseId ? <div className="text-[12px] font-normal text-danger">{errors.warehouseId.message}</div> : null}
+                {errors.warehouseId ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.warehouseId.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="po-expected">{t('purchaseOrders.expectedAt')}</label>
@@ -505,8 +502,17 @@ export function PurchaseOrdersPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="po-discount">{t('fields.discount')}</label>
-                <Input id="po-discount" type="number" min="0" step="0.01" className="w-full" {...register('discount')} />
-                {errors.discount ? <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div> : null}
+                <Input
+                  id="po-discount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="w-full"
+                  {...register('discount')}
+                />
+                {errors.discount ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div>
+                ) : null}
               </div>
             </div>
             <div className="mb-3 rounded-ui border border-border p-3">
@@ -540,7 +546,9 @@ export function PurchaseOrdersPage() {
                       {...register(`items.${index}.quantity`)}
                     />
                     {errors.items?.[index]?.quantity ? (
-                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.quantity?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">
+                        {errors.items[index]?.quantity?.message}
+                      </div>
                     ) : null}
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -555,7 +563,9 @@ export function PurchaseOrdersPage() {
                       {...register(`items.${index}.unitCost`)}
                     />
                     {errors.items?.[index]?.unitCost ? (
-                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.unitCost?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">
+                        {errors.items[index]?.unitCost?.message}
+                      </div>
                     ) : null}
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -591,7 +601,11 @@ export function PurchaseOrdersPage() {
               <label htmlFor="po-notes">{t('fields.notes')}</label>
               <Textarea id="po-notes" rows={2} className="w-full" {...register('notes')} />
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : t('purchaseOrders.createOrder')}
@@ -601,10 +615,7 @@ export function PurchaseOrdersPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={receiving !== null}
-        onOpenChange={(open) => !receiveBusy && !open && setReceiving(null)}
-      >
+      <Dialog open={receiving !== null} onOpenChange={(open) => !receiveBusy && !open && setReceiving(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader title={t('purchaseOrders.receiveTitle', { number: receiving?.number ?? '' })} />
           <form onSubmit={(event) => void submitReceive(event)}>
@@ -648,9 +659,18 @@ export function PurchaseOrdersPage() {
               <label htmlFor="receive-notes">{t('fields.notes')}</label>
               <Textarea id="receive-notes" rows={2} className="w-full" {...receiveRegister('notes')} />
             </div>
-            {receiveError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{receiveError}</div> : null}
+            {receiveError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {receiveError}
+              </div>
+            ) : null}
             <DialogFooter>
-              <Button variant="default" type="submit" disabled={receiveBusy || !receiving} loading={receiveBusy || !receiving}>
+              <Button
+                variant="default"
+                type="submit"
+                disabled={receiveBusy || !receiving}
+                loading={receiveBusy || !receiving}
+              >
                 {receiveBusy ? t('purchaseOrders.receiving') : t('purchaseOrders.recordReceipt')}
               </Button>
             </DialogFooter>

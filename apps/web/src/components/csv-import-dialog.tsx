@@ -144,7 +144,9 @@ export function CsvImportDialog({ open, onOpenChange, type, onImported }: CsvImp
         <DialogHeader title={t('imports.title')} />
         <div className="mb-3 text-[13px] text-muted">
           {t('imports.subtitle')}:{' '}
-          {t(`imports.type${type.charAt(0).toUpperCase()}${type.slice(1).replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())}`)}
+          {t(
+            `imports.type${type.charAt(0).toUpperCase()}${type.slice(1).replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())}`,
+          )}
         </div>
 
         <div
@@ -168,13 +170,7 @@ export function CsvImportDialog({ open, onOpenChange, type, onImported }: CsvImp
           <div className="text-[13px] font-semibold">{t('imports.selectFile')}</div>
           <div className="text-[12px] text-muted">{t('imports.dropHint')}</div>
         </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".csv,text/csv"
-          className="hidden"
-          onChange={handleChange}
-        />
+        <input ref={inputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleChange} />
 
         {file ? (
           <div className="flex items-center gap-2 rounded-ui border border-border bg-surface px-[14px] py-2.5 text-[13px]">
@@ -204,9 +200,7 @@ export function CsvImportDialog({ open, onOpenChange, type, onImported }: CsvImp
         <p className="text-[12px] text-muted">{t('imports.duplicateSkipped')}</p>
 
         {error ? (
-          <div className="rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
-            {error}
-          </div>
+          <div className="rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{error}</div>
         ) : null}
 
         {result ? (
@@ -219,35 +213,23 @@ export function CsvImportDialog({ open, onOpenChange, type, onImported }: CsvImp
                 <div className="text-xl font-semibold tabular-nums">{result.total}</div>
               </div>
               <div>
-                <div className="text-[12px] uppercase tracking-[0.04em] text-muted">
-                  {t('imports.imported')}
-                </div>
-                <div className="text-xl font-semibold tabular-nums text-success">
-                  {result.imported}
-                </div>
+                <div className="text-[12px] uppercase tracking-[0.04em] text-muted">{t('imports.imported')}</div>
+                <div className="text-xl font-semibold tabular-nums text-success">{result.imported}</div>
               </div>
               <div>
-                <div className="text-[12px] uppercase tracking-[0.04em] text-muted">
-                  {t('imports.skipped')}
-                </div>
+                <div className="text-[12px] uppercase tracking-[0.04em] text-muted">{t('imports.skipped')}</div>
                 <div className="text-xl font-semibold tabular-nums">{result.skipped}</div>
               </div>
               <div>
-                <div className="text-[12px] uppercase tracking-[0.04em] text-muted">
-                  {t('imports.errorsCount')}
-                </div>
-                <div className="text-xl font-semibold tabular-nums text-danger">
-                  {result.errors.length}
-                </div>
+                <div className="text-[12px] uppercase tracking-[0.04em] text-muted">{t('imports.errorsCount')}</div>
+                <div className="text-xl font-semibold tabular-nums text-danger">{result.errors.length}</div>
               </div>
             </div>
             {result.errors.length > 0 ? (
               <ul className="max-h-[220px] overflow-auto rounded-ui border border-border bg-bg px-3 py-2 text-[12px]">
                 {result.errors.map((entry) => (
                   <li key={entry.row} className="border-b border-border py-1.5 last:border-b-0">
-                    <span className="font-semibold">
-                      {t('imports.rowError', { row: entry.row })}:
-                    </span>{' '}
+                    <span className="font-semibold">{t('imports.rowError', { row: entry.row })}:</span>{' '}
                     {entry.errors.join('; ')}
                   </li>
                 ))}

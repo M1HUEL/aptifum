@@ -80,15 +80,7 @@ function trendPct(current: number, previous: number): number | null {
   return ((current - previous) / Math.abs(previous)) * 100;
 }
 
-function StatusRow({
-  label,
-  count,
-  warnThreshold,
-}: {
-  label: string;
-  count: number;
-  warnThreshold?: number;
-}) {
+function StatusRow({ label, count, warnThreshold }: { label: string; count: number; warnThreshold?: number }) {
   const warn = warnThreshold !== undefined && count >= warnThreshold;
   return (
     <div className="flex items-center justify-between rounded-ui border-b border-border py-2.5 transition-colors hover:bg-bg last:border-b-0">
@@ -120,7 +112,11 @@ function AlertSection({
           {count > 0 ? t('dashboard.viewAll', { count }) : emptyText}
         </Link>
       </div>
-      {count > 0 ? <div className="flex flex-col gap-2.5">{children}</div> : <p className="text-[13px] text-muted">{emptyText}</p>}
+      {count > 0 ? (
+        <div className="flex flex-col gap-2.5">{children}</div>
+      ) : (
+        <p className="text-[13px] text-muted">{emptyText}</p>
+      )}
     </div>
   );
 }
@@ -257,12 +253,7 @@ export function DashboardPage() {
             <label className="whitespace-nowrap text-[13px] text-muted" htmlFor="dash-to">
               {t('dashboard.to')}
             </label>
-            <Input
-              id="dash-to"
-              type="date"
-              value={customTo}
-              onChange={(event) => setCustomTo(event.target.value)}
-            />
+            <Input id="dash-to" type="date" value={customTo} onChange={(event) => setCustomTo(event.target.value)} />
           </div>
         ) : null}
         <Select value={warehouseId} onChange={(event) => setWarehouseId(event.target.value)}>
@@ -279,9 +270,21 @@ export function DashboardPage() {
       {report ? (
         <>
           <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3.5">
-            <StatCard label={t('dashboard.stat.revenuePeriod')} value={formatMoney(report.salesRange)} trend={salesTrend} />
-            <StatCard label={t('dashboard.stat.netIncomePeriod')} value={formatMoney(report.netIncomeRange)} trend={netIncomeTrend} />
-            <StatCard label={t('dashboard.stat.invoicesPeriod')} value={String(report.rangeInvoices)} trend={invoicesTrend} />
+            <StatCard
+              label={t('dashboard.stat.revenuePeriod')}
+              value={formatMoney(report.salesRange)}
+              trend={salesTrend}
+            />
+            <StatCard
+              label={t('dashboard.stat.netIncomePeriod')}
+              value={formatMoney(report.netIncomeRange)}
+              trend={netIncomeTrend}
+            />
+            <StatCard
+              label={t('dashboard.stat.invoicesPeriod')}
+              value={String(report.rangeInvoices)}
+              trend={invoicesTrend}
+            />
             <StatCard label={t('dashboard.stat.salesToday')} value={formatMoney(report.salesToday)} />
             <StatCard label={t('dashboard.stat.salesThisMonth')} value={formatMoney(report.salesMonth)} />
             <StatCard label={t('dashboard.stat.netIncomeMonth')} value={formatMoney(report.netIncomeMonth)} />
@@ -304,63 +307,78 @@ export function DashboardPage() {
         <Card>
           <CardHeader className="flex-row items-center justify-between gap-2">
             <CardTitle>{t('dashboard.alerts')}</CardTitle>
-            <Badge tone={alerts.summary.lowStock + alerts.summary.overdueReceivables + alerts.summary.overduePayables > 0 ? 'warning' : 'success'}>
+            <Badge
+              tone={
+                alerts.summary.lowStock + alerts.summary.overdueReceivables + alerts.summary.overduePayables > 0
+                  ? 'warning'
+                  : 'success'
+              }
+            >
               {alerts.summary.lowStock + alerts.summary.overdueReceivables + alerts.summary.overduePayables}
             </Badge>
           </CardHeader>
           <CardContent>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-[18px]">
-            <AlertSection
-              title={t('dashboard.lowStock')}
-              count={alerts.summary.lowStock}
-              linkTo="/stock"
-              emptyText={t('dashboard.lowStockOk')}
-            >
-              {alerts.lowStock.map((product) => (
-                <div className="flex items-center justify-between rounded-ui border-b border-border py-2.5 transition-colors hover:bg-bg last:border-b-0" key={product.productId}>
-                  <span>
-                    {product.name}
-                    <span className="text-muted"> ({product.sku})</span>
-                  </span>
-                  <Badge tone="warning">
-                    {product.quantity} {product.unitOfMeasure}
-                  </Badge>
-                </div>
-              ))}
-            </AlertSection>
-            <AlertSection
-              title={t('dashboard.overdueReceivables')}
-              count={alerts.summary.overdueReceivables}
-              linkTo="/invoices"
-              emptyText={t('dashboard.noOverdueInvoices')}
-            >
-              {alerts.overdueReceivables.map((invoice) => (
-                <div className="flex items-center justify-between rounded-ui border-b border-border py-2.5 transition-colors hover:bg-bg last:border-b-0" key={invoice.invoiceId}>
-                  <span>
-                    {invoice.number}
-                    <span className="text-muted"> · {invoice.customerName}</span>
-                  </span>
-                  <Badge tone="danger">{formatMoney(invoice.balanceDue)}</Badge>
-                </div>
-              ))}
-            </AlertSection>
-            <AlertSection
-              title={t('dashboard.overduePayables')}
-              count={alerts.summary.overduePayables}
-              linkTo="/purchasing"
-              emptyText={t('dashboard.noOverduePayables')}
-            >
-              {alerts.overduePayables.map((receipt) => (
-                <div className="flex items-center justify-between rounded-ui border-b border-border py-2.5 transition-colors hover:bg-bg last:border-b-0" key={receipt.receiptId}>
-                  <span>
-                    {receipt.number}
-                    <span className="text-muted"> · {receipt.supplierName}</span>
-                  </span>
-                  <Badge tone="danger">{formatMoney(receipt.outstanding)}</Badge>
-                </div>
-              ))}
-            </AlertSection>
-          </div>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-[18px]">
+              <AlertSection
+                title={t('dashboard.lowStock')}
+                count={alerts.summary.lowStock}
+                linkTo="/stock"
+                emptyText={t('dashboard.lowStockOk')}
+              >
+                {alerts.lowStock.map((product) => (
+                  <div
+                    className="flex items-center justify-between rounded-ui border-b border-border py-2.5 transition-colors hover:bg-bg last:border-b-0"
+                    key={product.productId}
+                  >
+                    <span>
+                      {product.name}
+                      <span className="text-muted"> ({product.sku})</span>
+                    </span>
+                    <Badge tone="warning">
+                      {product.quantity} {product.unitOfMeasure}
+                    </Badge>
+                  </div>
+                ))}
+              </AlertSection>
+              <AlertSection
+                title={t('dashboard.overdueReceivables')}
+                count={alerts.summary.overdueReceivables}
+                linkTo="/invoices"
+                emptyText={t('dashboard.noOverdueInvoices')}
+              >
+                {alerts.overdueReceivables.map((invoice) => (
+                  <div
+                    className="flex items-center justify-between rounded-ui border-b border-border py-2.5 transition-colors hover:bg-bg last:border-b-0"
+                    key={invoice.invoiceId}
+                  >
+                    <span>
+                      {invoice.number}
+                      <span className="text-muted"> · {invoice.customerName}</span>
+                    </span>
+                    <Badge tone="danger">{formatMoney(invoice.balanceDue)}</Badge>
+                  </div>
+                ))}
+              </AlertSection>
+              <AlertSection
+                title={t('dashboard.overduePayables')}
+                count={alerts.summary.overduePayables}
+                linkTo="/purchasing"
+                emptyText={t('dashboard.noOverduePayables')}
+              >
+                {alerts.overduePayables.map((receipt) => (
+                  <div
+                    className="flex items-center justify-between rounded-ui border-b border-border py-2.5 transition-colors hover:bg-bg last:border-b-0"
+                    key={receipt.receiptId}
+                  >
+                    <span>
+                      {receipt.number}
+                      <span className="text-muted"> · {receipt.supplierName}</span>
+                    </span>
+                    <Badge tone="danger">{formatMoney(receipt.outstanding)}</Badge>
+                  </div>
+                ))}
+              </AlertSection>
+            </div>
           </CardContent>
         </Card>
       ) : null}
@@ -371,59 +389,55 @@ export function DashboardPage() {
             <CardTitle>{t('dashboard.salesTrend')}</CardTitle>
           </CardHeader>
           <CardContent>
-          <div className="mb-2.5 flex justify-end">
-            <Select value={groupBy} onChange={(event) => setGroupBy(event.target.value)}>
-              {groupOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {t(option.labelKey)}
-                </option>
-              ))}
-            </Select>
-          </div>
-          {summary ? (
-            <div className="w-full">
-              <ResponsiveContainer width="100%" height={260}>
-                <AreaChart data={summary.data}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                  <XAxis
-                    dataKey="period"
-                    tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
-                    axisLine={{ stroke: 'var(--border)' }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'var(--border)' }} />
-                  <Legend
-                    iconType="circle"
-                    iconSize={8}
-                    formatter={(value: string | number) => (
-                      <span style={{ color: 'var(--text-muted)' }}>{String(value)}</span>
-                    )}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    name={t('dashboard.revenue')}
-                    stroke="var(--primary)"
-                    fill="var(--primary)"
-                    fillOpacity={0.15}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    name={t('dashboard.total')}
-                    stroke="var(--success)"
-                    fill="var(--success)"
-                    fillOpacity={0.1}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div className="mb-2.5 flex justify-end">
+              <Select value={groupBy} onChange={(event) => setGroupBy(event.target.value)}>
+                {groupOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(option.labelKey)}
+                  </option>
+                ))}
+              </Select>
             </div>
-          ) : null}
+            {summary ? (
+              <div className="w-full">
+                <ResponsiveContainer width="100%" height={260}>
+                  <AreaChart data={summary.data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                    <XAxis
+                      dataKey="period"
+                      tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
+                      axisLine={{ stroke: 'var(--border)' }}
+                      tickLine={false}
+                    />
+                    <YAxis tick={{ fontSize: 12, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'var(--border)' }} />
+                    <Legend
+                      iconType="circle"
+                      iconSize={8}
+                      formatter={(value: string | number) => (
+                        <span style={{ color: 'var(--text-muted)' }}>{String(value)}</span>
+                      )}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      name={t('dashboard.revenue')}
+                      stroke="var(--primary)"
+                      fill="var(--primary)"
+                      fillOpacity={0.15}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      name={t('dashboard.total')}
+                      stroke="var(--success)"
+                      fill="var(--success)"
+                      fillOpacity={0.1}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -432,44 +446,47 @@ export function DashboardPage() {
             <CardTitle>{t('dashboard.topProducts')}</CardTitle>
           </CardHeader>
           <CardContent>
-          {topProducts.length === 0 ? (
-            <p className="text-muted">{t('dashboard.noSalesData')}</p>
-          ) : (
-            <div className="w-full">
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={topProducts} layout="vertical" margin={{ left: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                  <XAxis
-                    type="number"
-                    tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={120}
-                    tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(value: string) =>
-                      value.length > 16 ? `${value.slice(0, 15)}…` : value
-                    }
-                  />
-                  <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--border)', fillOpacity: 0.4 }} />
-                  <Legend
-                    iconType="circle"
-                    iconSize={8}
-                    formatter={(value: string | number) => (
-                      <span style={{ color: 'var(--text-muted)' }}>{String(value)}</span>
-                    )}
-                  />
-                  <Bar dataKey="revenue" name={t('dashboard.revenue')} fill="var(--primary)" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="grossProfit" name={t('dashboard.grossProfit')} fill="var(--success)" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+            {topProducts.length === 0 ? (
+              <p className="text-muted">{t('dashboard.noSalesData')}</p>
+            ) : (
+              <div className="w-full">
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={topProducts} layout="vertical" margin={{ left: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                    <XAxis
+                      type="number"
+                      tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={120}
+                      tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(value: string) => (value.length > 16 ? `${value.slice(0, 15)}…` : value)}
+                    />
+                    <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--border)', fillOpacity: 0.4 }} />
+                    <Legend
+                      iconType="circle"
+                      iconSize={8}
+                      formatter={(value: string | number) => (
+                        <span style={{ color: 'var(--text-muted)' }}>{String(value)}</span>
+                      )}
+                    />
+                    <Bar dataKey="revenue" name={t('dashboard.revenue')} fill="var(--primary)" radius={[0, 4, 4, 0]} />
+                    <Bar
+                      dataKey="grossProfit"
+                      name={t('dashboard.grossProfit')}
+                      fill="var(--success)"
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -480,11 +497,15 @@ export function DashboardPage() {
             <CardTitle>{t('dashboard.operationalHealth')}</CardTitle>
           </CardHeader>
           <CardContent>
-          <div className="flex flex-col gap-2.5">
-            <StatusRow label={t('dashboard.stat.openPurchaseOrders')} count={report.openPurchaseOrders} />
-            <StatusRow label={t('dashboard.productionOrdersInProgress')} count={report.productionInProgress} />
-            <StatusRow label={t('dashboard.stat.lowStockProducts')} count={report.lowStockProducts} warnThreshold={1} />
-          </div>
+            <div className="flex flex-col gap-2.5">
+              <StatusRow label={t('dashboard.stat.openPurchaseOrders')} count={report.openPurchaseOrders} />
+              <StatusRow label={t('dashboard.productionOrdersInProgress')} count={report.productionInProgress} />
+              <StatusRow
+                label={t('dashboard.stat.lowStockProducts')}
+                count={report.lowStockProducts}
+                warnThreshold={1}
+              />
+            </div>
           </CardContent>
         </Card>
       ) : null}

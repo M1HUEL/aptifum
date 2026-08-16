@@ -1,12 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { apiFetch, clearTokens, getAccessToken, getRefreshToken, storeTokens } from '../api/client';
 import type { AuthResult, UserProfile } from '../api/types';
 
@@ -100,9 +92,7 @@ export function usePermission(): (permission: string) => boolean {
   return useCallback(
     (permission: string) => {
       if (!user) return false;
-      return user.roles.some(
-        (role) => role.permissions.includes('*') || role.permissions.includes(permission),
-      );
+      return user.roles.some((role) => role.permissions.includes('*') || role.permissions.includes(permission));
     },
     [user],
   );

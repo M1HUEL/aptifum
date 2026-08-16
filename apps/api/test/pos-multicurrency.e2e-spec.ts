@@ -256,9 +256,7 @@ describe('Multi-currency POS sale and payment (e2e)', () => {
     expect(detail.body.currency).toBe('EUR');
     expect(detail.body.exchangeRate).toBe(bookedRate);
 
-    await pay(invoice.body.id, { method: 'cash', amount: 50, receivedAt: '2026-08-05' }).expect(
-      201,
-    );
+    await pay(invoice.body.id, { method: 'cash', amount: 50, receivedAt: '2026-08-05' }).expect(201);
   });
 
   it('rejects a payment whose currency does not match the invoice', async () => {

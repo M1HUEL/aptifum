@@ -148,11 +148,10 @@ describe('Warehouse locations CRUD (e2e)', () => {
   it('updates a location', async () => {
     const locations = await listLocations();
     const a1 = locations.find((location) => location.code === 'A1')!;
-    const res = await api(
-      'patch',
-      `/inventory/warehouses/${warehouse.id}/locations/${a1.id}`,
-      { name: 'Aisle 1 (Front)', active: false },
-    ).expect(200);
+    const res = await api('patch', `/inventory/warehouses/${warehouse.id}/locations/${a1.id}`, {
+      name: 'Aisle 1 (Front)',
+      active: false,
+    }).expect(200);
     expect(res.body).toMatchObject({ id: a1.id, name: 'Aisle 1 (Front)', active: false });
   });
 

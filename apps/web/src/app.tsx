@@ -15,39 +15,24 @@ function lazyPage<T extends Record<string, ComponentType>>(
 }
 
 const AccountingPage = lazyPage(() => import('./pages/accounting-page'), 'AccountingPage');
-const AcceptInvitePage = lazyPage(
-  () => import('./pages/accept-invite-page'),
-  'AcceptInvitePage',
-);
-const AttendanceLeavesPage = lazyPage(
-  () => import('./pages/attendance-leaves-page'),
-  'AttendanceLeavesPage',
-);
+const AcceptInvitePage = lazyPage(() => import('./pages/accept-invite-page'), 'AcceptInvitePage');
+const AttendanceLeavesPage = lazyPage(() => import('./pages/attendance-leaves-page'), 'AttendanceLeavesPage');
 const AuditPage = lazyPage(() => import('./pages/audit-page'), 'AuditPage');
 const ChartAccountsPage = lazyPage(() => import('./pages/chart-accounts-page'), 'ChartAccountsPage');
 const CustomersPage = lazyPage(() => import('./pages/customers-page'), 'CustomersPage');
 const CrmPage = lazyPage(() => import('./pages/crm-page'), 'CrmPage');
 const DashboardPage = lazyPage(() => import('./pages/dashboard-page'), 'DashboardPage');
-const ForgotPasswordPage = lazyPage(
-  () => import('./pages/forgot-password-page'),
-  'ForgotPasswordPage',
-);
+const ForgotPasswordPage = lazyPage(() => import('./pages/forgot-password-page'), 'ForgotPasswordPage');
 const HrPage = lazyPage(() => import('./pages/hr-page'), 'HrPage');
 const InvoicesPage = lazyPage(() => import('./pages/invoices-page'), 'InvoicesPage');
 const LoginPage = lazyPage(() => import('./pages/login-page'), 'LoginPage');
 const ProductsPage = lazyPage(() => import('./pages/products-page'), 'ProductsPage');
 const ProductionPage = lazyPage(() => import('./pages/production-page'), 'ProductionPage');
 const ProfilePage = lazyPage(() => import('./pages/profile-page'), 'ProfilePage');
-const PurchaseOrdersPage = lazyPage(
-  () => import('./pages/purchase-orders-page'),
-  'PurchaseOrdersPage',
-);
+const PurchaseOrdersPage = lazyPage(() => import('./pages/purchase-orders-page'), 'PurchaseOrdersPage');
 const PosPage = lazyPage(() => import('./pages/pos-page'), 'PosPage');
 const ReportsPage = lazyPage(() => import('./pages/reports-page'), 'ReportsPage');
-const ResetPasswordPage = lazyPage(
-  () => import('./pages/reset-password-page'),
-  'ResetPasswordPage',
-);
+const ResetPasswordPage = lazyPage(() => import('./pages/reset-password-page'), 'ResetPasswordPage');
 const StockPage = lazyPage(() => import('./pages/stock-page'), 'StockPage');
 const SuppliersPage = lazyPage(() => import('./pages/suppliers-page'), 'SuppliersPage');
 const UsersRolesPage = lazyPage(() => import('./pages/users-roles-page'), 'UsersRolesPage');
@@ -62,9 +47,7 @@ const NotFoundPage = lazyPage(() => import('./pages/not-found-page'), 'NotFoundP
 
 function GuardedRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  return (
-    <RequirePermission permission={permissionForRoute(location.pathname)}>{children}</RequirePermission>
-  );
+  return <RequirePermission permission={permissionForRoute(location.pathname)}>{children}</RequirePermission>;
 }
 
 function ProtectedLayout() {
@@ -75,9 +58,7 @@ function ProtectedLayout() {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  return (
-    <Layout />
-  );
+  return <Layout />;
 }
 
 export default function App() {
@@ -93,27 +74,174 @@ export default function App() {
           <Route path="/404" element={<NotFoundPage />} />
           <Route element={<ProtectedLayout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<GuardedRoute><DashboardPage /></GuardedRoute>} />
-            <Route path="/pos" element={<GuardedRoute><PosPage /></GuardedRoute>} />
-            <Route path="/products" element={<GuardedRoute><ProductsPage /></GuardedRoute>} />
-            <Route path="/stock" element={<GuardedRoute><StockPage /></GuardedRoute>} />
-            <Route path="/warehouses" element={<GuardedRoute><WarehousesCategoriesPage /></GuardedRoute>} />
-            <Route path="/invoices" element={<GuardedRoute><InvoicesPage /></GuardedRoute>} />
-            <Route path="/customers" element={<GuardedRoute><CustomersPage /></GuardedRoute>} />
-            <Route path="/orders" element={<GuardedRoute><SalesOrdersPage /></GuardedRoute>} />
-            <Route path="/suppliers" element={<GuardedRoute><SuppliersPage /></GuardedRoute>} />
-            <Route path="/purchasing" element={<GuardedRoute><PurchaseOrdersPage /></GuardedRoute>} />
-            <Route path="/accounting" element={<GuardedRoute><AccountingPage /></GuardedRoute>} />
-            <Route path="/accounts" element={<GuardedRoute><ChartAccountsPage /></GuardedRoute>} />
-            <Route path="/hr" element={<GuardedRoute><HrPage /></GuardedRoute>} />
-            <Route path="/attendance" element={<GuardedRoute><AttendanceLeavesPage /></GuardedRoute>} />
-            <Route path="/crm" element={<GuardedRoute><CrmPage /></GuardedRoute>} />
-            <Route path="/production" element={<GuardedRoute><ProductionPage /></GuardedRoute>} />
-            <Route path="/reports" element={<GuardedRoute><ReportsPage /></GuardedRoute>} />
-            <Route path="/users-roles" element={<GuardedRoute><UsersRolesPage /></GuardedRoute>} />
-            <Route path="/audit" element={<GuardedRoute><AuditPage /></GuardedRoute>} />
-            <Route path="/settings" element={<GuardedRoute><SettingsPage /></GuardedRoute>} />
-            <Route path="/profile" element={<GuardedRoute><ProfilePage /></GuardedRoute>} />
+            <Route
+              path="/dashboard"
+              element={
+                <GuardedRoute>
+                  <DashboardPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/pos"
+              element={
+                <GuardedRoute>
+                  <PosPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <GuardedRoute>
+                  <ProductsPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/stock"
+              element={
+                <GuardedRoute>
+                  <StockPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/warehouses"
+              element={
+                <GuardedRoute>
+                  <WarehousesCategoriesPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/invoices"
+              element={
+                <GuardedRoute>
+                  <InvoicesPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/customers"
+              element={
+                <GuardedRoute>
+                  <CustomersPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <GuardedRoute>
+                  <SalesOrdersPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/suppliers"
+              element={
+                <GuardedRoute>
+                  <SuppliersPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/purchasing"
+              element={
+                <GuardedRoute>
+                  <PurchaseOrdersPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/accounting"
+              element={
+                <GuardedRoute>
+                  <AccountingPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/accounts"
+              element={
+                <GuardedRoute>
+                  <ChartAccountsPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/hr"
+              element={
+                <GuardedRoute>
+                  <HrPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/attendance"
+              element={
+                <GuardedRoute>
+                  <AttendanceLeavesPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/crm"
+              element={
+                <GuardedRoute>
+                  <CrmPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/production"
+              element={
+                <GuardedRoute>
+                  <ProductionPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <GuardedRoute>
+                  <ReportsPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/users-roles"
+              element={
+                <GuardedRoute>
+                  <UsersRolesPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/audit"
+              element={
+                <GuardedRoute>
+                  <AuditPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <GuardedRoute>
+                  <SettingsPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <GuardedRoute>
+                  <ProfilePage />
+                </GuardedRoute>
+              }
+            />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Route>
         </Routes>

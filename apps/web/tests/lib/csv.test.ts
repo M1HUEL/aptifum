@@ -63,9 +63,7 @@ describe('exportRowsToCsv', () => {
     });
 
     await expect(csvContent()).resolves.toBe(
-      '"Name";"Notes";"Qty"\r\n' +
-        '"Alice";"first order";"2"\r\n' +
-        '"Bob";"second order";"5"',
+      '"Name";"Notes";"Qty"\r\n' + '"Alice";"first order";"2"\r\n' + '"Bob";"second order";"5"',
     );
   });
 

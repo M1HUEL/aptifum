@@ -37,9 +37,7 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
   const corsOrigin = env.NODE_ENV === 'production' ? env.CORS_ORIGIN || false : true;
   app.enableCors({ origin: corsOrigin, credentials: true });
-  app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, transform: true }),
-  );
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new ApiExceptionFilter());
   app.getHttpAdapter().get('/healthz', (_req: Request, res: Response) => {
     res.status(200).json({ status: 'ok' });

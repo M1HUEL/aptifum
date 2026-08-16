@@ -49,14 +49,7 @@ export function ForgotPasswordPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#121a2b] via-[#1e2a44] to-primary">
       <div className="w-[360px] rounded-ui border border-border bg-surface p-8 shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
-        <svg
-          className="mx-auto mb-3 block"
-          aria-hidden="true"
-          width="44"
-          height="44"
-          viewBox="0 0 44 44"
-          fill="none"
-        >
+        <svg className="mx-auto mb-3 block" aria-hidden="true" width="44" height="44" viewBox="0 0 44 44" fill="none">
           <rect width="44" height="44" rx="10" fill="var(--color-primary)" />
           <path d="M22 9 L36 35 H29.5 L22 19 L14.5 35 H8 Z" fill="#ffffff" />
         </svg>
@@ -66,7 +59,8 @@ export function ForgotPasswordPage() {
           <form onSubmit={(event) => void handleSubmit(event)}>
             <label className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <span>{t('fields.email')}</span>
-              <Input className="w-full"
+              <Input
+                className="w-full"
                 type="email"
                 autoComplete="username"
                 required
@@ -75,7 +69,9 @@ export function ForgotPasswordPage() {
               />
             </label>
             {error ? (
-              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{error}</div>
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {error}
+              </div>
             ) : null}
             <Button type="submit" className="w-full" loading={submitting}>
               {submitting ? t('auth.sending') : t('auth.sendResetLink')}

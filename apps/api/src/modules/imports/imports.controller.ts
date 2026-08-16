@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  Controller,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common';
+import { BadRequestException, Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
@@ -45,10 +39,7 @@ export class ImportsController {
     },
   })
   @ApiOperation({ summary: 'Import products from CSV (sku, name, category, prices, ...)' })
-  importProducts(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @UploadedFile() file?: CsvUploadFile,
-  ) {
+  importProducts(@CurrentUser() user: { tenantId: string | null; id: string }, @UploadedFile() file?: CsvUploadFile) {
     return this.handle(user, 'products', file);
   }
 
@@ -64,10 +55,7 @@ export class ImportsController {
     },
   })
   @ApiOperation({ summary: 'Import customers from CSV (code, trade_name, tax_id, ...)' })
-  importCustomers(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @UploadedFile() file?: CsvUploadFile,
-  ) {
+  importCustomers(@CurrentUser() user: { tenantId: string | null; id: string }, @UploadedFile() file?: CsvUploadFile) {
     return this.handle(user, 'customers', file);
   }
 
@@ -83,10 +71,7 @@ export class ImportsController {
     },
   })
   @ApiOperation({ summary: 'Import suppliers from CSV (code, trade_name, tax_id, ...)' })
-  importSuppliers(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @UploadedFile() file?: CsvUploadFile,
-  ) {
+  importSuppliers(@CurrentUser() user: { tenantId: string | null; id: string }, @UploadedFile() file?: CsvUploadFile) {
     return this.handle(user, 'suppliers', file);
   }
 

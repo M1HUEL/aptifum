@@ -4,14 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
 import type { components } from '../api/schema';
-import type {
-  Customer,
-  Paginated,
-  Product,
-  SalesOrder,
-  SalesOrderStatus,
-  Warehouse,
-} from '../api/types';
+import type { Customer, Paginated, Product, SalesOrder, SalesOrderStatus, Warehouse } from '../api/types';
 import { salesOrderFormSchema, type SalesOrderFormValues } from '../api/schemas';
 import { useApiInvalidation, useApiMutation, useApiMutationVoid } from '../api/hooks';
 import {
@@ -171,9 +164,7 @@ export function SalesOrdersPage() {
 
   const createMutation = useApiMutation<CreateOrderDto>('/api/v1/sales/orders', 'POST');
   const statusMutation = useApiMutationVoid(
-    statusAction
-      ? `/api/v1/sales/orders/${statusAction.id}/${statusAction.action}`
-      : '/api/v1/sales/orders',
+    statusAction ? `/api/v1/sales/orders/${statusAction.id}/${statusAction.action}` : '/api/v1/sales/orders',
     'POST',
   );
 
@@ -223,7 +214,10 @@ export function SalesOrdersPage() {
   };
 
   const removeItem = (index: number) => {
-    setValue('items', items.filter((_, i) => i !== index));
+    setValue(
+      'items',
+      items.filter((_, i) => i !== index),
+    );
   };
 
   const submitCreate = handleSubmit((values) => {
@@ -348,12 +342,7 @@ export function SalesOrdersPage() {
         subtitle={t('salesOrders.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <Button
-              variant="secondary"
-              type="button"
-              aria-label={t('common.export')}
-              onClick={handleExport}
-            >
+            <Button variant="secondary" type="button" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </Button>
             <Button onClick={openCreate}>{t('salesOrders.newOrder')}</Button>
@@ -394,11 +383,7 @@ export function SalesOrdersPage() {
             { value: 'cancelled', label: t('salesOrders.cancelled') },
           ]}
         />
-        <Button
-          type="submit"
-        >
-          {t('common.search')}
-        </Button>
+        <Button type="submit">{t('common.search')}</Button>
       </form>
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
@@ -421,7 +406,13 @@ export function SalesOrdersPage() {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={setPage}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
 
@@ -453,7 +444,9 @@ export function SalesOrdersPage() {
                     />
                   )}
                 />
-                {errors.customerId ? <div className="text-[12px] font-normal text-danger">{errors.customerId.message}</div> : null}
+                {errors.customerId ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.customerId.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-warehouse">{t('fields.warehouse')} *</label>
@@ -465,7 +458,9 @@ export function SalesOrdersPage() {
                     </option>
                   ))}
                 </Select>
-                {errors.warehouseId ? <div className="text-[12px] font-normal text-danger">{errors.warehouseId.message}</div> : null}
+                {errors.warehouseId ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.warehouseId.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-issue">{t('fields.issueDate')}</label>
@@ -477,8 +472,17 @@ export function SalesOrdersPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="so-discount">{t('fields.discount')}</label>
-                <Input id="so-discount" type="number" min="0" step="0.01" className="w-full" {...register('discount')} />
-                {errors.discount ? <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div> : null}
+                <Input
+                  id="so-discount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="w-full"
+                  {...register('discount')}
+                />
+                {errors.discount ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div>
+                ) : null}
               </div>
             </div>
             <div className="mb-3 rounded-ui border border-border p-3">
@@ -512,7 +516,9 @@ export function SalesOrdersPage() {
                       {...register(`items.${index}.quantity`)}
                     />
                     {errors.items?.[index]?.quantity ? (
-                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.quantity?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">
+                        {errors.items[index]?.quantity?.message}
+                      </div>
                     ) : null}
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -527,7 +533,9 @@ export function SalesOrdersPage() {
                       {...register(`items.${index}.unitPrice`)}
                     />
                     {errors.items?.[index]?.unitPrice ? (
-                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.unitPrice?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">
+                        {errors.items[index]?.unitPrice?.message}
+                      </div>
                     ) : null}
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -557,7 +565,9 @@ export function SalesOrdersPage() {
                       {...register(`items.${index}.discount`)}
                     />
                     {errors.items?.[index]?.discount ? (
-                      <div className="text-[12px] font-normal text-danger">{errors.items[index]?.discount?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">
+                        {errors.items[index]?.discount?.message}
+                      </div>
                     ) : null}
                   </div>
                   <div className="pt-6">
@@ -577,7 +587,11 @@ export function SalesOrdersPage() {
               <label htmlFor="so-notes">{t('fields.notes')}</label>
               <Textarea id="so-notes" rows={2} className="w-full" {...register('notes')} />
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : t('salesOrders.createOrder')}

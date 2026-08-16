@@ -1,5 +1,11 @@
 import { createSign, randomUUID } from 'node:crypto';
-import { CFDI_PAYMENT_FORMS, CFDI_PAYMENT_METHODS, GENERIC_RFC_FISICA, GENERIC_RFC_MORAL, satUnitForKey } from '@aptifum/core';
+import {
+  CFDI_PAYMENT_FORMS,
+  CFDI_PAYMENT_METHODS,
+  GENERIC_RFC_FISICA,
+  GENERIC_RFC_MORAL,
+  satUnitForKey,
+} from '@aptifum/core';
 import { certificateBase64 } from './certificate.util';
 import type { DemoCertificate } from './certificate.util';
 
@@ -81,7 +87,7 @@ export function buildCfdi(
   const uuid = randomUUID().toUpperCase();
   const exportacion = '01';
   const currency = invoice.currency || 'MXN';
-  const exchangeRate = currency === 'MXN' ? 1 : (invoice.exchangeRate || 1);
+  const exchangeRate = currency === 'MXN' ? 1 : invoice.exchangeRate || 1;
   const paymentForm = options.paymentForm ?? '99';
   const paymentMethod = options.paymentMethod ?? 'PUE';
   if (!CFDI_PAYMENT_FORMS[paymentForm]) {
@@ -212,10 +218,7 @@ function splitDocumentNumber(number: string): { serie: string | null; folio: str
   return { serie: match[1], folio: match[2] };
 }
 
-function buildImpuestosNode(
-  items: CfdiInvoiceInput['items'],
-  taxTotal: number,
-): string {
+function buildImpuestosNode(items: CfdiInvoiceInput['items'], taxTotal: number): string {
   const byRate = new Map<number, { base: number; importe: number }>();
   for (const item of items) {
     if (!item.taxRate) {
@@ -260,23 +263,13 @@ function buildTfdCadena(tfd: {
   selloSat: string;
 }): string {
   return buildCadena(
-    [
-      tfd.version,
-      tfd.uuid,
-      tfd.fechaTimbrado,
-      tfd.rfcProvCertif,
-      tfd.selloCfd,
-      tfd.noCertificadoSat,
-      tfd.selloSat,
-    ],
+    [tfd.version, tfd.uuid, tfd.fechaTimbrado, tfd.rfcProvCertif, tfd.selloCfd, tfd.noCertificadoSat, tfd.selloSat],
     true,
   );
 }
 
 function buildCadena(attributes: Array<string | null>, doubleBars = false): string {
-  const joined = attributes
-    .map((value) => (value === null || value === undefined ? '' : cadenaClean(value)))
-    .join('|');
+  const joined = attributes.map((value) => (value === null || value === undefined ? '' : cadenaClean(value))).join('|');
   return doubleBars ? `||${joined}||` : `${joined}|`;
 }
 
@@ -303,11 +296,7 @@ function attributesToString(attributes: Record<string, string | null>): string {
 }
 
 function xmlEscape(value: string): string {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function skuAttr(sku: string | null | undefined): string {

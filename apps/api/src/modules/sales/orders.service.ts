@@ -1,16 +1,7 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, In, Repository } from 'typeorm';
-import {
-  DocumentSeriesKind,
-  SalesOrderKind,
-  SalesOrderStatus,
-} from '@aptifum/core';
+import { DocumentSeriesKind, SalesOrderKind, SalesOrderStatus } from '@aptifum/core';
 import {
   Customer,
   InsufficientStockError,
@@ -102,12 +93,11 @@ export class OrdersService {
       if (!customer) {
         throw new NotFoundException('Customer not found');
       }
-      const usTaxRate = await this.usSalesTax.resolveRate(
+      const usTaxRate = await this.usSalesTax.resolveRate(tenantId, customer.state, customer.taxExempt);
+      const products = await this.loadProducts(
         tenantId,
-        customer.state,
-        customer.taxExempt,
+        dto.items.map((item) => item.productId),
       );
-      const products = await this.loadProducts(tenantId, dto.items.map((item) => item.productId));
       const variants = await this.loadVariants(
         tenantId,
         dto.items.filter((item) => item.variantId).map((item) => item.variantId as string),
@@ -122,9 +112,7 @@ export class OrdersService {
           throw new NotFoundException(`Variant ${item.variantId} not found`);
         }
         if (variant && variant.productId !== product.id) {
-          throw new BadRequestException(
-            `Variant ${item.variantId} does not belong to product ${product.id}`,
-          );
+          throw new BadRequestException(`Variant ${item.variantId} does not belong to product ${product.id}`);
         }
         const unitPrice = item.unitPrice ?? variant?.salePrice ?? product.salePrice;
         const taxRate = item.taxRate ?? usTaxRate;
@@ -147,9 +135,7 @@ export class OrdersService {
       const { number } = await nextDocumentNumber(
         manager,
         tenantId,
-        dto.kind === SalesOrderKind.QUOTE
-          ? DocumentSeriesKind.QUOTE
-          : DocumentSeriesKind.ORDER,
+        dto.kind === SalesOrderKind.QUOTE ? DocumentSeriesKind.QUOTE : DocumentSeriesKind.ORDER,
       );
       const order = await manager.getRepository(SalesOrder).save(
         manager.getRepository(SalesOrder).create({
@@ -194,9 +180,7 @@ export class OrdersService {
             });
           } catch (error) {
             if (error instanceof InsufficientStockError) {
-              throw new BadRequestException(
-                `Insufficient stock for product ${item.productId}`,
-              );
+              throw new BadRequestException(`Insufficient stock for product ${item.productId}`);
             }
             throw error;
           }
@@ -217,8 +201,7 @@ export class OrdersService {
       throw new ConflictException('Order is already cancelled');
     }
     this.assertTenant(tenantId);
-    const releasesReserved =
-      order.kind === SalesOrderKind.ORDER && order.status === SalesOrderStatus.CONFIRMED;
+    const releasesReserved = order.kind === SalesOrderKind.ORDER && order.status === SalesOrderStatus.CONFIRMED;
     if (!releasesReserved) {
       order.status = SalesOrderStatus.CANCELLED;
       return this.ordersRepo.save(order);
@@ -265,10 +248,7 @@ export class OrdersService {
     return new Map(products.map((product) => [product.id, product]));
   }
 
-  private async loadVariants(
-    tenantId: string,
-    ids: string[],
-  ): Promise<Map<string, ProductVariant>> {
+  private async loadVariants(tenantId: string, ids: string[]): Promise<Map<string, ProductVariant>> {
     if (ids.length === 0) {
       return new Map();
     }

@@ -124,11 +124,19 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
                 <tbody>
                   {(viewing.items ?? []).map((item) => (
                     <tr key={item.id} className="border-t border-border">
-                      <td className="px-[14px] py-2.5 align-middle">{item.description ?? item.product?.name ?? item.productId}</td>
+                      <td className="px-[14px] py-2.5 align-middle">
+                        {item.description ?? item.product?.name ?? item.productId}
+                      </td>
                       <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{item.quantity}</td>
-                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{formatMoney(item.unitPrice)}</td>
-                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{formatMoney(item.taxAmount)}</td>
-                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{formatMoney(item.lineTotal)}</td>
+                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">
+                        {formatMoney(item.unitPrice)}
+                      </td>
+                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">
+                        {formatMoney(item.taxAmount)}
+                      </td>
+                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">
+                        {formatMoney(item.lineTotal)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -159,8 +167,12 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
                       {(viewing.payments ?? []).map((payment) => (
                         <tr key={payment.id} className="border-t border-border">
                           <td className="px-[14px] py-2.5 align-middle">{formatDate(payment.receivedAt)}</td>
-                          <td className="px-[14px] py-2.5 align-middle">{t(PAYMENT_METHOD_KEYS[payment.method] ?? payment.method)}</td>
-                          <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{formatMoney(payment.amount)}</td>
+                          <td className="px-[14px] py-2.5 align-middle">
+                            {t(PAYMENT_METHOD_KEYS[payment.method] ?? payment.method)}
+                          </td>
+                          <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">
+                            {formatMoney(payment.amount)}
+                          </td>
                           <td className="px-[14px] py-2.5 align-middle">{payment.reference ?? '—'}</td>
                         </tr>
                       ))}
@@ -194,7 +206,13 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
                     label: t('common.status'),
                     value: (
                       <Badge tone={statusTone(cfdi.status)}>
-                        {t(cfdi.status === 'stamped' ? 'invoices.stamped' : cfdi.status === 'pending' ? 'invoices.pending' : 'invoices.cancelled')}
+                        {t(
+                          cfdi.status === 'stamped'
+                            ? 'invoices.stamped'
+                            : cfdi.status === 'pending'
+                              ? 'invoices.pending'
+                              : 'invoices.cancelled',
+                        )}
                       </Badge>
                     ),
                   },

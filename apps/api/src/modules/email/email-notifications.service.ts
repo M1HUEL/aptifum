@@ -1,14 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import {
-  Customer,
-  Invoice,
-  OutboxEvent,
-  PurchaseOrder,
-  Supplier,
-  SupplierBill,
-} from '@aptifum/database';
+import { Customer, Invoice, OutboxEvent, PurchaseOrder, Supplier, SupplierBill } from '@aptifum/database';
 import { ModuleName, permission } from '@aptifum/core';
 import { EmailService } from './email.service';
 
@@ -187,10 +180,7 @@ export class EmailNotificationsService {
     if (!bill) {
       return;
     }
-    const recipients = await this.tenantEmailsWithPermission(
-      event.tenantId,
-      permission(ModuleName.PURCHASING, 'read'),
-    );
+    const recipients = await this.tenantEmailsWithPermission(event.tenantId, permission(ModuleName.PURCHASING, 'read'));
     if (recipients.length === 0) {
       return;
     }

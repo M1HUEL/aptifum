@@ -63,9 +63,7 @@ function buildManager(repos: Record<string, Record<string, unknown>>) {
       if (entity === Customer) return repos.customer;
       if (entity === ProductStock) return repos.stock;
       if (entity === Tenant)
-        return (
-          repos.tenant ?? { findOneBy: vi.fn().mockResolvedValue({ defaultCurrency: 'USD' }) }
-        );
+        return repos.tenant ?? { findOneBy: vi.fn().mockResolvedValue({ defaultCurrency: 'USD' }) };
       throw new Error(`Unexpected repository: ${String(entity)}`);
     }),
   };
@@ -89,16 +87,11 @@ function baseRepos(overrides: Record<string, Record<string, unknown>> = {}) {
   return {
     invoice: overrides.invoice ?? invoiceRepo(),
     item: { create: vi.fn((x: unknown) => x) },
-    customer:
-      overrides.customer ?? { findOneBy: vi.fn().mockResolvedValue(null) },
+    customer: overrides.customer ?? { findOneBy: vi.fn().mockResolvedValue(null) },
     stock: { findOneBy: vi.fn().mockResolvedValue(null) },
-    warehouse:
-      overrides.warehouse ??
-      { findOneBy: vi.fn().mockResolvedValue({ id: 'w1', name: 'Main' }) },
+    warehouse: overrides.warehouse ?? { findOneBy: vi.fn().mockResolvedValue({ id: 'w1', name: 'Main' }) },
     product: {
-      findBy: vi.fn().mockResolvedValue([
-        { id: 'p1', name: 'Espresso', salePrice: 10, sku: 'SKU-1' },
-      ]),
+      findBy: vi.fn().mockResolvedValue([{ id: 'p1', name: 'Espresso', salePrice: 10, sku: 'SKU-1' }]),
     },
     outbox: overrides.outbox ?? { emit: vi.fn().mockResolvedValue(undefined) },
   };
@@ -112,16 +105,12 @@ const directDto = {
 describe('InvoicesService direct invoice customer resolution', () => {
   it('requires a tenant', async () => {
     const service = buildService({});
-    await expect(service.create(null, 'u1', directDto as never)).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.create(null, 'u1', directDto as never)).rejects.toThrow(BadRequestException);
   });
 
   it('rejects a direct invoice without warehouseId or items', async () => {
     const service = buildService({});
-    await expect(service.create(TENANT, 'u1', {} as never)).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.create(TENANT, 'u1', {} as never)).rejects.toThrow(BadRequestException);
   });
 
   it('rejects an unknown warehouse', async () => {
@@ -129,9 +118,7 @@ describe('InvoicesService direct invoice customer resolution', () => {
       warehouse: { findOneBy: vi.fn().mockResolvedValue(null) },
     });
     const service = buildService(repos);
-    await expect(service.create(TENANT, 'u1', directDto as never)).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(service.create(TENANT, 'u1', directDto as never)).rejects.toThrow(NotFoundException);
   });
 
   it('creates a walk-in customer when customerId is omitted', async () => {
@@ -191,9 +178,9 @@ describe('InvoicesService direct invoice customer resolution', () => {
     const dataSource = buildTransaction(repos);
     const service = buildService({ ...repos, dataSource });
 
-    await expect(
-      service.create(TENANT, 'u1', { ...directDto, customerId: 'c1' } as never),
-    ).rejects.toThrow(NotFoundException);
+    await expect(service.create(TENANT, 'u1', { ...directDto, customerId: 'c1' } as never)).rejects.toThrow(
+      NotFoundException,
+    );
     expect(customerRepo.findOneBy).toHaveBeenCalledWith({
       id: 'c1',
       tenantId: TENANT,

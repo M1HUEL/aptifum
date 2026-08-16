@@ -100,10 +100,7 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
   const active = watch('active');
 
   const createMutation = useApiMutation<CreateContactDto>('/api/v1/crm/contacts', 'POST');
-  const updateMutation = useApiMutation<UpdateContactDto>(
-    `/api/v1/crm/contacts/${editingId ?? ''}`,
-    'PATCH',
-  );
+  const updateMutation = useApiMutation<UpdateContactDto>(`/api/v1/crm/contacts/${editingId ?? ''}`, 'PATCH');
   const deleteMutation = useApiMutationVoid(`/api/v1/crm/contacts/${deleting?.id ?? ''}`, 'DELETE');
 
   const saving = createMutation.isPending || updateMutation.isPending;
@@ -163,7 +160,9 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
       key: 'active',
       header: t('common.status'),
       render: (row) => (
-        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>
+        <Badge tone={row.active ? 'success' : 'neutral'}>
+          {row.active ? t('common.active') : t('common.inactive')}
+        </Badge>
       ),
     },
     {
@@ -214,7 +213,13 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={() => {}}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
 
@@ -225,10 +230,13 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-name">
-                  {t('fields.fullName')}<span className="text-danger"> *</span>
+                  {t('fields.fullName')}
+                  <span className="text-danger"> *</span>
                 </label>
                 <Input className="w-full" id="contact-name" {...register('fullName')} />
-                {errors.fullName ? <div className="text-[12px] font-normal text-danger">{errors.fullName.message}</div> : null}
+                {errors.fullName ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.fullName.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="contact-customer">{t('fields.customer')}</label>
@@ -279,7 +287,11 @@ export function ContactPanel({ customers }: { customers: Customer[] }) {
                 </div>
               </div>
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createContact')}

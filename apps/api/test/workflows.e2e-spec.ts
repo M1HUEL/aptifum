@@ -258,9 +258,7 @@ describe('E2E workflows: purchasing -> inventory and payroll -> accounting', () 
       .get('/api/v1/accounting/reports/trial-balance')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
-    const byCode = new Map(
-      (tb.body.data as TrialBalanceRow[]).map((row) => [row.code, row]),
-    );
+    const byCode = new Map((tb.body.data as TrialBalanceRow[]).map((row) => [row.code, row]));
     expect(byCode.get('1200')?.debit).toBe(250);
     expect(byCode.get('2000')?.credit).toBe(250);
     expect(tb.body.totals).toEqual({ debit: 250, credit: 250 });
@@ -293,9 +291,7 @@ describe('E2E workflows: purchasing -> inventory and payroll -> accounting', () 
       .get('/api/v1/accounting/reports/trial-balance')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
-    const byCode = new Map(
-      (tb.body.data as TrialBalanceRow[]).map((row) => [row.code, row]),
-    );
+    const byCode = new Map((tb.body.data as TrialBalanceRow[]).map((row) => [row.code, row]));
     expect(byCode.get('6000')?.debit).toBe(1150);
     expect(byCode.get('2001')?.credit).toBe(1090);
     expect(byCode.get('2002')?.credit).toBe(60);

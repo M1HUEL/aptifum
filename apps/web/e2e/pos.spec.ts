@@ -48,7 +48,9 @@ test('sells a product at the point of sale and collects payment', async ({ conte
   await expect(page.getByText('Tap a product to add it to the ticket.', { exact: true })).toBeVisible();
 
   await page.goto('/invoices');
-  const invoiceRow = page.locator('[data-testid="data-table"] tbody tr', { hasText: invoiceNumber.replace('Invoice ', '') });
+  const invoiceRow = page.locator('[data-testid="data-table"] tbody tr', {
+    hasText: invoiceNumber.replace('Invoice ', ''),
+  });
   await expect(invoiceRow).toBeVisible();
   await expect(invoiceRow).toContainText('Walk-in Customer');
 });

@@ -7,9 +7,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 export class CategoriesService {
-  constructor(
-    @InjectRepository(Category) private readonly categoriesRepo: Repository<Category>,
-  ) {}
+  constructor(@InjectRepository(Category) private readonly categoriesRepo: Repository<Category>) {}
 
   private scoped(tenantId: string | null): { tenantId?: string } {
     return tenantId ? { tenantId } : {};

@@ -38,9 +38,7 @@ export class OutboxService {
     if (event.attempts >= 5) {
       event.status = OutboxEventStatus.FAILED;
     }
-    this.logger.error(
-      `Outbox event ${event.id} (${event.eventType}) failed attempt ${event.attempts}: ${message}`,
-    );
+    this.logger.error(`Outbox event ${event.id} (${event.eventType}) failed attempt ${event.attempts}: ${message}`);
     return this.eventsRepo.save(event);
   }
 }

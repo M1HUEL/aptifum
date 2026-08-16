@@ -1,22 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In } from 'typeorm';
-import {
-  MovementType,
-  US_STATES,
-  normalizeRfc,
-  validateEin,
-  validateRfc,
-} from '@aptifum/core';
-import {
-  applyStockMovement,
-  Category,
-  Customer,
-  Product,
-  Supplier,
-  Tenant,
-  Warehouse,
-} from '@aptifum/database';
+import { MovementType, US_STATES, normalizeRfc, validateEin, validateRfc } from '@aptifum/core';
+import { applyStockMovement, Category, Customer, Product, Supplier, Tenant, Warehouse } from '@aptifum/database';
 import { CsvParseError, parseCsv, type ParsedCsv } from '../../common/import/csv-parser.util';
 
 export type ImportType = 'products' | 'customers' | 'suppliers' | 'initial-stock';
@@ -147,18 +133,14 @@ export class ImportsService {
     const productsRepo = manager.getRepository(Product);
     const categoriesRepo = manager.getRepository(Category);
 
-    const skus = Array.from(
-      new Set(parsed.rows.map((row) => row.sku ?? '').filter((value) => value !== '')),
-    );
+    const skus = Array.from(new Set(parsed.rows.map((row) => row.sku ?? '').filter((value) => value !== '')));
     const existing = skus.length
       ? await productsRepo.find({ where: { tenantId, sku: In(skus) }, select: { sku: true } })
       : [];
     const existingSkus = new Set(existing.map((product) => product.sku));
 
     const categories = await categoriesRepo.find({ where: { tenantId } });
-    const categoryByName = new Map(
-      categories.map((category) => [category.name.toLowerCase(), category.id]),
-    );
+    const categoryByName = new Map(categories.map((category) => [category.name.toLowerCase(), category.id]));
 
     const seen = new Set<string>();
 
@@ -246,9 +228,7 @@ export class ImportsService {
     const tenant = await tenantsRepo.findOneBy({ id: tenantId });
     const country = tenant?.country ?? 'US';
 
-    const codes = Array.from(
-      new Set(parsed.rows.map((row) => row.code ?? '').filter((value) => value !== '')),
-    );
+    const codes = Array.from(new Set(parsed.rows.map((row) => row.code ?? '').filter((value) => value !== '')));
     const existing = codes.length
       ? await customersRepo.find({ where: { tenantId, code: In(codes) }, select: { code: true } })
       : [];
@@ -346,9 +326,7 @@ export class ImportsService {
   ): Promise<void> {
     const suppliersRepo = manager.getRepository(Supplier);
 
-    const codes = Array.from(
-      new Set(parsed.rows.map((row) => row.code ?? '').filter((value) => value !== '')),
-    );
+    const codes = Array.from(new Set(parsed.rows.map((row) => row.code ?? '').filter((value) => value !== '')));
     const existing = codes.length
       ? await suppliersRepo.find({ where: { tenantId, code: In(codes) }, select: { code: true } })
       : [];
@@ -422,9 +400,7 @@ export class ImportsService {
     const productsRepo = manager.getRepository(Product);
     const warehousesRepo = manager.getRepository(Warehouse);
 
-    const skus = Array.from(
-      new Set(parsed.rows.map((row) => row.sku ?? '').filter((value) => value !== '')),
-    );
+    const skus = Array.from(new Set(parsed.rows.map((row) => row.sku ?? '').filter((value) => value !== '')));
     const products = skus.length
       ? await productsRepo.find({
           where: { tenantId, sku: In(skus) },
@@ -433,9 +409,7 @@ export class ImportsService {
       : [];
     const productBySku = new Map(products.map((product) => [product.sku, product.id]));
 
-    const codes = Array.from(
-      new Set(parsed.rows.map((row) => row.warehouse ?? '').filter((value) => value !== '')),
-    );
+    const codes = Array.from(new Set(parsed.rows.map((row) => row.warehouse ?? '').filter((value) => value !== '')));
     const warehouses = codes.length
       ? await warehousesRepo.find({
           where: { tenantId, code: In(codes) },
@@ -523,12 +497,7 @@ function parseOptionalNumber(raw: string | undefined, field: string, errors: str
   return num;
 }
 
-function parseNumber(
-  raw: string | undefined,
-  field: string,
-  errors: string[],
-  positive = false,
-): number | null {
+function parseNumber(raw: string | undefined, field: string, errors: string[], positive = false): number | null {
   const value = (raw ?? '').trim();
   if (value === '') {
     errors.push(`${field} is required`);
@@ -557,10 +526,7 @@ function parseBoolean(raw: string | undefined, field: string, errors: string[]):
   return null;
 }
 
-function resolveTaxId(
-  country: string,
-  value: string,
-): { ok: true; value: string } | { ok: false; message: string } {
+function resolveTaxId(country: string, value: string): { ok: true; value: string } | { ok: false; message: string } {
   if (country === 'MX') {
     if (!validateRfc(value)) {
       return { ok: false, message: 'Invalid Mexican RFC' };

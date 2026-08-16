@@ -75,9 +75,7 @@ describe('LeavesService status transitions', () => {
       save: vi.fn(),
     };
     const service = new LeavesService(leavesRepo as never, {} as never);
-    await expect(service.update(TENANT, 'l1', { reason: 'x' } as never)).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.update(TENANT, 'l1', { reason: 'x' } as never)).rejects.toThrow(BadRequestException);
     expect(leavesRepo.save).not.toHaveBeenCalled();
   });
 
@@ -115,9 +113,7 @@ describe('AttendanceService clock', () => {
   function buildClock(managerRepo: Record<string, unknown>) {
     const attendanceRepo = {
       manager: {
-        transaction: vi.fn(async (cb: (m: unknown) => unknown) =>
-          cb({ getRepository: () => managerRepo }),
-        ),
+        transaction: vi.fn(async (cb: (m: unknown) => unknown) => cb({ getRepository: () => managerRepo })),
       },
     };
     const employeesRepo = { findOneBy: vi.fn().mockResolvedValue({ id: 'e1' }) };

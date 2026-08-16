@@ -37,10 +37,7 @@ export class UsersController {
   @Patch(':id')
   @RequirePermissions(permission(ModuleName.USERS, 'write'))
   @ApiOperation({ summary: 'Update a user' })
-  update(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() dto: UpdateUserDto,
-  ) {
+  update(@Param('id', new ParseUUIDPipe()) id: string, @Body() dto: UpdateUserDto) {
     return this.usersService.update(id, {
       name: dto.name,
       active: dto.active,

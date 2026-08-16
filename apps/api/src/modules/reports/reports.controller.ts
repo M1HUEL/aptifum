@@ -17,10 +17,7 @@ export class ReportsController {
   @Get('alerts')
   @RequirePermissions(permission(ModuleName.REPORTING, 'read'))
   @ApiOperation({ summary: 'Actionable alerts: low stock, overdue receivables and payables' })
-  async alerts(
-    @CurrentUser() user: { tenantId: string | null },
-    @Query('limit') limit?: string,
-  ) {
+  async alerts(@CurrentUser() user: { tenantId: string | null }, @Query('limit') limit?: string) {
     return this.reportsService.alerts(user.tenantId, { limit: limit ? Number(limit) : undefined });
   }
 
@@ -58,10 +55,7 @@ export class ReportsController {
         buildTablePdf({
           title: 'Executive Dashboard',
           subtitle: rangeText({ from: query.from, to: query.to }),
-          columns: [
-            { header: 'Metric' },
-            { header: 'Value', align: 'right' },
-          ],
+          columns: [{ header: 'Metric' }, { header: 'Value', align: 'right' }],
           rows,
         }),
       );

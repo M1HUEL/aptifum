@@ -46,14 +46,7 @@ import { CsvImportDialog } from '../components/csv-import-dialog';
 
 type CreateMovementDto = components['schemas']['CreateMovementDto'];
 
-const movementTypes: MovementType[] = [
-  'inbound',
-  'outbound',
-  'adjustment',
-  'transfer',
-  'return',
-  'disposal',
-];
+const movementTypes: MovementType[] = ['inbound', 'outbound', 'adjustment', 'transfer', 'return', 'disposal'];
 
 type StockTab = 'stock' | 'movements' | 'lots';
 
@@ -81,9 +74,7 @@ const stockColumns = (t: TFunction): Column<ProductStock>[] => [
   {
     key: 'quantity',
     header: t('stock.onHand'),
-    render: (row) => (
-      <Badge tone={row.quantity <= 10 ? 'warning' : 'success'}>{formatNumber(row.quantity)}</Badge>
-    ),
+    render: (row) => <Badge tone={row.quantity <= 10 ? 'warning' : 'success'}>{formatNumber(row.quantity)}</Badge>,
   },
   {
     key: 'reservedQuantity',
@@ -223,8 +214,9 @@ function StockTab({ onCreate }: { onCreate: () => void }) {
       <div className="mb-4 flex gap-2.5">
         <Button
           type="button"
-         
-          variant="secondary" aria-label={t('common.export')}
+
+          variant="secondary"
+          aria-label={t('common.export')}
           onClick={handleExport}
         >
           {t('common.export')}
@@ -243,7 +235,13 @@ function StockTab({ onCreate }: { onCreate: () => void }) {
           ) : (
             <DataTable columns={stockColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={setPage}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
     </>
@@ -312,8 +310,9 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
       <div className="mb-4 flex gap-2.5">
         <Button
           type="button"
-         
-          variant="secondary" aria-label={t('common.export')}
+
+          variant="secondary"
+          aria-label={t('common.export')}
           onClick={handleExport}
         >
           {t('common.export')}
@@ -359,7 +358,13 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
           ) : (
             <DataTable columns={movementColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={setPage}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
     </>
@@ -422,8 +427,9 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
       <div className="mb-4 flex gap-2.5">
         <Button
           type="button"
-         
-          variant="secondary" aria-label={t('common.export')}
+
+          variant="secondary"
+          aria-label={t('common.export')}
           onClick={handleExport}
         >
           {t('common.export')}
@@ -470,7 +476,13 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
           ) : (
             <DataTable columns={lotColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={setPage}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
     </>
@@ -701,7 +713,9 @@ export function StockPage() {
                     </option>
                   ))}
                 </Select>
-                {errors.productId ?                 <div className="text-[12px] font-normal text-danger">{errors.productId.message}</div> : null}
+                {errors.productId ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.productId.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-warehouse">{t('fields.warehouse')} *</label>
@@ -722,7 +736,9 @@ export function StockPage() {
                     />
                   )}
                 />
-                {errors.warehouseId ?                 <div className="text-[12px] font-normal text-danger">{errors.warehouseId.message}</div> : null}
+                {errors.warehouseId ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.warehouseId.message}</div>
+                ) : null}
               </div>
               {locations.length > 0 ? (
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -765,17 +781,23 @@ export function StockPage() {
                       : ''}
                   </div>
                 ) : null}
-                {errors.quantity ?                 <div className="text-[12px] font-normal text-danger">{errors.quantity.message}</div> : null}
+                {errors.quantity ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.quantity.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-cost">{t('fields.unitCost')}</label>
                 <Input id="movement-cost" type="number" min="0" step="0.01" {...register('unitCost')} />
-                {errors.unitCost ?                 <div className="text-[12px] font-normal text-danger">{errors.unitCost.message}</div> : null}
+                {errors.unitCost ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.unitCost.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-lot">{t('fields.lotNumber')}</label>
                 <Input id="movement-lot" placeholder={t('stock.lotPlaceholder')} {...register('lotNumber')} />
-                {errors.lotNumber ?                 <div className="text-[12px] font-normal text-danger">{errors.lotNumber.message}</div> : null}
+                {errors.lotNumber ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.lotNumber.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="movement-expiry">{t('fields.expiryDate')}</label>
@@ -786,7 +808,11 @@ export function StockPage() {
                 <Textarea id="movement-notes" rows={2} {...register('notes')} />
               </div>
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('stock.recording') : t('stock.recordMovement')}

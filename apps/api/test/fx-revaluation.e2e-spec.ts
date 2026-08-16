@@ -229,9 +229,7 @@ describe('FX revaluation and realized FX on settlement (e2e)', () => {
       .get('/api/v1/sales/invoices')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
-    const open = (invoice.body.data as Array<{ id: string; currency: string }>).find(
-      (i) => i.currency === 'EUR',
-    );
+    const open = (invoice.body.data as Array<{ id: string; currency: string }>).find((i) => i.currency === 'EUR');
     expect(open).toBeDefined();
 
     const payment = await request(app.getHttpServer())

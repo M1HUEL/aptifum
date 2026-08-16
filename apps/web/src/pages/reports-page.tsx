@@ -29,13 +29,55 @@ interface ReportDef {
 }
 
 const REPORTS: ReportDef[] = [
-  { id: 'dashboard', labelKey: 'reports.list.dashboard', endpoint: '/api/v1/reports/dashboard', shape: 'single', pdf: true },
-  { id: 'sales-summary', labelKey: 'reports.list.salesSummary', endpoint: '/api/v1/reports/sales/summary', shape: 'list', pdf: true },
-  { id: 'sales-by-product', labelKey: 'reports.list.salesByProduct', endpoint: '/api/v1/reports/sales/by-product', shape: 'list', pdf: true },
-  { id: 'sales-by-customer', labelKey: 'reports.list.salesByCustomer', endpoint: '/api/v1/reports/sales/by-customer', shape: 'list', pdf: true },
-  { id: 'inventory-valuation', labelKey: 'reports.list.inventoryValuation', endpoint: '/api/v1/reports/inventory/valuation', shape: 'list', pdf: true },
-  { id: 'stock-movements', labelKey: 'reports.list.stockMovements', endpoint: '/api/v1/reports/inventory/movements', shape: 'list', pdf: true },
-  { id: 'low-stock', labelKey: 'reports.list.lowStock', endpoint: '/api/v1/reports/inventory/low-stock', shape: 'list', pdf: true },
+  {
+    id: 'dashboard',
+    labelKey: 'reports.list.dashboard',
+    endpoint: '/api/v1/reports/dashboard',
+    shape: 'single',
+    pdf: true,
+  },
+  {
+    id: 'sales-summary',
+    labelKey: 'reports.list.salesSummary',
+    endpoint: '/api/v1/reports/sales/summary',
+    shape: 'list',
+    pdf: true,
+  },
+  {
+    id: 'sales-by-product',
+    labelKey: 'reports.list.salesByProduct',
+    endpoint: '/api/v1/reports/sales/by-product',
+    shape: 'list',
+    pdf: true,
+  },
+  {
+    id: 'sales-by-customer',
+    labelKey: 'reports.list.salesByCustomer',
+    endpoint: '/api/v1/reports/sales/by-customer',
+    shape: 'list',
+    pdf: true,
+  },
+  {
+    id: 'inventory-valuation',
+    labelKey: 'reports.list.inventoryValuation',
+    endpoint: '/api/v1/reports/inventory/valuation',
+    shape: 'list',
+    pdf: true,
+  },
+  {
+    id: 'stock-movements',
+    labelKey: 'reports.list.stockMovements',
+    endpoint: '/api/v1/reports/inventory/movements',
+    shape: 'list',
+    pdf: true,
+  },
+  {
+    id: 'low-stock',
+    labelKey: 'reports.list.lowStock',
+    endpoint: '/api/v1/reports/inventory/low-stock',
+    shape: 'list',
+    pdf: true,
+  },
   { id: 'aging-ar', labelKey: 'reports.list.agingAr', endpoint: '/api/v1/reports/aging/ar', shape: 'list', pdf: true },
   { id: 'aging-ap', labelKey: 'reports.list.agingAp', endpoint: '/api/v1/reports/aging/ap', shape: 'list', pdf: true },
   {
@@ -51,7 +93,13 @@ const REPORTS: ReportDef[] = [
     ],
     summaryRows: [{ code: '', nameKey: 'reports.summaryRow.netIncome', key: 'netIncome' }],
   },
-  { id: 'cash-flow', labelKey: 'reports.list.cashFlow', endpoint: '/api/v1/reports/financial/cash-flow', shape: 'list', pdf: true },
+  {
+    id: 'cash-flow',
+    labelKey: 'reports.list.cashFlow',
+    endpoint: '/api/v1/reports/financial/cash-flow',
+    shape: 'list',
+    pdf: true,
+  },
   {
     id: 'balance-sheet',
     labelKey: 'reports.list.balanceSheet',
@@ -94,9 +142,7 @@ function buildColumns(rows: Row[], t: TFunction): Column<Row>[] {
 function flattenFinancial(report: ReportDef, payload: Json, t: TFunction): Row[] {
   const rows: Row[] = [];
   for (const { sectionKey, key } of report.sections ?? []) {
-    const sectionData = payload[key] as
-      | { accounts?: Array<Record<string, unknown>>; total?: number }
-      | undefined;
+    const sectionData = payload[key] as { accounts?: Array<Record<string, unknown>>; total?: number } | undefined;
     const sectionLabel = t(sectionKey);
     for (const account of sectionData?.accounts ?? []) {
       rows.push({ section: sectionLabel, code: account.code, name: account.name, balance: account.balance });
@@ -230,7 +276,9 @@ export function ReportsPage() {
       </div>
       <div className="hidden print:block print:mb-4">
         <h2 className="print:text-lg">{t(activeReport.labelKey)}</h2>
-        <p className="print:text-[12px] print:text-muted">{t('reports.generated', { date: new Date().toLocaleString() })}</p>
+        <p className="print:text-[12px] print:text-muted">
+          {t('reports.generated', { date: new Date().toLocaleString() })}
+        </p>
       </div>
       {error ? <ErrorBanner message={error} /> : null}
       {downloadError ? <ErrorBanner message={downloadError} /> : null}

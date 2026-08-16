@@ -1,10 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import {
-  Customer,
-  nextDocumentNumber as dbNextDocumentNumber,
-} from '@aptifum/database';
+import { Customer, nextDocumentNumber as dbNextDocumentNumber } from '@aptifum/database';
 import { DocumentSeriesKind, LeadStatus } from '@aptifum/core';
 import { CrmLead } from '@aptifum/database';
 import { CreateLeadDto } from './dto/create-lead.dto';
@@ -51,11 +48,7 @@ export class LeadsService {
   async create(tenantId: string | null, dto: CreateLeadDto) {
     this.assertTenant(tenantId);
     return this.dataSource.transaction(async (manager) => {
-      const { number } = await dbNextDocumentNumber(
-        manager,
-        tenantId as string,
-        DocumentSeriesKind.LEAD,
-      );
+      const { number } = await dbNextDocumentNumber(manager, tenantId as string, DocumentSeriesKind.LEAD);
       const lead = manager.getRepository(CrmLead).create({
         tenantId: tenantId as string,
         number,
@@ -103,11 +96,7 @@ export class LeadsService {
     return { id };
   }
 
-  async convert(
-    tenantId: string | null,
-    id: string,
-    opts: { customerCode?: string },
-  ) {
+  async convert(tenantId: string | null, id: string, opts: { customerCode?: string }) {
     this.assertTenant(tenantId);
     return this.dataSource.transaction(async (manager) => {
       const leadsRepo = manager.getRepository(CrmLead);

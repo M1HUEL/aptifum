@@ -116,14 +116,10 @@ describe('CFDI / tax compliance (e2e)', () => {
       }),
     );
     for (const [kind, prefix] of Object.entries(DEFAULT_SERIES) as [DocumentSeriesKind, string][]) {
-      await seriesRepo.save(
-        seriesRepo.create({ tenantId: mxTenant.id, kind, prefix, nextNumber: 1, active: true }),
-      );
+      await seriesRepo.save(seriesRepo.create({ tenantId: mxTenant.id, kind, prefix, nextNumber: 1, active: true }));
     }
     for (const account of DEFAULT_ACCOUNTS) {
-      await accountsRepo.save(
-        accountsRepo.create({ tenantId: mxTenant.id, ...account }),
-      );
+      await accountsRepo.save(accountsRepo.create({ tenantId: mxTenant.id, ...account }));
     }
     const now = new Date();
     const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -281,9 +277,7 @@ describe('CFDI / tax compliance (e2e)', () => {
       .expect(201);
     expect(res.body.status).toBe('stamped');
     expect(res.body.invoiceId).toBe(invoice.id);
-    expect(res.body.uuid).toMatch(
-      /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
-    );
+    expect(res.body.uuid).toMatch(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i);
     expect(res.body.serie).toBe('INV');
     expect(res.body.emitterRfc).toBe('XND160713M46');
     expect(res.body.receiverRfc).toBe('CND070823MTA');

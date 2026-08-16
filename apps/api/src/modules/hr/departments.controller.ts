@@ -17,10 +17,7 @@ export class DepartmentsController {
   @Get()
   @RequirePermissions(permission(ModuleName.HR, 'read'))
   @ApiOperation({ summary: 'List departments' })
-  list(
-    @CurrentUser() user: { tenantId: string | null },
-    @Query() { page, limit }: PaginationQueryDto,
-  ) {
+  list(@CurrentUser() user: { tenantId: string | null }, @Query() { page, limit }: PaginationQueryDto) {
     return this.departmentsService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100));
   }
 

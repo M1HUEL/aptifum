@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  GENERIC_RFC_FISICA,
-  GENERIC_RFC_MORAL,
-  normalizeRfc,
-  validateEin,
-  validateRfc,
-} from '@aptifum/core';
+import { GENERIC_RFC_FISICA, GENERIC_RFC_MORAL, normalizeRfc, validateEin, validateRfc } from '@aptifum/core';
 
 describe('RFC validation', () => {
   it('accepts a valid persona moral RFC', () => {

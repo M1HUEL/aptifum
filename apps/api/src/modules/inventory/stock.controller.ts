@@ -17,10 +17,7 @@ export class StockController {
   @Get('stock')
   @RequirePermissions(permission(ModuleName.INVENTORY, 'read'))
   @ApiOperation({ summary: 'List current stock' })
-  listStock(
-    @CurrentUser() user: { tenantId: string | null },
-    @Query() { page, limit }: PaginationQueryDto,
-  ) {
+  listStock(@CurrentUser() user: { tenantId: string | null }, @Query() { page, limit }: PaginationQueryDto) {
     return this.stockService.listStock(user.tenantId, Number(page), Math.min(Number(limit), 100));
   }
 
@@ -46,13 +43,7 @@ export class StockController {
     if (!warehouseId) {
       throw new BadRequestException('warehouseId is required');
     }
-    return this.stockService.listPosProducts(
-      user.tenantId,
-      warehouseId,
-      Number(page),
-      Math.min(Number(limit), 100),
-      q,
-    );
+    return this.stockService.listPosProducts(user.tenantId, warehouseId, Number(page), Math.min(Number(limit), 100), q);
   }
 
   @Get('lots')
@@ -101,38 +92,27 @@ export class StockController {
     if (to && Number.isNaN(Date.parse(to))) {
       throw new BadRequestException('Invalid to date');
     }
-    return this.stockService.listMovements(
-      user.tenantId,
-      Number(page),
-      Math.min(Number(limit), 100),
-      {
-        productId,
-        variantId,
-        warehouseId,
-        movementType: movementType as MovementType | undefined,
-        from,
-        to,
-      },
-    );
+    return this.stockService.listMovements(user.tenantId, Number(page), Math.min(Number(limit), 100), {
+      productId,
+      variantId,
+      warehouseId,
+      movementType: movementType as MovementType | undefined,
+      from,
+      to,
+    });
   }
 
   @Post('movements')
   @RequirePermissions(permission(ModuleName.INVENTORY, 'adjust'))
   @ApiOperation({ summary: 'Create a stock movement' })
-  createMovement(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @Body() dto: CreateMovementDto,
-  ) {
+  createMovement(@CurrentUser() user: { tenantId: string | null; id: string }, @Body() dto: CreateMovementDto) {
     return this.stockService.createMovement(user.tenantId, user.id, dto);
   }
 
   @Post('transfers')
   @RequirePermissions(permission(ModuleName.INVENTORY, 'adjust'))
   @ApiOperation({ summary: 'Transfer stock between warehouses' })
-  createTransfer(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @Body() dto: CreateTransferDto,
-  ) {
+  createTransfer(@CurrentUser() user: { tenantId: string | null; id: string }, @Body() dto: CreateTransferDto) {
     return this.stockService.createTransfer(user.tenantId, user.id, dto);
   }
 }

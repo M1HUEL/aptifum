@@ -211,9 +211,7 @@ describe('Payment integrations: Stripe provider + webhook (e2e)', () => {
       },
     });
     const timestamp = Math.floor(Date.now() / 1000);
-    const signature = createHmac('sha256', WEBHOOK_SECRET)
-      .update(`${timestamp}.${payload}`)
-      .digest('hex');
+    const signature = createHmac('sha256', WEBHOOK_SECRET).update(`${timestamp}.${payload}`).digest('hex');
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/webhooks/stripe')
@@ -243,9 +241,7 @@ describe('Payment integrations: Stripe provider + webhook (e2e)', () => {
       },
     });
     const timestamp = Math.floor(Date.now() / 1000);
-    const signature = createHmac('sha256', WEBHOOK_SECRET)
-      .update(`${timestamp}.${payload}`)
-      .digest('hex');
+    const signature = createHmac('sha256', WEBHOOK_SECRET).update(`${timestamp}.${payload}`).digest('hex');
 
     await request(app.getHttpServer())
       .post('/api/v1/webhooks/stripe')

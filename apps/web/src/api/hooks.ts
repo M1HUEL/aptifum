@@ -52,11 +52,7 @@ export function useApiMutationVoid(
   });
 }
 
-export function useApiPagedQuery<T>(
-  key: QueryKeyFn,
-  path: string,
-  options: ApiQueryOptions<Paginated<T>> = {},
-) {
+export function useApiPagedQuery<T>(key: QueryKeyFn, path: string, options: ApiQueryOptions<Paginated<T>> = {}) {
   return useQuery<Paginated<T>, ApiError>({
     queryKey: resolveKey(key),
     queryFn: () => apiFetch<Paginated<T>>(path),

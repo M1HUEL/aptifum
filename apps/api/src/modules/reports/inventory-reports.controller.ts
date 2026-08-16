@@ -7,11 +7,7 @@ import { RequirePermissions } from '../rbac/decorators/require-permissions.decor
 import { ReportsService } from './reports.service';
 import { sendCsv, sendPdf, sendXlsx } from '../../common/export/export.util';
 import { buildTablePdf, formatMoney, formatNumber, rangeText } from '../../common/pdf/pdf.util';
-import {
-  InventoryValuationQueryDto,
-  LowStockQueryDto,
-  StockMovementsQueryDto,
-} from './dto/reports-query.dto';
+import { InventoryValuationQueryDto, LowStockQueryDto, StockMovementsQueryDto } from './dto/reports-query.dto';
 
 @ApiTags('reports')
 @Controller('reports/inventory')
@@ -49,15 +45,7 @@ export class InventoryReportsController {
             formatMoney(row.averageCost),
             formatMoney(row.value),
           ]),
-          totalsRow: [
-            '',
-            'Total',
-            '',
-            '',
-            formatNumber(report.totals.quantity),
-            '',
-            formatMoney(report.totals.value),
-          ],
+          totalsRow: ['', 'Total', '', '', formatNumber(report.totals.quantity), '', formatMoney(report.totals.value)],
         }),
       );
     }
@@ -132,12 +120,7 @@ export class InventoryReportsController {
             { header: 'UoM' },
             { header: 'Qty on hand', align: 'right' },
           ],
-          rows: report.data.map((row) => [
-            row.sku,
-            row.name,
-            row.unitOfMeasure,
-            formatNumber(row.totalQuantity),
-          ]),
+          rows: report.data.map((row) => [row.sku, row.name, row.unitOfMeasure, formatNumber(row.totalQuantity)]),
           totalsRow: ['', 'Total products', '', formatNumber(report.totals.lowStock)],
         }),
       );

@@ -158,10 +158,7 @@ export function ProductsPage() {
   }, [searchParams]);
 
   const createMutation = useApiMutation<CreateProductDto>('/api/v1/inventory/products', 'POST');
-  const updateMutation = useApiMutation<CreateProductDto>(
-    `/api/v1/inventory/products/${editingId ?? ''}`,
-    'PATCH',
-  );
+  const updateMutation = useApiMutation<CreateProductDto>(`/api/v1/inventory/products/${editingId ?? ''}`, 'PATCH');
   const deleteMutation = useApiMutation<Record<string, never>, unknown>(
     `/api/v1/inventory/products/${deleting?.id ?? ''}`,
     'DELETE',
@@ -369,12 +366,7 @@ export function ProductsPage() {
         subtitle={t('products.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <Button
-              variant="secondary"
-              type="button"
-              aria-label={t('common.export')}
-              onClick={handleExport}
-            >
+            <Button variant="secondary" type="button" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </Button>
             <Button type="button" variant="secondary" onClick={() => setImportOpen(true)}>
@@ -393,11 +385,7 @@ export function ProductsPage() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <Button
-          type="submit"
-        >
-          {t('common.search')}
-        </Button>
+        <Button type="submit">{t('common.search')}</Button>
       </Toolbar>
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
@@ -425,7 +413,13 @@ export function ProductsPage() {
               onSortChange={handleSortChange}
             />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={handlePageChange}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
 
@@ -447,17 +441,28 @@ export function ProductsPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-brand">{t('fields.brand')}</label>
                 <Input id="product-brand" className="w-full" {...register('brand')} />
-                {errors.brand ? <div className="text-[12px] font-normal text-danger">{errors.brand.message}</div> : null}
+                {errors.brand ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.brand.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-uom">{t('fields.unitOfMeasure')}</label>
-                <Input id="product-uom" placeholder={t('products.uomPlaceholder')} className="w-full" {...register('unitOfMeasure')} />
-                {errors.unitOfMeasure ? <div className="text-[12px] font-normal text-danger">{errors.unitOfMeasure.message}</div> : null}
+                <Input
+                  id="product-uom"
+                  placeholder={t('products.uomPlaceholder')}
+                  className="w-full"
+                  {...register('unitOfMeasure')}
+                />
+                {errors.unitOfMeasure ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.unitOfMeasure.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-barcode">{t('fields.barcode')}</label>
                 <Input id="product-barcode" className="w-full" {...register('barcode')} />
-                {errors.barcode ? <div className="text-[12px] font-normal text-danger">{errors.barcode.message}</div> : null}
+                {errors.barcode ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.barcode.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-category">{t('products.category')}</label>
@@ -469,10 +474,7 @@ export function ProductsPage() {
                       id="product-category"
                       value={field.value}
                       onChange={field.onChange}
-                      options={[
-                        { value: '', label: t('products.none') },
-                        ...categoryOptions,
-                      ]}
+                      options={[{ value: '', label: t('products.none') }, ...categoryOptions]}
                       placeholder={t('products.none')}
                       ariaLabel={t('products.category')}
                     />
@@ -495,8 +497,17 @@ export function ProductsPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-sale">{t('fields.salePrice')}</label>
-                <Input id="product-sale" type="number" min="0" step="0.01" className="w-full" {...register('salePrice')} />
-                {errors.salePrice ? <div className="text-[12px] font-normal text-danger">{errors.salePrice.message}</div> : null}
+                <Input
+                  id="product-sale"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="w-full"
+                  {...register('salePrice')}
+                />
+                {errors.salePrice ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.salePrice.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="product-description">{t('fields.description')}</label>
@@ -516,7 +527,11 @@ export function ProductsPage() {
                 </div>
               </div>
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('products.createProduct')}

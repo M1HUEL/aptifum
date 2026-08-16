@@ -122,16 +122,17 @@ function drawRow(
   opts?: { bold?: boolean; background?: boolean },
 ): void {
   const pad = 6;
-  const heights = columns.map((column, i) =>
-    doc.heightOfString(values[i] ?? '', { width: column.width - pad * 2 }),
-  );
+  const heights = columns.map((column, i) => doc.heightOfString(values[i] ?? '', { width: column.width - pad * 2 }));
   const height = Math.max(ROW_MIN, ...heights);
   ensureSpace(doc, columns, height);
   const y = doc.y;
   if (opts?.background) {
     doc.fillColor('#f3f4f6').rect(MARGIN, y, BODY_WIDTH, height).fill();
   }
-  doc.fillColor('#111827').font(opts?.bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(9);
+  doc
+    .fillColor('#111827')
+    .font(opts?.bold ? 'Helvetica-Bold' : 'Helvetica')
+    .fontSize(9);
   let x = MARGIN;
   for (let i = 0; i < columns.length; i++) {
     doc.text(values[i] ?? '', x + pad, y + 4, {

@@ -4,13 +4,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
 import type { components } from '../api/schema';
-import type {
-  Paginated,
-  Product,
-  ProductionBom,
-  ProductionOrder,
-  Warehouse,
-} from '../api/types';
+import type { Paginated, Product, ProductionBom, ProductionOrder, Warehouse } from '../api/types';
 import {
   bomFormSchema,
   productionOrderFormSchema,
@@ -144,15 +138,17 @@ export function ProductionPage() {
   const toast = useToast();
   const { invalidate } = useApiInvalidation();
 
-  const {
-    data: boms,
-    error: bomsError,
-  } = usePagedQuery<ProductionBom>({ path: '/api/v1/production/boms', page: 1, limit });
+  const { data: boms, error: bomsError } = usePagedQuery<ProductionBom>({
+    path: '/api/v1/production/boms',
+    page: 1,
+    limit,
+  });
 
-  const {
-    data: orders,
-    error: ordersError,
-  } = usePagedQuery<ProductionOrder>({ path: '/api/v1/production/orders', page: 1, limit });
+  const { data: orders, error: ordersError } = usePagedQuery<ProductionOrder>({
+    path: '/api/v1/production/orders',
+    page: 1,
+    limit,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -222,10 +218,7 @@ export function ProductionPage() {
   }));
 
   const createBomMutation = useApiMutation<CreateBomDto>('/api/v1/production/boms', 'POST');
-  const updateBomMutation = useApiMutation<CreateBomDto>(
-    `/api/v1/production/boms/${editingBomId ?? ''}`,
-    'PATCH',
-  );
+  const updateBomMutation = useApiMutation<CreateBomDto>(`/api/v1/production/boms/${editingBomId ?? ''}`, 'PATCH');
   const deleteBomMutation = useApiMutationVoid(`/api/v1/production/boms/${deletingBom?.id ?? ''}`, 'DELETE');
 
   const createOrderMutation = useApiMutation<CreateProductionOrderDto>('/api/v1/production/orders', 'POST');
@@ -270,7 +263,10 @@ export function ProductionPage() {
   };
 
   const setBomLine = (index: number, key: keyof BomLineFormValues, value: string) => {
-    setBomValue('lines', bomLines.map((line, i) => (i === index ? { ...line, [key]: value } : line)));
+    setBomValue(
+      'lines',
+      bomLines.map((line, i) => (i === index ? { ...line, [key]: value } : line)),
+    );
   };
 
   const addBomLine = () => {
@@ -278,7 +274,10 @@ export function ProductionPage() {
   };
 
   const removeBomLine = (index: number) => {
-    setBomValue('lines', bomLines.filter((_, i) => i !== index));
+    setBomValue(
+      'lines',
+      bomLines.filter((_, i) => i !== index),
+    );
   };
 
   const submitBom = submitBomForm((values) => {
@@ -478,9 +477,7 @@ export function ProductionPage() {
     },
   ];
 
-  const bomOptionsForProduct = bomsForSelect.filter(
-    (bom) => bom.productId === orderProductId,
-  );
+  const bomOptionsForProduct = bomsForSelect.filter((bom) => bom.productId === orderProductId);
 
   const handleLimitChange = (next: number) => {
     setLimit(next);
@@ -518,11 +515,7 @@ export function ProductionPage() {
         <button type="button" className={tab === 'boms' ? 'tab tab-active' : 'tab'} onClick={() => setTab('boms')}>
           {t('production.boms')}
         </button>
-        <button
-          type="button"
-          className={tab === 'orders' ? 'tab tab-active' : 'tab'}
-          onClick={() => setTab('orders')}
-        >
+        <button type="button" className={tab === 'orders' ? 'tab tab-active' : 'tab'} onClick={() => setTab('orders')}>
           {t('production.orders')}
         </button>
       </div>
@@ -541,7 +534,13 @@ export function ProductionPage() {
               ) : (
                 <DataTable columns={bomColumns} rows={boms.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={boms.meta.page} limit={boms.meta.limit} total={boms.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
+              <Pagination
+                page={boms.meta.page}
+                limit={boms.meta.limit}
+                total={boms.meta.total}
+                onPage={() => {}}
+                onLimit={handleLimitChange}
+              />
             </>
           ) : null}
         </>
@@ -560,7 +559,13 @@ export function ProductionPage() {
               ) : (
                 <DataTable columns={orderColumns} rows={orders.data} rowKey={(row) => row.id} />
               )}
-              <Pagination page={orders.meta.page} limit={orders.meta.limit} total={orders.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
+              <Pagination
+                page={orders.meta.page}
+                limit={orders.meta.limit}
+                total={orders.meta.total}
+                onPage={() => {}}
+                onLimit={handleLimitChange}
+              />
             </>
           ) : null}
         </>
@@ -574,7 +579,9 @@ export function ProductionPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="bom-name">{t('fields.name')} *</label>
                 <Input className="w-full" id="bom-name" {...registerBom('name')} />
-                {bomErrors.name ? <div className="text-[12px] font-normal text-danger">{bomErrors.name.message}</div> : null}
+                {bomErrors.name ? (
+                  <div className="text-[12px] font-normal text-danger">{bomErrors.name.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="bom-product">{t('fields.finishedProduct')} *</label>
@@ -597,7 +604,8 @@ export function ProductionPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="bom-output">{t('fields.outputQuantity')}</label>
-                <Input className="w-full"
+                <Input
+                  className="w-full"
                   id="bom-output"
                   type="number"
                   min="0.0001"
@@ -624,7 +632,10 @@ export function ProductionPage() {
             </div>
             <div className="mb-2 mt-4 font-semibold">{t('production.componentLines')}</div>
             {bomLines.map((line, index) => (
-              <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 [grid-template-columns:3fr_1fr_1fr]" key={index}>
+              <div
+                className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 [grid-template-columns:3fr_1fr_1fr]"
+                key={index}
+              >
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`bomline-${index}-product`}>{t('production.component')}</label>
                   <SearchableSelect
@@ -637,7 +648,8 @@ export function ProductionPage() {
                 </div>
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`bomline-${index}-qty`}>{t('fields.quantity')}</label>
-                  <Input className="w-full"
+                  <Input
+                    className="w-full"
                     id={`bomline-${index}-qty`}
                     type="number"
                     min="0.0001"
@@ -649,7 +661,8 @@ export function ProductionPage() {
                 <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                   <label htmlFor={`bomline-${index}-waste`}>{t('fields.wasteRate')} (%)</label>
                   <div className="flex items-center gap-1.5">
-                    <Input className="w-full"
+                    <Input
+                      className="w-full"
                       id={`bomline-${index}-waste`}
                       type="number"
                       min="0"
@@ -668,7 +681,11 @@ export function ProductionPage() {
             <Button variant="ghost" size="sm" type="button" onClick={addBomLine}>
               {t('common.addLine')}
             </Button>
-            {bomError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{bomError}</div> : null}
+            {bomError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {bomError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={bomSaving} loading={bomSaving}>
                 {bomSaving ? t('common.saving') : editingBomId ? t('common.saveChanges') : t('production.createBom')}
@@ -680,7 +697,9 @@ export function ProductionPage() {
 
       <Dialog open={orderOpen} onOpenChange={(open) => !orderSaving && setOrderOpen(open)}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader title={editingOrderId ? t('production.editProductionOrder') : t('production.newProductionOrderTitle')} />
+          <DialogHeader
+            title={editingOrderId ? t('production.editProductionOrder') : t('production.newProductionOrderTitle')}
+          />
           <form onSubmit={(event) => void submitOrder(event)}>
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -732,7 +751,8 @@ export function ProductionPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-quantity">{t('fields.quantity')} *</label>
-                <Input className="w-full"
+                <Input
+                  className="w-full"
                   id="order-quantity"
                   type="number"
                   min="0.0001"
@@ -745,14 +765,28 @@ export function ProductionPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-labor">{t('fields.laborCost')}</label>
-                <Input className="w-full" id="order-labor" type="number" min="0" step="0.01" {...registerOrder('laborCost')} />
+                <Input
+                  className="w-full"
+                  id="order-labor"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  {...registerOrder('laborCost')}
+                />
                 {orderErrors.laborCost ? (
                   <div className="text-[12px] font-normal text-danger">{orderErrors.laborCost.message}</div>
                 ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="order-overhead">{t('fields.overhead')}</label>
-                <Input className="w-full" id="order-overhead" type="number" min="0" step="0.01" {...registerOrder('overhead')} />
+                <Input
+                  className="w-full"
+                  id="order-overhead"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  {...registerOrder('overhead')}
+                />
                 {orderErrors.overhead ? (
                   <div className="text-[12px] font-normal text-danger">{orderErrors.overhead.message}</div>
                 ) : null}
@@ -762,10 +796,18 @@ export function ProductionPage() {
                 <Textarea className="w-full" id="order-notes" rows={3} {...registerOrder('notes')} />
               </div>
             </div>
-            {orderError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{orderError}</div> : null}
+            {orderError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {orderError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={orderSaving} loading={orderSaving}>
-                {orderSaving ? t('common.saving') : editingOrderId ? t('common.saveChanges') : t('production.createOrder')}
+                {orderSaving
+                  ? t('common.saving')
+                  : editingOrderId
+                    ? t('common.saveChanges')
+                    : t('production.createOrder')}
               </Button>
             </DialogFooter>
           </form>
@@ -779,23 +821,31 @@ export function ProductionPage() {
             <>
               <div className="mb-2 grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 gap-y-3">
                 <div>
-                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.product')}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">
+                    {t('fields.product')}
+                  </span>
                   <span className="mt-0.5 block">
                     {viewing.product.sku} · {viewing.product.name}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('production.bom')}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">
+                    {t('production.bom')}
+                  </span>
                   <span className="mt-0.5 block">{viewing.bom?.name ?? '—'}</span>
                 </div>
                 <div>
-                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.warehouse')}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">
+                    {t('fields.warehouse')}
+                  </span>
                   <span className="mt-0.5 block">
                     {viewing.warehouse ? `${viewing.warehouse.code} · ${viewing.warehouse.name}` : '—'}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.quantity')}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">
+                    {t('fields.quantity')}
+                  </span>
                   <span className="mt-0.5 block">{formatNumber(viewing.quantity)}</span>
                 </div>
                 <div>
@@ -805,15 +855,21 @@ export function ProductionPage() {
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.materialCost')}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">
+                    {t('tables.materialCost')}
+                  </span>
                   <span className="mt-0.5 block">{formatMoney(viewing.materialCost)}</span>
                 </div>
                 <div>
-                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.laborOverhead')}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">
+                    {t('tables.laborOverhead')}
+                  </span>
                   <span className="mt-0.5 block">{formatMoney(viewing.laborCost + viewing.overhead)}</span>
                 </div>
                 <div>
-                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.totalCost')}</span>
+                  <span className="block text-[12px] uppercase tracking-[0.03em] text-muted">
+                    {t('tables.totalCost')}
+                  </span>
                   <span className="mt-0.5 block">{formatMoney(viewing.totalCost)}</span>
                 </div>
               </div>
@@ -864,10 +920,7 @@ export function ProductionPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={action !== null}
-        onOpenChange={(open) => !actionBusy && !open && setAction(null)}
-      >
+      <Dialog open={action !== null} onOpenChange={(open) => !actionBusy && !open && setAction(null)}>
         <DialogContent>
           <DialogHeader
             title={action ? actionLabels[action.kind].title : ''}

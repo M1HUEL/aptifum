@@ -133,9 +133,7 @@ function periodColumns(t: TFunction, onClose: (period: AccountingPeriod) => void
     {
       key: 'status',
       header: t('common.status'),
-      render: (row) => (
-        <Badge tone={row.status === 'open' ? 'success' : 'neutral'}>{row.status}</Badge>
-      ),
+      render: (row) => <Badge tone={row.status === 'open' ? 'success' : 'neutral'}>{row.status}</Badge>,
     },
     {
       key: 'actions',
@@ -179,11 +177,7 @@ function JournalEntriesTab({
               action={<Button onClick={onCreate}>{t('accounting.newJournalEntry')}</Button>}
             />
           ) : (
-            <DataTable
-              columns={journalColumns(t, onOpenEntry)}
-              rows={data.data}
-              rowKey={(row) => row.id}
-            />
+            <DataTable columns={journalColumns(t, onOpenEntry)} rows={data.data} rowKey={(row) => row.id} />
           )}
           <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={setPage} />
         </>
@@ -222,14 +216,8 @@ export function AccountingPage() {
     page: 1,
   });
 
-  const createMutation = useApiMutation<CreateJournalEntryDto>(
-    '/api/v1/accounting/journal-entries',
-    'POST',
-  );
-  const closeMutation = useApiMutationVoid(
-    `/api/v1/accounting/periods/${closingPeriod?.id ?? ''}/close`,
-    'POST',
-  );
+  const createMutation = useApiMutation<CreateJournalEntryDto>('/api/v1/accounting/journal-entries', 'POST');
+  const closeMutation = useApiMutationVoid(`/api/v1/accounting/periods/${closingPeriod?.id ?? ''}/close`, 'POST');
 
   const saving = createMutation.isPending;
   const closeBusy = closeMutation.isPending;
@@ -259,7 +247,10 @@ export function AccountingPage() {
   };
 
   const removeLine = (index: number) => {
-    setValue('lines', lines.filter((_, i) => i !== index));
+    setValue(
+      'lines',
+      lines.filter((_, i) => i !== index),
+    );
   };
 
   const submit = handleSubmit((values) => {
@@ -302,10 +293,18 @@ export function AccountingPage() {
         action={<Button onClick={openCreate}>{t('accounting.newJournalEntry')}</Button>}
       />
       <div className="mb-4 flex gap-1">
-        <button type="button" className={tab === 'entries' ? 'tab tab-active' : 'tab'} onClick={() => setTab('entries')}>
+        <button
+          type="button"
+          className={tab === 'entries' ? 'tab tab-active' : 'tab'}
+          onClick={() => setTab('entries')}
+        >
           {t('accounting.journalEntries')}
         </button>
-        <button type="button" className={tab === 'periods' ? 'tab tab-active' : 'tab'} onClick={() => setTab('periods')}>
+        <button
+          type="button"
+          className={tab === 'periods' ? 'tab tab-active' : 'tab'}
+          onClick={() => setTab('periods')}
+        >
           {t('accounting.periods')}
         </button>
       </div>
@@ -320,11 +319,7 @@ export function AccountingPage() {
               {periods.data.length === 0 ? (
                 <EmptyState message={t('accounting.noAccountingPeriods')} icon={<CalendarRange className="size-6" />} />
               ) : (
-                <DataTable
-                  columns={periodColumns(t, setClosingPeriod)}
-                  rows={periods.data}
-                  rowKey={(row) => row.id}
-                />
+                <DataTable columns={periodColumns(t, setClosingPeriod)} rows={periods.data} rowKey={(row) => row.id} />
               )}
               <Pagination
                 page={periods.meta.page}
@@ -345,12 +340,16 @@ export function AccountingPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="je-date">{t('fields.entryDate')} *</label>
                 <Input className="w-full" id="je-date" type="date" {...register('entryDate')} />
-                {errors.entryDate ? <div className="text-[12px] font-normal text-danger">{errors.entryDate.message}</div> : null}
+                {errors.entryDate ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.entryDate.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="je-description">{t('fields.description')}</label>
                 <Input className="w-full" id="je-description" {...register('description')} />
-                {errors.description ? <div className="text-[12px] font-normal text-danger">{errors.description.message}</div> : null}
+                {errors.description ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.description.message}</div>
+                ) : null}
               </div>
             </div>
             <div className="mb-3 rounded-ui border border-border p-3">
@@ -358,7 +357,11 @@ export function AccountingPage() {
                 <div className="grid grid-cols-[3fr_1fr_1.5fr_1fr_auto] items-start gap-2.5" key={index}>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-account-${index}`}>{t('tables.account')}</label>
-                    <Select className="w-full" id={`je-line-account-${index}`} {...register(`lines.${index}.accountCode`)}>
+                    <Select
+                      className="w-full"
+                      id={`je-line-account-${index}`}
+                      {...register(`lines.${index}.accountCode`)}
+                    >
                       <option value="">{t('accounting.selectAccount')}</option>
                       {accounts.map((account) => (
                         <option key={account.id} value={account.code}>
@@ -369,7 +372,8 @@ export function AccountingPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-debit-${index}`}>{t('fields.debit')}</label>
-                    <Input className="w-full"
+                    <Input
+                      className="w-full"
                       id={`je-line-debit-${index}`}
                       type="number"
                       min="0"
@@ -382,7 +386,8 @@ export function AccountingPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-credit-${index}`}>{t('fields.credit')}</label>
-                    <Input className="w-full"
+                    <Input
+                      className="w-full"
                       id={`je-line-credit-${index}`}
                       type="number"
                       min="0"
@@ -395,9 +400,15 @@ export function AccountingPage() {
                   </div>
                   <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                     <label htmlFor={`je-line-memo-${index}`}>{t('fields.memo')}</label>
-                    <Input className="w-full" id={`je-line-memo-${index}`} {...register(`lines.${index}.description`)} />
+                    <Input
+                      className="w-full"
+                      id={`je-line-memo-${index}`}
+                      {...register(`lines.${index}.description`)}
+                    />
                     {errors.lines?.[index]?.description ? (
-                      <div className="text-[12px] font-normal text-danger">{errors.lines[index]?.description?.message}</div>
+                      <div className="text-[12px] font-normal text-danger">
+                        {errors.lines[index]?.description?.message}
+                      </div>
                     ) : null}
                   </div>
                   <div className="pt-6">
@@ -413,7 +424,11 @@ export function AccountingPage() {
             <Button variant="ghost" size="sm" type="button" onClick={addLine}>
               {t('common.addLine')}
             </Button>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('accounting.posting') : t('accounting.postEntry')}
@@ -432,9 +447,7 @@ export function AccountingPage() {
                 rows={[
                   {
                     label: t('common.status'),
-                    value: (
-                      <Badge tone={entryStatusTone(viewing.status)}>{t(`accounting.${viewing.status}`)}</Badge>
-                    ),
+                    value: <Badge tone={entryStatusTone(viewing.status)}>{t(`accounting.${viewing.status}`)}</Badge>,
                   },
                   {
                     label: t('fields.description'),
@@ -488,10 +501,7 @@ export function AccountingPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={closingPeriod !== null}
-        onOpenChange={(open) => !closeBusy && !open && setClosingPeriod(null)}
-      >
+      <Dialog open={closingPeriod !== null} onOpenChange={(open) => !closeBusy && !open && setClosingPeriod(null)}>
         <DialogContent>
           <DialogHeader
             title={t('accounting.closePeriodTitle')}

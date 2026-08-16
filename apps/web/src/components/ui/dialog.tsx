@@ -32,7 +32,7 @@ const DialogContent = forwardRef<
               aria-label={t('common.close')}
               className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-hover hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
-            <X className="size-4" aria-hidden="true" />
+              <X className="size-4" aria-hidden="true" />
             </button>
           </DialogPrimitive.Close>
         ) : null}
@@ -46,13 +46,9 @@ DialogContent.displayName = DialogPrimitive.Content.displayName;
 function DialogHeader({ title, description }: { title: string; description?: string }) {
   return (
     <div className="mb-4">
-      <DialogPrimitive.Title className="text-lg font-semibold text-text">
-        {title}
-      </DialogPrimitive.Title>
+      <DialogPrimitive.Title className="text-lg font-semibold text-text">{title}</DialogPrimitive.Title>
       {description ? (
-        <DialogPrimitive.Description className="mt-1 text-sm text-muted">
-          {description}
-        </DialogPrimitive.Description>
+        <DialogPrimitive.Description className="mt-1 text-sm text-muted">{description}</DialogPrimitive.Description>
       ) : null}
     </div>
   );

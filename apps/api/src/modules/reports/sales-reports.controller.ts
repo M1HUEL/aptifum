@@ -7,11 +7,7 @@ import { RequirePermissions } from '../rbac/decorators/require-permissions.decor
 import { ReportsService } from './reports.service';
 import { sendCsv, sendPdf, sendXlsx } from '../../common/export/export.util';
 import { buildTablePdf, formatMoney, formatNumber, rangeText } from '../../common/pdf/pdf.util';
-import {
-  SalesByCustomerQueryDto,
-  SalesByProductQueryDto,
-  SalesSummaryQueryDto,
-} from './dto/reports-query.dto';
+import { SalesByCustomerQueryDto, SalesByProductQueryDto, SalesSummaryQueryDto } from './dto/reports-query.dto';
 
 @ApiTags('reports')
 @Controller('reports/sales')

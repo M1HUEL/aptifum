@@ -103,9 +103,7 @@ describe('Product variants in stock/POS (e2e)', () => {
       }
       return req.expect((res) => {
         if (res.status >= 400) {
-          throw new Error(
-            `${method.toUpperCase()} ${path} -> ${res.status}: ${JSON.stringify(res.body)}`,
-          );
+          throw new Error(`${method.toUpperCase()} ${path} -> ${res.status}: ${JSON.stringify(res.body)}`);
         }
       });
     };
@@ -193,9 +191,7 @@ describe('Product variants in stock/POS (e2e)', () => {
       .send({
         customerId: customer.id,
         warehouseId: warehouse.id,
-        items: [
-          { productId: product.id, variantId: variant.id, quantity: 3, unitPrice: 12.5 },
-        ],
+        items: [{ productId: product.id, variantId: variant.id, quantity: 3, unitPrice: 12.5 }],
       })
       .expect(201);
     expect(res.body.items[0]).toMatchObject({

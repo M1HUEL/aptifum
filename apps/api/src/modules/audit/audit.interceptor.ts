@@ -1,9 +1,4 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { AuditAction } from '@aptifum/core';
 import { Observable, mergeMap } from 'rxjs';
 import { AuditService } from './audit.service';
@@ -78,9 +73,7 @@ function entityIdFromPath(path: string): string | null {
   if (!candidate || candidate === 'me') {
     return null;
   }
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate)
-    ? candidate
-    : null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate) ? candidate : null;
 }
 
 function actionForMethod(method: string): AuditAction {

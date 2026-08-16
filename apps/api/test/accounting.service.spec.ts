@@ -88,9 +88,9 @@ describe('PayrollsService generate', () => {
       }),
     };
     const service = buildService(manager);
-    await expect(
-      service.generate(TENANT, { period: '2026-08', lines: [] } as never),
-    ).rejects.toThrow(ConflictException);
+    await expect(service.generate(TENANT, { period: '2026-08', lines: [] } as never)).rejects.toThrow(
+      ConflictException,
+    );
   });
 
   it('rejects negative net pay for an employee', async () => {
@@ -98,9 +98,7 @@ describe('PayrollsService generate', () => {
       getRepository: vi.fn((entity: unknown) => {
         if (entity === Employee) {
           return {
-            findBy: vi.fn().mockResolvedValue([
-              { id: 'e1', employeeNo: 'EMP-1', salary: 100 },
-            ]),
+            findBy: vi.fn().mockResolvedValue([{ id: 'e1', employeeNo: 'EMP-1', salary: 100 }]),
           };
         }
         return { findOneBy: vi.fn().mockResolvedValue(null) };

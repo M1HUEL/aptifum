@@ -19,10 +19,7 @@ export class WarehousesController {
   @Get()
   @RequirePermissions(permission(ModuleName.INVENTORY, 'read'))
   @ApiOperation({ summary: 'List warehouses' })
-  list(
-    @CurrentUser() user: { tenantId: string | null },
-    @Query() { page, limit }: PaginationQueryDto,
-  ) {
+  list(@CurrentUser() user: { tenantId: string | null }, @Query() { page, limit }: PaginationQueryDto) {
     return this.warehousesService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100));
   }
 
@@ -61,10 +58,7 @@ export class WarehousesController {
   @Get(':id/locations')
   @RequirePermissions(permission(ModuleName.INVENTORY, 'read'))
   @ApiOperation({ summary: 'List warehouse locations' })
-  listLocations(
-    @CurrentUser() user: { tenantId: string | null },
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  listLocations(@CurrentUser() user: { tenantId: string | null }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.warehousesService.listLocations(user.tenantId, id);
   }
 

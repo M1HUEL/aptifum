@@ -164,10 +164,7 @@ export function AuditPage() {
       />
 
       <div className="mb-4 flex gap-2.5">
-        <Select
-          value={filters.module}
-          onChange={(event) => setFilter('module', event.target.value)}
-        >
+        <Select value={filters.module} onChange={(event) => setFilter('module', event.target.value)}>
           <option value="">{t('audit.allModules')}</option>
           {MODULES.map((module) => (
             <option key={module} value={module}>
@@ -175,10 +172,7 @@ export function AuditPage() {
             </option>
           ))}
         </Select>
-        <Select
-          value={filters.action}
-          onChange={(event) => setFilter('action', event.target.value)}
-        >
+        <Select value={filters.action} onChange={(event) => setFilter('action', event.target.value)}>
           <option value="">{t('audit.allActions')}</option>
           {ACTIONS.map((action) => (
             <option key={action} value={action}>
@@ -186,16 +180,8 @@ export function AuditPage() {
             </option>
           ))}
         </Select>
-        <Input
-          type="date"
-          value={filters.from}
-          onChange={(event) => setFilter('from', event.target.value)}
-        />
-        <Input
-          type="date"
-          value={filters.to}
-          onChange={(event) => setFilter('to', event.target.value)}
-        />
+        <Input type="date" value={filters.from} onChange={(event) => setFilter('from', event.target.value)} />
+        <Input type="date" value={filters.to} onChange={(event) => setFilter('to', event.target.value)} />
         {hasFilters ? (
           <Button variant="ghost" size="sm" onClick={resetFilters}>
             {t('audit.clearFilters')}

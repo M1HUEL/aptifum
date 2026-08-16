@@ -174,9 +174,7 @@ export async function buildInvoicePdf(opts: InvoicePdfOptions): Promise<Buffer> 
     doc.font('Helvetica').fontSize(9).fillColor('#374151');
     for (const payment of invoice.payments) {
       doc.moveDown(0.3);
-      const date = payment.receivedAt
-        ? new Date(payment.receivedAt).toLocaleDateString('en-US')
-        : '';
+      const date = payment.receivedAt ? new Date(payment.receivedAt).toLocaleDateString('en-US') : '';
       doc.text(`${date}  ${formatCurrency(payment.amount, currency)}  ${payment.method}`, MARGIN, doc.y);
     }
   }
@@ -184,7 +182,11 @@ export async function buildInvoicePdf(opts: InvoicePdfOptions): Promise<Buffer> 
   if (invoice.notes) {
     doc.moveDown(1);
     doc.fillColor('#6b7280').font('Helvetica-Bold').fontSize(9).text('NOTES', MARGIN, doc.y);
-    doc.font('Helvetica').fontSize(9).fillColor('#374151').text(invoice.notes, MARGIN, doc.y + 10);
+    doc
+      .font('Helvetica')
+      .fontSize(9)
+      .fillColor('#374151')
+      .text(invoice.notes, MARGIN, doc.y + 10);
   }
 
   doc.end();

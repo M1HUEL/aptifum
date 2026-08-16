@@ -45,15 +45,7 @@ export function formatDate(value: string | null | undefined, locale?: string): s
   return date.toLocaleDateString(resolvedLocale, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-export function StatCard({
-  label,
-  value,
-  trend,
-}: {
-  label: string;
-  value: string;
-  trend?: number | null;
-}) {
+export function StatCard({ label, value, trend }: { label: string; value: string; trend?: number | null }) {
   const hasTrend = trend !== undefined && trend !== null && Number.isFinite(trend);
   const trendUp = (trend ?? 0) >= 0;
   return (
@@ -76,24 +68,12 @@ export function StatCard({
   );
 }
 
-export function PageHeader({
-  title,
-  subtitle,
-  action,
-}: {
-  title: string;
-  subtitle?: string;
-  action?: ReactNode;
-}) {
+export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
   return (
     <div className="mb-5 flex items-start justify-between gap-4 max-[640px]:flex-col max-[640px]:items-stretch">
       <div className="min-w-0">
-        <h1 className="text-[22px] font-bold leading-tight tracking-[-0.02em] text-text">
-          {title}
-        </h1>
-        {subtitle ? (
-          <p className="mt-1 text-[13px] leading-relaxed text-muted">{subtitle}</p>
-        ) : null}
+        <h1 className="text-[22px] font-bold leading-tight tracking-[-0.02em] text-text">{title}</h1>
+        {subtitle ? <p className="mt-1 text-[13px] leading-relaxed text-muted">{subtitle}</p> : null}
       </div>
       {action ? <div className="shrink-0 max-[640px]:flex max-[640px]:justify-end">{action}</div> : null}
     </div>
@@ -117,16 +97,19 @@ export function Toolbar({
 
 export function Spinner() {
   const { t } = useTranslation();
-  return <div className="size-7 animate-spin rounded-full border-[3px] border-border border-t-primary" aria-label={t('common.loading')} />;
+  return (
+    <div
+      className="size-7 animate-spin rounded-full border-[3px] border-border border-t-primary"
+      aria-label={t('common.loading')}
+    />
+  );
 }
 
 export function LoadingBlock({ full = false }: { full?: boolean }) {
   return (
     <div
       className={
-        full
-          ? 'fixed inset-0 z-50 flex items-center justify-center p-12'
-          : 'flex items-center justify-center p-12'
+        full ? 'fixed inset-0 z-50 flex items-center justify-center p-12' : 'flex items-center justify-center p-12'
       }
     >
       <Spinner />
@@ -174,18 +157,12 @@ export function TableSkeleton({ columns, rows = 5 }: { columns: number; rows?: n
 }
 
 export function ErrorBanner({ message }: { message: string }) {
-  return <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{message}</div>;
+  return (
+    <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{message}</div>
+  );
 }
 
-export function EmptyState({
-  message,
-  icon,
-  action,
-}: {
-  message: string;
-  icon?: ReactNode;
-  action?: ReactNode;
-}) {
+export function EmptyState({ message, icon, action }: { message: string; icon?: ReactNode; action?: ReactNode }) {
   return (
     <div className="rounded-ui border border-dashed border-border bg-surface p-10 text-center text-muted">
       <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-hover/50">
@@ -209,7 +186,9 @@ const badgeToneClasses: Record<BadgeTone, string> = {
 
 export function Badge({ children, tone = 'neutral' }: { children: ReactNode; tone?: BadgeTone }) {
   return (
-    <span className={`badge-${tone} inline-block rounded-full px-[9px] py-0.5 text-[12px] font-semibold ${badgeToneClasses[tone]}`}>
+    <span
+      className={`badge-${tone} inline-block rounded-full px-[9px] py-0.5 text-[12px] font-semibold ${badgeToneClasses[tone]}`}
+    >
       {children}
     </span>
   );
@@ -310,7 +289,9 @@ export function DataTable<T>({
                     <button
                       type="button"
                       onClick={() => toggleSort(col)}
-                      aria-label={t(`common.sort${active && dir === 'desc' ? 'Descending' : 'Ascending'}`, { column: col.header })}
+                      aria-label={t(`common.sort${active && dir === 'desc' ? 'Descending' : 'Ascending'}`, {
+                        column: col.header,
+                      })}
                       className="inline-flex cursor-pointer items-center gap-1 uppercase tracking-[0.04em] select-none hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       {col.header}
@@ -408,9 +389,7 @@ export function Pagination({
       >
         {t('common.previous')}
       </button>
-      <span>
-        {t('common.showingRange', { start, end, total })}
-      </span>
+      <span>{t('common.showingRange', { start, end, total })}</span>
       <button
         type="button"
         className="cursor-pointer text-text transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"

@@ -47,10 +47,7 @@ describe('Users and roles (e2e)', () => {
   const auth = () => ({ Authorization: `Bearer ${token}` });
 
   it('lists roles with the system defaults', async () => {
-    const res = await request(server())
-      .get('/api/v1/roles')
-      .set(auth())
-      .expect(200);
+    const res = await request(server()).get('/api/v1/roles').set(auth()).expect(200);
     const roles = res.body as Array<{ name: string; isSystem: boolean }>;
     const byName = new Map(roles.map((r) => [r.name, r]));
     expect(byName.has('admin')).toBe(true);
@@ -77,42 +74,22 @@ describe('Users and roles (e2e)', () => {
     expect(patched.body).toMatchObject({ name: `${roleName}-v2`, isSystem: false });
     expect(patched.body.permissions).toEqual(['crm:read', 'crm:write']);
 
-    const removed = await request(server())
-      .delete(`/api/v1/roles/${roleId}`)
-      .set(auth())
-      .expect(200);
+    const removed = await request(server()).delete(`/api/v1/roles/${roleId}`).set(auth()).expect(200);
     expect(removed.body).toEqual({ id: roleId });
   });
 
   it('refuses to delete or duplicate a system role', async () => {
-    const res = await request(server())
-      .get('/api/v1/roles')
-      .set(auth())
-      .expect(200);
-    const adminRole = (res.body as Array<{ name: string; id: string }>).find(
-      (r) => r.name === 'admin',
-    )!;
+    const res = await request(server()).get('/api/v1/roles').set(auth()).expect(200);
+    const adminRole = (res.body as Array<{ name: string; id: string }>).find((r) => r.name === 'admin')!;
 
-    await request(server())
-      .delete(`/api/v1/roles/${adminRole.id}`)
-      .set(auth())
-      .expect(403);
+    await request(server()).delete(`/api/v1/roles/${adminRole.id}`).set(auth()).expect(403);
 
-    await request(server())
-      .post('/api/v1/roles')
-      .set(auth())
-      .send({ name: 'seller', permissions: [] })
-      .expect(409);
+    await request(server()).post('/api/v1/roles').set(auth()).send({ name: 'seller', permissions: [] }).expect(409);
   });
 
   it('creates a user with roles and lists it', async () => {
-    const res = await request(server())
-      .get('/api/v1/roles')
-      .set(auth())
-      .expect(200);
-    const sellerRole = (res.body as Array<{ name: string; id: string }>).find(
-      (r) => r.name === 'seller',
-    )!;
+    const res = await request(server()).get('/api/v1/roles').set(auth()).expect(200);
+    const sellerRole = (res.body as Array<{ name: string; id: string }>).find((r) => r.name === 'seller')!;
 
     const email = `user-${suffix}@aptifum.dev`;
     const created = await request(server())
@@ -126,22 +103,13 @@ describe('Users and roles (e2e)', () => {
       })
       .expect(201);
     expect(created.body).toMatchObject({ email, name: 'E2E User', active: true });
-    expect(created.body.roles).toEqual(
-      expect.arrayContaining([expect.objectContaining({ name: 'seller' })]),
-    );
+    expect(created.body.roles).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'seller' })]));
     expect(created.body.passwordHash).toBeUndefined();
 
-    const list = await request(server())
-      .get('/api/v1/users')
-      .set(auth())
-      .expect(200);
-    const found = (list.body.data as Array<{ email: string; roles: unknown[] }>).find(
-      (u) => u.email === email,
-    );
+    const list = await request(server()).get('/api/v1/users').set(auth()).expect(200);
+    const found = (list.body.data as Array<{ email: string; roles: unknown[] }>).find((u) => u.email === email);
     expect(found).toBeDefined();
-    expect(found!.roles).toEqual(
-      expect.arrayContaining([expect.objectContaining({ name: 'seller' })]),
-    );
+    expect(found!.roles).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'seller' })]));
   });
 
   it('deactivating a user blocks login', async () => {
@@ -158,10 +126,7 @@ describe('Users and roles (e2e)', () => {
       .send({ active: false })
       .expect(200);
 
-    await request(server())
-      .post('/api/v1/auth/login')
-      .send({ email, password: 'password123' })
-      .expect(401);
+    await request(server()).post('/api/v1/auth/login').send({ email, password: 'password123' }).expect(401);
   });
 
   it('enforces users:write for non-admins', async () => {

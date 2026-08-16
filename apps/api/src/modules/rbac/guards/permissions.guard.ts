@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ALL_PERMISSIONS } from '@aptifum/core';
 import { PermissionsService } from '../rbac.service';
@@ -30,9 +25,7 @@ export class PermissionsGuard implements CanActivate {
       return false;
     }
     const permissions = await this.permissionsService.permissionsFor(user.id);
-    const hasAll = required.every(
-      (perm) => permissions.includes(ALL_PERMISSIONS) || permissions.includes(perm),
-    );
+    const hasAll = required.every((perm) => permissions.includes(ALL_PERMISSIONS) || permissions.includes(perm));
     if (!hasAll) {
       throw new ForbiddenException('Insufficient permissions');
     }

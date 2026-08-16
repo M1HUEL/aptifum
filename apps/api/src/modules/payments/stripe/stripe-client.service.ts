@@ -55,9 +55,7 @@ export class StripeClient {
       error?: { message?: string };
     };
     if (!res.ok || !data.url || !data.id) {
-      this.logger.warn(
-        `Stripe checkout session creation failed: ${data.error?.message ?? res.status}`,
-      );
+      this.logger.warn(`Stripe checkout session creation failed: ${data.error?.message ?? res.status}`);
       throw new BadRequestException('Failed to create Stripe checkout session');
     }
     return { url: data.url, sessionId: data.id };

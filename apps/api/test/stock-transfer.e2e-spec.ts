@@ -99,9 +99,7 @@ describe('Stock transfer between warehouses (e2e)', () => {
       }
       return req.expect((res) => {
         if (res.status >= 400) {
-          throw new Error(
-            `${method.toUpperCase()} ${path} -> ${res.status}: ${JSON.stringify(res.body)}`,
-          );
+          throw new Error(`${method.toUpperCase()} ${path} -> ${res.status}: ${JSON.stringify(res.body)}`);
         }
       });
     };
@@ -201,9 +199,7 @@ describe('Stock transfer between warehouses (e2e)', () => {
     expect(base).toHaveLength(2);
     expect(base.find((m) => m.warehouseId === origin.id)?.quantity).toBe(-30);
     expect(base.find((m) => m.warehouseId === destination.id)?.quantity).toBe(30);
-    expect(base.every((m) => m.movementType === 'transfer' && m.referenceType === 'transfer')).toBe(
-      true,
-    );
+    expect(base.every((m) => m.movementType === 'transfer' && m.referenceType === 'transfer')).toBe(true);
   });
 
   it('transfers a variant between warehouses independently of the base product', async () => {

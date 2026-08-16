@@ -15,12 +15,7 @@ export class ExchangeRatesService {
     return tenantId ? { tenantId } : {};
   }
 
-  async findAll(
-    tenantId: string | null,
-    page: number,
-    limit: number,
-    opts: { base?: string; quote?: string } = {},
-  ) {
+  async findAll(tenantId: string | null, page: number, limit: number, opts: { base?: string; quote?: string } = {}) {
     const where: FindOptionsWhere<ExchangeRate> = this.scoped(tenantId);
     if (opts.base) where.baseCurrency = opts.base;
     if (opts.quote) where.quoteCurrency = opts.quote;
@@ -33,12 +28,7 @@ export class ExchangeRatesService {
     return { data: rows, meta: { page, limit, total } };
   }
 
-  async latest(
-    tenantId: string | null,
-    base: string,
-    quote: string,
-    date?: string,
-  ): Promise<ExchangeRate | null> {
+  async latest(tenantId: string | null, base: string, quote: string, date?: string): Promise<ExchangeRate | null> {
     const where: FindOptionsWhere<ExchangeRate> = {
       tenantId: tenantId ?? undefined,
       baseCurrency: base,
@@ -62,9 +52,7 @@ export class ExchangeRatesService {
     if (existing) {
       throw new ConflictException('An exchange rate already exists for this pair and date');
     }
-    return this.ratesRepo.save(
-      this.ratesRepo.create({ tenantId, ...dto, rateDate: dto.rateDate ?? this.today() }),
-    );
+    return this.ratesRepo.save(this.ratesRepo.create({ tenantId, ...dto, rateDate: dto.rateDate ?? this.today() }));
   }
 
   async remove(tenantId: string | null, id: string) {

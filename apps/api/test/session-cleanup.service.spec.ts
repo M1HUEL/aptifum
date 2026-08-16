@@ -20,10 +20,7 @@ describe('SessionCleanupService', () => {
 
     expect(sessionsRepo.find).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: [
-          { revokedAt: expect.anything() },
-          { expiresAt: expect.anything() },
-        ],
+        where: [{ revokedAt: expect.anything() }, { expiresAt: expect.anything() }],
         take: 5000,
         select: { id: true },
       }),

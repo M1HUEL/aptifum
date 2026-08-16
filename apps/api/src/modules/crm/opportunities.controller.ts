@@ -22,12 +22,7 @@ export class OpportunitiesController {
     @Query() { page, limit }: PaginationQueryDto,
     @Query('stage') stage?: string,
   ) {
-    return this.opportunitiesService.findAll(
-      user.tenantId,
-      Number(page),
-      Math.min(Number(limit), 100),
-      stage,
-    );
+    return this.opportunitiesService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100), stage);
   }
 
   @Get(':id')

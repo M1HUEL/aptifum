@@ -20,9 +20,7 @@ export class EmailService {
           host: config.env.SMTP_HOST,
           port: config.env.SMTP_PORT,
           secure: config.env.SMTP_PORT === 465,
-          auth: config.env.SMTP_USER
-            ? { user: config.env.SMTP_USER, pass: config.env.SMTP_PASS }
-            : undefined,
+          auth: config.env.SMTP_USER ? { user: config.env.SMTP_USER, pass: config.env.SMTP_PASS } : undefined,
         })
       : null;
   }

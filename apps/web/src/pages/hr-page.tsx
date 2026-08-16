@@ -13,12 +13,7 @@ import type {
   PayrollLine,
   PayrollStatus,
 } from '../api/types';
-import {
-  employeeFormSchema,
-  payrollFormSchema,
-  type EmployeeFormValues,
-  type PayrollFormValues,
-} from '../api/schemas';
+import { employeeFormSchema, payrollFormSchema, type EmployeeFormValues, type PayrollFormValues } from '../api/schemas';
 import { useApiInvalidation, useApiMutation, useApiMutationVoid } from '../api/hooks';
 import {
   Badge,
@@ -175,15 +170,10 @@ export function HrPage() {
   }, []);
 
   const createMutation = useApiMutation<CreateEmployeeDto>('/api/v1/hr/employees', 'POST');
-  const updateMutation = useApiMutation<CreateEmployeeDto>(
-    `/api/v1/hr/employees/${editingId ?? ''}`,
-    'PATCH',
-  );
+  const updateMutation = useApiMutation<CreateEmployeeDto>(`/api/v1/hr/employees/${editingId ?? ''}`, 'PATCH');
   const generateMutation = useApiMutation<GeneratePayrollDto>('/api/v1/hr/payrolls/generate', 'POST');
   const payrollActionMutation = useApiMutationVoid(
-    payrollAction
-      ? `/api/v1/hr/payrolls/${payrollAction.id}/${payrollAction.action}`
-      : '/api/v1/hr/payrolls',
+    payrollAction ? `/api/v1/hr/payrolls/${payrollAction.id}/${payrollAction.action}` : '/api/v1/hr/payrolls',
     'POST',
   );
 
@@ -274,7 +264,11 @@ export function HrPage() {
     );
   });
 
-  const runPayrollAction = (id: string, action: 'post' | 'cancel', messageKey: 'hr.payrollPosted' | 'hr.payrollCancelled') => {
+  const runPayrollAction = (
+    id: string,
+    action: 'post' | 'cancel',
+    messageKey: 'hr.payrollPosted' | 'hr.payrollCancelled',
+  ) => {
     setPayrollAction({ id, action, messageKey });
   };
 
@@ -383,8 +377,7 @@ export function HrPage() {
     {
       key: 'employee',
       header: t('fields.employee'),
-      render: (row) =>
-        row.employee ? `${row.employee.firstName} ${row.employee.lastName}` : '—',
+      render: (row) => (row.employee ? `${row.employee.firstName} ${row.employee.lastName}` : '—'),
     },
     { key: 'gross', header: t('tables.gross'), render: (row) => formatMoney(row.gross) },
     { key: 'bonus', header: t('fields.bonus'), render: (row) => formatMoney(row.bonus) },
@@ -407,10 +400,18 @@ export function HrPage() {
         }
       />
       <div className="mb-4 flex gap-1">
-        <button type="button" className={tab === 'employees' ? 'tab tab-active' : 'tab'} onClick={() => setTab('employees')}>
+        <button
+          type="button"
+          className={tab === 'employees' ? 'tab tab-active' : 'tab'}
+          onClick={() => setTab('employees')}
+        >
           {t('hr.employees')}
         </button>
-        <button type="button" className={tab === 'payrolls' ? 'tab tab-active' : 'tab'} onClick={() => setTab('payrolls')}>
+        <button
+          type="button"
+          className={tab === 'payrolls' ? 'tab tab-active' : 'tab'}
+          onClick={() => setTab('payrolls')}
+        >
           {t('hr.payrolls')}
         </button>
       </div>
@@ -452,27 +453,37 @@ export function HrPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-no">{t('fields.employeeNo')}</label>
                 <Input className="w-full" id="emp-no" {...register('employeeNo')} />
-                {errors.employeeNo ? <div className="text-[12px] font-normal text-danger">{errors.employeeNo.message}</div> : null}
+                {errors.employeeNo ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.employeeNo.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-first">{t('fields.firstName')} *</label>
                 <Input className="w-full" id="emp-first" {...register('firstName')} />
-                {errors.firstName ? <div className="text-[12px] font-normal text-danger">{errors.firstName.message}</div> : null}
+                {errors.firstName ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.firstName.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-last">{t('fields.lastName')} *</label>
                 <Input className="w-full" id="emp-last" {...register('lastName')} />
-                {errors.lastName ? <div className="text-[12px] font-normal text-danger">{errors.lastName.message}</div> : null}
+                {errors.lastName ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.lastName.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-email">{t('fields.email')}</label>
                 <Input className="w-full" id="emp-email" type="email" {...register('email')} />
-                {errors.email ? <div className="text-[12px] font-normal text-danger">{errors.email.message}</div> : null}
+                {errors.email ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.email.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-phone">{t('fields.phone')}</label>
                 <Input className="w-full" id="emp-phone" {...register('phone')} />
-                {errors.phone ? <div className="text-[12px] font-normal text-danger">{errors.phone.message}</div> : null}
+                {errors.phone ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.phone.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-department">{t('fields.department')}</label>
@@ -488,17 +499,23 @@ export function HrPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-position">{t('fields.position')}</label>
                 <Input className="w-full" id="emp-position" {...register('position')} />
-                {errors.position ? <div className="text-[12px] font-normal text-danger">{errors.position.message}</div> : null}
+                {errors.position ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.position.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-hire">{t('fields.hireDate')} *</label>
                 <Input className="w-full" id="emp-hire" type="date" {...register('hireDate')} />
-                {errors.hireDate ? <div className="text-[12px] font-normal text-danger">{errors.hireDate.message}</div> : null}
+                {errors.hireDate ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.hireDate.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-salary">{t('fields.salary')}</label>
                 <Input className="w-full" id="emp-salary" type="number" min="0" step="0.01" {...register('salary')} />
-                {errors.salary ? <div className="text-[12px] font-normal text-danger">{errors.salary.message}</div> : null}
+                {errors.salary ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.salary.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="emp-frequency">{t('fields.salaryFrequency')}</label>
@@ -522,7 +539,11 @@ export function HrPage() {
                 </div>
               </div>
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('hr.createEmployee')}
@@ -555,7 +576,8 @@ export function HrPage() {
                     </div>
                     <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                       <label htmlFor={`pay-bonus-${employee.id}`}>{t('fields.bonus')}</label>
-                      <Input className="w-full"
+                      <Input
+                        className="w-full"
                         id={`pay-bonus-${employee.id}`}
                         type="number"
                         min="0"
@@ -563,12 +585,15 @@ export function HrPage() {
                         {...payrollRegister(`lines.${index}.bonus`)}
                       />
                       {payrollErrors.lines?.[index]?.bonus ? (
-                        <div className="text-[12px] font-normal text-danger">{payrollErrors.lines[index]?.bonus?.message}</div>
+                        <div className="text-[12px] font-normal text-danger">
+                          {payrollErrors.lines[index]?.bonus?.message}
+                        </div>
                       ) : null}
                     </div>
                     <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                       <label htmlFor={`pay-overtime-${employee.id}`}>{t('fields.overtime')}</label>
-                      <Input className="w-full"
+                      <Input
+                        className="w-full"
                         id={`pay-overtime-${employee.id}`}
                         type="number"
                         min="0"
@@ -576,12 +601,15 @@ export function HrPage() {
                         {...payrollRegister(`lines.${index}.overtime`)}
                       />
                       {payrollErrors.lines?.[index]?.overtime ? (
-                        <div className="text-[12px] font-normal text-danger">{payrollErrors.lines[index]?.overtime?.message}</div>
+                        <div className="text-[12px] font-normal text-danger">
+                          {payrollErrors.lines[index]?.overtime?.message}
+                        </div>
                       ) : null}
                     </div>
                     <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                       <label htmlFor={`pay-deductions-${employee.id}`}>{t('fields.deductions')}</label>
-                      <Input className="w-full"
+                      <Input
+                        className="w-full"
                         id={`pay-deductions-${employee.id}`}
                         type="number"
                         min="0"
@@ -589,7 +617,9 @@ export function HrPage() {
                         {...payrollRegister(`lines.${index}.deductions`)}
                       />
                       {payrollErrors.lines?.[index]?.deductions ? (
-                        <div className="text-[12px] font-normal text-danger">{payrollErrors.lines[index]?.deductions?.message}</div>
+                        <div className="text-[12px] font-normal text-danger">
+                          {payrollErrors.lines[index]?.deductions?.message}
+                        </div>
                       ) : null}
                     </div>
                     <div className="pt-6" />
@@ -597,7 +627,11 @@ export function HrPage() {
                 ))}
               </div>
             )}
-            {payrollError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{payrollError}</div> : null}
+            {payrollError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {payrollError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={payrollBusy} loading={payrollBusy}>
                 {payrollBusy ? t('hr.generating') : t('hr.generateDraft')}
@@ -613,13 +647,10 @@ export function HrPage() {
           {viewingPayroll ? (
             <>
               <p className="text-muted">
-                {viewingPayroll.period} · <Badge tone={payrollStatusTone(viewingPayroll.status)}>{viewingPayroll.status}</Badge>
+                {viewingPayroll.period} ·{' '}
+                <Badge tone={payrollStatusTone(viewingPayroll.status)}>{viewingPayroll.status}</Badge>
               </p>
-              <DataTable
-                columns={payrollLineColumns}
-                rows={viewingPayroll.lines}
-                rowKey={(row) => row.id}
-              />
+              <DataTable columns={payrollLineColumns} rows={viewingPayroll.lines} rowKey={(row) => row.id} />
             </>
           ) : null}
           <DialogFooter cancelLabel={t('common.close')} />

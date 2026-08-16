@@ -9,10 +9,7 @@ import { AuditService } from './audit.service';
 @Module({
   imports: [TypeOrmModule.forFeature([AuditLog])],
   controllers: [AuditController],
-  providers: [
-    AuditService,
-    { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
-  ],
+  providers: [AuditService, { provide: APP_INTERCEPTOR, useClass: AuditInterceptor }],
   exports: [AuditService],
 })
 export class AuditModule {}

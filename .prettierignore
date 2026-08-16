@@ -1,0 +1,5 @@
+# Generated API contract (produced by: pnpm --filter @aptifum/web gen:api)
+apps/web/src/api/schema.ts
+
+# Lockfile (keep stable)
+pnpm-lock.yaml

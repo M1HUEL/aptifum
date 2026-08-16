@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, In, Repository } from 'typeorm';
 import { DocumentSeriesKind, PayrollStatus, round2 } from '@aptifum/core';
@@ -112,11 +107,7 @@ export class PayrollsService {
         }),
         { totalGross: 0, totalDeductions: 0, totalNet: 0 },
       );
-      const { number } = await nextDocumentNumber(
-        manager,
-        tenantId as string,
-        DocumentSeriesKind.PAYROLL,
-      );
+      const { number } = await nextDocumentNumber(manager, tenantId as string, DocumentSeriesKind.PAYROLL);
       const payroll = await payrollsRepo.save(
         payrollsRepo.create({
           tenantId: tenantId as string,

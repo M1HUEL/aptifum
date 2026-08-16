@@ -6,16 +6,14 @@ import { ProductVariant } from './product-variant.entity';
 import { Warehouse } from './warehouse.entity';
 
 @Entity('product_stock')
-@Index(
-  'UQ_product_stock_tenant_product_warehouse',
-  ['tenantId', 'productId', 'warehouseId'],
-  { unique: true, where: `"variant_id" IS NULL` },
-)
-@Index(
-  'UQ_product_stock_tenant_variant_warehouse',
-  ['tenantId', 'productId', 'variantId', 'warehouseId'],
-  { unique: true, where: `"variant_id" IS NOT NULL` },
-)
+@Index('UQ_product_stock_tenant_product_warehouse', ['tenantId', 'productId', 'warehouseId'], {
+  unique: true,
+  where: `"variant_id" IS NULL`,
+})
+@Index('UQ_product_stock_tenant_variant_warehouse', ['tenantId', 'productId', 'variantId', 'warehouseId'], {
+  unique: true,
+  where: `"variant_id" IS NOT NULL`,
+})
 export class ProductStock extends TenantBaseEntity {
   @Index()
   @Column({ name: 'product_id', type: 'uuid' })

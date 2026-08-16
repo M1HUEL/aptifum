@@ -37,9 +37,7 @@ function buildDataSource() {
     },
     payment: {
       create: vi.fn((x: unknown) => x),
-      save: vi.fn((x: unknown) =>
-        Promise.resolve({ ...(x as Record<string, unknown>), id: 'p1' }),
-      ),
+      save: vi.fn((x: unknown) => Promise.resolve({ ...(x as Record<string, unknown>), id: 'p1' })),
       findOne: vi.fn().mockResolvedValue({ id: 'p1', supplierId: 's1' }),
     },
   };
@@ -133,38 +131,36 @@ describe('SupplierPaymentsService record', () => {
     it('rejects an unknown bill', async () => {
       const { dataSource } = buildDataSource();
       const service = buildService({}, { dataSource });
-      await expect(
-        service.record(TENANT, 'u1', { ...dto, billId: 'missing' } as never),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.record(TENANT, 'u1', { ...dto, billId: 'missing' } as never)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('rejects a bill from a different supplier', async () => {
       const { dataSource, repos } = buildDataSource();
       repos.bill.findOneBy = vi.fn().mockResolvedValue(issuedBill({ supplierId: 's2' }));
       const service = buildService({}, { dataSource });
-      await expect(
-        service.record(TENANT, 'u1', { ...dto, billId: 'b1' } as never),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.record(TENANT, 'u1', { ...dto, billId: 'b1' } as never)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('rejects a bill that is not issued', async () => {
       const { dataSource, repos } = buildDataSource();
-      repos.bill.findOneBy = vi
-        .fn()
-        .mockResolvedValue(issuedBill({ status: SupplierBillStatus.CANCELLED }));
+      repos.bill.findOneBy = vi.fn().mockResolvedValue(issuedBill({ status: SupplierBillStatus.CANCELLED }));
       const service = buildService({}, { dataSource });
-      await expect(
-        service.record(TENANT, 'u1', { ...dto, billId: 'b1' } as never),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.record(TENANT, 'u1', { ...dto, billId: 'b1' } as never)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('rejects a payment exceeding the bill balance due', async () => {
       const { dataSource, repos } = buildDataSource();
       repos.bill.findOneBy = vi.fn().mockResolvedValue(issuedBill());
       const service = buildService({}, { dataSource });
-      await expect(
-        service.record(TENANT, 'u1', { ...dto, billId: 'b1', amount: 251 } as never),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.record(TENANT, 'u1', { ...dto, billId: 'b1', amount: 251 } as never)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('applies a partial payment and keeps the bill issued', async () => {

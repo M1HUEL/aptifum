@@ -24,9 +24,7 @@ describe('document search (q) on invoices', () => {
     const qb = qbChain(['inv-1']);
     const invoicesRepo = {
       createQueryBuilder: vi.fn(() => qb),
-      findAndCount: vi
-        .fn()
-        .mockResolvedValue([[{ id: 'inv-1', number: 'INV-000001' }], 1]),
+      findAndCount: vi.fn().mockResolvedValue([[{ id: 'inv-1', number: 'INV-000001' }], 1]),
     };
     const service = new InvoicesService(
       invoicesRepo as never,

@@ -63,11 +63,7 @@ export class PaymentsService {
     return this.toView(saved);
   }
 
-  async createCheckoutUrl(
-    tenantId: string | null,
-    invoiceId: string,
-    origin?: string,
-  ): Promise<{ url: string }> {
+  async createCheckoutUrl(tenantId: string | null, invoiceId: string, origin?: string): Promise<{ url: string }> {
     if (!tenantId) {
       throw new BadRequestException('Tenant context required');
     }

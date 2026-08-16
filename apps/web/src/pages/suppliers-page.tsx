@@ -147,10 +147,7 @@ export function SuppliersPage() {
   }, [searchParams]);
 
   const createMutation = useApiMutation<CreateSupplierDto>('/api/v1/purchasing/suppliers', 'POST');
-  const updateMutation = useApiMutation<CreateSupplierDto>(
-    `/api/v1/purchasing/suppliers/${editingId ?? ''}`,
-    'PATCH',
-  );
+  const updateMutation = useApiMutation<CreateSupplierDto>(`/api/v1/purchasing/suppliers/${editingId ?? ''}`, 'PATCH');
   const deleteMutation = useApiMutation<Record<string, never>, unknown>(
     `/api/v1/purchasing/suppliers/${deleting?.id ?? ''}`,
     'DELETE',
@@ -273,19 +270,21 @@ export function SuppliersPage() {
   const columns: Column<Supplier>[] = [
     { key: 'code', header: t('fields.code') },
     { key: 'tradeName', header: t('suppliers.tradeName') },
-    { key: 'taxId', header: t('fields.taxId'), render: (row) => row.taxId ?? 'â€”' },
-    { key: 'email', header: t('fields.email'), render: (row) => row.email ?? 'â€”' },
-    { key: 'phone', header: t('fields.phone'), render: (row) => row.phone ?? 'â€”' },
+    { key: 'taxId', header: t('fields.taxId'), render: (row) => row.taxId ?? '—' },
+    { key: 'email', header: t('fields.email'), render: (row) => row.email ?? '—' },
+    { key: 'phone', header: t('fields.phone'), render: (row) => row.phone ?? '—' },
     {
       key: 'creditLimit',
       header: t('fields.creditLimit'),
-      render: (row) => (row.creditLimit != null ? formatMoney(row.creditLimit) : 'â€”'),
+      render: (row) => (row.creditLimit != null ? formatMoney(row.creditLimit) : '—'),
     },
     {
       key: 'active',
       header: t('common.status'),
       render: (row) => (
-        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>
+        <Badge tone={row.active ? 'success' : 'neutral'}>
+          {row.active ? t('common.active') : t('common.inactive')}
+        </Badge>
       ),
       sortValue: (row) => (row.active ? 1 : 0),
     },
@@ -319,12 +318,7 @@ export function SuppliersPage() {
         subtitle={t('suppliers.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <Button
-              variant="secondary"
-              type="button"
-              aria-label={t('common.export')}
-              onClick={handleExport}
-            >
+            <Button variant="secondary" type="button" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </Button>
             <Button type="button" variant="secondary" onClick={() => setImportOpen(true)}>
@@ -343,11 +337,7 @@ export function SuppliersPage() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <Button
-          type="submit"
-        >
-          {t('common.search')}
-        </Button>
+        <Button type="submit">{t('common.search')}</Button>
       </Toolbar>
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
@@ -367,9 +357,21 @@ export function SuppliersPage() {
               }
             />
           ) : (
-            <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} sort={sort} onSortChange={handleSortChange} />
+            <DataTable
+              columns={columns}
+              rows={data.data}
+              rowKey={(row) => row.id}
+              sort={sort}
+              onSortChange={handleSortChange}
+            />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={handlePageChange}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
 
@@ -381,12 +383,14 @@ export function SuppliersPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-code">{t('fields.code')} *</label>
                 <Input id="supplier-code" className="w-full" {...register('code')} />
-                {errors.code ?               <div className="text-[12px] font-normal text-danger">{errors.code.message}</div> : null}
+                {errors.code ? <div className="text-[12px] font-normal text-danger">{errors.code.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-trade">{t('suppliers.tradeName')} *</label>
                 <Input id="supplier-trade" className="w-full" {...register('tradeName')} />
-                {errors.tradeName ?               <div className="text-[12px] font-normal text-danger">{errors.tradeName.message}</div> : null}
+                {errors.tradeName ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.tradeName.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-legal">{t('fields.legalName')}</label>
@@ -399,7 +403,9 @@ export function SuppliersPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-email">{t('fields.email')}</label>
                 <Input id="supplier-email" type="email" className="w-full" {...register('email')} />
-                {errors.email ?               <div className="text-[12px] font-normal text-danger">{errors.email.message}</div> : null}
+                {errors.email ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.email.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-phone">{t('fields.phone')}</label>
@@ -411,12 +417,26 @@ export function SuppliersPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-terms">{t('suppliers.paymentTerms')}</label>
-                <Input id="supplier-terms" placeholder={t('suppliers.paymentTermsPlaceholder')} className="w-full" {...register('paymentTerms')} />
+                <Input
+                  id="supplier-terms"
+                  placeholder={t('suppliers.paymentTermsPlaceholder')}
+                  className="w-full"
+                  {...register('paymentTerms')}
+                />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-credit">{t('fields.creditLimit')}</label>
-                <Input id="supplier-credit" type="number" min="0" step="0.01" className="w-full" {...register('creditLimit')} />
-                {errors.creditLimit ?               <div className="text-[12px] font-normal text-danger">{errors.creditLimit.message}</div> : null}
+                <Input
+                  id="supplier-credit"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="w-full"
+                  {...register('creditLimit')}
+                />
+                {errors.creditLimit ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.creditLimit.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="supplier-address">{t('fields.address')}</label>
@@ -436,7 +456,11 @@ export function SuppliersPage() {
                 </div>
               </div>
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('suppliers.createSupplier')}
@@ -460,9 +484,7 @@ export function SuppliersPage() {
         onOpenChange={setImportOpen}
         type="suppliers"
         onImported={() =>
-          void invalidate(['paged', '/api/v1/purchasing/suppliers']).then(() =>
-            toast.toast(t('suppliers.imported')),
-          )
+          void invalidate(['paged', '/api/v1/purchasing/suppliers']).then(() => toast.toast(t('suppliers.imported')))
         }
       />
     </>

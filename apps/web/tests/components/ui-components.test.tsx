@@ -124,11 +124,7 @@ describe('DataTable', () => {
 
   it('renders headers and raw values', () => {
     render(
-      <DataTable
-        columns={columns}
-        rows={[{ id: 1, name: 'Alice', active: false }]}
-        rowKey={(row) => String(row.id)}
-      />,
+      <DataTable columns={columns} rows={[{ id: 1, name: 'Alice', active: false }]} rowKey={(row) => String(row.id)} />,
     );
     expect(screen.getByText('Name')).toBeInTheDocument();
     expect(screen.getByText('Alice')).toBeInTheDocument();
@@ -136,11 +132,7 @@ describe('DataTable', () => {
 
   it('uses the render function per column', () => {
     render(
-      <DataTable
-        columns={columns}
-        rows={[{ id: 1, name: 'Alice', active: true }]}
-        rowKey={(row) => String(row.id)}
-      />,
+      <DataTable columns={columns} rows={[{ id: 1, name: 'Alice', active: true }]} rowKey={(row) => String(row.id)} />,
     );
     expect(screen.getByText('Yes')).toBeInTheDocument();
   });
@@ -186,10 +178,7 @@ describe('StatusSelect', () => {
     render(<StatusSelect value="active" onChange={vi.fn()} options={options} ariaLabel="Status" />);
     const select = screen.getByLabelText('Status');
     expect(select).toBeInTheDocument();
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
-      'Active',
-      'Inactive',
-    ]);
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Active', 'Inactive']);
   });
 
   it('calls onChange when the selection changes', () => {

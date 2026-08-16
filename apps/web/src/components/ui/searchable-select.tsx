@@ -37,10 +37,7 @@ export function SearchableSelect({
   const filteredOptions = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return options;
-    return options.filter(
-      (option) =>
-        option.label.toLowerCase().includes(q) || option.value.toLowerCase().includes(q),
-    );
+    return options.filter((option) => option.label.toLowerCase().includes(q) || option.value.toLowerCase().includes(q));
   }, [options, query]);
 
   useEffect(() => {
@@ -51,13 +48,7 @@ export function SearchableSelect({
   }, [open]);
 
   return (
-    <Select
-      value={value}
-      onValueChange={onChange}
-      open={open}
-      onOpenChange={setOpen}
-      disabled={disabled}
-    >
+    <Select value={value} onValueChange={onChange} open={open} onOpenChange={setOpen} disabled={disabled}>
       <SelectTrigger aria-label={ariaLabel} id={id}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
@@ -82,9 +73,7 @@ export function SearchableSelect({
           />
         </div>
         {filteredOptions.length === 0 ? (
-          <div className="px-3 py-6 text-center text-sm text-muted">
-            {emptyMessage ?? t('common.noMatches')}
-          </div>
+          <div className="px-3 py-6 text-center text-sm text-muted">{emptyMessage ?? t('common.noMatches')}</div>
         ) : (
           filteredOptions.map((option) => (
             <SelectItem key={option.value} value={option.value}>

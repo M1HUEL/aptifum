@@ -75,9 +75,7 @@ const draftDto = {
 describe('SupplierBillsService create', () => {
   it('requires a tenant', async () => {
     const service = buildService({});
-    await expect(service.create(null, 'u1', draftDto as never)).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.create(null, 'u1', draftDto as never)).rejects.toThrow(BadRequestException);
   });
 
   it('rejects an unknown supplier', async () => {
@@ -88,9 +86,7 @@ describe('SupplierBillsService create', () => {
       item: { create: vi.fn() },
     });
     const service = buildService({}, { dataSource });
-    await expect(service.create(TENANT, 'u1', draftDto as never)).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(service.create(TENANT, 'u1', draftDto as never)).rejects.toThrow(NotFoundException);
   });
 
   it('rejects a receipt from a different supplier', async () => {
@@ -101,9 +97,7 @@ describe('SupplierBillsService create', () => {
       item: { create: vi.fn() },
     });
     const service = buildService({}, { dataSource });
-    await expect(service.create(TENANT, 'u1', draftDto as never)).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.create(TENANT, 'u1', draftDto as never)).rejects.toThrow(BadRequestException);
   });
 
   it('rejects a second draft for the same receipt', async () => {
@@ -118,9 +112,7 @@ describe('SupplierBillsService create', () => {
       item: { create: vi.fn() },
     });
     const service = buildService({}, { dataSource });
-    await expect(service.create(TENANT, 'u1', draftDto as never)).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.create(TENANT, 'u1', draftDto as never)).rejects.toThrow(BadRequestException);
   });
 
   it('computes totals, line totals and returns the bill view', async () => {
@@ -256,9 +248,7 @@ describe('SupplierBillsService issue', () => {
   });
 
   it('maps missing chart accounts to a bad request', async () => {
-    vi.mocked(postJournalEntry).mockRejectedValue(
-      new ChartAccountNotFoundError('Account 5000 missing'),
-    );
+    vi.mocked(postJournalEntry).mockRejectedValue(new ChartAccountNotFoundError('Account 5000 missing'));
     const { service } = build({ total: 22, receiptAmount: 10 });
     await expect(service.issue(TENANT, 'u1', 'b1')).rejects.toThrow(BadRequestException);
   });

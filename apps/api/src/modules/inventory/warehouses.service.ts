@@ -102,20 +102,13 @@ export class WarehousesService {
       );
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw new BadRequestException(
-          `A location with code "${dto.code}" already exists in this warehouse`,
-        );
+        throw new BadRequestException(`A location with code "${dto.code}" already exists in this warehouse`);
       }
       throw error;
     }
   }
 
-  async updateLocation(
-    tenantId: string | null,
-    warehouseId: string,
-    locationId: string,
-    dto: UpdateLocationDto,
-  ) {
+  async updateLocation(tenantId: string | null, warehouseId: string, locationId: string, dto: UpdateLocationDto) {
     const location = await this.findLocation(tenantId, warehouseId, locationId);
     Object.assign(location, {
       code: dto.code ?? location.code,
@@ -126,9 +119,7 @@ export class WarehousesService {
       return await this.locationsRepo.save(location);
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw new BadRequestException(
-          `A location with code "${location.code}" already exists in this warehouse`,
-        );
+        throw new BadRequestException(`A location with code "${location.code}" already exists in this warehouse`);
       }
       throw error;
     }

@@ -6,11 +6,7 @@ describe('pdf.util', () => {
   it('produces a valid PDF buffer for a table report', async () => {
     const buffer = await buildTablePdf({
       title: 'Payroll Summary',
-      columns: [
-        { header: 'Period' },
-        { header: 'Payrolls', align: 'right' },
-        { header: 'Net', align: 'right' },
-      ],
+      columns: [{ header: 'Period' }, { header: 'Payrolls', align: 'right' }, { header: 'Net', align: 'right' }],
       rows: [['2026-07', '2', formatMoney(4200)]],
       totalsRow: ['Total', '2', formatMoney(4200)],
     });
@@ -87,9 +83,7 @@ describe('pdf.util', () => {
             lineTotal: 1080,
           } as never,
         ],
-        payments: [
-          { method: 'transfer', amount: 500, receivedAt: new Date('2026-08-05') } as never,
-        ],
+        payments: [{ method: 'transfer', amount: 500, receivedAt: new Date('2026-08-05') } as never],
       } as never,
     });
 

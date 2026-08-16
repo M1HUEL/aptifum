@@ -105,9 +105,7 @@ describe('Lot and expiry tracking (e2e)', () => {
       }
       return req.expect((res) => {
         if (res.status >= 400) {
-          throw new Error(
-            `${method.toUpperCase()} ${path} -> ${res.status}: ${JSON.stringify(res.body)}`,
-          );
+          throw new Error(`${method.toUpperCase()} ${path} -> ${res.status}: ${JSON.stringify(res.body)}`);
         }
       });
     };

@@ -1,9 +1,4 @@
-import {
-  AccountingPeriodStatus,
-  DocumentSeriesKind,
-  JournalEntryStatus,
-  round2,
-} from '@aptifum/core';
+import { AccountingPeriodStatus, DocumentSeriesKind, JournalEntryStatus, round2 } from '@aptifum/core';
 import { EntityManager, In } from 'typeorm';
 import { AccountingPeriod } from '../entities/accounting-period.entity';
 import { ChartAccount } from '../entities/chart-account.entity';
@@ -143,14 +138,10 @@ export async function postJournalEntry(
   }
   for (const line of lines) {
     if (line.debit > 0 && line.credit > 0) {
-      throw new JournalEntryInvalidError(
-        `Line for ${line.accountCode} cannot have both debit and credit`,
-      );
+      throw new JournalEntryInvalidError(`Line for ${line.accountCode} cannot have both debit and credit`);
     }
     if (line.debit <= 0 && line.credit <= 0) {
-      throw new JournalEntryInvalidError(
-        `Line for ${line.accountCode} must have a positive debit or credit`,
-      );
+      throw new JournalEntryInvalidError(`Line for ${line.accountCode} must have a positive debit or credit`);
     }
   }
   const debitTotal = round2(lines.reduce((sum, line) => sum + line.debit, 0));
@@ -168,11 +159,7 @@ export async function postJournalEntry(
 
   const entriesRepo = manager.getRepository(JournalEntry);
   const linesRepo = manager.getRepository(JournalEntryLine);
-  const { number } = await nextDocumentNumber(
-    manager,
-    tenantId,
-    DocumentSeriesKind.JOURNAL_ENTRY,
-  );
+  const { number } = await nextDocumentNumber(manager, tenantId, DocumentSeriesKind.JOURNAL_ENTRY);
 
   const entry = entriesRepo.create({
     tenantId,

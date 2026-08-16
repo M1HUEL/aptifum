@@ -58,9 +58,7 @@ export class InvoicesController {
     const invoice = await this.invoicesService.findOne(user.tenantId, id);
     const tenant = user.tenantId ? await this.tenantsRepo.findOneBy({ id: user.tenantId }) : null;
     if (res) {
-      return sendPdf(res, `invoice-${invoice.number}.pdf`, () =>
-        buildInvoicePdf({ tenant, invoice }),
-      );
+      return sendPdf(res, `invoice-${invoice.number}.pdf`, () => buildInvoicePdf({ tenant, invoice }));
     }
     return buildInvoicePdf({ tenant, invoice });
   }

@@ -51,12 +51,7 @@ export class ProductVariantsService {
     );
   }
 
-  async update(
-    tenantId: string | null,
-    productId: string,
-    id: string,
-    dto: UpdateProductVariantDto,
-  ) {
+  async update(tenantId: string | null, productId: string, id: string, dto: UpdateProductVariantDto) {
     const variant = await this.findOne(tenantId, productId, id);
     if (dto.sku && dto.sku !== variant.sku) {
       await this.assertSkuAvailable(tenantId, productId, dto.sku, id);
@@ -86,12 +81,7 @@ export class ProductVariantsService {
     }
   }
 
-  private async assertSkuAvailable(
-    tenantId: string | null,
-    productId: string,
-    sku: string,
-    excludeId?: string,
-  ) {
+  private async assertSkuAvailable(tenantId: string | null, productId: string, sku: string, excludeId?: string) {
     const product = await this.productsRepo.findOne({
       where: { id: productId, ...this.scoped(tenantId) },
     });

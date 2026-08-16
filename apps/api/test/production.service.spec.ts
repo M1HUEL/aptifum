@@ -5,10 +5,7 @@ import { ProductionOrdersService } from '../src/modules/production/production-or
 
 const TENANT = '00000000-0000-4000-8000-000000000001';
 
-function buildOrdersService(
-  ordersRepo: Record<string, unknown>,
-  extras: Record<string, unknown> = {},
-) {
+function buildOrdersService(ordersRepo: Record<string, unknown>, extras: Record<string, unknown> = {}) {
   return new ProductionOrdersService(
     ordersRepo as never,
     (extras.bomsRepo ?? {}) as never,
@@ -50,9 +47,7 @@ describe('ProductionOrdersService update', () => {
       save: vi.fn(),
     };
     const service = buildOrdersService(ordersRepo);
-    await expect(service.update(TENANT, 'o1', { quantity: 5 })).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.update(TENANT, 'o1', { quantity: 5 })).rejects.toThrow(BadRequestException);
     expect(ordersRepo.save).not.toHaveBeenCalled();
   });
 

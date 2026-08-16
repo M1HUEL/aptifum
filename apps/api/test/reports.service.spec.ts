@@ -21,9 +21,7 @@ describe('ReportsService validation', () => {
   it('rejects an invalid movement type before querying', async () => {
     const query = vi.fn();
     const service = buildService(query);
-    await expect(
-      service.stockMovements(TENANT, { movementType: 'banana' }),
-    ).rejects.toThrow(BadRequestException);
+    await expect(service.stockMovements(TENANT, { movementType: 'banana' })).rejects.toThrow(BadRequestException);
     expect(query).not.toHaveBeenCalled();
   });
 
@@ -37,9 +35,7 @@ describe('ReportsService validation', () => {
   it('rejects an invalid sales summary groupBy', async () => {
     const query = vi.fn();
     const service = buildService(query);
-    await expect(service.salesSummary(TENANT, { groupBy: 'hour' })).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.salesSummary(TENANT, { groupBy: 'hour' })).rejects.toThrow(BadRequestException);
     expect(query).not.toHaveBeenCalled();
   });
 });
@@ -83,12 +79,15 @@ describe('ReportsService stockMovements mapping', () => {
   });
 
   it('validates a quoted movement type with whitespace-aware filter', async () => {
-    const query = vi.fn().mockResolvedValue([]).mockResolvedValue([{ total: 0 }]);
+    const query = vi
+      .fn()
+      .mockResolvedValue([])
+      .mockResolvedValue([{ total: 0 }]);
     const service = buildService(query);
     const result = await service.stockMovements(TENANT, { movementType: 'inbound' });
     expect(result.meta.total).toBe(0);
     const sql = query.mock.calls[0][0] as string;
-    expect(sql).toContain("sm.movement_type = $");
+    expect(sql).toContain('sm.movement_type = $');
     expect(sql).toContain('ORDER BY sm.occurred_at DESC');
   });
 });

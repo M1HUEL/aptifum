@@ -20,12 +20,7 @@ export class SupplierBillsController {
     @Query() { page, limit }: PaginationQueryDto,
     @Query('supplierId') supplierId?: string,
   ) {
-    return this.billsService.findAll(
-      user.tenantId,
-      Number(page),
-      Math.min(Number(limit), 100),
-      supplierId,
-    );
+    return this.billsService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100), supplierId);
   }
 
   @Get(':id')
@@ -38,30 +33,21 @@ export class SupplierBillsController {
   @Post()
   @RequirePermissions(permission(ModuleName.PURCHASING, 'write'))
   @ApiOperation({ summary: 'Create a supplier bill (draft)' })
-  create(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @Body() dto: CreateSupplierBillDto,
-  ) {
+  create(@CurrentUser() user: { tenantId: string | null; id: string }, @Body() dto: CreateSupplierBillDto) {
     return this.billsService.create(user.tenantId, user.id, dto);
   }
 
   @Post(':id/issue')
   @RequirePermissions(permission(ModuleName.PURCHASING, 'write'))
   @ApiOperation({ summary: 'Issue a supplier bill (posts AP and assigns number)' })
-  issue(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  issue(@CurrentUser() user: { tenantId: string | null; id: string }, @Param('id', ParseUUIDPipe) id: string) {
     return this.billsService.issue(user.tenantId, user.id, id);
   }
 
   @Post(':id/cancel')
   @RequirePermissions(permission(ModuleName.PURCHASING, 'write'))
   @ApiOperation({ summary: 'Cancel a draft supplier bill' })
-  cancel(
-    @CurrentUser() user: { tenantId: string | null },
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  cancel(@CurrentUser() user: { tenantId: string | null }, @Param('id', ParseUUIDPipe) id: string) {
     return this.billsService.cancel(user.tenantId, id);
   }
 }

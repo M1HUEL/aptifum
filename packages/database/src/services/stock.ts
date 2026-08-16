@@ -90,11 +90,7 @@ async function findOrCreateLot(
   return lot;
 }
 
-async function assertLotMatches(
-  manager: EntityManager,
-  lotId: string,
-  input: LotContext,
-): Promise<ProductLot> {
+async function assertLotMatches(manager: EntityManager, lotId: string, input: LotContext): Promise<ProductLot> {
   const lot = await manager.getRepository(ProductLot).findOneBy({ id: lotId });
   if (
     !lot ||
@@ -231,9 +227,7 @@ export async function applyStockMovement(
     let averageCost = stock.averageCost;
     if (sign > 0 && unitCost > 0) {
       averageCost =
-        stock.quantity > 0
-          ? (stock.quantity * stock.averageCost + qty * unitCost) / (stock.quantity + qty)
-          : unitCost;
+        stock.quantity > 0 ? (stock.quantity * stock.averageCost + qty * unitCost) / (stock.quantity + qty) : unitCost;
     }
     stock.quantity = newQty;
     stock.reservedQuantity = Math.max(0, currentReserved + Math.min(0, sign * qty));
@@ -319,10 +313,7 @@ export interface TransferStockInput {
   notes?: string | null;
 }
 
-async function moveLotsFefo(
-  manager: EntityManager,
-  input: TransferStockInput,
-): Promise<void> {
+async function moveLotsFefo(manager: EntityManager, input: TransferStockInput): Promise<void> {
   if (input.quantity <= 0) {
     return;
   }
@@ -411,8 +402,7 @@ export async function transferStock(
     destination.quantity = destQty + input.quantity;
     destination.averageCost =
       destination.quantity > 0
-        ? (destQty * destination.averageCost + input.quantity * averageCost) /
-          destination.quantity
+        ? (destQty * destination.averageCost + input.quantity * averageCost) / destination.quantity
         : averageCost;
     await stockRepo.save(destination);
   } else if (input.quantity > 0) {
@@ -459,10 +449,7 @@ export async function transferStock(
   return { from, to };
 }
 
-export async function reserveStock(
-  manager: EntityManager,
-  input: ReserveStockInput,
-): Promise<void> {
+export async function reserveStock(manager: EntityManager, input: ReserveStockInput): Promise<void> {
   const stockRepo = manager.getRepository(ProductStock);
   const stock = await stockRepo
     .createQueryBuilder('stock')
@@ -485,10 +472,7 @@ export async function reserveStock(
   await stockRepo.save(stock);
 }
 
-export async function releaseStock(
-  manager: EntityManager,
-  input: ReserveStockInput,
-): Promise<void> {
+export async function releaseStock(manager: EntityManager, input: ReserveStockInput): Promise<void> {
   const stockRepo = manager.getRepository(ProductStock);
   const stock = await stockRepo
     .createQueryBuilder('stock')

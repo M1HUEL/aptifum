@@ -78,40 +78,40 @@ The UI is bilingual (**English / Spanish**, Spanish by default) via i18next with
 
 ## Scripts
 
-| Script | Description |
-| --- | --- |
-| `pnpm dev` | Run all apps in watch mode |
-| `pnpm build` | Build all packages and apps |
-| `pnpm lint` | ESLint across the monorepo |
-| `pnpm typecheck` | TypeScript type-checking |
-| `pnpm test` | API unit and e2e tests (needs a `aptifum_test` database) |
-| `pnpm db:seed` | Seed base data (tenant, roles, admin, accounts, series, taxes) |
-| `pnpm db:seed:demo` | Seed demo business data |
-| `pnpm db:seed:demo:transactions` | Seed demo business data plus realistic transactions |
+| Script                           | Description                                                    |
+| -------------------------------- | -------------------------------------------------------------- |
+| `pnpm dev`                       | Run all apps in watch mode                                     |
+| `pnpm build`                     | Build all packages and apps                                    |
+| `pnpm lint`                      | ESLint across the monorepo                                     |
+| `pnpm typecheck`                 | TypeScript type-checking                                       |
+| `pnpm test`                      | API unit and e2e tests (needs a `aptifum_test` database)       |
+| `pnpm db:seed`                   | Seed base data (tenant, roles, admin, accounts, series, taxes) |
+| `pnpm db:seed:demo`              | Seed demo business data                                        |
+| `pnpm db:seed:demo:transactions` | Seed demo business data plus realistic transactions            |
 
 ## Environment variables
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `NODE_ENV` | `development` | Runtime environment |
-| `PORT` | `3000` | API port |
-| `DB_HOST` / `DB_PORT` | `localhost` / `5432` | PostgreSQL host and port |
-| `DB_USER` / `DB_PASSWORD` | `aptifum` | PostgreSQL credentials |
-| `DB_NAME` | `aptifum` | Main database |
-| `DB_NAME_TEST` | `aptifum_test` | Database used by e2e tests |
-| `JWT_ACCESS_SECRET` | — | Access token signing secret (min 16 chars) |
-| `JWT_REFRESH_SECRET` | — | Refresh token signing secret (min 16 chars) |
-| `JWT_ACCESS_TTL` | `15m` | Access token lifetime |
-| `JWT_REFRESH_TTL` | `7d` | Refresh token lifetime |
-| `MAX_ACTIVE_SESSIONS_PER_USER` | `5` | Active sessions per user |
-| `SESSION_RETENTION_DAYS` | `30` | Days expired sessions are kept |
-| `PASSWORD_RESET_TTL` | `15m` | Password reset token lifetime |
-| `INVITE_TTL` | `72h` | User invitation token lifetime |
-| `SMTP_HOST` | *(empty)* | SMTP server for real email delivery; empty = demo mode (tokens returned in the API response) |
-| `SMTP_PORT` | `2525` | SMTP port |
-| `SMTP_USER` / `SMTP_PASS` | *(empty)* | SMTP credentials |
-| `SMTP_FROM_EMAIL` | `no-reply@aptifum.dev` | Outgoing sender address |
-| `SMTP_FROM_NAME` | `Aptifum` | Outgoing sender name |
+| Variable                       | Default                | Description                                                                                  |
+| ------------------------------ | ---------------------- | -------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                     | `development`          | Runtime environment                                                                          |
+| `PORT`                         | `3000`                 | API port                                                                                     |
+| `DB_HOST` / `DB_PORT`          | `localhost` / `5432`   | PostgreSQL host and port                                                                     |
+| `DB_USER` / `DB_PASSWORD`      | `aptifum`              | PostgreSQL credentials                                                                       |
+| `DB_NAME`                      | `aptifum`              | Main database                                                                                |
+| `DB_NAME_TEST`                 | `aptifum_test`         | Database used by e2e tests                                                                   |
+| `JWT_ACCESS_SECRET`            | —                      | Access token signing secret (min 16 chars)                                                   |
+| `JWT_REFRESH_SECRET`           | —                      | Refresh token signing secret (min 16 chars)                                                  |
+| `JWT_ACCESS_TTL`               | `15m`                  | Access token lifetime                                                                        |
+| `JWT_REFRESH_TTL`              | `7d`                   | Refresh token lifetime                                                                       |
+| `MAX_ACTIVE_SESSIONS_PER_USER` | `5`                    | Active sessions per user                                                                     |
+| `SESSION_RETENTION_DAYS`       | `30`                   | Days expired sessions are kept                                                               |
+| `PASSWORD_RESET_TTL`           | `15m`                  | Password reset token lifetime                                                                |
+| `INVITE_TTL`                   | `72h`                  | User invitation token lifetime                                                               |
+| `SMTP_HOST`                    | _(empty)_              | SMTP server for real email delivery; empty = demo mode (tokens returned in the API response) |
+| `SMTP_PORT`                    | `2525`                 | SMTP port                                                                                    |
+| `SMTP_USER` / `SMTP_PASS`      | _(empty)_              | SMTP credentials                                                                             |
+| `SMTP_FROM_EMAIL`              | `no-reply@aptifum.dev` | Outgoing sender address                                                                      |
+| `SMTP_FROM_NAME`               | `Aptifum`              | Outgoing sender name                                                                         |
 
 ## Testing
 

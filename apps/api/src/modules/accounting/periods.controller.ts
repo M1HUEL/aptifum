@@ -20,21 +20,13 @@ export class PeriodsController {
     @Query() { page, limit }: PaginationQueryDto,
     @Query('status') status?: string,
   ) {
-    return this.periodsService.findAll(
-      user.tenantId,
-      Number(page),
-      Math.min(Number(limit), 100),
-      status,
-    );
+    return this.periodsService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100), status);
   }
 
   @Post(':id/close')
   @RequirePermissions(permission(ModuleName.ACCOUNTING, 'write'))
   @ApiOperation({ summary: 'Close an accounting period' })
-  close(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  close(@CurrentUser() user: { tenantId: string | null; id: string }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.periodsService.close(user.tenantId, user.id, id);
   }
 }

@@ -48,20 +48,8 @@ import { TaxesService } from './taxes.service';
     ExchangeRatesModule,
     TaxModule,
   ],
-  controllers: [
-    CustomersController,
-    TaxesController,
-    DocumentSeriesController,
-    OrdersController,
-    InvoicesController,
-  ],
-  providers: [
-    CustomersService,
-    TaxesService,
-    DocumentSeriesService,
-    OrdersService,
-    InvoicesService,
-  ],
+  controllers: [CustomersController, TaxesController, DocumentSeriesController, OrdersController, InvoicesController],
+  providers: [CustomersService, TaxesService, DocumentSeriesService, OrdersService, InvoicesService],
   exports: [InvoicesService],
 })
 export class SalesModule {}

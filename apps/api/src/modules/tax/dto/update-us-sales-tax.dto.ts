@@ -1,9 +1,4 @@
-import {
-  ArrayMaxSize,
-  IsObject,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { ArrayMaxSize, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class UpdateUsSalesTaxDto {
   @IsOptional()

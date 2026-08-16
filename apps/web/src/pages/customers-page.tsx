@@ -157,7 +157,10 @@ export function CustomersPage() {
 
   const createMutation = useApiMutation<CreateCustomerDto>('/api/v1/sales/customers', 'POST');
   const updateMutation = useApiMutation<CreateCustomerDto>(`/api/v1/sales/customers/${editingId ?? ''}`, 'PATCH');
-  const deleteMutation = useApiMutation<Record<string, never>, unknown>(`/api/v1/sales/customers/${deleting?.id ?? ''}`, 'DELETE');
+  const deleteMutation = useApiMutation<Record<string, never>, unknown>(
+    `/api/v1/sales/customers/${deleting?.id ?? ''}`,
+    'DELETE',
+  );
 
   const saving = createMutation.isPending || updateMutation.isPending;
   const deleteBusy = deleteMutation.isPending;
@@ -284,7 +287,9 @@ export function CustomersPage() {
       key: 'active',
       header: t('common.status'),
       render: (row: Customer) => (
-        <Badge tone={row.active ? 'success' : 'neutral'}>{row.active ? t('common.active') : t('common.inactive')}</Badge>
+        <Badge tone={row.active ? 'success' : 'neutral'}>
+          {row.active ? t('common.active') : t('common.inactive')}
+        </Badge>
       ),
       sortValue: (row: Customer) => (row.active ? 1 : 0),
     },
@@ -318,12 +323,7 @@ export function CustomersPage() {
         subtitle={t('customers.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <Button
-              variant="secondary"
-              type="button"
-              aria-label={t('common.export')}
-              onClick={handleExport}
-            >
+            <Button variant="secondary" type="button" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </Button>
             <Button type="button" variant="secondary" onClick={() => setImportOpen(true)}>
@@ -342,11 +342,7 @@ export function CustomersPage() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
         />
-        <Button
-          type="submit"
-        >
-          {t('common.search')}
-        </Button>
+        <Button type="submit">{t('common.search')}</Button>
       </Toolbar>
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
       {data ? (
@@ -374,7 +370,13 @@ export function CustomersPage() {
               onSortChange={handleSortChange}
             />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={handlePageChange}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
 
@@ -386,12 +388,14 @@ export function CustomersPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-code">{t('fields.code')} *</label>
                 <Input id="customer-code" className="w-full" {...register('code')} />
-                {errors.code ?               <div className="text-[12px] font-normal text-danger">{errors.code.message}</div> : null}
+                {errors.code ? <div className="text-[12px] font-normal text-danger">{errors.code.message}</div> : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-trade">{t('fields.tradeName')} *</label>
                 <Input id="customer-trade" className="w-full" {...register('tradeName')} />
-                {errors.tradeName ?               <div className="text-[12px] font-normal text-danger">{errors.tradeName.message}</div> : null}
+                {errors.tradeName ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.tradeName.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-legal">{t('fields.legalName')}</label>
@@ -404,7 +408,9 @@ export function CustomersPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-email">{t('fields.email')}</label>
                 <Input id="customer-email" type="email" className="w-full" {...register('email')} />
-                {errors.email ?               <div className="text-[12px] font-normal text-danger">{errors.email.message}</div> : null}
+                {errors.email ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.email.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-phone">{t('fields.phone')}</label>
@@ -416,12 +422,26 @@ export function CustomersPage() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-credit">{t('fields.creditLimit')}</label>
-                <Input id="customer-credit" type="number" min="0" step="0.01" className="w-full" {...register('creditLimit')} />
-                {errors.creditLimit ?               <div className="text-[12px] font-normal text-danger">{errors.creditLimit.message}</div> : null}
+                <Input
+                  id="customer-credit"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="w-full"
+                  {...register('creditLimit')}
+                />
+                {errors.creditLimit ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.creditLimit.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-price">{t('fields.priceCategory')}</label>
-                <Input id="customer-price" placeholder={t('customers.priceCategoryPlaceholder')} className="w-full" {...register('priceCategory')} />
+                <Input
+                  id="customer-price"
+                  placeholder={t('customers.priceCategoryPlaceholder')}
+                  className="w-full"
+                  {...register('priceCategory')}
+                />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="customer-address">{t('fields.address')}</label>
@@ -434,7 +454,7 @@ export function CustomersPage() {
                   <option value="">{t('customers.noState')}</option>
                   {Object.entries(core.US_STATES).map(([code, info]) => (
                     <option key={code} value={code}>
-                      {code} â€” {info.name}
+                      {code} — {info.name}
                     </option>
                   ))}
                 </Select>
@@ -442,7 +462,11 @@ export function CustomersPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('customers.taxStatus')}</label>
                 <div className="mt-1 flex items-center gap-2">
-                  <Checkbox id="customer-tax-exempt" checked={taxExempt} onCheckedChange={(checked) => setValue('taxExempt', checked === true)} />
+                  <Checkbox
+                    id="customer-tax-exempt"
+                    checked={taxExempt}
+                    onCheckedChange={(checked) => setValue('taxExempt', checked === true)}
+                  />
                   <label htmlFor="customer-tax-exempt" className="text-sm text-gray-700">
                     {t('fields.taxExempt')}
                   </label>
@@ -451,14 +475,22 @@ export function CustomersPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label>{t('common.status')}</label>
                 <div className="mt-1 flex items-center gap-2">
-                  <Checkbox id="customer-active" checked={active} onCheckedChange={(checked) => setValue('active', checked === true)} />
+                  <Checkbox
+                    id="customer-active"
+                    checked={active}
+                    onCheckedChange={(checked) => setValue('active', checked === true)}
+                  />
                   <label htmlFor="customer-active" className="text-sm text-gray-700">
                     {t('common.active')}
                   </label>
                 </div>
               </div>
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('customers.createCustomer')}

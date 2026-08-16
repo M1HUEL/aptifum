@@ -1,7 +1,7 @@
 import { type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Paginated, PosProduct, Warehouse } from '../../api/types';
-import { Badge, EmptyState, ErrorBanner, formatMoney, LoadingBlock, Pagination , Input, Select } from '../ui';
+import { Badge, EmptyState, ErrorBanner, formatMoney, LoadingBlock, Pagination, Input, Select } from '../ui';
 import { Card } from '../ui/card';
 import { Package } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -35,11 +35,7 @@ export function PosCatalog({
   return (
     <div className="min-w-0">
       <div className="mb-4 flex gap-2.5">
-        <Select
-          id="pos-warehouse"
-          value={warehouseId}
-          onChange={(event) => onWarehouseChange(event.target.value)}
-        >
+        <Select id="pos-warehouse" value={warehouseId} onChange={(event) => onWarehouseChange(event.target.value)}>
           <option value="">{t('pos.selectWarehouse')}</option>
           {warehouses.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
@@ -56,9 +52,7 @@ export function PosCatalog({
           value={input}
           onChange={(event) => onInputChange(event.target.value)}
         />
-        <Button type="submit">
-          {t('common.search')}
-        </Button>
+        <Button type="submit">{t('common.search')}</Button>
       </form>
       {error ? <ErrorBanner message={error} /> : null}
       {loading ? <LoadingBlock /> : null}
@@ -92,12 +86,7 @@ export function PosCatalog({
               </Card>
             ))}
           </div>
-          <Pagination
-            page={catalog.meta.page}
-            limit={catalog.meta.limit}
-            total={catalog.meta.total}
-            onPage={onPage}
-          />
+          <Pagination page={catalog.meta.page} limit={catalog.meta.limit} total={catalog.meta.total} onPage={onPage} />
         </>
       ) : null}
     </div>

@@ -18,14 +18,9 @@ export class SessionCleanupService {
   @Cron(CronExpression.EVERY_DAY_AT_3AM)
   async purgeExpired(): Promise<void> {
     try {
-      const cutoff = new Date(
-        Date.now() - this.config.env.SESSION_RETENTION_DAYS * 24 * 60 * 60 * 1000,
-      );
+      const cutoff = new Date(Date.now() - this.config.env.SESSION_RETENTION_DAYS * 24 * 60 * 60 * 1000);
       const batch = await this.sessionsRepo.find({
-        where: [
-          { revokedAt: LessThan(cutoff) },
-          { expiresAt: LessThan(cutoff) },
-        ],
+        where: [{ revokedAt: LessThan(cutoff) }, { expiresAt: LessThan(cutoff) }],
         order: { updatedAt: 'ASC' },
         take: 5000,
         select: { id: true },

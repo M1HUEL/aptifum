@@ -1,10 +1,5 @@
 import { createHash } from 'node:crypto';
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, FindOptionsWhere, In, Not, Repository } from 'typeorm';
 import {
@@ -113,23 +108,14 @@ export class InvoicesService {
     return invoice;
   }
 
-  async create(
-    tenantId: string | null,
-    userId: string | null,
-    dto: CreateInvoiceDto,
-    idempotencyKey?: string,
-  ) {
-    return this.withIdempotency(
-      idempotencyKey,
-      `invoice:${JSON.stringify(dto)}`,
-      async () => {
-        this.assertTenant(tenantId);
-        if (dto.orderId) {
-          return this.createFromOrder(tenantId, userId, dto);
-        }
-        return this.createDirect(tenantId, userId, dto);
-      },
-    );
+  async create(tenantId: string | null, userId: string | null, dto: CreateInvoiceDto, idempotencyKey?: string) {
+    return this.withIdempotency(idempotencyKey, `invoice:${JSON.stringify(dto)}`, async () => {
+      this.assertTenant(tenantId);
+      if (dto.orderId) {
+        return this.createFromOrder(tenantId, userId, dto);
+      }
+      return this.createDirect(tenantId, userId, dto);
+    });
   }
 
   async recordPayment(
@@ -139,193 +125,164 @@ export class InvoicesService {
     dto: CreatePaymentDto,
     idempotencyKey?: string,
   ) {
-    return this.withIdempotency(
-      idempotencyKey,
-      `payment:${JSON.stringify(dto)}`,
-      async () => {
-        this.assertTenant(tenantId);
-        return this.dataSource.transaction(async (manager) => {
-          const invoicesRepo = manager.getRepository(Invoice);
-          const invoice = await invoicesRepo
-            .createQueryBuilder('invoice')
-            .setLock('pessimistic_write')
-            .where('invoice.tenant_id = :tenantId', { tenantId })
-            .andWhere('invoice.id = :id', { id: invoiceId })
-            .andWhere('invoice.type = :type', { type: InvoiceType.INVOICE })
-            .getOne();
-          if (!invoice) {
-            throw new NotFoundException('Invoice not found');
-          }
-          if (invoice.status === InvoiceStatus.CANCELLED) {
-            throw new BadRequestException('Cannot pay a cancelled invoice');
-          }
-          if (dto.currency && dto.currency !== invoice.currency) {
-            throw new BadRequestException('Payment currency does not match invoice currency');
-          }
-          const newPaid = round2(invoice.paidAmount + dto.amount);
-          if (newPaid - invoice.total > 0.005) {
-            throw new BadRequestException('Payment exceeds invoice balance');
-          }
-          invoice.paidAmount = newPaid;
-          invoice.balanceDue = round2(invoice.total - newPaid);
-          await invoicesRepo.save(invoice);
-          const functional = await this.functionalCurrency(manager, tenantId);
-          const receivedAt = dto.receivedAt ? new Date(dto.receivedAt) : new Date();
-          const rate =
-            dto.exchangeRate ??
-            (await this.exchangeRates.resolveRate(
-              tenantId,
-              functional,
-              invoice.currency,
-              receivedAt.toISOString().slice(0, 10),
-            ));
-          const payment = await manager.getRepository(Payment).save(
-            manager.getRepository(Payment).create({
-              tenantId,
-              invoiceId: invoice.id,
-              method: dto.method,
-              amount: dto.amount,
-              receivedAt,
-              exchangeRate: rate,
-              reference: dto.reference ?? null,
-              notes: dto.notes ?? null,
-            }),
-          );
-          await this.postPaymentEntry(manager, tenantId, userId, invoice, payment, rate, functional);
-          await this.outbox.emit(manager, tenantId, {
-            eventType: 'payment.received',
-            aggregateType: 'payment',
-            aggregateId: payment.id,
-            payload: { invoiceId: invoice.id, amount: payment.amount, method: payment.method },
+    return this.withIdempotency(idempotencyKey, `payment:${JSON.stringify(dto)}`, async () => {
+      this.assertTenant(tenantId);
+      return this.dataSource.transaction(async (manager) => {
+        const invoicesRepo = manager.getRepository(Invoice);
+        const invoice = await invoicesRepo
+          .createQueryBuilder('invoice')
+          .setLock('pessimistic_write')
+          .where('invoice.tenant_id = :tenantId', { tenantId })
+          .andWhere('invoice.id = :id', { id: invoiceId })
+          .andWhere('invoice.type = :type', { type: InvoiceType.INVOICE })
+          .getOne();
+        if (!invoice) {
+          throw new NotFoundException('Invoice not found');
+        }
+        if (invoice.status === InvoiceStatus.CANCELLED) {
+          throw new BadRequestException('Cannot pay a cancelled invoice');
+        }
+        if (dto.currency && dto.currency !== invoice.currency) {
+          throw new BadRequestException('Payment currency does not match invoice currency');
+        }
+        const newPaid = round2(invoice.paidAmount + dto.amount);
+        if (newPaid - invoice.total > 0.005) {
+          throw new BadRequestException('Payment exceeds invoice balance');
+        }
+        invoice.paidAmount = newPaid;
+        invoice.balanceDue = round2(invoice.total - newPaid);
+        await invoicesRepo.save(invoice);
+        const functional = await this.functionalCurrency(manager, tenantId);
+        const receivedAt = dto.receivedAt ? new Date(dto.receivedAt) : new Date();
+        const rate =
+          dto.exchangeRate ??
+          (await this.exchangeRates.resolveRate(
             tenantId,
-            userId,
-          });
-          return {
-            id: payment.id,
-            invoiceId: invoice.id,
-            method: payment.method,
-            amount: payment.amount,
-            paidAmount: invoice.paidAmount,
-            balanceDue: invoice.balanceDue,
-          };
-        });
-      },
-    );
-  }
-
-  async createCreditNote(
-    tenantId: string | null,
-    userId: string | null,
-    invoiceId: string,
-    idempotencyKey?: string,
-  ) {
-    return this.withIdempotency(
-      idempotencyKey,
-      `credit-note:${invoiceId}`,
-      async () => {
-        this.assertTenant(tenantId);
-        return this.dataSource.transaction(async (manager) => {
-          const invoicesRepo = manager.getRepository(Invoice);
-          const original = await invoicesRepo.findOne({
-            where: {
-              id: invoiceId,
-              tenantId,
-              type: InvoiceType.INVOICE,
-              status: InvoiceStatus.ISSUED,
-            },
-            relations: { items: true },
-          });
-          if (!original) {
-            throw new NotFoundException('Issued invoice not found');
-          }
-          const { number, seriesId } = await nextDocumentNumber(
-            manager,
-            tenantId,
-            DocumentSeriesKind.CREDIT_NOTE,
-          );
-          const items = original.items.map((item) =>
-            manager.getRepository(InvoiceItem).create({
-              tenantId,
-              productId: item.productId,
-              variantId: item.variantId ?? null,
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              discount: item.discount,
-              taxRate: item.taxRate,
-              taxAmount: item.taxAmount,
-              lineTotal: item.lineTotal,
-            }),
-          );
-          const totals = computeTotals(items, 0);
-          const functional = await this.functionalCurrency(manager, tenantId);
-          const creditNote = invoicesRepo.create({
-            tenantId,
-            number,
-            seriesId,
-            type: InvoiceType.CREDIT_NOTE,
-            status: InvoiceStatus.ISSUED,
-            customerId: original.customerId,
-            orderId: null,
-            warehouseId: original.warehouseId,
-            issueDate: today(),
-            dueDate: null,
-            currency: original.currency,
-            exchangeRate: original.exchangeRate ?? 1,
-            ...totals,
-            paidAmount: 0,
-            balanceDue: 0,
-            notes: `Credit note for invoice ${original.number}`,
-            items,
-          });
-          const saved = await invoicesRepo.save(creditNote);
-          let cogs = 0;
-          for (const item of original.items) {
-            const avgCost = await this.applyReturn(
-              manager,
-              tenantId,
-              userId,
-              item.productId,
-              original.warehouseId,
-              item.quantity,
-              saved.id,
-              item.variantId ?? null,
-            );
-            cogs = round2(cogs + item.quantity * avgCost);
-          }
-          await this.postSaleEntry(
-            manager,
-            tenantId,
-            userId,
-            saved,
-            cogs,
-            original.exchangeRate ?? 1,
             functional,
-          );
-          await this.outbox.emit(manager, tenantId, {
-            eventType: 'credit_note.issued',
-            aggregateType: 'invoice',
-            aggregateId: saved.id,
-        payload: {
-          number: saved.number,
-          customerId: saved.customerId,
-          total: saved.total,
-          invoiceId: saved.id,
-        },
+            invoice.currency,
+            receivedAt.toISOString().slice(0, 10),
+          ));
+        const payment = await manager.getRepository(Payment).save(
+          manager.getRepository(Payment).create({
             tenantId,
-            userId,
-          });
-          return this.invoiceView(saved, items);
+            invoiceId: invoice.id,
+            method: dto.method,
+            amount: dto.amount,
+            receivedAt,
+            exchangeRate: rate,
+            reference: dto.reference ?? null,
+            notes: dto.notes ?? null,
+          }),
+        );
+        await this.postPaymentEntry(manager, tenantId, userId, invoice, payment, rate, functional);
+        await this.outbox.emit(manager, tenantId, {
+          eventType: 'payment.received',
+          aggregateType: 'payment',
+          aggregateId: payment.id,
+          payload: { invoiceId: invoice.id, amount: payment.amount, method: payment.method },
+          tenantId,
+          userId,
         });
-      },
-    );
+        return {
+          id: payment.id,
+          invoiceId: invoice.id,
+          method: payment.method,
+          amount: payment.amount,
+          paidAmount: invoice.paidAmount,
+          balanceDue: invoice.balanceDue,
+        };
+      });
+    });
   }
 
-  private async createFromOrder(
-    tenantId: string,
-    userId: string | null,
-    dto: CreateInvoiceDto,
-  ) {
+  async createCreditNote(tenantId: string | null, userId: string | null, invoiceId: string, idempotencyKey?: string) {
+    return this.withIdempotency(idempotencyKey, `credit-note:${invoiceId}`, async () => {
+      this.assertTenant(tenantId);
+      return this.dataSource.transaction(async (manager) => {
+        const invoicesRepo = manager.getRepository(Invoice);
+        const original = await invoicesRepo.findOne({
+          where: {
+            id: invoiceId,
+            tenantId,
+            type: InvoiceType.INVOICE,
+            status: InvoiceStatus.ISSUED,
+          },
+          relations: { items: true },
+        });
+        if (!original) {
+          throw new NotFoundException('Issued invoice not found');
+        }
+        const { number, seriesId } = await nextDocumentNumber(manager, tenantId, DocumentSeriesKind.CREDIT_NOTE);
+        const items = original.items.map((item) =>
+          manager.getRepository(InvoiceItem).create({
+            tenantId,
+            productId: item.productId,
+            variantId: item.variantId ?? null,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            discount: item.discount,
+            taxRate: item.taxRate,
+            taxAmount: item.taxAmount,
+            lineTotal: item.lineTotal,
+          }),
+        );
+        const totals = computeTotals(items, 0);
+        const functional = await this.functionalCurrency(manager, tenantId);
+        const creditNote = invoicesRepo.create({
+          tenantId,
+          number,
+          seriesId,
+          type: InvoiceType.CREDIT_NOTE,
+          status: InvoiceStatus.ISSUED,
+          customerId: original.customerId,
+          orderId: null,
+          warehouseId: original.warehouseId,
+          issueDate: today(),
+          dueDate: null,
+          currency: original.currency,
+          exchangeRate: original.exchangeRate ?? 1,
+          ...totals,
+          paidAmount: 0,
+          balanceDue: 0,
+          notes: `Credit note for invoice ${original.number}`,
+          items,
+        });
+        const saved = await invoicesRepo.save(creditNote);
+        let cogs = 0;
+        for (const item of original.items) {
+          const avgCost = await this.applyReturn(
+            manager,
+            tenantId,
+            userId,
+            item.productId,
+            original.warehouseId,
+            item.quantity,
+            saved.id,
+            item.variantId ?? null,
+          );
+          cogs = round2(cogs + item.quantity * avgCost);
+        }
+        await this.postSaleEntry(manager, tenantId, userId, saved, cogs, original.exchangeRate ?? 1, functional);
+        await this.outbox.emit(manager, tenantId, {
+          eventType: 'credit_note.issued',
+          aggregateType: 'invoice',
+          aggregateId: saved.id,
+          payload: {
+            number: saved.number,
+            customerId: saved.customerId,
+            total: saved.total,
+            invoiceId: saved.id,
+          },
+          tenantId,
+          userId,
+        });
+        return this.invoiceView(saved, items);
+      });
+    });
+  }
+
+  private async createFromOrder(tenantId: string, userId: string | null, dto: CreateInvoiceDto) {
     return this.dataSource.transaction(async (manager) => {
       const ordersRepo = manager.getRepository(SalesOrder);
       const invoicesRepo = manager.getRepository(Invoice);
@@ -353,11 +310,7 @@ export class InvoicesService {
       if (alreadyInvoiced) {
         throw new ConflictException('Order has already been invoiced');
       }
-      const { number, seriesId } = await nextDocumentNumber(
-        manager,
-        tenantId,
-        DocumentSeriesKind.INVOICE,
-      );
+      const { number, seriesId } = await nextDocumentNumber(manager, tenantId, DocumentSeriesKind.INVOICE);
       const items = order.items.map((item) =>
         manager.getRepository(InvoiceItem).create({
           tenantId,
@@ -375,9 +328,7 @@ export class InvoicesService {
       const totals = computeTotals(items, 0);
       const functional = await this.functionalCurrency(manager, tenantId);
       const currency = dto.currency ?? order.currency;
-      const rate =
-        dto.exchangeRate ??
-        (await this.exchangeRates.resolveRate(tenantId, functional, currency, today()));
+      const rate = dto.exchangeRate ?? (await this.exchangeRates.resolveRate(tenantId, functional, currency, today()));
       const invoice = invoicesRepo.create({
         tenantId,
         number,
@@ -427,11 +378,7 @@ export class InvoicesService {
     });
   }
 
-  private async createDirect(
-    tenantId: string,
-    userId: string | null,
-    dto: CreateInvoiceDto,
-  ) {
+  private async createDirect(tenantId: string, userId: string | null, dto: CreateInvoiceDto) {
     if (!dto.warehouseId || !dto.items) {
       throw new BadRequestException('Direct invoices require warehouseId and items');
     }
@@ -455,16 +402,8 @@ export class InvoicesService {
     return this.dataSource.transaction(async (manager) => {
       const invoicesRepo = manager.getRepository(Invoice);
       const customer = await this.resolveCustomer(manager, tenantId, dto.customerId);
-      const usTaxRate = await this.usSalesTax.resolveRate(
-        tenantId,
-        customer.state,
-        customer.taxExempt,
-      );
-      const { number, seriesId } = await nextDocumentNumber(
-        manager,
-        tenantId,
-        DocumentSeriesKind.INVOICE,
-      );
+      const usTaxRate = await this.usSalesTax.resolveRate(tenantId, customer.state, customer.taxExempt);
+      const { number, seriesId } = await nextDocumentNumber(manager, tenantId, DocumentSeriesKind.INVOICE);
       const invoiceItems = items.map((item) => {
         const product = products.get(item.productId);
         if (!product) {
@@ -496,9 +435,7 @@ export class InvoicesService {
       const totals = computeTotals(invoiceItems, discount ?? 0);
       const functional = await this.functionalCurrency(manager, tenantId);
       const currency = dto.currency ?? customer.currency;
-      const rate =
-        dto.exchangeRate ??
-        (await this.exchangeRates.resolveRate(tenantId, functional, currency, today()));
+      const rate = dto.exchangeRate ?? (await this.exchangeRates.resolveRate(tenantId, functional, currency, today()));
       const invoice = invoicesRepo.create({
         tenantId,
         number,
@@ -546,11 +483,7 @@ export class InvoicesService {
     });
   }
 
-  private async resolveCustomer(
-    manager: EntityManager,
-    tenantId: string,
-    customerId?: string,
-  ): Promise<Customer> {
+  private async resolveCustomer(manager: EntityManager, tenantId: string, customerId?: string): Promise<Customer> {
     const repo = manager.getRepository(Customer);
     if (customerId) {
       const customer = await repo.findOneBy({ id: customerId, tenantId });
@@ -708,18 +641,14 @@ export class InvoicesService {
           );
         }
       }
-      const cleanLines = lines.filter(
-        (line) => (line.debit ?? 0) > 0 || (line.credit ?? 0) > 0,
-      );
+      const cleanLines = lines.filter((line) => (line.debit ?? 0) > 0 || (line.credit ?? 0) > 0);
       if (cleanLines.length === 0) {
         return;
       }
       await postJournalEntry(manager, tenantId, {
         entryDate: invoice.issueDate,
         description:
-          invoice.type === InvoiceType.CREDIT_NOTE
-            ? `Credit note ${invoice.number}`
-            : `Invoice ${invoice.number}`,
+          invoice.type === InvoiceType.CREDIT_NOTE ? `Credit note ${invoice.number}` : `Invoice ${invoice.number}`,
         referenceType: invoice.type === InvoiceType.CREDIT_NOTE ? 'credit_note' : 'invoice',
         referenceId: invoice.id,
         currency: functionalCurrency,
@@ -786,10 +715,7 @@ export class InvoicesService {
     return new Map(products.map((product) => [product.id, product]));
   }
 
-  private async loadVariants(
-    tenantId: string,
-    ids: string[],
-  ): Promise<Map<string, ProductVariant>> {
+  private async loadVariants(tenantId: string, ids: string[]): Promise<Map<string, ProductVariant>> {
     if (ids.length === 0) {
       return new Map();
     }
@@ -811,9 +737,7 @@ export class InvoicesService {
     }
     const result = await operation();
     const requestHash = createHash('sha256').update(requestHashInput).digest('hex').slice(0, 64);
-    await this.idempotencyRepo.save(
-      this.idempotencyRepo.create({ key, requestHash, response: result }),
-    );
+    await this.idempotencyRepo.save(this.idempotencyRepo.create({ key, requestHash, response: result }));
     return result;
   }
 

@@ -170,9 +170,7 @@ export class ProductionOrdersService {
             tenantId: tenantId as string,
           });
           for (const bomLine of bomLines) {
-            const required = round4(
-              bomLine.quantity * current.quantity * (1 + (bomLine.wasteRate ?? 0) / 100),
-            );
+            const required = round4(bomLine.quantity * current.quantity * (1 + (bomLine.wasteRate ?? 0) / 100));
             const stock = await stockRepo.findOneBy({
               tenantId: tenantId as string,
               productId: bomLine.productId,
@@ -209,8 +207,7 @@ export class ProductionOrdersService {
         await linesRepo.save(lines);
 
         const totalCost = round2(materialCost + current.laborCost + current.overhead);
-        const finishedUnitCost =
-          current.quantity > 0 ? round2(totalCost / current.quantity) : 0;
+        const finishedUnitCost = current.quantity > 0 ? round2(totalCost / current.quantity) : 0;
         await applyStockMovement(manager, {
           tenantId,
           movementType: MovementType.INBOUND,
@@ -252,10 +249,7 @@ export class ProductionOrdersService {
 
   async cancel(tenantId: string | null, id: string) {
     const order = await this.findOne(tenantId, id);
-    if (
-      order.status !== ProductionOrderStatus.PLANNED &&
-      order.status !== ProductionOrderStatus.IN_PROGRESS
-    ) {
+    if (order.status !== ProductionOrderStatus.PLANNED && order.status !== ProductionOrderStatus.IN_PROGRESS) {
       throw new BadRequestException('Only planned or in-progress production orders can be cancelled');
     }
     order.status = ProductionOrderStatus.CANCELLED;

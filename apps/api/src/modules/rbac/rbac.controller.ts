@@ -13,13 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  IsArray,
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsArray, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Repository } from 'typeorm';
 import { ModuleName, permission } from '@aptifum/core';
 import { Role } from '@aptifum/database';
@@ -66,9 +60,7 @@ export class UpdateRoleDto {
 @ApiTags('roles')
 @Controller('roles')
 export class RolesController {
-  constructor(
-    @InjectRepository(Role) private readonly rolesRepo: Repository<Role>,
-  ) {}
+  constructor(@InjectRepository(Role) private readonly rolesRepo: Repository<Role>) {}
 
   @Get()
   @RequirePermissions(permission(ModuleName.RBAC, 'read'))
@@ -98,10 +90,7 @@ export class RolesController {
   @Patch(':id')
   @RequirePermissions(permission(ModuleName.RBAC, 'write'))
   @ApiOperation({ summary: 'Update a role' })
-  async update(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() dto: UpdateRoleDto,
-  ) {
+  async update(@Param('id', new ParseUUIDPipe()) id: string, @Body() dto: UpdateRoleDto) {
     const role = await this.rolesRepo.findOneBy({ id });
     if (!role) {
       throw new NotFoundException('Role not found');

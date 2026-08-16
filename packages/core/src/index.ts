@@ -21,8 +21,7 @@ export type PermissionAction = 'read' | 'write' | 'approve' | 'adjust' | 'delete
 
 export const ALL_PERMISSIONS = '*';
 
-export const permission = (module: ModuleName, action: PermissionAction): string =>
-  `${module}:${action}`;
+export const permission = (module: ModuleName, action: PermissionAction): string => `${module}:${action}`;
 
 export type Permission = string;
 
@@ -492,12 +491,8 @@ export interface TotalsItem {
 }
 
 export function computeTotals(items: TotalsItem[], globalDiscount = 0) {
-  const subtotal = round2(
-    items.reduce((sum, i) => sum + (i.quantity * i.unitPrice - (i.discount ?? 0)), 0),
-  );
-  const tax = round2(
-    items.reduce((sum, i) => sum + i.quantity * i.unitPrice * (i.taxRate ?? 0), 0),
-  );
+  const subtotal = round2(items.reduce((sum, i) => sum + (i.quantity * i.unitPrice - (i.discount ?? 0)), 0));
+  const tax = round2(items.reduce((sum, i) => sum + i.quantity * i.unitPrice * (i.taxRate ?? 0), 0));
   return {
     subtotal,
     discount: round2(globalDiscount),

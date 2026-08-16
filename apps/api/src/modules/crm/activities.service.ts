@@ -7,9 +7,7 @@ import { UpdateActivityDto } from './dto/update-activity.dto';
 
 @Injectable()
 export class ActivitiesService {
-  constructor(
-    @InjectRepository(CrmActivity) private readonly activitiesRepo: Repository<CrmActivity>,
-  ) {}
+  constructor(@InjectRepository(CrmActivity) private readonly activitiesRepo: Repository<CrmActivity>) {}
 
   private scoped(tenantId: string | null): FindOptionsWhere<CrmActivity> {
     return tenantId ? { tenantId } : {};
@@ -75,14 +73,9 @@ export class ActivitiesService {
       description: dto.description === undefined ? activity.description : dto.description,
       dueAt: dto.dueAt === undefined ? activity.dueAt : dto.dueAt ? new Date(dto.dueAt) : null,
       completedAt:
-        dto.completedAt === undefined
-          ? activity.completedAt
-          : dto.completedAt
-            ? new Date(dto.completedAt)
-            : null,
+        dto.completedAt === undefined ? activity.completedAt : dto.completedAt ? new Date(dto.completedAt) : null,
       assigneeId: dto.assigneeId === undefined ? activity.assigneeId : dto.assigneeId,
-      referenceType:
-        dto.referenceType === undefined ? activity.referenceType : dto.referenceType,
+      referenceType: dto.referenceType === undefined ? activity.referenceType : dto.referenceType,
       referenceId: dto.referenceId === undefined ? activity.referenceId : dto.referenceId,
     });
     return this.activitiesRepo.save(activity);

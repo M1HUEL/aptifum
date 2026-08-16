@@ -31,9 +31,7 @@ export class OutboxDispatcher {
       try {
         await this.handle(event);
         await this.outbox.markDispatched(event);
-        this.logger.log(
-          `Dispatched outbox event ${event.id} (${event.eventType}) for tenant ${event.tenantId}`,
-        );
+        this.logger.log(`Dispatched outbox event ${event.id} (${event.eventType}) for tenant ${event.tenantId}`);
       } catch (error) {
         await this.outbox.markFailed(event, error);
       }

@@ -6,11 +6,10 @@ import { ProductVariant } from './product-variant.entity';
 import { Warehouse } from './warehouse.entity';
 
 @Entity('product_lots')
-@Index(
-  'UQ_product_lots_tenant_product_warehouse_lot',
-  ['tenantId', 'productId', 'warehouseId', 'lotNumber'],
-  { unique: true, where: `"variant_id" IS NULL` },
-)
+@Index('UQ_product_lots_tenant_product_warehouse_lot', ['tenantId', 'productId', 'warehouseId', 'lotNumber'], {
+  unique: true,
+  where: `"variant_id" IS NULL`,
+})
 @Index(
   'UQ_product_lots_tenant_variant_warehouse_lot',
   ['tenantId', 'productId', 'variantId', 'warehouseId', 'lotNumber'],

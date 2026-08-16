@@ -13,10 +13,7 @@ describe('toCsv', () => {
   });
 
   it('collects keys across rows even when missing', () => {
-    const csv = toCsv([
-      { a: 1, c: 3 },
-      { b: 2 },
-    ]);
+    const csv = toCsv([{ a: 1, c: 3 }, { b: 2 }]);
     const lines = csv.split('\r\n');
     expect(lines[0]).toBe('a,c,b');
     expect(lines[1]).toBe('1,3,');
@@ -36,9 +33,7 @@ describe('toCsv', () => {
   });
 
   it('prefixes cells starting with = + - @ to prevent formula injection', () => {
-    const csv = toCsv([
-      { formula: '=1+2', plus: '+cmd', minus: '-2', at: '@cmd', normal: 'ok' },
-    ]);
+    const csv = toCsv([{ formula: '=1+2', plus: '+cmd', minus: '-2', at: '@cmd', normal: 'ok' }]);
     expect(csv.split('\r\n')[1]).toBe("'=1+2,'+cmd,'-2,'@cmd,ok");
   });
 

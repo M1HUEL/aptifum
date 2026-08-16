@@ -16,10 +16,7 @@ export class ProductVariantsController {
   @Get()
   @RequirePermissions(permission(ModuleName.INVENTORY, 'read'))
   @ApiOperation({ summary: 'List product variants' })
-  list(
-    @CurrentUser() user: { tenantId: string | null },
-    @Param('productId', new ParseUUIDPipe()) productId: string,
-  ) {
+  list(@CurrentUser() user: { tenantId: string | null }, @Param('productId', new ParseUUIDPipe()) productId: string) {
     return this.productVariantsService.findAll(user.tenantId, productId);
   }
 

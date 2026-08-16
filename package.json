@@ -12,13 +12,19 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "db:seed": "pnpm --filter @aptifum/database seed",
     "db:seed:demo": "pnpm --filter @aptifum/database seed:demo",
-    "db:seed:demo:transactions": "pnpm --filter @aptifum/database seed:demo:transactions"
+    "db:seed:demo:transactions": "pnpm --filter @aptifum/database seed:demo:transactions",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.8.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.9.6",
     "turbo": "^2.10.8",
     "typescript-eslint": "^8.66.0"
   }

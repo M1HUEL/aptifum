@@ -1,11 +1,4 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpException,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { Request, Response } from 'express';
 import { REQUEST_ID_HEADER } from '../request-id.middleware';
@@ -83,7 +76,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
             : exception.message;
       return {
         status,
-        code: typeof body.code === 'string' ? body.code : STATUS_CODES[status] ?? `HTTP_${status}`,
+        code: typeof body.code === 'string' ? body.code : (STATUS_CODES[status] ?? `HTTP_${status}`),
         message,
         details,
         requestId,

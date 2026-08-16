@@ -5,12 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch, ApiError } from '../api/client';
 import type { components } from '../api/schema';
 import type { Paginated, Role, User } from '../api/types';
-import {
-  roleFormSchema,
-  userFormSchema,
-  type RoleFormValues,
-  type UserFormValues,
-} from '../api/schemas';
+import { roleFormSchema, userFormSchema, type RoleFormValues, type UserFormValues } from '../api/schemas';
 import { useApiMutation, useApiMutationVoid } from '../api/hooks';
 import {
   Badge,
@@ -219,8 +214,7 @@ export function UsersRolesPage() {
   const updateRoleMutation = useApiMutation<CreateRoleDto>(`/api/v1/roles/${editingRoleId ?? ''}`, 'PATCH');
   const deleteRoleMutation = useApiMutationVoid(`/api/v1/roles/${deletingRole?.id ?? ''}`, 'DELETE');
 
-  const userSaving =
-    createUserMutation.isPending || updateUserMutation.isPending || inviteMutation.isPending;
+  const userSaving = createUserMutation.isPending || updateUserMutation.isPending || inviteMutation.isPending;
   const roleSaving = createRoleMutation.isPending || updateRoleMutation.isPending;
   const roleDeleteBusy = deleteRoleMutation.isPending;
 
@@ -242,9 +236,7 @@ export function UsersRolesPage() {
   const toggleUserRole = (roleId: string) => {
     setUserValue(
       'roleIds',
-      userRoleIds.includes(roleId)
-        ? userRoleIds.filter((id) => id !== roleId)
-        : [...userRoleIds, roleId],
+      userRoleIds.includes(roleId) ? userRoleIds.filter((id) => id !== roleId) : [...userRoleIds, roleId],
     );
   };
 
@@ -269,9 +261,7 @@ export function UsersRolesPage() {
       inviteMutation.mutate(userToInviteDto(values), {
         onSuccess: (result) => {
           if (result.inviteToken) {
-            setInviteLink(
-              `${window.location.origin}/accept-invite?token=${encodeURIComponent(result.inviteToken)}`,
-            );
+            setInviteLink(`${window.location.origin}/accept-invite?token=${encodeURIComponent(result.inviteToken)}`);
           } else {
             setInviteEmailSent(true);
           }
@@ -422,12 +412,7 @@ export function UsersRolesPage() {
           <Button variant="ghost" size="sm" onClick={() => openEditRole(row)}>
             {t('common.edit')}
           </Button>
-          <Button
-            variant="danger"
-            size="sm"
-            disabled={row.isSystem}
-            onClick={() => setDeletingRole(row)}
-          >
+          <Button variant="danger" size="sm" disabled={row.isSystem} onClick={() => setDeletingRole(row)}>
             {t('common.delete')}
           </Button>
         </div>
@@ -458,7 +443,11 @@ export function UsersRolesPage() {
           const value = `${module}:${action}`;
           return (
             <div key={value} className="flex items-center gap-1.5">
-              <Checkbox id={value} checked={rolePermissions.includes(value)} onCheckedChange={() => togglePermission(value)} />
+              <Checkbox
+                id={value}
+                checked={rolePermissions.includes(value)}
+                onCheckedChange={() => togglePermission(value)}
+              />
               <label htmlFor={value} className="text-sm text-gray-700">
                 {action}
               </label>
@@ -545,13 +534,16 @@ export function UsersRolesPage() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="usr-email">{t('fields.email')} *</label>
-                <Input className="w-full"
+                <Input
+                  className="w-full"
                   id="usr-email"
                   type="email"
                   disabled={editingUserId !== null}
                   {...registerUser('email')}
                 />
-                {userErrors.email ? <div className="text-[12px] font-normal text-danger">{userErrors.email.message}</div> : null}
+                {userErrors.email ? (
+                  <div className="text-[12px] font-normal text-danger">{userErrors.email.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="usr-name">{t('fields.name')}</label>
@@ -577,10 +569,13 @@ export function UsersRolesPage() {
                   {editingUserId ? t('usersRoles.newPasswordOptional') : t('usersRoles.password')}
                   {!editingUserId && !userInvite ? ' *' : ''}
                 </label>
-                <Input className="w-full"
+                <Input
+                  className="w-full"
                   id="usr-password"
                   type="password"
-                  placeholder={editingUserId ? t('usersRoles.leaveBlank') : userInvite ? t('usersRoles.setByInvite') : ''}
+                  placeholder={
+                    editingUserId ? t('usersRoles.leaveBlank') : userInvite ? t('usersRoles.setByInvite') : ''
+                  }
                   disabled={userInvite}
                   {...registerUser('password')}
                 />
@@ -623,7 +618,11 @@ export function UsersRolesPage() {
                 )}
               </div>
             </div>
-            {userFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{userFormError}</div> : null}
+            {userFormError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {userFormError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={userSaving} loading={userSaving}>
                 {userSaving ? t('common.saving') : editingUserId ? t('common.saveChanges') : t('usersRoles.createUser')}
@@ -692,7 +691,9 @@ export function UsersRolesPage() {
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="role-name">{t('fields.name')} *</label>
                 <Input className="w-full" id="role-name" {...registerRole('name')} />
-                {roleErrors.name ? <div className="text-[12px] font-normal text-danger">{roleErrors.name.message}</div> : null}
+                {roleErrors.name ? (
+                  <div className="text-[12px] font-normal text-danger">{roleErrors.name.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="role-description">{t('fields.description')}</label>
@@ -708,7 +709,10 @@ export function UsersRolesPage() {
                       if (checked === true) {
                         setRoleValue('permissions', [ALL_PERMISSIONS]);
                       } else {
-                        setRoleValue('permissions', rolePermissions.filter((p) => p !== ALL_PERMISSIONS));
+                        setRoleValue(
+                          'permissions',
+                          rolePermissions.filter((p) => p !== ALL_PERMISSIONS),
+                        );
                       }
                     }}
                   />
@@ -719,7 +723,11 @@ export function UsersRolesPage() {
                 {rolePermissionRows}
               </div>
             </div>
-            {roleFormError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{roleFormError}</div> : null}
+            {roleFormError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {roleFormError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={roleSaving} loading={roleSaving}>
                 {roleSaving ? t('common.saving') : editingRoleId ? t('common.saveChanges') : t('usersRoles.createRole')}

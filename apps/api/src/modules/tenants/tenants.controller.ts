@@ -9,9 +9,7 @@ import { RequirePermissions } from '../rbac/decorators/require-permissions.decor
 @ApiTags('tenants')
 @Controller('tenants')
 export class TenantsController {
-  constructor(
-    @InjectRepository(Tenant) private readonly tenantsRepo: Repository<Tenant>,
-  ) {}
+  constructor(@InjectRepository(Tenant) private readonly tenantsRepo: Repository<Tenant>) {}
 
   @Get()
   @RequirePermissions(permission(ModuleName.TENANTS, 'read'))

@@ -37,11 +37,8 @@ describe('Auth security (e2e)', () => {
 
   const server = () => app.getHttpServer();
   const login = () =>
-    request(server())
-      .post('/api/v1/auth/login')
-      .send({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
-  const refresh = (refreshToken: string) =>
-    request(server()).post('/api/v1/auth/refresh').send({ refreshToken });
+    request(server()).post('/api/v1/auth/login').send({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
+  const refresh = (refreshToken: string) => request(server()).post('/api/v1/auth/refresh').send({ refreshToken });
 
   it('refresh rotates the token and rejects the previous one', async () => {
     const res = await login().expect(200);
@@ -70,10 +67,7 @@ describe('Auth security (e2e)', () => {
   it('logout revokes the refresh token family', async () => {
     const res = await login().expect(200);
 
-    await request(server())
-      .post('/api/v1/auth/logout')
-      .send({ refreshToken: res.body.refreshToken })
-      .expect(200);
+    await request(server()).post('/api/v1/auth/logout').send({ refreshToken: res.body.refreshToken }).expect(200);
 
     await refresh(res.body.refreshToken).expect(401);
   });
@@ -91,10 +85,7 @@ describe('Auth security (e2e)', () => {
     const token = reg.body.accessToken as string;
     const auth = { Authorization: `Bearer ${token}` };
 
-    await request(server())
-      .get('/api/v1/inventory/products')
-      .set(auth)
-      .expect(200);
+    await request(server()).get('/api/v1/inventory/products').set(auth).expect(200);
 
     await request(server()).get('/api/v1/reports/dashboard').set(auth).expect(403);
 
@@ -103,10 +94,7 @@ describe('Auth security (e2e)', () => {
 
   it('enforces the per-user active session limit', async () => {
     const email = `sessions-${Date.now()}@aptifum.dev`;
-    await request(server())
-      .post('/api/v1/auth/register')
-      .send({ email, password: 'password123' })
-      .expect(201);
+    await request(server()).post('/api/v1/auth/register').send({ email, password: 'password123' }).expect(201);
 
     const tokens: string[] = [];
     for (let i = 0; i < 6; i++) {

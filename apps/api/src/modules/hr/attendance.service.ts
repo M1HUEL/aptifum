@@ -32,10 +32,7 @@ export class AttendanceService {
       where.status = filters.status as AttendanceStatus;
     }
     if (filters.from || filters.to) {
-      where.workDate = Between(
-        filters.from ?? '1970-01-01',
-        filters.to ?? '2999-12-31',
-      );
+      where.workDate = Between(filters.from ?? '1970-01-01', filters.to ?? '2999-12-31');
     }
     const [rows, total] = await this.attendanceRepo.findAndCount({
       where,
@@ -134,7 +131,8 @@ export class AttendanceService {
   async update(tenantId: string | null, id: string, dto: UpdateAttendanceDto) {
     const record = await this.findOne(tenantId, id);
     const clockIn = dto.clockInAt !== undefined ? (dto.clockInAt ? new Date(dto.clockInAt) : null) : record.clockInAt;
-    const clockOut = dto.clockOutAt !== undefined ? (dto.clockOutAt ? new Date(dto.clockOutAt) : null) : record.clockOutAt;
+    const clockOut =
+      dto.clockOutAt !== undefined ? (dto.clockOutAt ? new Date(dto.clockOutAt) : null) : record.clockOutAt;
     Object.assign(record, {
       clockInAt: clockIn,
       clockOutAt: clockOut,

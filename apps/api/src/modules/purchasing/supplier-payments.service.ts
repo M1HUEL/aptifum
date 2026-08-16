@@ -47,11 +47,7 @@ export class SupplierPaymentsService {
     return { data: rows, meta: { page, limit, total } };
   }
 
-  async record(
-    tenantId: string | null,
-    userId: string | null,
-    dto: CreateSupplierPaymentDto,
-  ) {
+  async record(tenantId: string | null, userId: string | null, dto: CreateSupplierPaymentDto) {
     this.assertTenant(tenantId);
     return this.dataSource.transaction(async (manager) => {
       const supplier = await manager.getRepository(Supplier).findOneBy({
@@ -77,9 +73,7 @@ export class SupplierPaymentsService {
           throw new BadRequestException('Only issued supplier bills can be paid');
         }
         if (round2(dto.amount - bill.balanceDue) > 0.005) {
-          throw new BadRequestException(
-            `Payment exceeds balance due ${bill.balanceDue} for bill ${bill.number}`,
-          );
+          throw new BadRequestException(`Payment exceeds balance due ${bill.balanceDue} for bill ${bill.number}`);
         }
       }
       const paidAt = dto.paidAt ? new Date(dto.paidAt) : new Date();

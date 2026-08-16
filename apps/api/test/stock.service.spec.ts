@@ -49,18 +49,14 @@ function productRow(overrides: Record<string, unknown> = {}) {
 describe('StockService listPosProducts', () => {
   it('requires a tenant', async () => {
     const service = buildService({});
-    await expect(service.listPosProducts(null, 'w1', 1, 20)).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.listPosProducts(null, 'w1', 1, 20)).rejects.toThrow(BadRequestException);
   });
 
   it('rejects an unknown warehouse', async () => {
     const service = buildService({
       warehouses: { findOneBy: vi.fn().mockResolvedValue(null) },
     });
-    await expect(service.listPosProducts(TENANT, 'w1', 1, 20)).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(service.listPosProducts(TENANT, 'w1', 1, 20)).rejects.toThrow(NotFoundException);
   });
 
   it('merges products and variants, with numeric price and available stock', async () => {
@@ -76,7 +72,12 @@ describe('StockService listPosProducts', () => {
         availableStock: '3',
       }),
     ]);
-    const products = { createQueryBuilder: vi.fn(() => productsQb).mockReturnValueOnce(productsQb).mockReturnValueOnce(variantsQb) };
+    const products = {
+      createQueryBuilder: vi
+        .fn(() => productsQb)
+        .mockReturnValueOnce(productsQb)
+        .mockReturnValueOnce(variantsQb),
+    };
     const service = buildService({
       warehouses: { findOneBy: vi.fn().mockResolvedValue({ id: 'w1' }) },
       products,
@@ -116,10 +117,7 @@ describe('StockService listPosProducts', () => {
     const productsQb = qbChain([]);
     const variantsQb = qbChain([]);
     const products = {
-      createQueryBuilder: vi
-        .fn()
-        .mockReturnValueOnce(productsQb)
-        .mockReturnValueOnce(variantsQb),
+      createQueryBuilder: vi.fn().mockReturnValueOnce(productsQb).mockReturnValueOnce(variantsQb),
     };
     const service = buildService({
       warehouses: { findOneBy: vi.fn().mockResolvedValue({ id: 'w1' }) },
@@ -128,12 +126,8 @@ describe('StockService listPosProducts', () => {
 
     await service.listPosProducts(TENANT, 'w1', 1, 20, 'red');
 
-    const productFilter = productsQb.andWhere.mock.calls.find(
-      (call: unknown[]) => call[0] instanceof Brackets,
-    )?.[0];
-    const variantFilter = variantsQb.andWhere.mock.calls.find(
-      (call: unknown[]) => call[0] instanceof Brackets,
-    )?.[0];
+    const productFilter = productsQb.andWhere.mock.calls.find((call: unknown[]) => call[0] instanceof Brackets)?.[0];
+    const variantFilter = variantsQb.andWhere.mock.calls.find((call: unknown[]) => call[0] instanceof Brackets)?.[0];
     expect(productFilter).toBeTruthy();
     expect(variantFilter).toBeTruthy();
     const sub = {
@@ -153,16 +147,10 @@ describe('StockService listPosProducts', () => {
   });
 
   it('paginates the merged catalog in memory', async () => {
-    const productsQb = qbChain([
-      productRow({ id: 'a', name: 'Alpha' }),
-      productRow({ id: 'b', name: 'Bravo' }),
-    ]);
+    const productsQb = qbChain([productRow({ id: 'a', name: 'Alpha' }), productRow({ id: 'b', name: 'Bravo' })]);
     const variantsQb = qbChain([]);
     const products = {
-      createQueryBuilder: vi
-        .fn()
-        .mockReturnValueOnce(productsQb)
-        .mockReturnValueOnce(variantsQb),
+      createQueryBuilder: vi.fn().mockReturnValueOnce(productsQb).mockReturnValueOnce(variantsQb),
     };
     const service = buildService({
       warehouses: { findOneBy: vi.fn().mockResolvedValue({ id: 'w1' }) },

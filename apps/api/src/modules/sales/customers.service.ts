@@ -68,23 +68,20 @@ export class CustomersService {
 
   async update(tenantId: string | null, id: string, dto: UpdateCustomerDto) {
     const customer = await this.findOne(tenantId, id);
-    const taxId =
-      dto.taxId === undefined ? customer.taxId : await this.normalizeTaxId(tenantId, dto.taxId);
+    const taxId = dto.taxId === undefined ? customer.taxId : await this.normalizeTaxId(tenantId, dto.taxId);
     Object.assign(customer, {
       code: dto.code ?? customer.code,
       tradeName: dto.tradeName ?? customer.tradeName,
       legalName: dto.legalName === undefined ? customer.legalName : dto.legalName,
       taxId,
       usoCfdi: dto.usoCfdi === undefined ? customer.usoCfdi : (dto.usoCfdi ?? null),
-      regimenFiscal:
-        dto.regimenFiscal === undefined ? customer.regimenFiscal : (dto.regimenFiscal ?? null),
+      regimenFiscal: dto.regimenFiscal === undefined ? customer.regimenFiscal : (dto.regimenFiscal ?? null),
       email: dto.email === undefined ? customer.email : dto.email,
       phone: dto.phone === undefined ? customer.phone : dto.phone,
       address: dto.address === undefined ? customer.address : dto.address,
       currency: dto.currency ?? customer.currency,
       creditLimit: dto.creditLimit ?? customer.creditLimit,
-      priceCategory:
-        dto.priceCategory === undefined ? customer.priceCategory : dto.priceCategory,
+      priceCategory: dto.priceCategory === undefined ? customer.priceCategory : dto.priceCategory,
       state: dto.state === undefined ? customer.state : (dto.state ?? null),
       taxExempt: dto.taxExempt ?? customer.taxExempt,
       active: dto.active ?? customer.active,
@@ -108,9 +105,7 @@ export class CustomersService {
     if (!value || value.trim() === '') {
       return null;
     }
-    const tenant = tenantId
-      ? await this.tenantsRepo.findOneBy({ id: tenantId })
-      : null;
+    const tenant = tenantId ? await this.tenantsRepo.findOneBy({ id: tenantId }) : null;
     const country = tenant?.country ?? 'US';
     if (country === 'MX') {
       if (!validateRfc(value)) {

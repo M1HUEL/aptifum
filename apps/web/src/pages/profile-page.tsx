@@ -6,7 +6,7 @@ import type { components } from '../api/schema';
 import { profileFormSchema, type ProfileFormValues } from '../api/schemas';
 import { useApiMutation } from '../api/hooks';
 import { useAuth } from '../auth/auth-context';
-import { Badge, ErrorBanner, PageHeader , Input } from '../components/ui';
+import { Badge, ErrorBanner, PageHeader, Input } from '../components/ui';
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/toast';
 
@@ -22,9 +22,7 @@ const emptyForm: ProfileFormValues = {
 function toDto(values: ProfileFormValues): UpdateProfileDto {
   return {
     name: values.name.trim() || undefined,
-    ...(values.newPassword
-      ? { currentPassword: values.currentPassword, newPassword: values.newPassword }
-      : {}),
+    ...(values.newPassword ? { currentPassword: values.currentPassword, newPassword: values.newPassword } : {}),
   };
 }
 
@@ -73,21 +71,11 @@ export function ProfilePage() {
         <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="profile-email">{t('fields.email')}</label>
-            <Input
-              id="profile-email"
-              type="email"
-              value={user.email}
-              disabled
-              className="w-full"
-            />
+            <Input id="profile-email" type="email" value={user.email} disabled className="w-full" />
           </div>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="profile-name">{t('fields.name')}</label>
-            <Input
-              id="profile-name"
-              {...register('name')}
-              className="w-full"
-            />
+            <Input id="profile-name" {...register('name')} className="w-full" />
             {errors.name ? <div className="text-[12px] font-normal text-danger">{errors.name.message}</div> : null}
           </div>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -112,12 +100,7 @@ export function ProfilePage() {
         <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1" style={{ marginTop: '0.5rem' }}>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="profile-current">{t('fields.currentPassword')}</label>
-            <Input
-              id="profile-current"
-              type="password"
-              {...register('currentPassword')}
-              className="w-full"
-            />
+            <Input id="profile-current" type="password" {...register('currentPassword')} className="w-full" />
             {errors.currentPassword ? (
               <div className="text-[12px] font-normal text-danger">{errors.currentPassword.message}</div>
             ) : null}
@@ -131,16 +114,13 @@ export function ProfilePage() {
               {...register('newPassword')}
               className="w-full"
             />
-            {errors.newPassword ? <div className="text-[12px] font-normal text-danger">{errors.newPassword.message}</div> : null}
+            {errors.newPassword ? (
+              <div className="text-[12px] font-normal text-danger">{errors.newPassword.message}</div>
+            ) : null}
           </div>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="profile-confirm">{t('fields.confirmPassword')}</label>
-            <Input
-              id="profile-confirm"
-              type="password"
-              {...register('confirmPassword')}
-              className="w-full"
-            />
+            <Input id="profile-confirm" type="password" {...register('confirmPassword')} className="w-full" />
             {errors.confirmPassword ? (
               <div className="text-[12px] font-normal text-danger">{errors.confirmPassword.message}</div>
             ) : null}

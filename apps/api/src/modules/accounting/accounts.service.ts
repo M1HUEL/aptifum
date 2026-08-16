@@ -17,13 +17,7 @@ export class AccountsService {
     return tenantId ? { tenantId } : {};
   }
 
-  async findAll(
-    tenantId: string | null,
-    page: number,
-    limit: number,
-    type?: AccountType,
-    q?: string,
-  ) {
+  async findAll(tenantId: string | null, page: number, limit: number, type?: AccountType, q?: string) {
     const where: FindOptionsWhere<ChartAccount> = this.scoped(tenantId);
     if (type) {
       where.type = type;

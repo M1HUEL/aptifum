@@ -51,15 +51,11 @@ export async function generateDemoCertificate(options: {
 
 function toDateOnly(value: string): string {
   const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? value.slice(0, 10)
-    : date.toISOString().slice(0, 10);
+  return Number.isNaN(date.getTime()) ? value.slice(0, 10) : date.toISOString().slice(0, 10);
 }
 
 export function certificateBase64(certificatePem: string): string {
-  return certificatePem
-    .replace(/-----(BEGIN|END) [^-]*-----/g, '')
-    .replace(/\s+/g, '');
+  return certificatePem.replace(/-----(BEGIN|END) [^-]*-----/g, '').replace(/\s+/g, '');
 }
 
 export function certificateThumbprintSha256(certificatePem: string): string {

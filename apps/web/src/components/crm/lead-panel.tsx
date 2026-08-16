@@ -176,7 +176,11 @@ export function LeadPanel() {
     { key: 'companyName', header: t('crm.company'), render: (row) => row.companyName ?? '—' },
     { key: 'email', header: t('fields.email'), render: (row) => row.email ?? '—' },
     { key: 'estimatedAmount', header: t('fields.estimatedAmount'), render: (row) => formatMoney(row.estimatedAmount) },
-    { key: 'status', header: t('common.status'), render: (row) => <Badge tone={leadStatusTone(row.status)}>{row.status}</Badge> },
+    {
+      key: 'status',
+      header: t('common.status'),
+      render: (row) => <Badge tone={leadStatusTone(row.status)}>{row.status}</Badge>,
+    },
     {
       key: 'actions',
       header: t('common.actions'),
@@ -230,7 +234,13 @@ export function LeadPanel() {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={() => {}}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
 
@@ -241,7 +251,8 @@ export function LeadPanel() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-contact">
-                  {t('fields.contactName')}<span className="text-danger"> *</span>
+                  {t('fields.contactName')}
+                  <span className="text-danger"> *</span>
                 </label>
                 <Input className="w-full" id="lead-contact" {...register('contactName')} />
                 {errors.contactName ? (
@@ -276,7 +287,14 @@ export function LeadPanel() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-amount">{t('fields.estimatedAmount')}</label>
-                <Input className="w-full" id="lead-amount" type="number" min="0" step="0.01" {...register('estimatedAmount')} />
+                <Input
+                  className="w-full"
+                  id="lead-amount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  {...register('estimatedAmount')}
+                />
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="lead-currency">{t('fields.currency')}</label>
@@ -287,7 +305,11 @@ export function LeadPanel() {
                 <Textarea className="w-full" id="lead-notes" rows={3} {...register('notes')} />
               </div>
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createLead')}
@@ -303,7 +325,12 @@ export function LeadPanel() {
           <p className="text-muted">{t('crm.convertLeadMessage', { name: converting?.contactName })}</p>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
             <label htmlFor="convert-code">{t('crm.customerCode')}</label>
-            <Input className="w-full" id="convert-code" value={customerCode} onChange={(event) => setCustomerCode(event.target.value)} />
+            <Input
+              className="w-full"
+              id="convert-code"
+              value={customerCode}
+              onChange={(event) => setCustomerCode(event.target.value)}
+            />
           </div>
           <DialogFooter>
             <Button variant="default" type="button" disabled={convertBusy} onClick={() => void confirmConvert()}>

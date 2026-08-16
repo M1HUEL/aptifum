@@ -13,13 +13,7 @@ export class EmployeesService {
     return tenantId ? { tenantId } : {};
   }
 
-  async findAll(
-    tenantId: string | null,
-    page: number,
-    limit: number,
-    q?: string,
-    includeSalary = false,
-  ) {
+  async findAll(tenantId: string | null, page: number, limit: number, q?: string, includeSalary = false) {
     const where: FindOptionsWhere<Employee> = this.scoped(tenantId);
     if (q) {
       where.firstName = ILike(`%${q}%`);
@@ -50,8 +44,7 @@ export class EmployeesService {
 
   async create(tenantId: string | null, dto: CreateEmployeeDto) {
     this.assertTenant(tenantId);
-    const employeeNo =
-      dto.employeeNo ?? (await this.nextEmployeeNo(tenantId as string));
+    const employeeNo = dto.employeeNo ?? (await this.nextEmployeeNo(tenantId as string));
     const employee = await this.employeesRepo.save(
       this.employeesRepo.create({
         tenantId: tenantId as string,
@@ -92,8 +85,7 @@ export class EmployeesService {
       departmentId: dto.departmentId === undefined ? employee.departmentId : dto.departmentId,
       position: dto.position === undefined ? employee.position : dto.position,
       hireDate: dto.hireDate ?? employee.hireDate,
-      terminationDate:
-        dto.terminationDate === undefined ? employee.terminationDate : dto.terminationDate,
+      terminationDate: dto.terminationDate === undefined ? employee.terminationDate : dto.terminationDate,
       salary: dto.salary ?? employee.salary,
       salaryFrequency: dto.salaryFrequency ?? employee.salaryFrequency,
       bankName: dto.bankName === undefined ? employee.bankName : dto.bankName,

@@ -41,12 +41,6 @@ import { WarehousesService } from './warehouses.service';
     WarehousesController,
     StockController,
   ],
-  providers: [
-    CategoriesService,
-    ProductsService,
-    ProductVariantsService,
-    WarehousesService,
-    StockService,
-  ],
+  providers: [CategoriesService, ProductsService, ProductVariantsService, WarehousesService, StockService],
 })
 export class InventoryModule {}

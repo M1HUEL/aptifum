@@ -52,6 +52,9 @@ jobs:
       - name: Create app database
         run: PGPASSWORD=aptifum_dev psql -h localhost -U aptifum -d aptifum_test -c "CREATE DATABASE aptifum;"
 
+      - name: Check formatting
+        run: pnpm format:check
+
       - name: Lint
         run: pnpm lint
 

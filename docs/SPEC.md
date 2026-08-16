@@ -11,6 +11,7 @@ Multi-module ERP for **retail/commerce** at medium scale (20–200 users), deplo
 The goal is to manage the full commercial and financial lifecycle of a business: inventory, sales, purchasing, accounting, human resources, CRM, and light production (assemblies/kits), with consistent data, full audit trails, and reports.
 
 ### Guiding principles
+
 1. **Domain modularity**: modules are independent and communicate via **domain events**, not direct cross-module calls.
 2. **Accounting as the financial source of truth**: every economic transaction (sale, purchase, inventory movement) automatically generates its accounting entries.
 3. **Full audit trail**: every data mutation is recorded (who, what, when, before/after).
@@ -21,21 +22,21 @@ The goal is to manage the full commercial and financial lifecycle of a business:
 
 ## 2. Tech stack
 
-| Layer            | Technology                                                   |
-|------------------|--------------------------------------------------------------|
-| Monorepo         | **Turborepo** + pnpm                                         |
-| Language         | TypeScript (strict mode)                                     |
-| Backend          | **NestJS** (apps/api), domain-driven modular structure         |
-| ORM              | **TypeORM** + PostgreSQL                                     |
-| Database         | PostgreSQL 16 (transactional, ACID)                          |
-| Auth             | JWT (access + refresh), **bcrypt** (password hashing)                       |
-| Authorization    | RBAC + per-resource permissions (casl or custom guards)      |
-| Events           | @nestjs/event-emitter (in-process) + **transactional outbox** pattern |
-| Validation       | class-validator + class-transformer                          |
-| Documentation    | Swagger/OpenAPI                                              |
-| Testing          | **Vitest** (unit + e2e with supertest), data seeders        |
-| Quality          | ESLint + Prettier, husky, CI/CD in GitHub Actions            |
-| Deployment       | Docker, VPS/cloud (optional Kubernetes later)                |
+| Layer         | Technology                                                            |
+| ------------- | --------------------------------------------------------------------- |
+| Monorepo      | **Turborepo** + pnpm                                                  |
+| Language      | TypeScript (strict mode)                                              |
+| Backend       | **NestJS** (apps/api), domain-driven modular structure                |
+| ORM           | **TypeORM** + PostgreSQL                                              |
+| Database      | PostgreSQL 16 (transactional, ACID)                                   |
+| Auth          | JWT (access + refresh), **bcrypt** (password hashing)                 |
+| Authorization | RBAC + per-resource permissions (casl or custom guards)               |
+| Events        | @nestjs/event-emitter (in-process) + **transactional outbox** pattern |
+| Validation    | class-validator + class-transformer                                   |
+| Documentation | Swagger/OpenAPI                                                       |
+| Testing       | **Vitest** (unit + e2e with supertest), data seeders                  |
+| Quality       | ESLint + Prettier, husky, CI/CD in GitHub Actions                     |
+| Deployment    | Docker, VPS/cloud (optional Kubernetes later)                         |
 
 ---
 
@@ -83,6 +84,7 @@ aptifum/
 ```
 
 ### Architecture rules (enforced via Turborepo/ESLint)
+
 - `packages/*` **must not depend** on `apps/*`.
 - `apps/api/src/modules/*` **must not import each other**; they communicate via events and through shared services from `packages/core` or `packages/database` (entities).
 - Exposed API modules are registered in `app.module.ts`.
@@ -111,12 +113,14 @@ aptifum/
 ## 6. Modules — Functional scope
 
 ### 6.0 Core
+
 - **Auth:** login, logout, refresh, password recovery, password change.
 - **Users:** user CRUD, active/inactive status, role assignment.
 - **RBAC:** predefined roles + custom roles, permissions per module/action.
 - **Tenants:** company configuration (name, tax ID, default currency, country with US/MX tax presets, taxes, document series).
 
 ### 6.1 Inventory
+
 - **Products:** SKU, name, description, category, brand, unit of measure, variants (size/color), barcodes, image, purchase/sale prices, VAT/tax.
 - **Warehouses and locations:** multi-warehouse, locations within each warehouse.
 - **Stock movements:** inbound, outbound, adjustment, warehouse transfer, return, disposal. Each movement references a source document and a user.
@@ -125,6 +129,7 @@ aptifum/
 - **Concurrency:** versioning (optimistic lock) on `product_stock`; movements inside a DB transaction.
 
 ### 6.2 Sales and Billing
+
 - **Customers:** tax data (RFC/EIN by country), contacts, credit limit, assigned category/pricing, US billing `state` + `tax_exempt` flag (drives automatic US sales tax, §24).
 - **Quotes:** valid for X days, convertible to order.
 - **Orders (sales orders):** optional stock reservation, discounts, shipping, status (draft → confirmed → invoiced).
@@ -134,12 +139,14 @@ aptifum/
 - **Emits events:** `sale.invoiced`, `payment.received`, `credit_note.issued`.
 
 ### 6.3 Purchasing
+
 - **Suppliers:** tax data, contacts, payment terms, usual items.
 - **Purchase orders:** role-based approval, status tracking, partial/full receiving.
 - **Goods receipt:** generates an inventory inbound and updates cost.
 - **Supplier invoice and AP:** reconciliation with PO and receipt, due dates, supplier payments.
 
 ### 6.4 Accounting
+
 - **Chart of accounts:** hierarchical tree, account type (asset, liability, equity, income, expense), per tenant with a default initial catalog.
 - **Entries (journal):** double entry, open/closed accounting period, balance validation (debits = credits).
 - **Automatic entries:** generated from sales/credit invoices, collections, payments, inventory movements (valuation), payroll, production.
@@ -147,24 +154,28 @@ aptifum/
 - **Currency:** default functional currency per tenant; exchange rates implemented so foreign-currency documents post in the functional currency. Revaluation of open foreign-currency balances and settlement FX are shipped (see §11 #3 and §16.7).
 
 ### 6.5 Human Resources
+
 - **Employees:** file, department, position, salary, bank, tax data.
 - **Attendance:** clock in/out (manual or import), absences, time off, vacations.
 - **Payroll:** salary calculation, deductions, provisions; generates accounting entries.
 - **Module roles:** who can view salaries vs. who only sees attendance.
 
 ### 6.6 CRM
+
 - **Contacts/leads:** source, contact data.
 - **Opportunities:** pipeline stage (new → proposal → negotiation → won/lost), estimated amount, probability.
 - **Activities:** calls, meetings, tasks, notes; linked to contact/opportunity/customer.
 - **Integration:** won opportunity creates a customer from its linked lead (no quote/order).
 
 ### 6.7 Production (light / assembly)
+
 - **BOM / Recipes:** component list with quantities and waste (%).
 - **Production orders:** status (planned → in progress → completed / cancelled), material consumption (inventory outbound) and finished-good inbound.
 - **Costing:** order cost = consumed materials + labor + overhead; automatic journal entry on completion (see §8).
 - **Retail scenarios:** kits, repacking, prepared food.
 
 ### 6.8 Reporting
+
 - Inventory: valuation, movements, low stock, profitability per product.
 - Sales: by seller, product, customer, period; accounts receivable (aging).
 - Purchasing: by supplier, accounts payable (aging).
@@ -231,13 +242,13 @@ Entries are generated within the **same transaction** as the source document (ou
 
 ## 10. Phased roadmap
 
-| Phase | Content | Deliverable |
-|-------|---------|-------------|
-| **F0 · Foundation** | Monorepo scaffold (Turborepo + pnpm), NestJS API, PostgreSQL, auth + RBAC + tenants, audit, CI/CD, seeders, Swagger | Deployable base API with login and user management |
-| **F1 · Commercial core** | Inventory (products, warehouses, movements, valuation) + Sales/billing (customers, quotes, orders, invoices, collections) | Complete sales flow with stock integration |
-| **F2 · Finance** | Purchasing (suppliers, POs, receiving, AP) + Accounting (chart of accounts, automatic entries, reports) | Operational accounting close |
-| **F3 · Organization** | CRM + Human Resources + Production | Fully integrated modules |
-| **F4 · Analytics and platform** | BI reports, dashboard, exports, **online card payments (Stripe)**, integrations (banks, tax, e-commerce), web frontend | Complete ERP for 20–200 users |
+| Phase                           | Content                                                                                                                   | Deliverable                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **F0 · Foundation**             | Monorepo scaffold (Turborepo + pnpm), NestJS API, PostgreSQL, auth + RBAC + tenants, audit, CI/CD, seeders, Swagger       | Deployable base API with login and user management |
+| **F1 · Commercial core**        | Inventory (products, warehouses, movements, valuation) + Sales/billing (customers, quotes, orders, invoices, collections) | Complete sales flow with stock integration         |
+| **F2 · Finance**                | Purchasing (suppliers, POs, receiving, AP) + Accounting (chart of accounts, automatic entries, reports)                   | Operational accounting close                       |
+| **F3 · Organization**           | CRM + Human Resources + Production                                                                                        | Fully integrated modules                           |
+| **F4 · Analytics and platform** | BI reports, dashboard, exports, **online card payments (Stripe)**, integrations (banks, tax, e-commerce), web frontend    | Complete ERP for 20–200 users                      |
 
 ---
 
@@ -245,16 +256,16 @@ Entries are generated within the **same transaction** as the source document (ou
 
 The following decisions were settled and now constrain the product (see §6 and §8 for impact):
 
-| # | Decision | Resolution |
-|---|----------|------------|
-| 1 | Country-specific tax rules | **US + Mexico.** Tenants carry a `country` (`US`/`MX`) with seeded tax presets: US → `Sales Tax` 8% (sales), MX → `IVA` 16% (sales). Tax IDs follow the local format (US EIN 9 digits, MX RFC 12–13 chars). **MX CFDI 4.0 e-invoicing shipped (2026-08, §23):** self-contained XML + digital seal + demo TFD (self-signed per-tenant certificates, no real PAC). **US sales tax per state/nexus shipped (2026-08, §24):** automatic rate resolution from customer state + tenant nexus config. Real PAC timbrado remains **F4**. |
-| 2 | Physical POS / offline sales | **Web-only** — a web POS/cashier (catalog, ticket, payment collection) is **shipped** on the dashboard; no offline/desktop client. |
-| 3 | Multi-currency | **Single functional currency per tenant** (`default_currency`). Exchange rates are **implemented** (per-tenant `exchange_rates`, foreign-currency invoices/payments/supplier bills post in the functional currency, see §16.7). **Revaluation + settlement FX shipped (2026-08):** `POST /accounting/revaluations` revalues open foreign-currency balances (idempotent re-runs, automatic reversal of prior revaluations) and payments realize the FX difference vs the booked rate. |
-| 4 | Notifications | **Email notifications shipped** for invoice/credit-note issuance, payments and goods receipts, delivered by the transactional outbox dispatcher (see §8). **Due-date/approval reminders shipped (2026-08)**: a daily cron emits `reminder.*` outbox events (overdue AR/AP, purchase orders pending approval ≥ 2 days) delivered to customers and permissioned tenant users. SMS deferred to **F4**. |
-| 5 | Languages | **Bilingual web UI shipped.** The dashboard is English + Spanish (Spanish default) via i18next/react-i18next with a language switcher in the sidebar and settings; the API and outbox email templates remain English. |
-| 6 | Team | **Single developer.** Conventions stay simple; lightweight CI. |
-| 7 | Pilot business | **No real pilot yet.** Business rules are validated with synthetic examples; SPEC remains the reference. |
-| 8 | Online payments | **Stripe shipped (2026-08).** Per-tenant provider config (`test`/`live`), server-side Checkout Sessions for issued invoices with an outstanding balance, and a signature-verified webhook that records card payments idempotently (see §6.9, §22). Bank feeds and other gateways remain **F4**. |
+| #   | Decision                     | Resolution                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Country-specific tax rules   | **US + Mexico.** Tenants carry a `country` (`US`/`MX`) with seeded tax presets: US → `Sales Tax` 8% (sales), MX → `IVA` 16% (sales). Tax IDs follow the local format (US EIN 9 digits, MX RFC 12–13 chars). **MX CFDI 4.0 e-invoicing shipped (2026-08, §23):** self-contained XML + digital seal + demo TFD (self-signed per-tenant certificates, no real PAC). **US sales tax per state/nexus shipped (2026-08, §24):** automatic rate resolution from customer state + tenant nexus config. Real PAC timbrado remains **F4**. |
+| 2   | Physical POS / offline sales | **Web-only** — a web POS/cashier (catalog, ticket, payment collection) is **shipped** on the dashboard; no offline/desktop client.                                                                                                                                                                                                                                                                                                                                                                                               |
+| 3   | Multi-currency               | **Single functional currency per tenant** (`default_currency`). Exchange rates are **implemented** (per-tenant `exchange_rates`, foreign-currency invoices/payments/supplier bills post in the functional currency, see §16.7). **Revaluation + settlement FX shipped (2026-08):** `POST /accounting/revaluations` revalues open foreign-currency balances (idempotent re-runs, automatic reversal of prior revaluations) and payments realize the FX difference vs the booked rate.                                             |
+| 4   | Notifications                | **Email notifications shipped** for invoice/credit-note issuance, payments and goods receipts, delivered by the transactional outbox dispatcher (see §8). **Due-date/approval reminders shipped (2026-08)**: a daily cron emits `reminder.*` outbox events (overdue AR/AP, purchase orders pending approval ≥ 2 days) delivered to customers and permissioned tenant users. SMS deferred to **F4**.                                                                                                                              |
+| 5   | Languages                    | **Bilingual web UI shipped.** The dashboard is English + Spanish (Spanish default) via i18next/react-i18next with a language switcher in the sidebar and settings; the API and outbox email templates remain English.                                                                                                                                                                                                                                                                                                            |
+| 6   | Team                         | **Single developer.** Conventions stay simple; lightweight CI.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 7   | Pilot business               | **No real pilot yet.** Business rules are validated with synthetic examples; SPEC remains the reference.                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 8   | Online payments              | **Stripe shipped (2026-08).** Per-tenant provider config (`test`/`live`), server-side Checkout Sessions for issued invoices with an outstanding balance, and a signature-verified webhook that records card payments idempotently (see §6.9, §22). Bank feeds and other gateways remain **F4**.                                                                                                                                                                                                                                  |
 
 ---
 
@@ -303,17 +314,18 @@ The following decisions were settled and now constrain the product (see §6 and 
 
 ### 13.1 Inventory
 
-| Table | Columns (besides base + tenant) | Notes / indexes |
-|-------|--------------------------------|-----------------|
-| `categories` | `name`, `parent_id` (self-ref, nullable), `active` | tree; index `(tenant_id, parent_id)` |
-| `products` | `sku`, `name`, `description`, `category_id`, `brand`, `unit_of_measure`, `barcode`, `image_url`, `purchase_price`, `sale_price`, `default_tax_id`, `enabled`, `version` | `sku` unique per tenant; index `(tenant_id, sku)`, `(tenant_id, name)` |
-| `product_variants` | `product_id`, `sku`, `barcode`, `attributes` (jsonb: size/color), `purchase_price`, `sale_price` | per-variant sku/barcode/price; `sku` **unique per tenant**; FK → `products`; index `(tenant_id, product_id)`; soft delete |
-| `warehouses` | `code`, `name`, `address`, `active` | index `(tenant_id, code)` |
-| `warehouse_locations` | `warehouse_id`, `code`, `name`, `active` | index `(tenant_id, warehouse_id)` |
-| `product_stock` | `product_id`, `warehouse_id`, `quantity` (default 0), `reserved_quantity` (default 0), `average_cost` (default 0), `version` | stock per warehouse in F1 (locations are informational); **unique** `(tenant_id, product_id, warehouse_id)`; optimistic lock |
-| `stock_movements` | `movement_type` (enum), `product_id`, `warehouse_id`, `location_id`, `quantity` (signed), `unit_cost`, `reference_type`, `reference_id`, `user_id`, `notes`, `occurred_at` | append-only; index `(tenant_id, product_id, occurred_at)` |
+| Table                 | Columns (besides base + tenant)                                                                                                                                            | Notes / indexes                                                                                                              |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `categories`          | `name`, `parent_id` (self-ref, nullable), `active`                                                                                                                         | tree; index `(tenant_id, parent_id)`                                                                                         |
+| `products`            | `sku`, `name`, `description`, `category_id`, `brand`, `unit_of_measure`, `barcode`, `image_url`, `purchase_price`, `sale_price`, `default_tax_id`, `enabled`, `version`    | `sku` unique per tenant; index `(tenant_id, sku)`, `(tenant_id, name)`                                                       |
+| `product_variants`    | `product_id`, `sku`, `barcode`, `attributes` (jsonb: size/color), `purchase_price`, `sale_price`                                                                           | per-variant sku/barcode/price; `sku` **unique per tenant**; FK → `products`; index `(tenant_id, product_id)`; soft delete    |
+| `warehouses`          | `code`, `name`, `address`, `active`                                                                                                                                        | index `(tenant_id, code)`                                                                                                    |
+| `warehouse_locations` | `warehouse_id`, `code`, `name`, `active`                                                                                                                                   | index `(tenant_id, warehouse_id)`                                                                                            |
+| `product_stock`       | `product_id`, `warehouse_id`, `quantity` (default 0), `reserved_quantity` (default 0), `average_cost` (default 0), `version`                                               | stock per warehouse in F1 (locations are informational); **unique** `(tenant_id, product_id, warehouse_id)`; optimistic lock |
+| `stock_movements`     | `movement_type` (enum), `product_id`, `warehouse_id`, `location_id`, `quantity` (signed), `unit_cost`, `reference_type`, `reference_id`, `user_id`, `notes`, `occurred_at` | append-only; index `(tenant_id, product_id, occurred_at)`                                                                    |
 
 **Rules**
+
 - Stock is never negative (except authorized adjustments with `stock:adjust`).
 - Every movement runs inside a DB transaction; inbound updates `average_cost`:
   `new_avg = (prev_qty * prev_cost + qty * cost) / (prev_qty + qty)`.
@@ -321,17 +333,17 @@ The following decisions were settled and now constrain the product (see §6 and 
 
 ### 13.2 Sales & billing
 
-| Table | Columns (besides base + tenant) | Notes / indexes |
-|-------|--------------------------------|-----------------|
-| `customers` | `code`, `trade_name`, `legal_name`, `tax_id`, `email`, `phone`, `address`, `currency`, `credit_limit`, `price_category`, `uso_cfdi` (nullable, MX), `regimen_fiscal` (nullable, MX), `state` (nullable, US), `tax_exempt` (default false), `active`, `version` | index `(tenant_id, code)`, `(tenant_id, tax_id)` |
-| `taxes` | `name`, `rate` `numeric(6,4)`, `kind` (enum: sales/purchase), `active` | country-agnostic; tenant configures |
-| `document_series` | `kind` (enum: quote/order/invoice/credit_note), `prefix`, `next_number` (bigint), `active` | per-tenant automatic numbering; atomic increment (row lock/serializable) |
-| `sales_orders` | `number` (unique per tenant), `kind` (enum: quote/order), `status` (enum: draft/confirmed/invoiced/cancelled), `customer_id`, `warehouse_id`, `issue_date`, `due_date`, `currency`, `subtotal`, `discount`, `tax`, `total`, `notes`, `version` | quotes and orders share this table; index `(tenant_id, number)`, `(tenant_id, customer_id, issue_date)` |
-| `sales_order_items` | `order_id`, `product_id`, `description`, `quantity`, `unit_price`, `discount`, `tax_rate`, `tax_amount`, `line_total` | index `(tenant_id, order_id)` |
-| `invoices` | `number` (unique per tenant), `series_id`, `type` (enum: invoice/credit_note), `status` (enum: draft/issued/cancelled), `customer_id`, `order_id` (nullable), `warehouse_id` (nullable, source warehouse for COGS/returns), `issue_date`, `due_date`, `currency`, `exchange_rate` (default 1), `subtotal`, `discount`, `tax`, `total`, `paid_amount`, `balance_due`, `notes`, `version` | index `(tenant_id, number)`, `(tenant_id, customer_id, issue_date)` |
-| `invoice_items` | `invoice_id`, `product_id`, `description`, `quantity`, `unit_price`, `discount`, `tax_rate`, `tax_amount`, `line_total` | index `(tenant_id, invoice_id)` |
-| `payments` | `invoice_id`, `method` (enum: cash/card/transfer/other), `amount`, `exchange_rate` (default 1), `received_at`, `reference`, `notes` | partial payments; index `(tenant_id, invoice_id, received_at)` |
-| `idempotency_keys` | `key` (unique), `request_hash`, `response` (jsonb), `created_at` | dedupe on financial POSTs (`Idempotency-Key`) |
+| Table               | Columns (besides base + tenant)                                                                                                                                                                                                                                                                                                                                                         | Notes / indexes                                                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `customers`         | `code`, `trade_name`, `legal_name`, `tax_id`, `email`, `phone`, `address`, `currency`, `credit_limit`, `price_category`, `uso_cfdi` (nullable, MX), `regimen_fiscal` (nullable, MX), `state` (nullable, US), `tax_exempt` (default false), `active`, `version`                                                                                                                          | index `(tenant_id, code)`, `(tenant_id, tax_id)`                                                        |
+| `taxes`             | `name`, `rate` `numeric(6,4)`, `kind` (enum: sales/purchase), `active`                                                                                                                                                                                                                                                                                                                  | country-agnostic; tenant configures                                                                     |
+| `document_series`   | `kind` (enum: quote/order/invoice/credit_note), `prefix`, `next_number` (bigint), `active`                                                                                                                                                                                                                                                                                              | per-tenant automatic numbering; atomic increment (row lock/serializable)                                |
+| `sales_orders`      | `number` (unique per tenant), `kind` (enum: quote/order), `status` (enum: draft/confirmed/invoiced/cancelled), `customer_id`, `warehouse_id`, `issue_date`, `due_date`, `currency`, `subtotal`, `discount`, `tax`, `total`, `notes`, `version`                                                                                                                                          | quotes and orders share this table; index `(tenant_id, number)`, `(tenant_id, customer_id, issue_date)` |
+| `sales_order_items` | `order_id`, `product_id`, `description`, `quantity`, `unit_price`, `discount`, `tax_rate`, `tax_amount`, `line_total`                                                                                                                                                                                                                                                                   | index `(tenant_id, order_id)`                                                                           |
+| `invoices`          | `number` (unique per tenant), `series_id`, `type` (enum: invoice/credit_note), `status` (enum: draft/issued/cancelled), `customer_id`, `order_id` (nullable), `warehouse_id` (nullable, source warehouse for COGS/returns), `issue_date`, `due_date`, `currency`, `exchange_rate` (default 1), `subtotal`, `discount`, `tax`, `total`, `paid_amount`, `balance_due`, `notes`, `version` | index `(tenant_id, number)`, `(tenant_id, customer_id, issue_date)`                                     |
+| `invoice_items`     | `invoice_id`, `product_id`, `description`, `quantity`, `unit_price`, `discount`, `tax_rate`, `tax_amount`, `line_total`                                                                                                                                                                                                                                                                 | index `(tenant_id, invoice_id)`                                                                         |
+| `payments`          | `invoice_id`, `method` (enum: cash/card/transfer/other), `amount`, `exchange_rate` (default 1), `received_at`, `reference`, `notes`                                                                                                                                                                                                                                                     | partial payments; index `(tenant_id, invoice_id, received_at)`                                          |
+| `idempotency_keys`  | `key` (unique), `request_hash`, `response` (jsonb), `created_at`                                                                                                                                                                                                                                                                                                                        | dedupe on financial POSTs (`Idempotency-Key`)                                                           |
 
 ### 13.3 Key relationships
 
@@ -388,16 +400,16 @@ Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `numeric(18,4)
 
 ### 15.2 Tables
 
-| Table | Columns (besides base + tenant) | Notes / indexes |
-|-------|--------------------------------|-----------------|
-| `suppliers` | `code`, `trade_name`, `legal_name`, `tax_id`, `email`, `phone`, `address`, `currency`, `payment_terms`, `credit_limit` `numeric(14,2)`, `active`, `version` | `code` unique per tenant; index `(tenant_id, code)`, `(tenant_id, tax_id)` |
-| `purchase_orders` | `number` (unique per tenant), `status` (enum: draft/approved/received/cancelled), `supplier_id`, `warehouse_id`, `issue_date`, `expected_at`, `currency`, `subtotal`, `discount`, `tax`, `total`, `notes`, `version` | index `(tenant_id, number)`, `(tenant_id, supplier_id, issue_date)` |
-| `purchase_order_items` | `order_id`, `product_id`, `description`, `quantity`, `unit_cost`, `discount`, `tax_rate`, `tax_amount`, `line_total`, `received_quantity` (default 0) | `received_quantity` tracks partial receiving; index `(tenant_id, order_id)` |
-| `goods_receipts` | `number` (unique per tenant), `order_id`, `supplier_id`, `warehouse_id`, `received_at`, `notes` | append-only; index `(tenant_id, number)`, `(tenant_id, order_id)` |
-| `goods_receipt_items` | `receipt_id`, `order_item_id`, `product_id`, `quantity`, `unit_cost` | index `(tenant_id, receipt_id)` |
-| `supplier_payments` | `supplier_id`, `bill_id` (nullable), `method` (enum: cash/card/transfer/other), `amount` `numeric(14,2)`, `exchange_rate` (default 1), `paid_at`, `reference`, `notes` | append-only; index `(tenant_id, supplier_id)`, `(tenant_id, bill_id)` |
-| `supplier_bills` | `number` (nullable until issued, unique per tenant), `status` (enum: draft/issued/paid/cancelled), `supplier_id`, `order_id` (nullable), `receipt_id` (nullable), `bill_date`, `due_date` (nullable), `currency`, `exchange_rate` (default 1), `subtotal`, `tax`, `total`, `paid_amount`, `balance_due`, `notes`, `issued_at`, `version` | index `(tenant_id, number)`, `(tenant_id, supplier_id, bill_date)` |
-| `supplier_bill_items` | `bill_id`, `product_id` (nullable), `description`, `quantity`, `unit_price`, `tax_rate`, `line_total` | index `(tenant_id, bill_id)` |
+| Table                  | Columns (besides base + tenant)                                                                                                                                                                                                                                                                                                          | Notes / indexes                                                             |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `suppliers`            | `code`, `trade_name`, `legal_name`, `tax_id`, `email`, `phone`, `address`, `currency`, `payment_terms`, `credit_limit` `numeric(14,2)`, `active`, `version`                                                                                                                                                                              | `code` unique per tenant; index `(tenant_id, code)`, `(tenant_id, tax_id)`  |
+| `purchase_orders`      | `number` (unique per tenant), `status` (enum: draft/approved/received/cancelled), `supplier_id`, `warehouse_id`, `issue_date`, `expected_at`, `currency`, `subtotal`, `discount`, `tax`, `total`, `notes`, `version`                                                                                                                     | index `(tenant_id, number)`, `(tenant_id, supplier_id, issue_date)`         |
+| `purchase_order_items` | `order_id`, `product_id`, `description`, `quantity`, `unit_cost`, `discount`, `tax_rate`, `tax_amount`, `line_total`, `received_quantity` (default 0)                                                                                                                                                                                    | `received_quantity` tracks partial receiving; index `(tenant_id, order_id)` |
+| `goods_receipts`       | `number` (unique per tenant), `order_id`, `supplier_id`, `warehouse_id`, `received_at`, `notes`                                                                                                                                                                                                                                          | append-only; index `(tenant_id, number)`, `(tenant_id, order_id)`           |
+| `goods_receipt_items`  | `receipt_id`, `order_item_id`, `product_id`, `quantity`, `unit_cost`                                                                                                                                                                                                                                                                     | index `(tenant_id, receipt_id)`                                             |
+| `supplier_payments`    | `supplier_id`, `bill_id` (nullable), `method` (enum: cash/card/transfer/other), `amount` `numeric(14,2)`, `exchange_rate` (default 1), `paid_at`, `reference`, `notes`                                                                                                                                                                   | append-only; index `(tenant_id, supplier_id)`, `(tenant_id, bill_id)`       |
+| `supplier_bills`       | `number` (nullable until issued, unique per tenant), `status` (enum: draft/issued/paid/cancelled), `supplier_id`, `order_id` (nullable), `receipt_id` (nullable), `bill_date`, `due_date` (nullable), `currency`, `exchange_rate` (default 1), `subtotal`, `tax`, `total`, `paid_amount`, `balance_due`, `notes`, `issued_at`, `version` | index `(tenant_id, number)`, `(tenant_id, supplier_id, bill_date)`          |
+| `supplier_bill_items`  | `bill_id`, `product_id` (nullable), `description`, `quantity`, `unit_price`, `tax_rate`, `line_total`                                                                                                                                                                                                                                    | index `(tenant_id, bill_id)`                                                |
 
 ### 15.3 Key flows
 
@@ -422,44 +434,44 @@ Same as §13.0 (TenantBaseEntity, UUID PK, `numeric(14,2)` money, `version` opti
 
 ### 16.2 Tables
 
-| Table | Columns (besides base + tenant) | Notes / indexes |
-|-------|--------------------------------|-----------------|
-| `chart_accounts` | `code` (varchar 20), `name` (varchar 255), `type` (enum: asset/liability/equity/revenue/expense), `normal_balance` (enum: debit/credit), `parent_id` (nullable), `active`, `description`, `version` | `code` unique per tenant; index `(tenant_id, code)`, `(tenant_id, parent_id)`; self-FK `parent_id → chart_accounts(id)` |
-| `accounting_periods` | `period` `char(7)` `YYYY-MM` (unique per tenant), `label`, `start_date`, `end_date`, `status` (enum: open/closed), `closed_at`, `closed_by` | auto-created on first posting; index `(tenant_id, period)` |
-| `journal_entries` | `number` (varchar 30, unique per tenant), `period_id`, `entry_date`, `status` (enum: draft/posted/reversed), `reference_type`, `reference_id`, `currency` (default USD), `description`, `debit_total`, `credit_total`, `posted_at`, `posted_by`, `reversed_by_entry_id`, `version` | balance enforced (|debit − credit| ≤ 0.005); index `(tenant_id, number)`, `(tenant_id, entry_date)`, `(tenant_id, reference_type, reference_id)` |
-| `journal_entry_lines` | `entry_id`, `account_id`, `line_index`, `description`, `debit`, `credit` | exactly one of debit/credit > 0; index `(tenant_id, entry_id)`, `(tenant_id, account_id)`; FKs to `journal_entries` and `chart_accounts` |
+| Table                 | Columns (besides base + tenant)                                                                                                                                                                                                                                                    | Notes / indexes                                                                                                                          |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `chart_accounts`      | `code` (varchar 20), `name` (varchar 255), `type` (enum: asset/liability/equity/revenue/expense), `normal_balance` (enum: debit/credit), `parent_id` (nullable), `active`, `description`, `version`                                                                                | `code` unique per tenant; index `(tenant_id, code)`, `(tenant_id, parent_id)`; self-FK `parent_id → chart_accounts(id)`                  |
+| `accounting_periods`  | `period` `char(7)` `YYYY-MM` (unique per tenant), `label`, `start_date`, `end_date`, `status` (enum: open/closed), `closed_at`, `closed_by`                                                                                                                                        | auto-created on first posting; index `(tenant_id, period)`                                                                               |
+| `journal_entries`     | `number` (varchar 30, unique per tenant), `period_id`, `entry_date`, `status` (enum: draft/posted/reversed), `reference_type`, `reference_id`, `currency` (default USD), `description`, `debit_total`, `credit_total`, `posted_at`, `posted_by`, `reversed_by_entry_id`, `version` | balance enforced (                                                                                                                       | debit − credit | ≤ 0.005); index `(tenant_id, number)`, `(tenant_id, entry_date)`, `(tenant_id, reference_type, reference_id)` |
+| `journal_entry_lines` | `entry_id`, `account_id`, `line_index`, `description`, `debit`, `credit`                                                                                                                                                                                                           | exactly one of debit/credit > 0; index `(tenant_id, entry_id)`, `(tenant_id, account_id)`; FKs to `journal_entries` and `chart_accounts` |
 
 ### 16.3 Chart of accounts (seeded per tenant)
 
-| Code | Name | Type | Normal balance |
-|------|------|------|----------------|
-| 1000 | Cash and banks | asset | debit |
-| 1100 | Accounts receivable | asset | debit |
-| 1200 | Inventory | asset | debit |
-| 2000 | Accounts payable | liability | credit |
-| 2001 | Payroll payable | liability | credit |
-| 2002 | Withholdings and deductions payable | liability | credit |
-| 2100 | Sales tax payable | liability | credit |
-| 3000 | Retained earnings | equity | credit |
-| 4000 | Sales revenue | revenue | credit |
-| 4100 | Sales returns | revenue | debit |
-| 4200 | Foreign exchange gain | revenue | credit |
-| 5000 | Cost of goods sold | expense | debit |
-| 6000 | Payroll expense | expense | debit |
-| 6100 | Foreign exchange loss | expense | debit |
+| Code | Name                                | Type      | Normal balance |
+| ---- | ----------------------------------- | --------- | -------------- |
+| 1000 | Cash and banks                      | asset     | debit          |
+| 1100 | Accounts receivable                 | asset     | debit          |
+| 1200 | Inventory                           | asset     | debit          |
+| 2000 | Accounts payable                    | liability | credit         |
+| 2001 | Payroll payable                     | liability | credit         |
+| 2002 | Withholdings and deductions payable | liability | credit         |
+| 2100 | Sales tax payable                   | liability | credit         |
+| 3000 | Retained earnings                   | equity    | credit         |
+| 4000 | Sales revenue                       | revenue   | credit         |
+| 4100 | Sales returns                       | revenue   | debit          |
+| 4200 | Foreign exchange gain               | revenue   | credit         |
+| 5000 | Cost of goods sold                  | expense   | debit          |
+| 6000 | Payroll expense                     | expense   | debit          |
+| 6100 | Foreign exchange loss               | expense   | debit          |
 
 ### 16.4 Auto-posting rules (§8)
 
-| Trigger | Debits | Credits |
-|---------|--------|---------|
-| Invoice issued (direct or from order) | 1100 (total); 5000 (cogs) | 4000 (subtotal − discount); 2100 (tax); 1200 (cogs) |
-| Credit note | 4100 (subtotal − discount); 2100 (tax); 1200 (cogs) | 1100 (total); 5000 (cogs) |
-| Payment received | 1000 (amount) | 1100 (amount) |
-| Goods receipt | 1200 (received amount) | 2000 (received amount) |
-| Supplier payment | 2000 (amount) | 1000 (amount) |
-| Supplier bill variance | 5000 (bill − received, if positive) | 2000 (bill − received); inverse when negative |
-| Payroll posted | 6000 (gross) | 2001 (net); 2002 (deductions) |
-| Production completed | 1200 (total cost) | 1200 (material cost); 6000 (total − material) |
+| Trigger                               | Debits                                              | Credits                                             |
+| ------------------------------------- | --------------------------------------------------- | --------------------------------------------------- |
+| Invoice issued (direct or from order) | 1100 (total); 5000 (cogs)                           | 4000 (subtotal − discount); 2100 (tax); 1200 (cogs) |
+| Credit note                           | 4100 (subtotal − discount); 2100 (tax); 1200 (cogs) | 1100 (total); 5000 (cogs)                           |
+| Payment received                      | 1000 (amount)                                       | 1100 (amount)                                       |
+| Goods receipt                         | 1200 (received amount)                              | 2000 (received amount)                              |
+| Supplier payment                      | 2000 (amount)                                       | 1000 (amount)                                       |
+| Supplier bill variance                | 5000 (bill − received, if positive)                 | 2000 (bill − received); inverse when negative       |
+| Payroll posted                        | 6000 (gross)                                        | 2001 (net); 2002 (deductions)                       |
+| Production completed                  | 1200 (total cost)                                   | 1200 (material cost); 6000 (total − material)       |
 
 COGS is taken from `product_stock.average_cost` before the outbound movement. Auto-posted entries use `reference_type` `invoice` / `credit_note` / `payment` / `purchase_receipt` / `supplier_payment` / `supplier_bill` / `payroll` / `production_order` and `reference_id` of the source document. A closed period rejects any new posting (409).
 
@@ -483,12 +495,12 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 
 **Table** (`exchange_rates`, extends `TenantBaseEntity`)
 
-| Column | Notes |
-|--------|-------|
-| `base_currency` `char(3)` | base currency (e.g. `USD`) |
-| `quote_currency` `char(3)` | quote currency (e.g. `EUR`) |
-| `rate_date` `date` | default `CURRENT_DATE` |
-| `rate` `numeric(18,6)` | `rate = units of quote per 1 unit of base` |
+| Column                     | Notes                                      |
+| -------------------------- | ------------------------------------------ |
+| `base_currency` `char(3)`  | base currency (e.g. `USD`)                 |
+| `quote_currency` `char(3)` | quote currency (e.g. `EUR`)                |
+| `rate_date` `date`         | default `CURRENT_DATE`                     |
+| `rate` `numeric(18,6)`     | `rate = units of quote per 1 unit of base` |
 
 **Unique** `(tenant_id, base_currency, quote_currency, rate_date)`; the latest rate at or before a date is used for conversion.
 
@@ -511,12 +523,12 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 
 ### 17.2 Tables
 
-| Table | Columns (besides base + tenant) | Notes / indexes |
-|-------|--------------------------------|-----------------|
-| `crm_contacts` | `full_name`, `customer_id` (FK → customers, nullable), `title`, `email`, `phone`, `mobile`, `address`, `notes`, `active` | index `(tenant_id, full_name)`; `customer_id` FK ON DELETE NO ACTION |
-| `crm_leads` | `number` (unique per tenant), `source`, `company_name`, `contact_name`, `email`, `phone`, `status` (enum), `estimated_amount` (numeric(14,2)), `currency`, `assigned_user_id`, `notes`, `converted_customer_id` (FK → customers, nullable), `version` | **unique** `(tenant_id, number)`; index `(tenant_id, status)` |
-| `crm_opportunities` | `name`, `customer_id` (FK, nullable), `lead_id` (FK → crm_leads, nullable), `stage` (enum), `amount`, `currency`, `probability` (int %), `expected_close_date`, `assigned_user_id`, `won_at`, `lost_at`, `notes`, `version` | index `(tenant_id, stage)`; FKs ON DELETE NO ACTION |
-| `crm_activities` | `activity_type` (enum), `subject`, `description`, `due_at`, `completed_at`, `assignee_id`, `reference_type`, `reference_id` | polymorphic reference; index `(tenant_id, reference_type)`, `(tenant_id, reference_id)` |
+| Table               | Columns (besides base + tenant)                                                                                                                                                                                                                       | Notes / indexes                                                                         |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `crm_contacts`      | `full_name`, `customer_id` (FK → customers, nullable), `title`, `email`, `phone`, `mobile`, `address`, `notes`, `active`                                                                                                                              | index `(tenant_id, full_name)`; `customer_id` FK ON DELETE NO ACTION                    |
+| `crm_leads`         | `number` (unique per tenant), `source`, `company_name`, `contact_name`, `email`, `phone`, `status` (enum), `estimated_amount` (numeric(14,2)), `currency`, `assigned_user_id`, `notes`, `converted_customer_id` (FK → customers, nullable), `version` | **unique** `(tenant_id, number)`; index `(tenant_id, status)`                           |
+| `crm_opportunities` | `name`, `customer_id` (FK, nullable), `lead_id` (FK → crm_leads, nullable), `stage` (enum), `amount`, `currency`, `probability` (int %), `expected_close_date`, `assigned_user_id`, `won_at`, `lost_at`, `notes`, `version`                           | index `(tenant_id, stage)`; FKs ON DELETE NO ACTION                                     |
+| `crm_activities`    | `activity_type` (enum), `subject`, `description`, `due_at`, `completed_at`, `assignee_id`, `reference_type`, `reference_id`                                                                                                                           | polymorphic reference; index `(tenant_id, reference_type)`, `(tenant_id, reference_id)` |
 
 **Enums added in `packages/core`**
 
@@ -557,14 +569,14 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 
 ### 19.2 Tables
 
-| Table | Columns (besides base + tenant) | Notes / indexes |
-|-------|--------------------------------|-----------------|
-| `hr_departments` | `code` (unique per tenant), `name`, `manager_employee_id` (FK → hr_employees, nullable), `active` | unique `(tenant_id, code)` |
-| `hr_employees` | `employee_no` (unique per tenant), `names`, `email`, `phone`, `department_id` (FK → hr_departments), `position`, `hire_date`, `termination_date`, `salary` (numeric(14,2)), `salary_frequency`, `bank_name`, `bank_account`, `tax_id`, `address`, `status` (enum), `version` | unique `(tenant_id, employee_no)`; index `(tenant_id, department_id)` |
-| `hr_attendance` | `employee_id` (FK), `work_date` (date), `clock_in_at`/`clock_out_at` (timestamptz), `worked_minutes` (int), `status` (enum), `notes` | **unique** `(tenant_id, employee_id, work_date)` |
-| `hr_leaves` | `employee_id` (FK), `leave_type` (enum), `start_date`, `end_date`, `days` (int), `status` (enum), `reason`, `approved_by` (FK → users), `approved_at` | index `(tenant_id, employee_id, start_date)` |
-| `hr_payrolls` | `number` (unique per tenant), `period` (`YYYY-MM`), `status` (enum), `currency`, `total_gross`, `total_deductions`, `total_net` (numeric(14,2)), `paid_at`, `posted_entry_id` (FK → journal_entries, nullable), `posted_at`, `version` | unique `(tenant_id, number)`, `(tenant_id, period)` |
-| `hr_payroll_lines` | `payroll_id` (FK → hr_payrolls), `employee_id` (FK), `gross`, `bonus`, `overtime`, `deductions`, `net` (numeric(14,2)) | unique `(tenant_id, payroll_id, employee_id)` |
+| Table              | Columns (besides base + tenant)                                                                                                                                                                                                                                              | Notes / indexes                                                       |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `hr_departments`   | `code` (unique per tenant), `name`, `manager_employee_id` (FK → hr_employees, nullable), `active`                                                                                                                                                                            | unique `(tenant_id, code)`                                            |
+| `hr_employees`     | `employee_no` (unique per tenant), `names`, `email`, `phone`, `department_id` (FK → hr_departments), `position`, `hire_date`, `termination_date`, `salary` (numeric(14,2)), `salary_frequency`, `bank_name`, `bank_account`, `tax_id`, `address`, `status` (enum), `version` | unique `(tenant_id, employee_no)`; index `(tenant_id, department_id)` |
+| `hr_attendance`    | `employee_id` (FK), `work_date` (date), `clock_in_at`/`clock_out_at` (timestamptz), `worked_minutes` (int), `status` (enum), `notes`                                                                                                                                         | **unique** `(tenant_id, employee_id, work_date)`                      |
+| `hr_leaves`        | `employee_id` (FK), `leave_type` (enum), `start_date`, `end_date`, `days` (int), `status` (enum), `reason`, `approved_by` (FK → users), `approved_at`                                                                                                                        | index `(tenant_id, employee_id, start_date)`                          |
+| `hr_payrolls`      | `number` (unique per tenant), `period` (`YYYY-MM`), `status` (enum), `currency`, `total_gross`, `total_deductions`, `total_net` (numeric(14,2)), `paid_at`, `posted_entry_id` (FK → journal_entries, nullable), `posted_at`, `version`                                       | unique `(tenant_id, number)`, `(tenant_id, period)`                   |
+| `hr_payroll_lines` | `payroll_id` (FK → hr_payrolls), `employee_id` (FK), `gross`, `bonus`, `overtime`, `deductions`, `net` (numeric(14,2))                                                                                                                                                       | unique `(tenant_id, payroll_id, employee_id)`                         |
 
 **Enums added in `packages/core`**
 
@@ -603,12 +615,12 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 
 ### 20.2 Tables
 
-| Table | Columns (besides base + tenant) | Notes / indexes |
-|-------|--------------------------------|-----------------|
-| `production_boms` | `name`, `product_id`, `output_quantity` (default 1), `active`, `version` | BOM for a finished product; index `(tenant_id, product_id)`, `(tenant_id, name)` |
-| `production_bom_lines` | `bom_id`, `product_id`, `quantity`, `waste_rate` (default 0) | per-unit quantity of the component (relative to order quantity); a component cannot be the finished product itself; index `(tenant_id, bom_id)` |
-| `production_orders` | `number`, `product_id`, `bom_id` (nullable), `quantity`, `status` (enum), `warehouse_id`, `currency`, `labor_cost`, `overhead`, `material_cost`, `total_cost`, `completed_at`, `notes`, `version` | `number` per tenant via series `MO`; **unique** `(tenant_id, number)`; index `(tenant_id, status)`, `(tenant_id, product_id)`, `(tenant_id, warehouse_id)` |
-| `production_order_lines` | `order_id`, `product_id`, `planned_quantity`, `consumed_quantity`, `unit_cost`, `line_cost` | material consumption snapshot at completion; **unique** `(tenant_id, order_id, product_id)` |
+| Table                    | Columns (besides base + tenant)                                                                                                                                                                   | Notes / indexes                                                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `production_boms`        | `name`, `product_id`, `output_quantity` (default 1), `active`, `version`                                                                                                                          | BOM for a finished product; index `(tenant_id, product_id)`, `(tenant_id, name)`                                                                           |
+| `production_bom_lines`   | `bom_id`, `product_id`, `quantity`, `waste_rate` (default 0)                                                                                                                                      | per-unit quantity of the component (relative to order quantity); a component cannot be the finished product itself; index `(tenant_id, bom_id)`            |
+| `production_orders`      | `number`, `product_id`, `bom_id` (nullable), `quantity`, `status` (enum), `warehouse_id`, `currency`, `labor_cost`, `overhead`, `material_cost`, `total_cost`, `completed_at`, `notes`, `version` | `number` per tenant via series `MO`; **unique** `(tenant_id, number)`; index `(tenant_id, status)`, `(tenant_id, product_id)`, `(tenant_id, warehouse_id)` |
+| `production_order_lines` | `order_id`, `product_id`, `planned_quantity`, `consumed_quantity`, `unit_cost`, `line_cost`                                                                                                       | material consumption snapshot at completion; **unique** `(tenant_id, order_id, product_id)`                                                                |
 
 **Enums added in `packages/core`**
 
@@ -644,22 +656,22 @@ COGS is taken from `product_stock.average_cost` before the outbound movement. Au
 
 ### 21.2 Endpoints
 
-| Endpoint | Output |
-|----------|--------|
-| `GET /reports/dashboard` | salesToday, salesMonth, monthInvoices, receivables, payables, inventoryValue, lowStockProducts, openPurchaseOrders, productionInProgress, netIncomeMonth (+ range variants `rangeInvoices`, `netIncomeRange` with `from`/`to`) |
-| `GET /reports/alerts` | actionable alerts feed: low stock, overdue receivables and payables |
-| `GET /reports/inventory/valuation?warehouseId=` | rows per product/warehouse (quantity × average cost) + totals |
-| `GET /reports/inventory/movements?productId=&warehouseId=&movementType=&from=&to=&page=&limit=` | paginated stock movements (+ count) |
-| `GET /reports/inventory/low-stock?threshold=` | products at or below threshold (default 10) |
-| `GET /reports/sales/summary?groupBy=day\|month\|quarter\|year&from=&to=` | period buckets (revenue net of discounts, tax, total; credit notes negative) + totals |
-| `GET /reports/sales/by-product?from=&to=` | per product: quantity, revenue, COGS, grossProfit, margin + totals |
-| `GET /reports/sales/by-customer?from=&to=` | per customer: invoices, totalSold (net), totalPaid, balance (AR) + totals |
-| `GET /reports/aging/ar` | AR per customer bucketed by `CURRENT_DATE - COALESCE(due_date, issue_date)` (current / 1–30 / 31–60 / 61–90 / 90+) |
-| `GET /reports/aging/ap` | AP per supplier bucketed by `bill_date` (bills) / `received_at` (unbilled receipts) age, **net of `supplier_payments` not linked to a bill** (payments applied FIFO to the oldest buckets first; total = max(0, received − paid)) |
-| `GET /reports/financial/income-statement?periodId=&from=&to=` | revenue / cost of sales / operating expenses sections + net income |
-| `GET /reports/financial/balance-sheet?asOf=` | assets / liabilities / equity sections (equity includes current-period net income) |
-| `GET /reports/financial/cash-flow?from=&to=` | monthly cash-flow statement: inflows / outflows / net per period + running cash balance |
-| `GET /reports/hr/payroll?from=&to=` | payroll summary per period |
+| Endpoint                                                                                        | Output                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /reports/dashboard`                                                                        | salesToday, salesMonth, monthInvoices, receivables, payables, inventoryValue, lowStockProducts, openPurchaseOrders, productionInProgress, netIncomeMonth (+ range variants `rangeInvoices`, `netIncomeRange` with `from`/`to`)    |
+| `GET /reports/alerts`                                                                           | actionable alerts feed: low stock, overdue receivables and payables                                                                                                                                                               |
+| `GET /reports/inventory/valuation?warehouseId=`                                                 | rows per product/warehouse (quantity × average cost) + totals                                                                                                                                                                     |
+| `GET /reports/inventory/movements?productId=&warehouseId=&movementType=&from=&to=&page=&limit=` | paginated stock movements (+ count)                                                                                                                                                                                               |
+| `GET /reports/inventory/low-stock?threshold=`                                                   | products at or below threshold (default 10)                                                                                                                                                                                       |
+| `GET /reports/sales/summary?groupBy=day\|month\|quarter\|year&from=&to=`                        | period buckets (revenue net of discounts, tax, total; credit notes negative) + totals                                                                                                                                             |
+| `GET /reports/sales/by-product?from=&to=`                                                       | per product: quantity, revenue, COGS, grossProfit, margin + totals                                                                                                                                                                |
+| `GET /reports/sales/by-customer?from=&to=`                                                      | per customer: invoices, totalSold (net), totalPaid, balance (AR) + totals                                                                                                                                                         |
+| `GET /reports/aging/ar`                                                                         | AR per customer bucketed by `CURRENT_DATE - COALESCE(due_date, issue_date)` (current / 1–30 / 31–60 / 61–90 / 90+)                                                                                                                |
+| `GET /reports/aging/ap`                                                                         | AP per supplier bucketed by `bill_date` (bills) / `received_at` (unbilled receipts) age, **net of `supplier_payments` not linked to a bill** (payments applied FIFO to the oldest buckets first; total = max(0, received − paid)) |
+| `GET /reports/financial/income-statement?periodId=&from=&to=`                                   | revenue / cost of sales / operating expenses sections + net income                                                                                                                                                                |
+| `GET /reports/financial/balance-sheet?asOf=`                                                    | assets / liabilities / equity sections (equity includes current-period net income)                                                                                                                                                |
+| `GET /reports/financial/cash-flow?from=&to=`                                                    | monthly cash-flow statement: inflows / outflows / net per period + running cash balance                                                                                                                                           |
+| `GET /reports/hr/payroll?from=&to=`                                                             | payroll summary per period                                                                                                                                                                                                        |
 
 ### 21.3 Formulas (source of truth)
 
@@ -678,8 +690,8 @@ Same as §13.0 (TenantBaseEntity, UUID PK, enums in `packages/core`). Secrets (S
 
 ### 22.2 Tables
 
-| Table | Columns (besides base + tenant) | Notes / indexes |
-|-------|--------------------------------|-----------------|
+| Table               | Columns (besides base + tenant)                                                                                          | Notes / indexes                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
 | `payment_providers` | `provider` (enum: stripe), `environment` (enum: test/live), `secret_key`, `webhook_secret`, `is_enabled` (default false) | one row per `(tenant_id, provider)`; index `(tenant_id, provider)` |
 
 **Enums added in `packages/core`**
@@ -712,11 +724,11 @@ Same as §13.0 (TenantBaseEntity, UUID PK, enums in `packages/core`). The featur
 
 ### 23.2 Tables
 
-| Table | Columns (besides base + tenant) | Notes / indexes |
-|-------|--------------------------------|-----------------|
-| `cfdi_documents` | `invoice_id`, `uuid`, `serie` (nullable), `folio` (nullable), `version` (default `4.0`), `type` (`I`/`E`), `status` (enum `CfdiStatus`: pending/stamped/cancelled, default pending), `emitter_rfc`, `emitter_name`, `emitter_regime`, `receiver_rfc`, `receiver_name`, `receiver_uso` (nullable), `payment_form`, `payment_method`, `exportacion` (default `01`), `place_of_expedition`, `currency`, `exchange_rate` (default 1), `subtotal`, `discount`, `tax`, `total`, `xml` (text), `cadena_original` (text), `sello` (text), `cert_number`, `rfc_prov_certif`, `cert_sat_number`, `stamped_at` (nullable), `cancelled_at` (nullable) | **unique** `(tenant_id, invoice_id)` and `(tenant_id, uuid)`; indexes `(tenant_id)`, `(tenant_id, invoice_id)`, `(tenant_id, uuid)`, `(tenant_id, status)` |
-| `cfdi_certificates` | `kind` (`emisor`/`pac`), `rfc`, `name`, `serial_number`, `valid_from`, `valid_to`, `certificate_pem` (text), `private_key_pem` (text), `active` (default true) | **unique** `(tenant_id, kind)`; per-tenant lazily-created self-signed certs |
-| `tenants` (+): | `fiscal_regime` (nullable), `fiscal_address` (jsonb: street/exterior/interior/zip/city), `config.cfdi` (jsonb: `{ enabled, paymentForm, paymentMethod, placeOfExpedition }`) | `placeOfExpedition` falls back to `fiscal_address.zip`, then `00000` |
+| Table               | Columns (besides base + tenant)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Notes / indexes                                                                                                                                            |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cfdi_documents`    | `invoice_id`, `uuid`, `serie` (nullable), `folio` (nullable), `version` (default `4.0`), `type` (`I`/`E`), `status` (enum `CfdiStatus`: pending/stamped/cancelled, default pending), `emitter_rfc`, `emitter_name`, `emitter_regime`, `receiver_rfc`, `receiver_name`, `receiver_uso` (nullable), `payment_form`, `payment_method`, `exportacion` (default `01`), `place_of_expedition`, `currency`, `exchange_rate` (default 1), `subtotal`, `discount`, `tax`, `total`, `xml` (text), `cadena_original` (text), `sello` (text), `cert_number`, `rfc_prov_certif`, `cert_sat_number`, `stamped_at` (nullable), `cancelled_at` (nullable) | **unique** `(tenant_id, invoice_id)` and `(tenant_id, uuid)`; indexes `(tenant_id)`, `(tenant_id, invoice_id)`, `(tenant_id, uuid)`, `(tenant_id, status)` |
+| `cfdi_certificates` | `kind` (`emisor`/`pac`), `rfc`, `name`, `serial_number`, `valid_from`, `valid_to`, `certificate_pem` (text), `private_key_pem` (text), `active` (default true)                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | **unique** `(tenant_id, kind)`; per-tenant lazily-created self-signed certs                                                                                |
+| `tenants` (+):      | `fiscal_regime` (nullable), `fiscal_address` (jsonb: street/exterior/interior/zip/city), `config.cfdi` (jsonb: `{ enabled, paymentForm, paymentMethod, placeOfExpedition }`)                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `placeOfExpedition` falls back to `fiscal_address.zip`, then `00000`                                                                                       |
 
 **Enums and constants added in `packages/core`**
 
@@ -759,12 +771,12 @@ US-only feature for tenants with `country = 'US'`. Sales tax is applied per sale
 
 ### 24.2 Configuration and data model
 
-| Item | Type | Notes |
-|------|------|-------|
-| `tenants.config.usSalesTax` | jsonb | `{ nexusStates: string[], rates: Record<string, number> }`; seeded `{ nexusStates: ['CA','TX'], rates: {} }` for US tenants. |
-| `customers.state` | varchar(2) nullable | US state code of the billing address. |
-| `customers.tax_exempt` | boolean, default false | Exempt customers are never charged sales tax. |
-| `US_STATES` (in `packages/core`) | `Record<string, { name, rate }>` | 50 states + DC with base state-level sales tax rates (fraction); `config.rates` overrides win over these defaults. |
+| Item                             | Type                             | Notes                                                                                                                        |
+| -------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `tenants.config.usSalesTax`      | jsonb                            | `{ nexusStates: string[], rates: Record<string, number> }`; seeded `{ nexusStates: ['CA','TX'], rates: {} }` for US tenants. |
+| `customers.state`                | varchar(2) nullable              | US state code of the billing address.                                                                                        |
+| `customers.tax_exempt`           | boolean, default false           | Exempt customers are never charged sales tax.                                                                                |
+| `US_STATES` (in `packages/core`) | `Record<string, { name, rate }>` | 50 states + DC with base state-level sales tax rates (fraction); `config.rates` overrides win over these defaults.           |
 
 ### 24.3 Resolution rule
 
@@ -799,17 +811,17 @@ Web: Settings page (`/settings`, nav gated on `tax:read`) edits nexus checkboxes
 
 Navigation is permission-gated and grouped via `apps/web/src/auth/route-permissions.ts` (`RouteGuard` + `NavGroup`):
 
-| Group | Routes |
-|-------|--------|
-| overview | dashboard (`reporting:read`), profile |
-| sales | POS (`invoicing:read`), invoices, customers, sales orders (`sales:read`) |
-| purchasing | purchase orders, suppliers (`purchasing:read`) |
-| inventory | products, stock, warehouses (`inventory:read`) |
-| finance | accounting, chart of accounts (`accounting:read`) |
-| crm | contacts/leads/opportunities/activities (`crm:read`) |
-| hr | employees, attendance/leaves (`hr:read`) |
-| production | production orders (`production:read`) |
-| system | reports (`reporting:read`), users & roles (`users:read`), audit (`audit:read`), settings (`tax:read`) |
+| Group      | Routes                                                                                                |
+| ---------- | ----------------------------------------------------------------------------------------------------- |
+| overview   | dashboard (`reporting:read`), profile                                                                 |
+| sales      | POS (`invoicing:read`), invoices, customers, sales orders (`sales:read`)                              |
+| purchasing | purchase orders, suppliers (`purchasing:read`)                                                        |
+| inventory  | products, stock, warehouses (`inventory:read`)                                                        |
+| finance    | accounting, chart of accounts (`accounting:read`)                                                     |
+| crm        | contacts/leads/opportunities/activities (`crm:read`)                                                  |
+| hr         | employees, attendance/leaves (`hr:read`)                                                              |
+| production | production orders (`production:read`)                                                                 |
+| system     | reports (`reporting:read`), users & roles (`users:read`), audit (`audit:read`), settings (`tax:read`) |
 
 Protected routes render `Forbidden`/`NotFound` and redirect to login when unauthenticated. The sidebar collapses on desktop (state persisted) and becomes a drawer under 900 px; the active route shows an accent bar and nav links expose focus-visible rings. Login and auth pages (forgot/reset password, accept invite) use theme-aware branding (CSS `--color-primary`).
 
@@ -822,4 +834,3 @@ Shared primitives live in `apps/web/src/components/ui/*`: `Input`, `Select`, `Te
 - **Unit:** Vitest + Testing Library (`pnpm --filter @aptifum/web test`) — components, i18n and helpers (~75 tests).
 - **E2E:** Playwright (`apps/web/playwright.config.ts`) covering auth, inventory, POS, RBAC, reports and sales flows.
 - **CI:** web unit tests and the OpenAPI drift check run in GitHub Actions; Playwright e2e is run locally (`pnpm --filter @aptifum/web test:e2e`).
-

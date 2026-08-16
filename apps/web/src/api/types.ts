@@ -597,13 +597,7 @@ export interface Lead {
   convertedCustomer: Customer | null;
 }
 
-export type OpportunityStage =
-  | 'prospecting'
-  | 'qualification'
-  | 'proposal'
-  | 'negotiation'
-  | 'won'
-  | 'lost';
+export type OpportunityStage = 'prospecting' | 'qualification' | 'proposal' | 'negotiation' | 'won' | 'lost';
 
 export interface Opportunity {
   id: string;

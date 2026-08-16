@@ -92,10 +92,7 @@ export function ActivityPanel() {
   });
 
   const createMutation = useApiMutation<CreateActivityDto>('/api/v1/crm/activities', 'POST');
-  const updateMutation = useApiMutation<UpdateActivityDto>(
-    `/api/v1/crm/activities/${editingId ?? ''}`,
-    'PATCH',
-  );
+  const updateMutation = useApiMutation<UpdateActivityDto>(`/api/v1/crm/activities/${editingId ?? ''}`, 'PATCH');
   const deleteMutation = useApiMutationVoid(`/api/v1/crm/activities/${deleting?.id ?? ''}`, 'DELETE');
   const completeMutation = useApiMutation<{ completedAt: string }>(
     `/api/v1/crm/activities/${completeTarget?.id ?? ''}`,
@@ -241,7 +238,13 @@ export function ActivityPanel() {
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={() => {}} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={() => {}}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
 
@@ -252,7 +255,8 @@ export function ActivityPanel() {
             <div className="grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1">
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-type">
-                  {t('crm.type')}<span className="text-danger"> *</span>
+                  {t('crm.type')}
+                  <span className="text-danger"> *</span>
                 </label>
                 <Select className="w-full" id="activity-type" {...register('activityType')}>
                   {activityTypes.map((type) => (
@@ -264,10 +268,13 @@ export function ActivityPanel() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-subject">
-                  {t('fields.subject')}<span className="text-danger"> *</span>
+                  {t('fields.subject')}
+                  <span className="text-danger"> *</span>
                 </label>
                 <Input className="w-full" id="activity-subject" {...register('subject')} />
-                {errors.subject ? <div className="text-[12px] font-normal text-danger">{errors.subject.message}</div> : null}
+                {errors.subject ? (
+                  <div className="text-[12px] font-normal text-danger">{errors.subject.message}</div>
+                ) : null}
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-due">{t('crm.dueAt')}</label>
@@ -279,7 +286,8 @@ export function ActivityPanel() {
               </div>
               <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
                 <label htmlFor="activity-ref-type">{t('crm.referenceType')}</label>
-                <Input className="w-full"
+                <Input
+                  className="w-full"
                   id="activity-ref-type"
                   placeholder={t('crm.referenceTypePlaceholder')}
                   {...register('referenceType')}
@@ -294,7 +302,11 @@ export function ActivityPanel() {
               <label htmlFor="activity-description">{t('fields.description')}</label>
               <Textarea className="w-full" id="activity-description" rows={3} {...register('description')} />
             </div>
-            {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+            {formError ? (
+              <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+                {formError}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button variant="default" type="submit" disabled={saving} loading={saving}>
                 {saving ? t('common.saving') : editingId ? t('common.saveChanges') : t('crm.createActivity')}

@@ -41,10 +41,7 @@ export class PayrollsController {
   @Post(':id/post')
   @RequirePermissions(permission(ModuleName.HR, 'approve'))
   @ApiOperation({ summary: 'Post a payroll (generates accounting entry)' })
-  post(
-    @CurrentUser() user: { tenantId: string | null; id?: string },
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  post(@CurrentUser() user: { tenantId: string | null; id?: string }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.payrollsService.post(user.tenantId, user.id ?? null, id);
   }
 

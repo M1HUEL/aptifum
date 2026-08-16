@@ -21,12 +21,7 @@ export class JournalEntriesController {
     @Query() { page, limit }: PaginationQueryDto,
     @Query('periodId') periodId?: string,
   ) {
-    return this.journalEntriesService.findAll(
-      user.tenantId,
-      Number(page),
-      Math.min(Number(limit), 100),
-      periodId,
-    );
+    return this.journalEntriesService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100), periodId);
   }
 
   @Get(':id')
@@ -39,20 +34,14 @@ export class JournalEntriesController {
   @Post()
   @RequirePermissions(permission(ModuleName.ACCOUNTING, 'write'))
   @ApiOperation({ summary: 'Post a manual journal entry' })
-  create(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @Body() dto: CreateJournalEntryDto,
-  ) {
+  create(@CurrentUser() user: { tenantId: string | null; id: string }, @Body() dto: CreateJournalEntryDto) {
     return this.journalEntriesService.create(user.tenantId, user.id, dto);
   }
 
   @Post(':id/reverse')
   @RequirePermissions(permission(ModuleName.ACCOUNTING, 'write'))
   @ApiOperation({ summary: 'Reverse a posted journal entry' })
-  reverse(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  reverse(@CurrentUser() user: { tenantId: string | null; id: string }, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.journalEntriesService.reverse(user.tenantId, user.id, id);
   }
 }

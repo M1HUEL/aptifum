@@ -108,7 +108,10 @@ export function InvoiceFormModal({
   };
 
   const removeItem = (index: number) => {
-    setValue('items', items.filter((_, i) => i !== index));
+    setValue(
+      'items',
+      items.filter((_, i) => i !== index),
+    );
   };
 
   const submit = handleSubmit((values) => {
@@ -147,7 +150,9 @@ export function InvoiceFormModal({
                   />
                 )}
               />
-              {errors.customerId ? <div className="text-[12px] font-normal text-danger">{errors.customerId.message}</div> : null}
+              {errors.customerId ? (
+                <div className="text-[12px] font-normal text-danger">{errors.customerId.message}</div>
+              ) : null}
             </div>
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="invoice-warehouse">{t('fields.warehouse')}</label>
@@ -166,8 +171,17 @@ export function InvoiceFormModal({
             </div>
             <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
               <label htmlFor="invoice-discount">{t('fields.discount')}</label>
-              <Input className="w-full" id="invoice-discount" type="number" min="0" step="0.01" {...register('discount')} />
-              {errors.discount ? <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div> : null}
+              <Input
+                className="w-full"
+                id="invoice-discount"
+                type="number"
+                min="0"
+                step="0.01"
+                {...register('discount')}
+              />
+              {errors.discount ? (
+                <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div>
+              ) : null}
             </div>
           </div>
           <div className="mb-3 overflow-hidden rounded-ui border border-border bg-surface shadow-(--shadow)">
@@ -209,12 +223,15 @@ export function InvoiceFormModal({
                           )}
                         />
                         {errors.items?.[index]?.productId ? (
-                          <div className="text-[12px] font-normal text-danger">{errors.items[index]?.productId?.message}</div>
+                          <div className="text-[12px] font-normal text-danger">
+                            {errors.items[index]?.productId?.message}
+                          </div>
                         ) : null}
                       </div>
                     </td>
                     <td className="px-[14px] py-2.5 align-top">
-                      <Input className="w-full text-right"
+                      <Input
+                        className="w-full text-right"
                         id={`invoice-item-qty-${index}`}
                         type="number"
                         min="0.0001"
@@ -222,11 +239,14 @@ export function InvoiceFormModal({
                         {...register(`items.${index}.quantity`)}
                       />
                       {errors.items?.[index]?.quantity ? (
-                        <div className="text-[12px] font-normal text-danger">{errors.items[index]?.quantity?.message}</div>
+                        <div className="text-[12px] font-normal text-danger">
+                          {errors.items[index]?.quantity?.message}
+                        </div>
                       ) : null}
                     </td>
                     <td className="px-[14px] py-2.5 align-top">
-                      <Input className="w-full text-right"
+                      <Input
+                        className="w-full text-right"
                         id={`invoice-item-price-${index}`}
                         type="number"
                         min="0"
@@ -235,11 +255,14 @@ export function InvoiceFormModal({
                         {...register(`items.${index}.unitPrice`)}
                       />
                       {errors.items?.[index]?.unitPrice ? (
-                        <div className="text-[12px] font-normal text-danger">{errors.items[index]?.unitPrice?.message}</div>
+                        <div className="text-[12px] font-normal text-danger">
+                          {errors.items[index]?.unitPrice?.message}
+                        </div>
                       ) : null}
                     </td>
                     <td className="px-[14px] py-2.5 align-top">
-                      <Input className="w-full text-right"
+                      <Input
+                        className="w-full text-right"
                         id={`invoice-item-tax-${index}`}
                         type="number"
                         min="0"
@@ -249,7 +272,9 @@ export function InvoiceFormModal({
                         {...register(`items.${index}.taxRate`)}
                       />
                       {errors.items?.[index]?.taxRate ? (
-                        <div className="text-[12px] font-normal text-danger">{errors.items[index]?.taxRate?.message}</div>
+                        <div className="text-[12px] font-normal text-danger">
+                          {errors.items[index]?.taxRate?.message}
+                        </div>
                       ) : null}
                     </td>
                     <td className="px-2 py-2.5 text-center align-top">
@@ -271,7 +296,11 @@ export function InvoiceFormModal({
             <label htmlFor="invoice-notes">{t('fields.notes')}</label>
             <Textarea className="w-full" id="invoice-notes" rows={2} {...register('notes')} />
           </div>
-          {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+          {formError ? (
+            <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+              {formError}
+            </div>
+          ) : null}
           <DialogFooter>
             <Button variant="default" type="submit" disabled={saving} loading={saving}>
               {saving ? t('invoices.issuing') : t('invoices.issueInvoice')}

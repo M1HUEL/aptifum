@@ -31,9 +31,7 @@ function buildService(
     save: vi.fn((o: unknown) => Promise.resolve(o)),
   };
   const manager = {
-    getRepository: vi.fn((entity: unknown) =>
-      entity === ProductStock ? stockRepo : salesOrderRepo,
-    ),
+    getRepository: vi.fn((entity: unknown) => (entity === ProductStock ? stockRepo : salesOrderRepo)),
   };
   const dataSource = {
     transaction: vi.fn(async (cb: (m: unknown) => Promise<unknown>) => cb(manager)),
@@ -65,9 +63,7 @@ describe('OrdersService confirm', () => {
     };
     const { service, stockRepo } = buildService({ findOne: vi.fn().mockResolvedValue(order) });
     const result = await service.confirm(TENANT, 'o1');
-    expect(stockRepo.save).toHaveBeenCalledWith(
-      expect.objectContaining({ quantity: 100, reservedQuantity: 5 }),
-    );
+    expect(stockRepo.save).toHaveBeenCalledWith(expect.objectContaining({ quantity: 100, reservedQuantity: 5 }));
     expect(result.status).toBe('confirmed');
   });
 
@@ -128,9 +124,7 @@ describe('OrdersService cancel', () => {
       { stock: { quantity: 100, reservedQuantity: 5 } },
     );
     const result = await service.cancel(TENANT, 'o1');
-    expect(stockRepo.save).toHaveBeenCalledWith(
-      expect.objectContaining({ quantity: 100, reservedQuantity: 0 }),
-    );
+    expect(stockRepo.save).toHaveBeenCalledWith(expect.objectContaining({ quantity: 100, reservedQuantity: 0 }));
     expect(result.status).toBe('cancelled');
   });
 

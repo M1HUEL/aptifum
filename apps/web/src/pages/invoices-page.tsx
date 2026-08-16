@@ -195,9 +195,7 @@ export function InvoicesPage() {
     {
       key: 'type',
       header: t('tables.type'),
-      render: (row) => (
-        <Badge tone={row.type === 'invoice' ? 'info' : 'warning'}>{row.type.replace('_', ' ')}</Badge>
-      ),
+      render: (row) => <Badge tone={row.type === 'invoice' ? 'info' : 'warning'}>{row.type.replace('_', ' ')}</Badge>,
     },
     {
       key: 'customer',
@@ -250,12 +248,7 @@ export function InvoicesPage() {
         subtitle={t('invoices.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <Button
-              variant="secondary"
-              type="button"
-              aria-label={t('common.export')}
-              onClick={handleExport}
-            >
+            <Button variant="secondary" type="button" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </Button>
             <Button onClick={() => setInvoiceOpen(true)}>{t('invoices.newInvoice')}</Button>
@@ -286,11 +279,7 @@ export function InvoicesPage() {
           <option value="invoice">{t('invoices.invoice')}</option>
           <option value="credit_note">{t('invoices.creditNote')}</option>
         </Select>
-        <Button
-          type="submit"
-        >
-          {t('common.search')}
-        </Button>
+        <Button type="submit">{t('common.search')}</Button>
       </Toolbar>
       {error ? <ErrorBanner message={error} /> : null}
       {!data && !error ? <TableSkeleton columns={columns.length} /> : null}
@@ -311,9 +300,21 @@ export function InvoicesPage() {
               }
             />
           ) : (
-            <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} sort={sort} onSortChange={handleSortChange} />
+            <DataTable
+              columns={columns}
+              rows={data.data}
+              rowKey={(row) => row.id}
+              sort={sort}
+              onSortChange={handleSortChange}
+            />
           )}
-          <Pagination page={data.meta.page} limit={data.meta.limit} total={data.meta.total} onPage={handlePageChange} onLimit={handleLimitChange} />
+          <Pagination
+            page={data.meta.page}
+            limit={data.meta.limit}
+            total={data.meta.total}
+            onPage={handlePageChange}
+            onLimit={handleLimitChange}
+          />
         </>
       ) : null}
 

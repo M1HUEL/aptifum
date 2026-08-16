@@ -46,12 +46,7 @@ export class PurchaseOrdersService {
     return tenantId ? { tenantId } : {};
   }
 
-  async findAll(
-    tenantId: string | null,
-    page: number,
-    limit: number,
-    opts: { q?: string; status?: string } = {},
-  ) {
+  async findAll(tenantId: string | null, page: number, limit: number, opts: { q?: string; status?: string } = {}) {
     if (opts.status && !(Object.values(PurchaseOrderStatus) as string[]).includes(opts.status)) {
       throw new BadRequestException(`Invalid status: ${opts.status}`);
     }
@@ -106,7 +101,10 @@ export class PurchaseOrdersService {
     if (!warehouse) {
       throw new NotFoundException('Warehouse not found');
     }
-    const products = await this.loadProducts(tenantId, dto.items.map((i) => i.productId));
+    const products = await this.loadProducts(
+      tenantId,
+      dto.items.map((i) => i.productId),
+    );
 
     return this.dataSource.transaction(async (manager) => {
       const ordersRepo = manager.getRepository(PurchaseOrder);
@@ -162,10 +160,7 @@ export class PurchaseOrdersService {
 
   async cancel(tenantId: string | null, id: string) {
     const order = await this.findOne(tenantId, id);
-    if (
-      order.status !== PurchaseOrderStatus.DRAFT &&
-      order.status !== PurchaseOrderStatus.APPROVED
-    ) {
+    if (order.status !== PurchaseOrderStatus.DRAFT && order.status !== PurchaseOrderStatus.APPROVED) {
       throw new BadRequestException('Only draft or approved purchase orders can be cancelled');
     }
     order.status = PurchaseOrderStatus.CANCELLED;
@@ -244,21 +239,12 @@ export class PurchaseOrdersService {
         receivedAmount = round2(receivedAmount + orderItem.unitCost * line.quantity);
       }
 
-      const allReceived = order.items.every(
-        (item) => item.receivedQuantity + 1e-9 >= item.quantity,
-      );
+      const allReceived = order.items.every((item) => item.receivedQuantity + 1e-9 >= item.quantity);
       if (allReceived) {
         order.status = PurchaseOrderStatus.RECEIVED;
         await manager.getRepository(PurchaseOrder).save(order);
       }
-      await this.postReceiptEntry(
-        manager,
-        tenantId,
-        userId,
-        order.currency,
-        saved,
-        receivedAmount,
-      );
+      await this.postReceiptEntry(manager, tenantId, userId, order.currency, saved, receivedAmount);
       await this.outbox.emit(manager, tenantId, {
         eventType: 'purchase_receipt',
         aggregateType: 'goods_receipt',
@@ -300,7 +286,9 @@ export class PurchaseOrdersService {
     return new Map(products.map((p) => [p.id, p]));
   }
 
-  private computeTotals(items: Pick<PurchaseOrderItem, 'quantity' | 'unitCost' | 'discount' | 'taxRate' | 'taxAmount' | 'lineTotal'>[]) {
+  private computeTotals(
+    items: Pick<PurchaseOrderItem, 'quantity' | 'unitCost' | 'discount' | 'taxRate' | 'taxAmount' | 'lineTotal'>[],
+  ) {
     const subtotal = round2(items.reduce((sum, i) => sum + i.lineTotal, 0));
     const tax = round2(items.reduce((sum, i) => sum + i.taxAmount, 0));
     return { subtotal, discount: 0, tax, total: round2(subtotal + tax) };
@@ -319,9 +307,7 @@ export class PurchaseOrdersService {
         { accountCode: ACCOUNT_CODES.INVENTORY, debit: amount },
         { accountCode: ACCOUNT_CODES.ACCOUNTS_PAYABLE, credit: amount },
       ];
-      const cleanLines = lines.filter(
-        (line) => (line.debit ?? 0) > 0 || (line.credit ?? 0) > 0,
-      );
+      const cleanLines = lines.filter((line) => (line.debit ?? 0) > 0 || (line.credit ?? 0) > 0);
       if (cleanLines.length === 0) {
         return;
       }

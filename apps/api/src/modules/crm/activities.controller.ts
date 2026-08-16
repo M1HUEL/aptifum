@@ -24,12 +24,11 @@ export class ActivitiesController {
     @Query('referenceId') referenceId?: string,
     @Query('q') q?: string,
   ) {
-    return this.activitiesService.findAll(
-      user.tenantId,
-      Number(page),
-      Math.min(Number(limit), 100),
-      { referenceType, referenceId, q },
-    );
+    return this.activitiesService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100), {
+      referenceType,
+      referenceId,
+      q,
+    });
   }
 
   @Get(':id')

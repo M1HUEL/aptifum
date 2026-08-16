@@ -24,7 +24,9 @@ export function PosSuccess({
   const { t } = useTranslation();
   return (
     <div className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">
-      <div className="mb-4 rounded-ui border border-success/40 bg-success-bg px-[14px] py-2.5 text-success">{t('pos.saleCompleted')}</div>
+      <div className="mb-4 rounded-ui border border-success/40 bg-success-bg px-[14px] py-2.5 text-success">
+        {t('pos.saleCompleted')}
+      </div>
       <h3 className="mb-3.5 text-[15px]">{t('pos.invoiceNumber', { number: sale.number })}</h3>
       <div className="mb-2 grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 gap-y-3">
         <div className="detail-item">

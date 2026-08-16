@@ -12,9 +12,7 @@ describe('parseCsv', () => {
   it('parses headers and rows, normalizing header names', () => {
     const parsed = parseCsv('SKU,Name,Unit of Measure\nA1,Widget,unit\n');
     expect(parsed.headers).toEqual(['sku', 'name', 'unit_of_measure']);
-    expect(parsed.rows).toEqual([
-      { sku: 'A1', name: 'Widget', unit_of_measure: 'unit' },
-    ]);
+    expect(parsed.rows).toEqual([{ sku: 'A1', name: 'Widget', unit_of_measure: 'unit' }]);
     expect(parsed.rowNumbers).toEqual([2]);
   });
 
@@ -26,9 +24,7 @@ describe('parseCsv', () => {
   });
 
   it('supports quoted fields with commas, quotes and newlines', () => {
-    const parsed = parseCsv(
-      'name,address\n"Foo, Inc.","Main ""St"" 1"\n"Multi\nline",x',
-    );
+    const parsed = parseCsv('name,address\n"Foo, Inc.","Main ""St"" 1"\n"Multi\nline",x');
     expect(parsed.rows[0]).toEqual({ name: 'Foo, Inc.', address: 'Main "St" 1' });
     expect(parsed.rows[1]).toEqual({ name: 'Multi\nline', address: 'x' });
     expect(parsed.rowNumbers[1]).toBe(3);

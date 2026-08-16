@@ -6,7 +6,7 @@ import type { components } from '../../api/schema';
 import type { Invoice } from '../../api/types';
 import { paymentFormSchema, type PaymentFormValues } from '../../api/schemas';
 import { useApiInvalidation, useApiMutation } from '../../api/hooks';
-import { formatMoney , Input, Select, Textarea } from '../ui';
+import { formatMoney, Input, Select, Textarea } from '../ui';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { useToast } from '../toast';
@@ -105,9 +105,18 @@ export function PaymentFormModal({
               {t('fields.amount')} <span className="text-danger">*</span>
             </label>
             {invoice ? (
-              <div className="text-[12px] font-normal text-muted">{t('invoices.balanceDueHint', { amount: formatMoney(invoice.balanceDue) })}</div>
+              <div className="text-[12px] font-normal text-muted">
+                {t('invoices.balanceDueHint', { amount: formatMoney(invoice.balanceDue) })}
+              </div>
             ) : null}
-            <Input className="w-full" id="payment-amount" type="number" min="0.01" step="0.01" {...register('amount')} />
+            <Input
+              className="w-full"
+              id="payment-amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              {...register('amount')}
+            />
             {errors.amount ? <div className="text-[12px] font-normal text-danger">{errors.amount.message}</div> : null}
           </div>
           <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
@@ -122,7 +131,11 @@ export function PaymentFormModal({
             <label htmlFor="payment-notes">{t('fields.notes')}</label>
             <Textarea className="w-full" id="payment-notes" rows={2} {...register('notes')} />
           </div>
-          {formError ? <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">{formError}</div> : null}
+          {formError ? (
+            <div className="mb-4 rounded-ui border border-danger/40 bg-danger-bg px-[14px] py-2.5 text-danger">
+              {formError}
+            </div>
+          ) : null}
           <DialogFooter>
             <Button variant="default" type="submit" disabled={busy} loading={busy}>
               {busy ? t('invoices.recording') : t('invoices.recordPayment')}

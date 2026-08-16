@@ -1,12 +1,4 @@
-import {
-  IsBoolean,
-  IsIn,
-  IsNumber,
-  IsOptional,
-  IsString,
-  MaxLength,
-  Min,
-} from 'class-validator';
+import { IsBoolean, IsIn, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 import { FISCAL_REGIMES, USO_CFDI, US_STATES } from '@aptifum/core';
 
 export class UpdateCustomerDto {

@@ -30,10 +30,7 @@ interface LedgerRow {
 export class ReportsService {
   constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
 
-  async trialBalance(
-    tenantId: string | null,
-    opts: { periodId?: string; from?: string; to?: string },
-  ) {
+  async trialBalance(tenantId: string | null, opts: { periodId?: string; from?: string; to?: string }) {
     this.assertTenant(tenantId);
     const { where, params } = this.buildPeriodFilter(tenantId, opts);
     const rows: TrialBalanceRow[] = await this.dataSource.query(
@@ -56,9 +53,7 @@ export class ReportsService {
         const debit = round2(Number(row.debit));
         const credit = round2(Number(row.credit));
         const balance =
-          row.normal_balance === AccountNormalBalance.DEBIT
-            ? round2(debit - credit)
-            : round2(credit - debit);
+          row.normal_balance === AccountNormalBalance.DEBIT ? round2(debit - credit) : round2(credit - debit);
         return {
           accountId: row.id,
           code: row.code,
@@ -81,11 +76,7 @@ export class ReportsService {
     return { data, totals };
   }
 
-  async ledger(
-    tenantId: string | null,
-    accountId: string,
-    opts: { from?: string; to?: string },
-  ) {
+  async ledger(tenantId: string | null, accountId: string, opts: { from?: string; to?: string }) {
     this.assertTenant(tenantId);
     const account = await this.dataSource.query(
       `SELECT id, code, name, normal_balance FROM chart_accounts

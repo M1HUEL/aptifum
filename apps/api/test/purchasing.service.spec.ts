@@ -86,9 +86,7 @@ describe('PurchaseOrdersService receive', () => {
 
   it('requires a tenant', async () => {
     const service = buildOrdersService({});
-    await expect(service.receive(null, 'u1', 'o1', { items: [] })).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(service.receive(null, 'u1', 'o1', { items: [] })).rejects.toThrow(BadRequestException);
   });
 
   it('only allows receiving approved orders', async () => {
@@ -96,9 +94,9 @@ describe('PurchaseOrdersService receive', () => {
       findOne: vi.fn().mockResolvedValue({ ...approvedOrder, status: 'draft' }),
     };
     const service = buildOrdersService(ordersRepo);
-    await expect(
-      service.receive(TENANT, 'u1', 'o1', { items: [{ orderItemId: 'i1', quantity: 1 }] }),
-    ).rejects.toThrow(BadRequestException);
+    await expect(service.receive(TENANT, 'u1', 'o1', { items: [{ orderItemId: 'i1', quantity: 1 }] })).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('rejects an unknown order item', async () => {
@@ -112,9 +110,9 @@ describe('PurchaseOrdersService receive', () => {
   it('rejects receiving more than the remaining quantity', async () => {
     const ordersRepo = { findOne: vi.fn().mockResolvedValue(approvedOrder) };
     const service = buildOrdersService(ordersRepo);
-    await expect(
-      service.receive(TENANT, 'u1', 'o1', { items: [{ orderItemId: 'i1', quantity: 11 }] }),
-    ).rejects.toThrow(BadRequestException);
+    await expect(service.receive(TENANT, 'u1', 'o1', { items: [{ orderItemId: 'i1', quantity: 11 }] })).rejects.toThrow(
+      BadRequestException,
+    );
   });
 });
 
@@ -122,9 +120,7 @@ describe('SuppliersService create', () => {
   it('requires a tenant', async () => {
     const suppliersRepo = { create: vi.fn(), save: vi.fn() };
     const service = new SuppliersService(suppliersRepo as never);
-    await expect(
-      service.create(null, { code: 'S1', tradeName: 'Acme' } as never),
-    ).rejects.toThrow(BadRequestException);
+    await expect(service.create(null, { code: 'S1', tradeName: 'Acme' } as never)).rejects.toThrow(BadRequestException);
   });
 
   it('defaults currency and active when omitted', async () => {

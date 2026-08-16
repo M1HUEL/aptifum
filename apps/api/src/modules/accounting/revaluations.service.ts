@@ -3,14 +3,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In, Not } from 'typeorm';
 import { round2 } from '@aptifum/core';
 import { InvoiceStatus, JournalEntryStatus, SupplierBillStatus } from '@aptifum/core';
-import {
-  ACCOUNT_CODES,
-  Invoice,
-  JournalEntry,
-  SupplierBill,
-  Tenant,
-  postJournalEntry,
-} from '@aptifum/database';
+import { ACCOUNT_CODES, Invoice, JournalEntry, SupplierBill, Tenant, postJournalEntry } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
 import { CreateRevaluationDto } from './dto/create-revaluation.dto';
@@ -60,13 +53,7 @@ export class RevaluationsService {
       const rate = await this.exchangeRates.resolveRate(tenantId, functional, invoice.currency, date);
       const booked = round2(invoice.balanceDue * (invoice.exchangeRate ?? 1));
       const target = round2(invoice.balanceDue * rate);
-      const prior = await this.priorAdjustment(
-        manager,
-        tenantId,
-        invoice.id,
-        ACCOUNT_CODES.ACCOUNTS_RECEIVABLE,
-        true,
-      );
+      const prior = await this.priorAdjustment(manager, tenantId, invoice.id, ACCOUNT_CODES.ACCOUNTS_RECEIVABLE, true);
       const current = round2(booked + prior);
       if (Math.abs(round2(target - current)) <= 0.005) {
         continue;
@@ -129,13 +116,7 @@ export class RevaluationsService {
       const rate = await this.exchangeRates.resolveRate(tenantId, functional, bill.currency, date);
       const booked = round2(bill.balanceDue * (bill.exchangeRate ?? 1));
       const target = round2(bill.balanceDue * rate);
-      const prior = await this.priorAdjustment(
-        manager,
-        tenantId,
-        bill.id,
-        ACCOUNT_CODES.ACCOUNTS_PAYABLE,
-        false,
-      );
+      const prior = await this.priorAdjustment(manager, tenantId, bill.id, ACCOUNT_CODES.ACCOUNTS_PAYABLE, false);
       const current = round2(booked + prior);
       if (Math.abs(round2(target - current)) <= 0.005) {
         continue;

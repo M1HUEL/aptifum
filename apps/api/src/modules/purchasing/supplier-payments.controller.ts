@@ -20,21 +20,13 @@ export class SupplierPaymentsController {
     @Query() { page, limit }: PaginationQueryDto,
     @Query('supplierId') supplierId?: string,
   ) {
-    return this.paymentsService.findAll(
-      user.tenantId,
-      Number(page),
-      Math.min(Number(limit), 100),
-      supplierId,
-    );
+    return this.paymentsService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100), supplierId);
   }
 
   @Post()
   @RequirePermissions(permission(ModuleName.PURCHASING, 'write'))
   @ApiOperation({ summary: 'Record a supplier payment (AP)' })
-  record(
-    @CurrentUser() user: { tenantId: string | null; id: string },
-    @Body() dto: CreateSupplierPaymentDto,
-  ) {
+  record(@CurrentUser() user: { tenantId: string | null; id: string }, @Body() dto: CreateSupplierPaymentDto) {
     return this.paymentsService.record(user.tenantId, user.id, dto);
   }
 }

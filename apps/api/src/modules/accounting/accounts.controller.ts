@@ -23,13 +23,7 @@ export class AccountsController {
     @Query('type') type?: AccountType,
     @Query('q') q?: string,
   ) {
-    return this.accountsService.findAll(
-      user.tenantId,
-      Number(page),
-      Math.min(Number(limit), 100),
-      type,
-      q,
-    );
+    return this.accountsService.findAll(user.tenantId, Number(page), Math.min(Number(limit), 100), type, q);
   }
 
   @Get(':id')
