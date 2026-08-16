@@ -32,6 +32,7 @@ import { CsvImportDialog } from '../components/csv-import-dialog';
 import { useApiInvalidation, useApiMutation } from '../api/hooks';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
 import { exportRowsToCsv } from '../lib/csv';
 
 type CreateCustomerDto = components['schemas']['CreateCustomerDto'];
@@ -207,6 +208,8 @@ export function CustomersPage() {
     setFormError(null);
     setModalOpen(true);
   };
+
+  useNewRecordShortcut(openCreate);
 
   const openEdit = (customer: Customer) => {
     setEditingId(customer.id);

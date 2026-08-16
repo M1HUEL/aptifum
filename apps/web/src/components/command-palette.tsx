@@ -206,9 +206,6 @@ export function CommandPalette({
             className="h-12 w-full bg-transparent text-sm text-text outline-none placeholder:text-muted"
             aria-label={t('commandPalette.placeholder')}
           />
-          <kbd className="shrink-0 rounded-ui border border-border bg-bg px-1.5 py-0.5 text-[11px] text-muted">
-            ESC
-          </kbd>
         </div>
         <div ref={listRef} className="max-h-[320px] overflow-y-auto p-2">
           {groups.length === 0 ? (
@@ -246,6 +243,21 @@ export function CommandPalette({
               </div>
             ))
           )}
+        </div>
+        <div className="flex items-center gap-3 border-t border-border px-4 py-2 text-[11px] text-muted">
+          <span className="inline-flex items-center gap-1">
+            <kbd className="rounded-ui border border-border bg-bg px-1.5 py-0.5 text-[11px] text-text">N</kbd>
+            {t('commandPalette.hintNew')}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <kbd className="rounded-ui border border-border bg-bg px-1.5 py-0.5 text-[11px] text-text">↑</kbd>
+            <kbd className="rounded-ui border border-border bg-bg px-1.5 py-0.5 text-[11px] text-text">↓</kbd>
+            {t('commandPalette.hintNavigate')}
+          </span>
+          <span className="ml-auto inline-flex items-center gap-1">
+            <kbd className="rounded-ui border border-border bg-bg px-1.5 py-0.5 text-[11px] text-text">ESC</kbd>
+            {t('commandPalette.hintClose')}
+          </span>
         </div>
       </DialogContent>
     </Dialog>

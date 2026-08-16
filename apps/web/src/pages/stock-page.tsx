@@ -40,6 +40,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components
 import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
 import { exportRowsToCsv } from '../lib/csv';
 import { CsvImportDialog } from '../components/csv-import-dialog';
 
@@ -594,6 +595,8 @@ export function StockPage() {
     setFormError(null);
     setModalOpen(true);
   };
+
+  useNewRecordShortcut(openModal);
 
   const submit = handleSubmit((values) => {
     setFormError(null);

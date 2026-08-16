@@ -30,6 +30,7 @@ import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { CsvImportDialog } from '../components/csv-import-dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
 import { exportRowsToCsv } from '../lib/csv';
 
 type CreateSupplierDto = components['schemas']['CreateSupplierDto'];
@@ -204,6 +205,8 @@ export function SuppliersPage() {
     setFormError(null);
     setModalOpen(true);
   };
+
+  useNewRecordShortcut(openCreate);
 
   const openEdit = (supplier: Supplier) => {
     setEditingId(supplier.id);

@@ -33,6 +33,7 @@ import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
 import { exportRowsToCsv } from '../lib/csv';
 import { CsvImportDialog } from '../components/csv-import-dialog';
 
@@ -227,6 +228,8 @@ export function ProductsPage() {
     setFormError(null);
     setModalOpen(true);
   };
+
+  useNewRecordShortcut(openCreate);
 
   const openEdit = (product: Product) => {
     setEditingId(product.id);

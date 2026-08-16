@@ -35,6 +35,7 @@ import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
 import { exportRowsToCsv } from '../lib/csv';
 
 type CreateWarehouseDto = components['schemas']['CreateWarehouseDto'];
@@ -315,6 +316,8 @@ export function WarehousesCategoriesPage() {
     setCatError(null);
     setCatOpen(true);
   };
+
+  useNewRecordShortcut(() => (tab === 'warehouses' ? openWarehouse() : openCategory()));
 
   const submitCategory = submitCatForm((values) => {
     setCatError(null);

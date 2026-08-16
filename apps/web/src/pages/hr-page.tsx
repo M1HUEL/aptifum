@@ -40,6 +40,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
 
 type CreateEmployeeDto = components['schemas']['CreateEmployeeDto'];
 type GeneratePayrollDto = components['schemas']['GeneratePayrollDto'];
@@ -209,6 +210,8 @@ export function HrPage() {
     setFormError(null);
     setCreateOpen(true);
   };
+
+  useNewRecordShortcut(openCreate);
 
   const openEdit = (employee: Employee) => {
     setEditingId(employee.id);

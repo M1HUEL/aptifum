@@ -24,6 +24,7 @@ import { FileText } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
 import { exportRowsToCsv } from '../lib/csv';
 import { InvoiceFormModal } from '../components/invoices/invoice-form';
 import { PaymentFormModal } from '../components/invoices/payment-form';
@@ -62,6 +63,8 @@ export function InvoicesPage() {
     return key && (dir === 'asc' || dir === 'desc') ? { key, dir } : null;
   });
   const toast = useToast();
+
+  useNewRecordShortcut(() => setInvoiceOpen(true));
 
   const { data, error, reload } = usePagedQuery<Invoice>({
     path: '/api/v1/sales/invoices',

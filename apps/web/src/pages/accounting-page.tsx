@@ -28,6 +28,7 @@ import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
 
 type CreateJournalEntryDto = components['schemas']['CreateJournalEntryDto'];
 type CreateJournalEntryLineDto = components['schemas']['CreateJournalEntryLineDto'];
@@ -239,6 +240,8 @@ export function AccountingPage() {
     setFormError(null);
     setCreateOpen(true);
   };
+
+  useNewRecordShortcut(openCreate);
 
   const addLine = () => {
     setValue('lines', [...lines, emptyLine]);

@@ -962,6 +962,9 @@ const es = {
       customers: 'Clientes',
       invoices: 'Facturas',
     },
+    hintNew: 'Nuevo registro',
+    hintNavigate: 'Navegar',
+    hintClose: 'Cerrar',
   },
   validation: {
     required: '{{field}} es obligatorio',

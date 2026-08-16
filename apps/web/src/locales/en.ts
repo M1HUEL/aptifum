@@ -962,6 +962,9 @@ const en: Translation = {
       customers: 'Customers',
       invoices: 'Invoices',
     },
+    hintNew: 'New record',
+    hintNavigate: 'Navigate',
+    hintClose: 'Close',
   },
   validation: {
     required: '{{field}} is required',

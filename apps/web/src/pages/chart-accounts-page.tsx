@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components
 import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
+import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
 import { exportRowsToCsv } from '../lib/csv';
 
 const accountTypes: AccountType[] = ['asset', 'liability', 'equity', 'revenue', 'expense'];
@@ -117,6 +118,8 @@ export function ChartAccountsPage() {
     setFormError(null);
     setModalOpen(true);
   };
+
+  useNewRecordShortcut(openCreate);
 
   const openEdit = (account: ChartAccount) => {
     setEditingId(account.id);
