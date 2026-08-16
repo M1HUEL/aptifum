@@ -18,7 +18,7 @@
     "@aptifum/core": "workspace:*",
     "@aptifum/database": "workspace:*",
     "@aptifum/logger": "workspace:*",
-    "@nestjs/common": "^11.1.28",
+    "@nestjs/common": "^11.1.29",
     "@nestjs/core": "^11.1.28",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^11.1.28",
