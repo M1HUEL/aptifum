@@ -625,7 +625,11 @@ export function AttendanceLeavesPage() {
           {attData ? (
             <>
               {attData.data.length === 0 ? (
-                <EmptyState message={t('hr.noAttendanceRecords')} icon={<CalendarCheck className="size-6" />} />
+                <EmptyState
+                  message={t('hr.noAttendanceRecords')}
+                  icon={<CalendarCheck className="size-6" />}
+                  action={<Button onClick={() => openAttendance()}>{t('hr.newAttendance')}</Button>}
+                />
               ) : (
                 <DataTable columns={attendanceColumns} rows={attData.data} rowKey={(row) => row.id} />
               )}
@@ -676,7 +680,11 @@ export function AttendanceLeavesPage() {
           {leaveData ? (
             <>
               {leaveData.data.length === 0 ? (
-                <EmptyState message={t('hr.noLeaves')} icon={<CalendarOff className="size-6" />} />
+                <EmptyState
+                  message={t('hr.noLeaves')}
+                  icon={<CalendarOff className="size-6" />}
+                  action={<Button onClick={() => openLeave()}>{t('hr.newLeave')}</Button>}
+                />
               ) : (
                 <DataTable columns={leaveColumns} rows={leaveData.data} rowKey={(row) => row.id} />
               )}

@@ -66,6 +66,21 @@ export function InvoicesPage() {
 
   useNewRecordShortcut(() => setInvoiceOpen(true));
 
+  const hasActiveFilters = Boolean(query || statusFilter || typeFilter);
+  const clearFilters = () => {
+    setInput('');
+    setQuery('');
+    setStatusFilter('');
+    setTypeFilter('');
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.delete('q');
+    params.delete('status');
+    params.delete('type');
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
   const { data, error, reload } = usePagedQuery<Invoice>({
     path: '/api/v1/sales/invoices',
     page,
@@ -281,7 +296,19 @@ export function InvoicesPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('invoices.noInvoices')} icon={<FileText className="size-6" />} />
+            <EmptyState
+              message={t('invoices.noInvoices')}
+              icon={<FileText className="size-6" />}
+              action={
+                hasActiveFilters ? (
+                  <Button variant="ghost" onClick={clearFilters}>
+                    {t('common.clearFilters')}
+                  </Button>
+                ) : (
+                  <Button onClick={() => setInvoiceOpen(true)}>{t('invoices.newInvoice')}</Button>
+                )
+              }
+            />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} sort={sort} onSortChange={handleSortChange} />
           )}

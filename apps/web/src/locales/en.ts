@@ -29,6 +29,7 @@ const en: Translation = {
     confirm: 'Confirm',
     sortAscending: 'Sort {{column}} ascending',
     sortDescending: 'Sort {{column}} descending',
+    clearFilters: 'Clear filters',
     pdf: 'PDF',
     payment: 'Payment',
     paymentTerm: 'Payment',

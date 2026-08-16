@@ -533,7 +533,11 @@ export function ProductionPage() {
           {boms ? (
             <>
               {boms.data.length === 0 ? (
-                <EmptyState message={t('production.noBomsYet')} icon={<ListTree className="size-6" />} />
+                <EmptyState
+                  message={t('production.noBomsYet')}
+                  icon={<ListTree className="size-6" />}
+                  action={<Button onClick={openBomCreate}>{t('production.newBom')}</Button>}
+                />
               ) : (
                 <DataTable columns={bomColumns} rows={boms.data} rowKey={(row) => row.id} />
               )}
@@ -548,7 +552,11 @@ export function ProductionPage() {
           {orders ? (
             <>
               {orders.data.length === 0 ? (
-                <EmptyState message={t('production.noProductionOrdersYet')} icon={<Factory className="size-6" />} />
+                <EmptyState
+                  message={t('production.noProductionOrdersYet')}
+                  icon={<Factory className="size-6" />}
+                  action={<Button onClick={openOrderCreate}>{t('production.newProductionOrder')}</Button>}
+                />
               ) : (
                 <DataTable columns={orderColumns} rows={orders.data} rowKey={(row) => row.id} />
               )}

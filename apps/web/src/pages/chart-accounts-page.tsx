@@ -253,7 +253,13 @@ export function ChartAccountsPage() {
       />
       {error ? <ErrorBanner message={error} /> : null}
       {loading && accounts.length === 0 ? <TableSkeleton columns={columns.length} /> : null}
-      {!loading && accounts.length === 0 && !error ? <EmptyState message={t('accounts.noAccounts')} icon={<ListOrdered className="size-6" />} /> : null}
+      {!loading && accounts.length === 0 && !error ? (
+        <EmptyState
+          message={t('accounts.noAccounts')}
+          icon={<ListOrdered className="size-6" />}
+          action={<Button onClick={openCreate}>{t('accounts.newAccount')}</Button>}
+        />
+      ) : null}
       {accounts.length > 0 ? (
         <>
           <DataTable columns={columns} rows={accounts} rowKey={(row) => row.id} />

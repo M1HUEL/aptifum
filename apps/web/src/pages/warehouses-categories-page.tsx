@@ -450,7 +450,11 @@ export function WarehousesCategoriesPage() {
           {warehouseData ? (
             <>
               {warehouseData.data.length === 0 ? (
-                <EmptyState message={t('warehouses.noWarehouses')} icon={<WarehouseIcon className="size-6" />} />
+                <EmptyState
+                  message={t('warehouses.noWarehouses')}
+                  icon={<WarehouseIcon className="size-6" />}
+                  action={<Button onClick={() => openWarehouse()}>{t('warehouses.newWarehouse')}</Button>}
+                />
               ) : (
                 <DataTable columns={warehouseColumns} rows={warehouseData.data} rowKey={(row) => row.id} />
               )}
@@ -465,7 +469,11 @@ export function WarehousesCategoriesPage() {
           {categoryData ? (
             <>
               {categoryData.data.length === 0 ? (
-                <EmptyState message={t('warehouses.noCategories')} icon={<Tags className="size-6" />} />
+                <EmptyState
+                  message={t('warehouses.noCategories')}
+                  icon={<Tags className="size-6" />}
+                  action={<Button onClick={() => openCategory()}>{t('warehouses.newCategory')}</Button>}
+                />
               ) : (
                 <DataTable columns={categoryColumns} rows={categoryData.data} rowKey={(row) => row.id} />
               )}
@@ -531,7 +539,11 @@ export function WarehousesCategoriesPage() {
                 </Button>
               </div>
               {locations.length === 0 ? (
-                <EmptyState message={t('warehouses.noLocations')} icon={<MapPin className="size-6" />} />
+                <EmptyState
+                  message={t('warehouses.noLocations')}
+                  icon={<MapPin className="size-6" />}
+                  action={<Button onClick={() => openLocation()}>{t('warehouses.addLocation')}</Button>}
+                />
               ) : (
                 <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
                   <table className="w-full border-collapse">

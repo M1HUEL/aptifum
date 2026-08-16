@@ -211,6 +211,16 @@ export function CustomersPage() {
 
   useNewRecordShortcut(openCreate);
 
+  const clearSearch = () => {
+    setInput('');
+    setQuery('');
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.delete('q');
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
   const openEdit = (customer: Customer) => {
     setEditingId(customer.id);
     reset(fromCustomer(customer));
@@ -329,7 +339,19 @@ export function CustomersPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('customers.noCustomers')} icon={<Users className="size-6" />} />
+            <EmptyState
+              message={t('customers.noCustomers')}
+              icon={<Users className="size-6" />}
+              action={
+                query ? (
+                  <Button variant="ghost" onClick={clearSearch}>
+                    {t('common.clearFilters')}
+                  </Button>
+                ) : (
+                  <Button onClick={openCreate}>{t('customers.newCustomer')}</Button>
+                )
+              }
+            />
           ) : (
             <DataTable
               columns={columns}

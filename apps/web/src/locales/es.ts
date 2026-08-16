@@ -27,6 +27,7 @@ const es = {
     confirm: 'Confirmar',
     sortAscending: 'Ordenar {{column}} ascendente',
     sortDescending: 'Ordenar {{column}} descendente',
+    clearFilters: 'Limpiar filtros',
     pdf: 'PDF',
     payment: 'Pago',
     paymentTerm: 'Pago',

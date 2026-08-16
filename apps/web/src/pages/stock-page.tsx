@@ -198,7 +198,7 @@ const movementColumns = (t: TFunction): Column<StockMovement>[] => [
   { key: 'notes', header: t('fields.notes'), render: (row) => row.notes ?? 'â€”' },
 ];
 
-function StockTab() {
+function StockTab({ onCreate }: { onCreate: () => void }) {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -235,7 +235,11 @@ function StockTab() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('stock.noStockRecords')} icon={<Boxes className="size-6" />} />
+            <EmptyState
+              message={t('stock.noStockRecords')}
+              icon={<Boxes className="size-6" />}
+              action={<Button onClick={onCreate}>{t('stock.newMovement')}</Button>}
+            />
           ) : (
             <DataTable columns={stockColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -343,7 +347,15 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('stock.noMovementsMatch')} icon={<History className="size-6" />} />
+            <EmptyState
+              message={t('stock.noMovementsMatch')}
+              icon={<History className="size-6" />}
+              action={
+                <Button variant="ghost" onClick={resetFilters}>
+                  {t('stock.clearFilters')}
+                </Button>
+              }
+            />
           ) : (
             <DataTable columns={movementColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -446,7 +458,15 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('stock.noLotsMatch')} icon={<Boxes className="size-6" />} />
+            <EmptyState
+              message={t('stock.noLotsMatch')}
+              icon={<Boxes className="size-6" />}
+              action={
+                <Button variant="ghost" onClick={resetFilters}>
+                  {t('stock.clearFilters')}
+                </Button>
+              }
+            />
           ) : (
             <DataTable columns={lotColumns(t)} rows={data.data} rowKey={(row) => row.id} />
           )}
@@ -662,7 +682,7 @@ export function StockPage() {
           {t('stock.lots')}
         </button>
       </div>
-      {tab === 'stock' ? <StockTab key={`stock-${refreshKey}`} /> : null}
+      {tab === 'stock' ? <StockTab key={`stock-${refreshKey}`} onCreate={openModal} /> : null}
       {tab === 'movements' ? <MovementsTab key={`movements-${refreshKey}`} warehouses={warehouses} /> : null}
       {tab === 'lots' ? <LotsTab key={`lots-${refreshKey}`} warehouses={warehouses} /> : null}
 

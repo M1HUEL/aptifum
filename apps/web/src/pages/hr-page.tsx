@@ -420,7 +420,11 @@ export function HrPage() {
           {!data && !error ? <LoadingBlock /> : null}
           {data ? (
             data.data.length === 0 ? (
-              <EmptyState message={t('hr.noEmployees')} icon={<Users className="size-6" />} />
+              <EmptyState
+                message={t('hr.noEmployees')}
+                icon={<Users className="size-6" />}
+                action={<Button onClick={openCreate}>{t('hr.newEmployee')}</Button>}
+              />
             ) : (
               <DataTable columns={employeeColumns} rows={data.data} rowKey={(row) => row.id} />
             )

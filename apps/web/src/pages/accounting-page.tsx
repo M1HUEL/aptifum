@@ -151,7 +151,13 @@ function periodColumns(t: TFunction, onClose: (period: AccountingPeriod) => void
   ];
 }
 
-function JournalEntriesTab({ onOpenEntry }: { onOpenEntry: (entry: JournalEntry) => void }) {
+function JournalEntriesTab({
+  onOpenEntry,
+  onCreate,
+}: {
+  onOpenEntry: (entry: JournalEntry) => void;
+  onCreate: () => void;
+}) {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const { data, error } = usePagedQuery<JournalEntry>({
@@ -166,7 +172,11 @@ function JournalEntriesTab({ onOpenEntry }: { onOpenEntry: (entry: JournalEntry)
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('accounting.noJournalEntries')} icon={<FileSpreadsheet className="size-6" />} />
+            <EmptyState
+              message={t('accounting.noJournalEntries')}
+              icon={<FileSpreadsheet className="size-6" />}
+              action={<Button onClick={onCreate}>{t('accounting.newJournalEntry')}</Button>}
+            />
           ) : (
             <DataTable
               columns={journalColumns(t, onOpenEntry)}
@@ -299,7 +309,7 @@ export function AccountingPage() {
         </button>
       </div>
       {tab === 'entries' ? (
-        <JournalEntriesTab onOpenEntry={setViewing} />
+        <JournalEntriesTab onOpenEntry={setViewing} onCreate={openCreate} />
       ) : (
         <>
           {periodsError ? <ErrorBanner message={periodsError} /> : null}

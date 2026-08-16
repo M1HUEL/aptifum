@@ -200,6 +200,12 @@ export function SalesOrdersPage() {
 
   useNewRecordShortcut(openCreate);
 
+  const clearSearch = () => {
+    setInput('');
+    setQuery('');
+    setPage(1);
+  };
+
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     setQuery(input.trim());
@@ -397,7 +403,19 @@ export function SalesOrdersPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('salesOrders.noOrders')} icon={<ClipboardList className="size-6" />} />
+            <EmptyState
+              message={t('salesOrders.noOrders')}
+              icon={<ClipboardList className="size-6" />}
+              action={
+                query ? (
+                  <Button variant="ghost" onClick={clearSearch}>
+                    {t('common.clearFilters')}
+                  </Button>
+                ) : (
+                  <Button onClick={openCreate}>{t('salesOrders.newOrder')}</Button>
+                )
+              }
+            />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} />
           )}

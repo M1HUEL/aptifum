@@ -208,6 +208,16 @@ export function SuppliersPage() {
 
   useNewRecordShortcut(openCreate);
 
+  const clearSearch = () => {
+    setInput('');
+    setQuery('');
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.delete('q');
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
   const openEdit = (supplier: Supplier) => {
     setEditingId(supplier.id);
     reset(fromSupplier(supplier));
@@ -330,7 +340,19 @@ export function SuppliersPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('suppliers.noSuppliersFound')} icon={<Truck className="size-6" />} />
+            <EmptyState
+              message={t('suppliers.noSuppliersFound')}
+              icon={<Truck className="size-6" />}
+              action={
+                query ? (
+                  <Button variant="ghost" onClick={clearSearch}>
+                    {t('common.clearFilters')}
+                  </Button>
+                ) : (
+                  <Button onClick={openCreate}>{t('suppliers.newSupplier')}</Button>
+                )
+              }
+            />
           ) : (
             <DataTable columns={columns} rows={data.data} rowKey={(row) => row.id} sort={sort} onSortChange={handleSortChange} />
           )}

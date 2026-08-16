@@ -504,7 +504,11 @@ export function UsersRolesPage() {
           {userData ? (
             <>
               {userData.data.length === 0 ? (
-                <EmptyState message={t('usersRoles.noUsers')} icon={<Users className="size-6" />} />
+                <EmptyState
+                  message={t('usersRoles.noUsers')}
+                  icon={<Users className="size-6" />}
+                  action={<Button onClick={openCreateUser}>{t('usersRoles.newUser')}</Button>}
+                />
               ) : (
                 <DataTable columns={userColumns} rows={userData.data} rowKey={(row) => row.id} />
               )}
@@ -523,7 +527,11 @@ export function UsersRolesPage() {
           {rolesError ? <ErrorBanner message={rolesError} /> : null}
           {rolesLoading && roles.length === 0 ? <TableSkeleton columns={roleColumns.length} /> : null}
           {!rolesLoading && roles.length === 0 && !rolesError ? (
-            <EmptyState message={t('usersRoles.noRoles')} icon={<ShieldCheck className="size-6" />} />
+            <EmptyState
+              message={t('usersRoles.noRoles')}
+              icon={<ShieldCheck className="size-6" />}
+              action={<Button onClick={openCreateRole}>{t('usersRoles.newRole')}</Button>}
+            />
           ) : (
             <DataTable columns={roleColumns} rows={roles} rowKey={(row) => row.id} />
           )}

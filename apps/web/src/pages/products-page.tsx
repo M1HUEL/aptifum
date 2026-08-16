@@ -169,6 +169,16 @@ export function ProductsPage() {
   const saving = createMutation.isPending || updateMutation.isPending;
   const deleteBusy = deleteMutation.isPending;
 
+  const clearSearch = () => {
+    setInput('');
+    setQuery('');
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.delete('q');
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
   useEffect(() => {
     let cancelled = false;
     void apiFetch<Paginated<Category>>('/api/v1/inventory/categories?page=1&limit=100')
@@ -380,7 +390,19 @@ export function ProductsPage() {
       {data ? (
         <>
           {data.data.length === 0 ? (
-            <EmptyState message={t('products.noProducts')} icon={<Package className="size-6" />} />
+            <EmptyState
+              message={t('products.noProducts')}
+              icon={<Package className="size-6" />}
+              action={
+                query ? (
+                  <Button variant="ghost" onClick={clearSearch}>
+                    {t('common.clearFilters')}
+                  </Button>
+                ) : (
+                  <Button onClick={openCreate}>{t('products.newProduct')}</Button>
+                )
+              }
+            />
           ) : (
             <DataTable
               columns={columns}
