@@ -103,7 +103,7 @@ export function SettingsPage() {
     <>
       <PageHeader title={t('settings.title')} subtitle={t('settings.subtitle')} />
       {loadError ? <ErrorBanner message={loadError} /> : null}
-      {loading ? <LoadingBlock /> : null}
+      {loading ? <LoadingBlock full /> : null}
       {!loading ? (
         <>
           <section className="mb-5 rounded-ui border border-border bg-surface p-5 shadow-(--shadow)">

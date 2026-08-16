@@ -169,7 +169,7 @@ function JournalEntriesTab({
   return (
     <>
       {error ? <ErrorBanner message={error} /> : null}
-      {!data && !error ? <LoadingBlock /> : null}
+      {!data && !error ? <LoadingBlock full /> : null}
       {data ? (
         <>
           {data.data.length === 0 ? (
@@ -314,7 +314,7 @@ export function AccountingPage() {
       ) : (
         <>
           {periodsError ? <ErrorBanner message={periodsError} /> : null}
-          {!periods && !periodsError ? <LoadingBlock /> : null}
+          {!periods && !periodsError ? <LoadingBlock full /> : null}
           {periods ? (
             <>
               {periods.data.length === 0 ? (

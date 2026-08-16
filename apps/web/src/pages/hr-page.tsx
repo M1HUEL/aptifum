@@ -417,7 +417,7 @@ export function HrPage() {
       {tab === 'employees' ? (
         <>
           {error ? <ErrorBanner message={error} /> : null}
-          {!data && !error ? <LoadingBlock /> : null}
+          {!data && !error ? <LoadingBlock full /> : null}
           {data ? (
             data.data.length === 0 ? (
               <EmptyState
@@ -433,7 +433,7 @@ export function HrPage() {
       ) : (
         <>
           {payrollsError ? <ErrorBanner message={payrollsError} /> : null}
-          {!payrolls && !payrollsError ? <LoadingBlock /> : null}
+          {!payrolls && !payrollsError ? <LoadingBlock full /> : null}
           {payrolls ? (
             payrolls.data.length === 0 ? (
               <EmptyState message={t('hr.noPayrollsYet')} icon={<Wallet className="size-6" />} />

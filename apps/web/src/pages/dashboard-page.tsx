@@ -238,7 +238,7 @@ export function DashboardPage() {
         </Select>
       </div>
       {error ? <ErrorBanner message={error} /> : null}
-      {!report && !error ? <LoadingBlock /> : null}
+      {!report && !error ? <LoadingBlock full /> : null}
       {report ? (
         <>
           <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3.5">

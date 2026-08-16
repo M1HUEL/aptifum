@@ -120,9 +120,15 @@ export function Spinner() {
   return <div className="size-7 animate-spin rounded-full border-[3px] border-border border-t-primary" aria-label={t('common.loading')} />;
 }
 
-export function LoadingBlock() {
+export function LoadingBlock({ full = false }: { full?: boolean }) {
   return (
-    <div className="flex items-center justify-center p-12">
+    <div
+      className={
+        full
+          ? 'fixed inset-0 z-50 flex items-center justify-center p-12'
+          : 'flex items-center justify-center p-12'
+      }
+    >
       <Spinner />
     </div>
   );

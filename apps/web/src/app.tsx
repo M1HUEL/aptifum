@@ -70,7 +70,7 @@ function GuardedRoute({ children }: { children: React.ReactNode }) {
 function ProtectedLayout() {
   const { user, initializing } = useAuth();
   if (initializing) {
-    return <LoadingBlock />;
+    return <LoadingBlock full />;
   }
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -83,7 +83,7 @@ function ProtectedLayout() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <Suspense fallback={<LoadingBlock />}>
+      <Suspense fallback={<LoadingBlock full />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

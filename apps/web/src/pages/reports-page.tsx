@@ -234,7 +234,7 @@ export function ReportsPage() {
       </div>
       {error ? <ErrorBanner message={error} /> : null}
       {downloadError ? <ErrorBanner message={downloadError} /> : null}
-      {loading ? <LoadingBlock /> : null}
+      {loading ? <LoadingBlock full /> : null}
       {!loading && rows ? (
         rows.length === 0 ? (
           <EmptyState message={t('reports.noData')} icon={<BarChart3 className="size-6" />} />
