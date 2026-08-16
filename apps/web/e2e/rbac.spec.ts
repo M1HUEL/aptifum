@@ -14,13 +14,15 @@ test('seller role cannot access user management', async ({ browser, context, pag
 
   const sellerContext = await browser.newContext();
   const sellerPage = await sellerContext.newPage();
-  await login(sellerPage, email, 'Seller123!');
-  await expect(sellerPage.getByText('E2E Seller')).toBeVisible();
+  await login(sellerPage, email, 'Seller123!', /\/403/);
+  await expect(sellerPage.getByRole('heading', { name: '403' })).toBeVisible();
 
+  await sellerPage.goto('/pos');
   await expect(sellerPage.getByRole('link', { name: 'Users & roles' })).toHaveCount(0);
 
   await sellerPage.goto('/users-roles');
-  await expect(sellerPage.locator('.error-banner').first()).toBeVisible();
+  await expect(sellerPage).toHaveURL(/\/403$/);
+  await expect(sellerPage.getByRole('heading', { name: '403' })).toBeVisible();
 
   await sellerContext.close();
 });

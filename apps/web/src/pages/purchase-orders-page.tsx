@@ -476,6 +476,7 @@ export function PurchaseOrdersPage() {
                   name="supplierId"
                   render={({ field }) => (
                     <SearchableSelect
+                      id="po-supplier"
                       value={field.value}
                       onChange={field.onChange}
                       options={supplierOptions}
@@ -518,6 +519,7 @@ export function PurchaseOrdersPage() {
                       name={`items.${index}.productId`}
                       render={({ field }) => (
                         <SearchableSelect
+                          id={`po-item-product-${index}`}
                           value={field.value}
                           onChange={field.onChange}
                           options={productOptions}
@@ -608,7 +610,7 @@ export function PurchaseOrdersPage() {
           <form onSubmit={(event) => void submitReceive(event)}>
             {receiving ? (
               <div className="mb-3 rounded-ui border border-border p-3">
-                {receiving.items.map((item: PurchaseOrderItem, index) => {
+                {(receiving.items ?? []).map((item: PurchaseOrderItem, index) => {
                   const maxReceive = Math.max(0, item.quantity - item.receivedQuantity);
                   return (
                     <div className="grid grid-cols-[3fr_1fr_1.5fr_1fr_auto] items-start gap-2.5" key={item.id}>

@@ -41,12 +41,17 @@ export async function seedAuth(context: BrowserContext): Promise<AuthTokens> {
   return tokens;
 }
 
-export async function login(page: Page, email: string, password: string): Promise<void> {
+export async function login(page: Page, email: string, password: string, expectedUrl: RegExp = /\/dashboard/): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(password);
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page).toHaveURL(expectedUrl);
+}
+
+export async function selectSearchable(page: Page, id: string, label: string): Promise<void> {
+  await page.locator(`#${id}`).click();
+  await page.getByRole('option', { name: label, exact: true }).click();
 }
 
 interface Warehouse {

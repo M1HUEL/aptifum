@@ -71,7 +71,7 @@ const stockColumns = (t: TFunction): Column<ProductStock>[] => [
   {
     key: 'product',
     header: t('fields.product'),
-    render: (row) => `${row.product.sku} Â· ${row.product.name}`,
+    render: (row) => `${row.product.sku} · ${row.product.name}`,
   },
   {
     key: 'warehouse',
@@ -110,7 +110,7 @@ function formatDateTime(value: string): string {
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return 'â€”';
+  if (!value) return '—';
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString('en-US', {
@@ -130,12 +130,12 @@ const lotColumns = (t: TFunction): Column<ProductLot>[] => [
   {
     key: 'product',
     header: t('fields.product'),
-    render: (row) => `${row.product.sku} Â· ${row.product.name}`,
+    render: (row) => `${row.product.sku} · ${row.product.name}`,
   },
   {
     key: 'variant',
     header: t('stock.variant'),
-    render: (row) => (row.variant ? Object.values(row.variant.attributes ?? {}).join(' Â· ') || row.variant.sku : 'â€”'),
+    render: (row) => (row.variant ? Object.values(row.variant.attributes ?? {}).join(' · ') || row.variant.sku : '—'),
   },
   {
     key: 'lotNumber',
@@ -178,7 +178,7 @@ const movementColumns = (t: TFunction): Column<StockMovement>[] => [
   {
     key: 'product',
     header: t('fields.product'),
-    render: (row) => `${row.product.sku} Â· ${row.product.name}`,
+    render: (row) => `${row.product.sku} · ${row.product.name}`,
   },
   {
     key: 'warehouse',
@@ -195,7 +195,7 @@ const movementColumns = (t: TFunction): Column<StockMovement>[] => [
     header: t('fields.unitCost'),
     render: (row) => `$${row.unitCost.toFixed(2)}`,
   },
-  { key: 'notes', header: t('fields.notes'), render: (row) => row.notes ?? 'â€”' },
+  { key: 'notes', header: t('fields.notes'), render: (row) => row.notes ?? '—' },
 ];
 
 function StockTab({ onCreate }: { onCreate: () => void }) {
@@ -697,7 +697,7 @@ export function StockPage() {
                   <option value="">{t('stock.selectProduct')}</option>
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
-                      {product.sku} Â· {product.name}
+                      {product.sku} · {product.name}
                     </option>
                   ))}
                 </Select>
@@ -710,6 +710,7 @@ export function StockPage() {
                   name="warehouseId"
                   render={({ field }) => (
                     <SearchableSelect
+                      id="movement-warehouse"
                       value={field.value}
                       onChange={(next) => {
                         field.onChange(next);
@@ -730,7 +731,7 @@ export function StockPage() {
                     <option value="">{t('stock.noLocation')}</option>
                     {locations.map((location) => (
                       <option key={location.id} value={location.id}>
-                        {location.code} Â· {location.name}
+                        {location.code} · {location.name}
                       </option>
                     ))}
                   </Select>

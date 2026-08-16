@@ -320,12 +320,22 @@ export function InvoicesPage() {
       <InvoiceFormModal
         open={invoiceOpen}
         onClose={() => setInvoiceOpen(false)}
-        onSaved={() => void reload()}
+        onSaved={() => {
+          setInvoiceOpen(false);
+          void reload();
+        }}
         customers={customers}
         products={products}
         warehouses={warehouses}
       />
-      <PaymentFormModal invoice={payingInvoice} onClose={() => setPayingInvoice(null)} onSaved={() => void reload()} />
+      <PaymentFormModal
+        invoice={payingInvoice}
+        onClose={() => setPayingInvoice(null)}
+        onSaved={() => {
+          setPayingInvoice(null);
+          void reload();
+        }}
+      />
       <InvoiceDetailsModal invoice={viewing} onClose={() => setViewing(null)} />
     </>
   );

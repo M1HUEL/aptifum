@@ -2,6 +2,7 @@ import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Ip, Patch, Post, 
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
+import { getEnv } from '@aptifum/config';
 import { AuthUser, ModuleName, permission } from '@aptifum/core';
 import { AuthService, RequestContext } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -15,6 +16,8 @@ import { InviteUserDto } from './dto/invite-user.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+
+const loginThrottleLimit = getEnv().LOGIN_THROTTLE_LIMIT;
 
 @ApiTags('auth')
 @Controller('auth')
@@ -37,7 +40,7 @@ export class AuthController {
 
   @Post('login')
   @Public()
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle({ default: { limit: loginThrottleLimit, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email and password' })
   login(

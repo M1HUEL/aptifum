@@ -290,7 +290,10 @@ export function DataTable<T>({
   }
   return (
     <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
-      <table className="w-full border-collapse print:text-[11px] [&_tr:last-child>td]:border-b-0">
+      <table
+        data-testid="data-table"
+        className="w-full border-collapse print:text-[11px] [&_tr:last-child>td]:border-b-0"
+      >
         <thead>
           <tr>
             {columns.map((col) => {

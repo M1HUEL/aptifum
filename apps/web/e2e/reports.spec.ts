@@ -6,12 +6,12 @@ test('lists reports and exports a CSV', async ({ context, page }) => {
   await page.goto('/reports');
   await expect(page.getByRole('heading', { name: 'Reports' })).toBeVisible();
 
-  const reportSelect = page.locator('.toolbar select');
+  const reportSelect = page.locator('#report-select');
   await expect(reportSelect.locator('option')).toHaveCount(13);
   await expect(reportSelect.locator('option[value="payroll"]')).toHaveText('Payroll summary');
 
   await reportSelect.selectOption({ label: 'Inventory valuation' });
-  await expect(page.locator('.report-print-heading h2')).toHaveText('Inventory valuation');
+  await expect(page.locator('h2', { hasText: 'Inventory valuation' })).toHaveText('Inventory valuation');
 
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Download CSV' }).click();

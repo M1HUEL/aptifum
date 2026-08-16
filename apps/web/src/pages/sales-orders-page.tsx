@@ -444,6 +444,7 @@ export function SalesOrdersPage() {
                   name="customerId"
                   render={({ field }) => (
                     <SearchableSelect
+                      id="so-customer"
                       value={field.value}
                       onChange={field.onChange}
                       options={customerOptions}
@@ -490,6 +491,7 @@ export function SalesOrdersPage() {
                       name={`items.${index}.productId`}
                       render={({ field }) => (
                         <SearchableSelect
+                          id={`so-item-product-${index}`}
                           value={field.value}
                           onChange={field.onChange}
                           options={productOptions}

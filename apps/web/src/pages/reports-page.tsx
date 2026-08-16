@@ -220,7 +220,7 @@ export function ReportsPage() {
         }
       />
       <div className="mb-4 flex gap-2.5">
-        <Select value={reportId} onChange={(event) => setReportId(event.target.value)}>
+        <Select id="report-select" value={reportId} onChange={(event) => setReportId(event.target.value)}>
           {REPORTS.map((report) => (
             <option key={report.id} value={report.id}>
               {t(report.labelKey)}

@@ -9,6 +9,7 @@ import {
   createSupplier,
   createWarehouse,
   seedAuth,
+  selectSearchable,
 } from './helpers';
 
 test('creates a customer and a sales order in the UI, then confirms it', async ({ context, page }) => {
@@ -27,24 +28,24 @@ test('creates a customer and a sales order in the UI, then confirms it', async (
   await page.locator('#customer-code').fill(customerCode);
   await page.locator('#customer-trade').fill(customerName);
   await page.getByRole('button', { name: 'Create customer' }).click();
-  await expect(page.getByText('Customer created.')).toBeVisible();
-  await expect(page.locator('.data-table tbody tr', { hasText: customerName })).toBeVisible();
+  await expect(page.getByText('Customer created.', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-testid="data-table"] tbody tr', { hasText: customerName })).toBeVisible();
 
   await page.getByRole('link', { name: 'Sales orders' }).click();
   await page.getByRole('button', { name: 'New sales order' }).click();
   await page.locator('#so-kind').selectOption('order');
-  await page.locator('#so-customer').selectOption({ label: customerName });
+  await selectSearchable(page, 'so-customer', customerName);
   await page.locator('#so-warehouse').selectOption({ label: warehouse.name });
-  await page.locator('#so-item-product-0').selectOption({ label: `${product.sku} · E2E Gadget` });
+  await selectSearchable(page, 'so-item-product-0', `${product.sku} · E2E Gadget`);
   await page.locator('#so-item-qty-0').fill('2');
   await page.locator('#so-item-price-0').fill('15');
   await page.getByRole('button', { name: 'Create sales order' }).click();
-  await expect(page.getByText('Sales order created.')).toBeVisible();
+  await expect(page.getByText('Sales order created.', { exact: true })).toBeVisible();
 
-  const orderRow = page.locator('.data-table tbody tr', { hasText: customerName });
+  const orderRow = page.locator('[data-testid="data-table"] tbody tr', { hasText: customerName });
   await expect(orderRow).toBeVisible();
   await orderRow.getByRole('button', { name: 'Confirm' }).click();
-  await expect(page.getByText('Sales order confirmed.')).toBeVisible();
+  await expect(page.getByText('Sales order confirmed.', { exact: true })).toBeVisible();
   await expect(orderRow.getByText('confirmed')).toBeVisible();
 });
 
@@ -70,26 +71,26 @@ test('issues an invoice for a confirmed order, records a payment, and searches b
 
   await page.goto('/invoices');
   await page.getByRole('button', { name: 'New invoice' }).click();
-  await page.locator('#invoice-customer').selectOption({ label: customerName });
+  await selectSearchable(page, 'invoice-customer', customerName);
   await page.locator('#invoice-warehouse').selectOption({ label: warehouse.name });
-  await page.locator('#invoice-item-product-0').selectOption({ label: `${product.sku} · E2E Widget` });
+  await selectSearchable(page, 'invoice-item-product-0', `${product.sku} · E2E Widget`);
   await page.locator('#invoice-item-qty-0').fill('1');
   await page.locator('#invoice-item-price-0').fill('15');
   await page.getByRole('button', { name: 'Issue invoice' }).click();
-  await expect(page.getByText('Invoice issued.')).toBeVisible();
+  await expect(page.getByText('Invoice issued.', { exact: true })).toBeVisible();
 
-  const invoiceRow = page.locator('.data-table tbody tr', { hasText: customerName });
+  const invoiceRow = page.locator('[data-testid="data-table"] tbody tr', { hasText: customerName });
   await expect(invoiceRow).toBeVisible();
   await invoiceRow.getByRole('button', { name: 'Payment' }).click();
   await page.locator('#payment-method').selectOption('transfer');
   await page.getByRole('button', { name: 'Record payment' }).click();
-  await expect(page.getByText('Payment recorded.')).toBeVisible();
+  await expect(page.getByText('Payment recorded.', { exact: true })).toBeVisible();
   await expect(invoiceRow.getByText('$0.00')).toBeVisible();
 
   await page.getByRole('link', { name: 'Sales orders' }).click();
-  await page.locator('.search-form input').fill(customerName);
-  await page.getByRole('button', { name: 'Search' }).click();
-  const searchedRow = page.locator('.data-table tbody tr', { hasText: customerName });
+  await page.getByRole('searchbox').fill(customerName);
+  await page.getByRole('main').getByRole('button', { name: 'Search' }).click();
+  const searchedRow = page.locator('[data-testid="data-table"] tbody tr', { hasText: customerName });
   await expect(searchedRow).toBeVisible();
 });
 
@@ -111,29 +112,29 @@ test('creates a supplier and purchase order in the UI, then approves and receive
   await page.locator('#supplier-code').fill(supplierCode);
   await page.locator('#supplier-trade').fill(supplierName);
   await page.getByRole('button', { name: 'Create supplier' }).click();
-  await expect(page.getByText('Supplier created.')).toBeVisible();
-  await expect(page.locator('.data-table tbody tr', { hasText: supplierName })).toBeVisible();
+  await expect(page.getByText('Supplier created.', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-testid="data-table"] tbody tr', { hasText: supplierName })).toBeVisible();
 
   await page.getByRole('link', { name: 'Purchasing' }).click();
   await page.getByRole('button', { name: 'New purchase order' }).click();
-  await page.locator('#po-supplier').selectOption({ label: supplierName });
+  await selectSearchable(page, 'po-supplier', supplierName);
   await page.locator('#po-warehouse').selectOption({ label: warehouse.name });
-  await page.locator('#po-item-product-0').selectOption({ label: `${product.sku} · E2E Part` });
+  await selectSearchable(page, 'po-item-product-0', `${product.sku} · E2E Part`);
   await page.locator('#po-item-qty-0').fill('5');
   await page.locator('#po-item-cost-0').fill('4');
   await page.getByRole('button', { name: 'Create purchase order' }).click();
-  await expect(page.getByText('Purchase order created.')).toBeVisible();
+  await expect(page.getByText('Purchase order created.', { exact: true })).toBeVisible();
 
-  const poRow = page.locator('.data-table tbody tr', { hasText: supplierName });
+  const poRow = page.locator('[data-testid="data-table"] tbody tr', { hasText: supplierName });
   await expect(poRow).toBeVisible();
   await poRow.getByRole('button', { name: 'Approve' }).click();
-  await expect(page.getByText('Purchase order approved.')).toBeVisible();
+  await expect(page.getByText('Purchase order approved.', { exact: true })).toBeVisible();
   await expect(poRow.getByText('approved')).toBeVisible();
 
   await poRow.getByRole('button', { name: 'Receive' }).click();
   const receiveQty = page.locator('input[id^="receive-qty-"]');
   await expect(receiveQty).toBeVisible();
   await page.getByRole('button', { name: 'Record receipt' }).click();
-  await expect(page.getByText('Goods receipt recorded.')).toBeVisible();
+  await expect(page.getByText('Goods receipt recorded.', { exact: true })).toBeVisible();
   await expect(poRow.getByText('received')).toBeVisible();
 });

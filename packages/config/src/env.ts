@@ -28,6 +28,7 @@ const EnvSchema = z.object({
   SMTP_FROM_NAME: z.string().default('Aptifum'),
   MAX_ACTIVE_SESSIONS_PER_USER: z.coerce.number().min(1).default(5),
   SESSION_RETENTION_DAYS: z.coerce.number().min(1).default(30),
+  LOGIN_THROTTLE_LIMIT: z.coerce.number().min(1).default(10),
 });
 
 export type AppEnv = z.infer<typeof EnvSchema>;

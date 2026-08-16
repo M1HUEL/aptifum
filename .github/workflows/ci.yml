@@ -67,6 +67,18 @@ jobs:
       - name: Test Web
         run: pnpm --filter @aptifum/web test:coverage
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright browser
+        run: pnpm --filter @aptifum/web exec playwright install --with-deps chromium
+
+      - name: Test Web E2E
+        run: pnpm --filter @aptifum/web test:e2e
+
       - name: Check OpenAPI drift
         run: |
           pnpm --filter @aptifum/web gen:api
