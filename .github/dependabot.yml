@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    versioning-strategy: increase
+    open-pull-requests-limit: 10
+    groups:
+      dev-tooling:
+        applies-to: version-updates
+        patterns:
+          - 'eslint'
+          - 'prettier'
+          - 'typescript'
+          - 'turbo'
+          - 'husky'
+          - 'lint-staged'
+          - 'typescript-eslint'
+          - '@eslint/*'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
