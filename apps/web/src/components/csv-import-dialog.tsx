@@ -256,15 +256,7 @@ export function CsvImportDialog({ open, onOpenChange, type, onImported }: CsvImp
           </div>
         ) : null}
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            type="button"
-            disabled={busy}
-            onClick={() => onOpenChange(false)}
-          >
-            {t('common.close')}
-          </Button>
+        <DialogFooter cancelLabel={t('common.close')} cancelDisabled={busy}>
           <Button type="button" disabled={!file || busy} loading={busy} onClick={() => void upload()}>
             {busy ? t('imports.importing') : t('imports.importButton')}
           </Button>

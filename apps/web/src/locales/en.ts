@@ -333,6 +333,14 @@ const en: Translation = {
     receivedAt: 'Received at',
     recording: 'Recording…',
     recordPayment: 'Record payment',
+    pending: 'Pending',
+    items: 'Items',
+    methods: {
+      cash: 'Cash',
+      card: 'Card',
+      transfer: 'Transfer',
+      other: 'Other',
+    },
   },
   accounting: {
     title: 'Accounting',

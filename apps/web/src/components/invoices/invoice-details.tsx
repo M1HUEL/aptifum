@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch, ApiError, downloadFile } from '../../api/client';
 import type { CfdiDocument, Invoice } from '../../api/types';
@@ -6,6 +6,58 @@ import { Badge, ErrorBanner, formatDate, formatMoney, LoadingBlock } from '../ui
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { useToast } from '../toast';
+
+const PAYMENT_METHOD_KEYS: Record<string, string> = {
+  cash: 'invoices.methods.cash',
+  card: 'invoices.methods.card',
+  transfer: 'invoices.methods.transfer',
+  other: 'invoices.methods.other',
+};
+
+function statusTone(status: string): 'success' | 'neutral' | 'danger' {
+  switch (status) {
+    case 'issued':
+    case 'stamped':
+      return 'success';
+    case 'draft':
+    case 'pending':
+      return 'neutral';
+    default:
+      return 'danger';
+  }
+}
+
+function SectionHeading({ children }: { children: ReactNode }) {
+  return (
+    <h4 className="mb-2 mt-5 flex items-center gap-2 border-t border-border pt-4 text-[14px] font-semibold text-text">
+      {children}
+    </h4>
+  );
+}
+
+interface DetailRow {
+  label: string;
+  value: ReactNode;
+}
+
+function DetailTable({ rows }: { rows: DetailRow[] }) {
+  return (
+    <div className="mb-3.5 overflow-hidden rounded-ui border border-border bg-surface shadow-(--shadow)">
+      <table className="w-full border-collapse [&_tr:last-child>td]:border-b-0">
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={index}>
+              <td className="w-[45%] whitespace-nowrap border-b border-border px-[14px] py-2.5 align-top text-[12px] uppercase tracking-[0.04em] text-muted">
+                {row.label}
+              </td>
+              <td className="border-b border-border px-[14px] py-2.5 align-top text-right tabular-nums">{row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | null; onClose: () => void }) {
   const { t } = useTranslation();
@@ -17,11 +69,11 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
   const toast = useToast();
 
   useEffect(() => {
-    if (!invoice) return;
     setDetail(null);
-    setLoading(true);
     setError(null);
     setCfdi(null);
+    if (!invoice) return;
+    setLoading(true);
     setCfdiLoading(true);
     void apiFetch<Invoice>(`/api/v1/sales/invoices/${invoice.id}`)
       .then(setDetail)
@@ -61,73 +113,53 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
         {error ? <ErrorBanner message={error} /> : null}
         {!loading && viewing ? (
           <div>
-            <div className="mb-2 grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 gap-y-3">
-              <div className="detail-item">
-                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('common.status')}</div>
-                <div className="mt-0.5 block">
-                  <Badge
-                    tone={viewing.status === 'issued' ? 'success' : viewing.status === 'draft' ? 'neutral' : 'danger'}
-                  >
-                    {viewing.status}
-                  </Badge>
-                </div>
-              </div>
-              <div className="detail-item">
-                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.customer')}</div>
-                <div className="mt-0.5 block">{viewing.customer?.tradeName ?? '—'}</div>
-              </div>
-              <div className="detail-item">
-                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.issueDate')}</div>
-                <div className="mt-0.5 block">{formatDate(viewing.issueDate)}</div>
-              </div>
-              <div className="detail-item">
-                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.dueDate')}</div>
-                <div className="mt-0.5 block">{viewing.dueDate ? formatDate(viewing.dueDate) : '—'}</div>
-              </div>
-              <div className="detail-item">
-                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.subtotal')}</div>
-                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.subtotal)}</div>
-              </div>
-              <div className="detail-item">
-                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.discount')}</div>
-                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.discount)}</div>
-              </div>
-              <div className="detail-item">
-                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('fields.tax')}</div>
-                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.tax)}</div>
-              </div>
-              <div className="detail-item">
-                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.total')}</div>
-                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.total)}</div>
-              </div>
-              <div className="detail-item">
-                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('invoices.paid')}</div>
-                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.paidAmount)}</div>
-              </div>
-              <div className="detail-item">
-                <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('invoices.balanceDue')}</div>
-                <div className="mt-0.5 text-right tabular-nums">{formatMoney(viewing.balanceDue)}</div>
-              </div>
-            </div>
+            <DetailTable
+              rows={[
+                {
+                  label: t('common.status'),
+                  value: <Badge tone={statusTone(viewing.status)}>{t(`invoices.${viewing.status}`)}</Badge>,
+                },
+                { label: t('fields.customer'), value: viewing.customer?.tradeName ?? '—' },
+                { label: t('tables.issueDate'), value: formatDate(viewing.issueDate) },
+                { label: t('fields.dueDate'), value: viewing.dueDate ? formatDate(viewing.dueDate) : '—' },
+                { label: t('fields.subtotal'), value: formatMoney(viewing.subtotal) },
+                { label: t('fields.discount'), value: formatMoney(viewing.discount) },
+                { label: t('fields.tax'), value: formatMoney(viewing.tax) },
+                { label: t('tables.total'), value: formatMoney(viewing.total) },
+                { label: t('invoices.paid'), value: formatMoney(viewing.paidAmount) },
+                { label: t('invoices.balanceDue'), value: formatMoney(viewing.balanceDue) },
+              ]}
+            />
+            <SectionHeading>{t('invoices.items')}</SectionHeading>
             <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    <th>{t('fields.product')}</th>
-                    <th className="text-right tabular-nums">{t('fields.qty')}</th>
-                    <th className="text-right tabular-nums">{t('fields.unitPrice')}</th>
-                    <th className="text-right tabular-nums">{t('fields.tax')}</th>
-                    <th className="text-right tabular-nums">{t('invoices.lineTotal')}</th>
+                    <th className="h-10 bg-bg px-[14px] text-left align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                      {t('fields.product')}
+                    </th>
+                    <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                      {t('fields.qty')}
+                    </th>
+                    <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                      {t('fields.unitPrice')}
+                    </th>
+                    <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                      {t('fields.tax')}
+                    </th>
+                    <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                      {t('invoices.lineTotal')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {(viewing.items ?? []).map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.description ?? item.product?.name ?? item.productId}</td>
-                      <td className="text-right tabular-nums">{item.quantity}</td>
-                      <td className="text-right tabular-nums">{formatMoney(item.unitPrice)}</td>
-                      <td className="text-right tabular-nums">{formatMoney(item.taxAmount)}</td>
-                      <td className="text-right tabular-nums">{formatMoney(item.lineTotal)}</td>
+                    <tr key={item.id} className="border-t border-border">
+                      <td className="px-[14px] py-2.5 align-middle">{item.description ?? item.product?.name ?? item.productId}</td>
+                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{item.quantity}</td>
+                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{formatMoney(item.unitPrice)}</td>
+                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{formatMoney(item.taxAmount)}</td>
+                      <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{formatMoney(item.lineTotal)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -135,24 +167,32 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
             </div>
             {(viewing.payments ?? []).length > 0 ? (
               <>
-                <h4 className="mb-2 mt-4 text-[14px]">{t('invoices.payments')}</h4>
+                <SectionHeading>{t('invoices.payments')}</SectionHeading>
                 <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr>
-                        <th>{t('tables.date')}</th>
-                        <th>{t('invoices.method')}</th>
-                        <th className="text-right tabular-nums">{t('fields.amount')}</th>
-                        <th>{t('invoices.reference')}</th>
+                        <th className="h-10 bg-bg px-[14px] text-left align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                          {t('tables.date')}
+                        </th>
+                        <th className="h-10 bg-bg px-[14px] text-left align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                          {t('invoices.method')}
+                        </th>
+                        <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                          {t('fields.amount')}
+                        </th>
+                        <th className="h-10 bg-bg px-[14px] text-left align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                          {t('invoices.reference')}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {(viewing.payments ?? []).map((payment) => (
-                        <tr key={payment.id}>
-                          <td>{formatDate(payment.receivedAt)}</td>
-                          <td>{payment.method}</td>
-                          <td className="text-right tabular-nums">{formatMoney(payment.amount)}</td>
-                          <td>{payment.reference ?? '—'}</td>
+                        <tr key={payment.id} className="border-t border-border">
+                          <td className="px-[14px] py-2.5 align-middle">{formatDate(payment.receivedAt)}</td>
+                          <td className="px-[14px] py-2.5 align-middle">{t(PAYMENT_METHOD_KEYS[payment.method] ?? payment.method)}</td>
+                          <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">{formatMoney(payment.amount)}</td>
+                          <td className="px-[14px] py-2.5 align-middle">{payment.reference ?? '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -160,53 +200,44 @@ export function InvoiceDetailsModal({ invoice, onClose }: { invoice: Invoice | n
                 </div>
               </>
             ) : null}
-            {viewing.notes ? <div className="mt-2">{viewing.notes}</div> : null}
-            <div className="flex items-center justify-between gap-2">
-              <h4 className="mb-2 mt-4 text-[14px]">{t('invoices.cfdi')}</h4>
-              <Button variant="ghost" size="sm" onClick={() => void downloadPdf(viewing)}>
-                {t('common.pdf')}
-              </Button>
-              {!cfdiLoading && cfdi ? (
-                <Button variant="ghost" size="sm" onClick={() => void downloadCfd(cfdi)}>
-                  {t('invoices.downloadXml')}
+            {viewing.notes ? (
+              <div className="mt-5 rounded-ui border border-border bg-bg p-3 text-sm text-text">{viewing.notes}</div>
+            ) : null}
+            <div className="mb-2 mt-5 flex items-center justify-between gap-2 border-t border-border pt-4">
+              <h4 className="text-[14px] font-semibold text-text">{t('invoices.cfdi')}</h4>
+              <div className="flex gap-1.5">
+                <Button variant="ghost" size="sm" onClick={() => void downloadPdf(viewing)}>
+                  {t('common.pdf')}
                 </Button>
-              ) : null}
+                {!cfdiLoading && cfdi ? (
+                  <Button variant="ghost" size="sm" onClick={() => void downloadCfd(cfdi)}>
+                    {t('invoices.downloadXml')}
+                  </Button>
+                ) : null}
+              </div>
             </div>
             {cfdiLoading ? <LoadingBlock /> : null}
             {!cfdiLoading && cfdi ? (
-              <div className="mb-2 grid grid-cols-2 gap-x-4 max-[480px]:grid-cols-1 gap-y-3">
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('invoices.uuid')}</div>
-                  <div className="mt-0.5 block">{cfdi.uuid}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('common.status')}</div>
-                  <div className="mt-0.5 block">
-                    <Badge
-                      tone={cfdi.status === 'stamped' ? 'success' : cfdi.status === 'pending' ? 'neutral' : 'danger'}
-                    >
-                      {cfdi.status}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('tables.total')}</div>
-                  <div className="mt-0.5 text-right tabular-nums">{formatMoney(cfdi.total)}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="block text-[12px] uppercase tracking-[0.03em] text-muted">{t('invoices.stamped')}</div>
-                  <div className="mt-0.5 block">{cfdi.stampedAt ? formatDate(cfdi.stampedAt) : '—'}</div>
-                </div>
-              </div>
+              <DetailTable
+                rows={[
+                  { label: t('invoices.uuid'), value: cfdi.uuid },
+                  {
+                    label: t('common.status'),
+                    value: (
+                      <Badge tone={statusTone(cfdi.status)}>
+                        {t(cfdi.status === 'stamped' ? 'invoices.stamped' : cfdi.status === 'pending' ? 'invoices.pending' : 'invoices.cancelled')}
+                      </Badge>
+                    ),
+                  },
+                  { label: t('tables.total'), value: formatMoney(cfdi.total) },
+                  { label: t('invoices.stamped'), value: cfdi.stampedAt ? formatDate(cfdi.stampedAt) : '—' },
+                ]}
+              />
             ) : null}
             {!cfdiLoading && !cfdi ? <p className="mt-2">{t('invoices.noCfdi')}</p> : null}
           </div>
         ) : null}
-        <DialogFooter>
-          <Button variant="outline" type="button" onClick={onClose}>
-            {t('common.close')}
-          </Button>
-        </DialogFooter>
+        <DialogFooter cancelLabel={t('common.close')} />
       </DialogContent>
     </Dialog>
   );

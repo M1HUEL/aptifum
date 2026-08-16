@@ -616,11 +616,7 @@ export function ProductsPage() {
               )}
             </div>
           ) : null}
-          <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => setViewing(null)}>
-              {t('common.close')}
-            </Button>
-          </DialogFooter>
+          <DialogFooter cancelLabel={t('common.close')} />
         </DialogContent>
       </Dialog>
 

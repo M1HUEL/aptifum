@@ -58,12 +58,22 @@ function DialogHeader({ title, description }: { title: string; description?: str
   );
 }
 
-function DialogFooter({ children }: { children: ReactNode }) {
+function DialogFooter({
+  children,
+  cancelLabel,
+  cancelDisabled = false,
+}: {
+  children?: ReactNode;
+  cancelLabel?: string;
+  cancelDisabled?: boolean;
+}) {
   const { t } = useTranslation();
   return (
     <div className="mt-6 flex justify-end gap-2">
       <DialogPrimitive.Close asChild>
-        <Button variant="outline">{t('common.cancel')}</Button>
+        <Button variant="outline" disabled={cancelDisabled}>
+          {cancelLabel ?? t('common.cancel')}
+        </Button>
       </DialogPrimitive.Close>
       {children}
     </div>

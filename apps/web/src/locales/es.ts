@@ -331,6 +331,14 @@ const es = {
     receivedAt: 'Recibido el',
     recording: 'Registrando…',
     recordPayment: 'Registrar pago',
+    pending: 'Pendiente',
+    items: 'Artículos',
+    methods: {
+      cash: 'Efectivo',
+      card: 'Tarjeta',
+      transfer: 'Transferencia',
+      other: 'Otro',
+    },
   },
   accounting: {
     title: 'Contabilidad',

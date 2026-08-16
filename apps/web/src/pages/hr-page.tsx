@@ -622,11 +622,7 @@ export function HrPage() {
               />
             </>
           ) : null}
-          <DialogFooter>
-            <Button variant="outline" type="button" onClick={() => setViewingPayroll(null)}>
-              {t('common.close')}
-            </Button>
-          </DialogFooter>
+          <DialogFooter cancelLabel={t('common.close')} />
         </DialogContent>
       </Dialog>
     </>

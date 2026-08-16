@@ -170,80 +170,99 @@ export function InvoiceFormModal({
               {errors.discount ? <div className="text-[12px] font-normal text-danger">{errors.discount.message}</div> : null}
             </div>
           </div>
-          <div className="mb-3 rounded-ui border border-border p-3">
-            {items.map((_, index) => (
-              <div className="grid grid-cols-[3fr_1fr_1.5fr_1fr_auto] items-start gap-2.5" key={index}>
-                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
-                  <label htmlFor={`invoice-item-product-${index}`}>{t('fields.product')}</label>
-                  <Controller
-                    control={control}
-                    name={`items.${index}.productId`}
-                    render={({ field }) => (
-                      <SearchableSelect
-                        id={`invoice-item-product-${index}`}
-                        value={field.value}
-                        onChange={field.onChange}
-                        options={productOptions}
-                        placeholder={t('invoices.selectProduct')}
-                        ariaLabel={t('fields.product')}
+          <div className="mb-3 overflow-hidden rounded-ui border border-border bg-surface shadow-(--shadow)">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className="h-10 bg-bg px-[14px] text-left align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                    {t('fields.product')}
+                  </th>
+                  <th className="h-10 w-[90px] bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                    {t('fields.qty')}
+                  </th>
+                  <th className="h-10 w-[130px] bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                    {t('fields.unitPrice')}
+                  </th>
+                  <th className="h-10 w-[110px] bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                    {t('invoices.taxPercent')}
+                  </th>
+                  <th className="h-10 w-12 bg-bg" />
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((_, index) => (
+                  <tr key={index} className="border-t border-border">
+                    <td className="px-[14px] py-2.5 align-top">
+                      <div className="flex flex-col gap-1">
+                        <Controller
+                          control={control}
+                          name={`items.${index}.productId`}
+                          render={({ field }) => (
+                            <SearchableSelect
+                              id={`invoice-item-product-${index}`}
+                              value={field.value}
+                              onChange={field.onChange}
+                              options={productOptions}
+                              placeholder={t('invoices.selectProduct')}
+                              ariaLabel={t('fields.product')}
+                            />
+                          )}
+                        />
+                        {errors.items?.[index]?.productId ? (
+                          <div className="text-[12px] font-normal text-danger">{errors.items[index]?.productId?.message}</div>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-[14px] py-2.5 align-top">
+                      <Input className="w-full text-right"
+                        id={`invoice-item-qty-${index}`}
+                        type="number"
+                        min="0.0001"
+                        step="any"
+                        {...register(`items.${index}.quantity`)}
                       />
-                    )}
-                  />
-                  {errors.items?.[index]?.productId ? (
-                    <div className="text-[12px] font-normal text-danger">{errors.items[index]?.productId?.message}</div>
-                  ) : null}
-                </div>
-                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
-                  <label htmlFor={`invoice-item-qty-${index}`}>{t('fields.qty')}</label>
-                  <Input className="w-full"
-                    id={`invoice-item-qty-${index}`}
-                    type="number"
-                    min="0.0001"
-                    step="any"
-                    {...register(`items.${index}.quantity`)}
-                  />
-                  {errors.items?.[index]?.quantity ? (
-                    <div className="text-[12px] font-normal text-danger">{errors.items[index]?.quantity?.message}</div>
-                  ) : null}
-                </div>
-                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
-                  <label htmlFor={`invoice-item-price-${index}`}>{t('fields.unitPrice')}</label>
-                  <Input className="w-full"
-                    id={`invoice-item-price-${index}`}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder={t('invoices.unitPricePlaceholder')}
-                    {...register(`items.${index}.unitPrice`)}
-                  />
-                  {errors.items?.[index]?.unitPrice ? (
-                    <div className="text-[12px] font-normal text-danger">{errors.items[index]?.unitPrice?.message}</div>
-                  ) : null}
-                </div>
-                <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] font-semibold">
-                  <label htmlFor={`invoice-item-tax-${index}`}>{t('invoices.taxPercent')}</label>
-                  <Input className="w-full"
-                    id={`invoice-item-tax-${index}`}
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    placeholder={t('invoices.taxPlaceholder')}
-                    {...register(`items.${index}.taxRate`)}
-                  />
-                  {errors.items?.[index]?.taxRate ? (
-                    <div className="text-[12px] font-normal text-danger">{errors.items[index]?.taxRate?.message}</div>
-                  ) : null}
-                </div>
-                <div className="pt-6">
-                  {items.length > 1 ? (
-                    <Button variant="ghost" size="sm" type="button" onClick={() => removeItem(index)}>
-                      {t('common.remove')}
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
-            ))}
+                      {errors.items?.[index]?.quantity ? (
+                        <div className="text-[12px] font-normal text-danger">{errors.items[index]?.quantity?.message}</div>
+                      ) : null}
+                    </td>
+                    <td className="px-[14px] py-2.5 align-top">
+                      <Input className="w-full text-right"
+                        id={`invoice-item-price-${index}`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder={t('invoices.unitPricePlaceholder')}
+                        {...register(`items.${index}.unitPrice`)}
+                      />
+                      {errors.items?.[index]?.unitPrice ? (
+                        <div className="text-[12px] font-normal text-danger">{errors.items[index]?.unitPrice?.message}</div>
+                      ) : null}
+                    </td>
+                    <td className="px-[14px] py-2.5 align-top">
+                      <Input className="w-full text-right"
+                        id={`invoice-item-tax-${index}`}
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        placeholder={t('invoices.taxPlaceholder')}
+                        {...register(`items.${index}.taxRate`)}
+                      />
+                      {errors.items?.[index]?.taxRate ? (
+                        <div className="text-[12px] font-normal text-danger">{errors.items[index]?.taxRate?.message}</div>
+                      ) : null}
+                    </td>
+                    <td className="px-2 py-2.5 text-center align-top">
+                      {items.length > 1 ? (
+                        <Button variant="ghost" size="sm" type="button" onClick={() => removeItem(index)}>
+                          {t('common.remove')}
+                        </Button>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
           <Button variant="ghost" size="sm" type="button" onClick={addItem}>
             {t('common.addLine')}
