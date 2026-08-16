@@ -533,7 +533,7 @@ export function WarehousesCategoriesPage() {
           {locationsError ? <ErrorBanner message={locationsError} /> : null}
           {!locationsLoading && !locationsError ? (
             <>
-              <div className="flex justify-end gap-1.5" style={{ marginBottom: '1rem' }}>
+              <div className="mb-4 flex justify-end gap-1.5">
                 <Button size="sm" onClick={() => openLocation()}>
                   {t('warehouses.addLocation')}
                 </Button>
@@ -549,23 +549,31 @@ export function WarehousesCategoriesPage() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr>
-                        <th>{t('fields.code')}</th>
-                        <th>{t('fields.name')}</th>
-                        <th>{t('common.status')}</th>
-                        <th>{t('common.actions')}</th>
+                        <th className="h-10 bg-bg px-[14px] text-left align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                          {t('fields.code')}
+                        </th>
+                        <th className="h-10 bg-bg px-[14px] text-left align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                          {t('fields.name')}
+                        </th>
+                        <th className="h-10 bg-bg px-[14px] text-left align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                          {t('common.status')}
+                        </th>
+                        <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                          {t('common.actions')}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {locations.map((location) => (
-                        <tr key={location.id}>
-                          <td>{location.code}</td>
-                          <td>{location.name}</td>
-                          <td>
+                        <tr key={location.id} className="border-t border-border">
+                          <td className="px-[14px] py-2.5 align-middle">{location.code}</td>
+                          <td className="px-[14px] py-2.5 align-middle">{location.name}</td>
+                          <td className="px-[14px] py-2.5 align-middle">
                             <Badge tone={location.active ? 'success' : 'neutral'}>
                               {location.active ? t('common.active') : t('common.inactive')}
                             </Badge>
                           </td>
-                          <td>
+                          <td className="px-[14px] py-2.5 align-middle">
                             <div className="flex justify-end gap-1.5">
                               <Button variant="ghost" size="sm" onClick={() => openLocation(location)}>
                                 {t('common.edit')}
@@ -585,11 +593,7 @@ export function WarehousesCategoriesPage() {
               )}
             </>
           ) : null}
-          <div className="flex shrink-0 justify-end gap-2 border-t border-border px-5 py-3.5">
-            <Button variant="ghost" onClick={() => setLocationsFor(null)}>
-              {t('common.close')}
-            </Button>
-          </div>
+          <DialogFooter cancelLabel={t('common.close')} />
         </DialogContent>
       </Dialog>
 

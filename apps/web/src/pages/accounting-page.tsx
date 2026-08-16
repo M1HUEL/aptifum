@@ -25,6 +25,7 @@ import {
 } from '../components/ui';
 import { CalendarRange, FileSpreadsheet } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { DetailTable, SectionHeading } from '../components/ui/detail-table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useToast } from '../components/toast';
 import { usePagedQuery } from '../hooks/use-paged-query';
@@ -427,25 +428,60 @@ export function AccountingPage() {
           <DialogHeader title={t('accounting.entry', { number: viewing?.number ?? '' })} />
           {viewing ? (
             <>
-              <p className="text-muted">
-                {viewing.description ?? t('accounting.noDescription')} · {formatDate(viewing.entryDate)} ·{' '}
-                <Badge tone={entryStatusTone(viewing.status)}>{viewing.status}</Badge>
-              </p>
-              <DataTable
-                columns={[
+              <DetailTable
+                rows={[
                   {
-                    key: 'account',
-                    header: t('tables.account'),
-                    render: (row) =>
-                      row.account ? `${row.account.code} · ${row.account.name}` : '—',
+                    label: t('common.status'),
+                    value: (
+                      <Badge tone={entryStatusTone(viewing.status)}>{t(`accounting.${viewing.status}`)}</Badge>
+                    ),
                   },
-                  { key: 'description', header: t('fields.description'), render: (row) => row.description ?? '—' },
-                  { key: 'debit', header: t('fields.debit'), render: (row) => (row.debit ? formatMoney(row.debit) : '—') },
-                  { key: 'credit', header: t('fields.credit'), render: (row) => (row.credit ? formatMoney(row.credit) : '—') },
+                  {
+                    label: t('fields.description'),
+                    value: viewing.description ?? t('accounting.noDescription'),
+                  },
+                  { label: t('fields.entryDate'), value: formatDate(viewing.entryDate) },
+                  { label: t('fields.debit'), value: formatMoney(viewing.debitTotal) },
+                  { label: t('fields.credit'), value: formatMoney(viewing.creditTotal) },
                 ]}
-                rows={viewing.lines}
-                rowKey={(row) => row.id}
               />
+              <SectionHeading>{t('accounting.lines')}</SectionHeading>
+              <div className="mb-3.5 max-h-[480px] overflow-auto rounded-ui border border-border bg-surface shadow-(--shadow)">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="h-10 bg-bg px-[14px] text-left align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                        {t('tables.account')}
+                      </th>
+                      <th className="h-10 bg-bg px-[14px] text-left align-middle text-xs font-medium uppercase tracking-wide text-muted">
+                        {t('fields.description')}
+                      </th>
+                      <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                        {t('fields.debit')}
+                      </th>
+                      <th className="h-10 bg-bg px-[14px] text-right align-middle text-xs font-medium uppercase tracking-wide text-muted tabular-nums">
+                        {t('fields.credit')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {viewing.lines.map((line) => (
+                      <tr key={line.id} className="border-t border-border">
+                        <td className="px-[14px] py-2.5 align-middle">
+                          {line.account ? `${line.account.code} · ${line.account.name}` : '—'}
+                        </td>
+                        <td className="px-[14px] py-2.5 align-middle">{line.description ?? '—'}</td>
+                        <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">
+                          {line.debit ? formatMoney(line.debit) : '—'}
+                        </td>
+                        <td className="px-[14px] py-2.5 text-right align-middle tabular-nums">
+                          {line.credit ? formatMoney(line.credit) : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </>
           ) : null}
           <DialogFooter cancelLabel={t('common.close')} />
