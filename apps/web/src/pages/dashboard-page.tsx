@@ -91,7 +91,7 @@ function StatusRow({
 }) {
   const warn = warnThreshold !== undefined && count >= warnThreshold;
   return (
-    <div className="flex items-center justify-between border-b border-border pb-2.5 last:border-b-0 last:pb-0">
+    <div className="flex items-center justify-between rounded-ui border-b border-border py-2.5 transition-colors hover:bg-bg last:border-b-0">
       <span>{label}</span>
       <Badge tone={warn ? 'warning' : 'success'}>{count}</Badge>
     </div>
@@ -121,6 +121,43 @@ function AlertSection({
         </Link>
       </div>
       {count > 0 ? <div className="flex flex-col gap-2.5">{children}</div> : <p className="text-[13px] text-muted">{emptyText}</p>}
+    </div>
+  );
+}
+
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: ReadonlyArray<{
+    name?: string | number;
+    value?: number | string;
+    color?: string;
+  }>;
+  label?: string | number;
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+  return (
+    <div className="rounded-ui border border-border bg-surface px-3.5 py-2.5 shadow-(--shadow)">
+      {label !== undefined && label !== '' ? (
+        <div className="mb-1.5 text-[12px] font-semibold text-text">{String(label)}</div>
+      ) : null}
+      <div className="flex flex-col gap-1">
+        {payload.map((entry, index) => (
+          <div key={index} className="flex items-center gap-2 text-[13px]">
+            <span
+              className="size-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: entry.color ?? 'var(--primary)' }}
+            />
+            <span className="text-muted">{entry.name}</span>
+            <span className="ml-auto pl-4 font-semibold tabular-nums text-text">
+              {formatMoney(Number(entry.value))}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -265,8 +302,11 @@ export function DashboardPage() {
 
       {alerts ? (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex-row items-center justify-between gap-2">
             <CardTitle>{t('dashboard.alerts')}</CardTitle>
+            <Badge tone={alerts.summary.lowStock + alerts.summary.overdueReceivables + alerts.summary.overduePayables > 0 ? 'warning' : 'success'}>
+              {alerts.summary.lowStock + alerts.summary.overdueReceivables + alerts.summary.overduePayables}
+            </Badge>
           </CardHeader>
           <CardContent>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-[18px]">
@@ -277,7 +317,7 @@ export function DashboardPage() {
               emptyText={t('dashboard.lowStockOk')}
             >
               {alerts.lowStock.map((product) => (
-                <div className="flex items-center justify-between border-b border-border pb-2.5 last:border-b-0 last:pb-0" key={product.productId}>
+                <div className="flex items-center justify-between rounded-ui border-b border-border py-2.5 transition-colors hover:bg-bg last:border-b-0" key={product.productId}>
                   <span>
                     {product.name}
                     <span className="text-muted"> ({product.sku})</span>
@@ -295,7 +335,7 @@ export function DashboardPage() {
               emptyText={t('dashboard.noOverdueInvoices')}
             >
               {alerts.overdueReceivables.map((invoice) => (
-                <div className="flex items-center justify-between border-b border-border pb-2.5 last:border-b-0 last:pb-0" key={invoice.invoiceId}>
+                <div className="flex items-center justify-between rounded-ui border-b border-border py-2.5 transition-colors hover:bg-bg last:border-b-0" key={invoice.invoiceId}>
                   <span>
                     {invoice.number}
                     <span className="text-muted"> · {invoice.customerName}</span>
@@ -311,7 +351,7 @@ export function DashboardPage() {
               emptyText={t('dashboard.noOverduePayables')}
             >
               {alerts.overduePayables.map((receipt) => (
-                <div className="flex items-center justify-between border-b border-border pb-2.5 last:border-b-0 last:pb-0" key={receipt.receiptId}>
+                <div className="flex items-center justify-between rounded-ui border-b border-border py-2.5 transition-colors hover:bg-bg last:border-b-0" key={receipt.receiptId}>
                   <span>
                     {receipt.number}
                     <span className="text-muted"> · {receipt.supplierName}</span>
@@ -344,11 +384,26 @@ export function DashboardPage() {
             <div className="w-full">
               <ResponsiveContainer width="100%" height={260}>
                 <AreaChart data={summary.data}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="period" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(value) => formatMoney(Number(value))} />
-                  <Legend />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                  <XAxis
+                    dataKey="period"
+                    tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
+                    axisLine={{ stroke: 'var(--border)' }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'var(--border)' }} />
+                  <Legend
+                    iconType="circle"
+                    iconSize={8}
+                    formatter={(value: string | number) => (
+                      <span style={{ color: 'var(--text-muted)' }}>{String(value)}</span>
+                    )}
+                  />
                   <Area
                     type="monotone"
                     dataKey="revenue"
@@ -383,19 +438,32 @@ export function DashboardPage() {
             <div className="w-full">
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={topProducts} layout="vertical" margin={{ left: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis type="number" tick={{ fontSize: 12 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
                   <YAxis
                     type="category"
                     dataKey="name"
                     width={120}
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
+                    axisLine={false}
+                    tickLine={false}
                     tickFormatter={(value: string) =>
                       value.length > 16 ? `${value.slice(0, 15)}…` : value
                     }
                   />
-                  <Tooltip formatter={(value) => formatMoney(Number(value))} />
-                  <Legend />
+                  <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--border)', fillOpacity: 0.4 }} />
+                  <Legend
+                    iconType="circle"
+                    iconSize={8}
+                    formatter={(value: string | number) => (
+                      <span style={{ color: 'var(--text-muted)' }}>{String(value)}</span>
+                    )}
+                  />
                   <Bar dataKey="revenue" name={t('dashboard.revenue')} fill="var(--primary)" radius={[0, 4, 4, 0]} />
                   <Bar dataKey="grossProfit" name={t('dashboard.grossProfit')} fill="var(--success)" radius={[0, 4, 4, 0]} />
                 </BarChart>

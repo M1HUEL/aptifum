@@ -57,12 +57,12 @@ export function StatCard({
   const hasTrend = trend !== undefined && trend !== null && Number.isFinite(trend);
   const trendUp = (trend ?? 0) >= 0;
   return (
-    <div className="rounded-ui border border-border bg-surface p-4 shadow-(--shadow)">
+    <div className="rounded-ui border border-border bg-surface p-4 shadow-(--shadow) transition-transform duration-200 hover:-translate-y-0.5">
       <div className="mb-1.5 flex items-center justify-between gap-2">
-        <span className="text-[12px] uppercase tracking-[0.04em] text-muted">{label}</span>
+        <span className="min-w-0 truncate text-[12px] uppercase tracking-[0.04em] text-muted">{label}</span>
         {hasTrend ? (
           <span
-            className={`inline-flex items-center gap-0.5 text-[12px] font-semibold ${
+            className={`inline-flex shrink-0 items-center gap-0.5 text-[12px] font-semibold ${
               trendUp ? 'text-success' : 'text-danger'
             }`}
           >
@@ -71,7 +71,7 @@ export function StatCard({
           </span>
         ) : null}
       </div>
-      <div className="text-xl font-bold">{value}</div>
+      <div className="text-xl font-bold tabular-nums">{value}</div>
     </div>
   );
 }
