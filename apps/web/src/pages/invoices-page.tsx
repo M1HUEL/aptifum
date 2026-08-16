@@ -251,6 +251,7 @@ export function InvoicesPage() {
         action={
           <div className="flex justify-end gap-2">
             <Button
+              variant="secondary"
               type="button"
               aria-label={t('common.export')}
               onClick={handleExport}

@@ -305,7 +305,7 @@ export function SalesOrdersPage() {
           </Button>
           {row.status === 'draft' ? (
             <Button
-              variant="ghost"
+              variant="secondary"
               size="sm"
               onClick={() => runAction(row.id, 'confirm', 'salesOrders.orderConfirmed')}
             >
@@ -314,7 +314,7 @@ export function SalesOrdersPage() {
           ) : null}
           {row.status === 'draft' && row.kind === 'quote' ? (
             <Button
-              variant="ghost"
+              variant="secondary"
               size="sm"
               onClick={() => runAction(row.id, 'convert', 'salesOrders.quoteConverted')}
             >
@@ -348,6 +348,7 @@ export function SalesOrdersPage() {
         action={
           <div className="flex justify-end gap-2">
             <Button
+              variant="secondary"
               type="button"
               aria-label={t('common.export')}
               onClick={handleExport}

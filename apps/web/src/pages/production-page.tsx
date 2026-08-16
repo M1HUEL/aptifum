@@ -452,7 +452,7 @@ export function ProductionPage() {
           </Button>
           {row.status === 'planned' ? (
             <>
-              <Button variant="ghost" size="sm" onClick={() => setAction({ kind: 'start', order: row })}>
+              <Button variant="secondary" size="sm" onClick={() => setAction({ kind: 'start', order: row })}>
                 {t('production.start')}
               </Button>
               <Button variant="ghost" size="sm" onClick={() => openOrderEdit(row)}>
@@ -465,7 +465,7 @@ export function ProductionPage() {
           ) : null}
           {row.status === 'in_progress' ? (
             <>
-              <Button variant="ghost" size="sm" onClick={() => setAction({ kind: 'complete', order: row })}>
+              <Button variant="secondary" size="sm" onClick={() => setAction({ kind: 'complete', order: row })}>
                 {t('production.complete')}
               </Button>
               <Button variant="danger" size="sm" onClick={() => setAction({ kind: 'cancel', order: row })}>
@@ -503,7 +503,7 @@ export function ProductionPage() {
         subtitle={t('production.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <Button type="button" aria-label={t('common.export')} onClick={handleExport}>
+            <Button type="button" variant="secondary" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </Button>
             {tab === 'boms' ? (

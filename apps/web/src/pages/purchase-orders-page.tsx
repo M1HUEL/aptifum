@@ -356,7 +356,7 @@ export function PurchaseOrdersPage() {
           {row.status === 'draft' ? (
             <>
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={() => runAction(row.id, 'approve', 'purchaseOrders.orderApproved')}
               >
@@ -394,6 +394,7 @@ export function PurchaseOrdersPage() {
         action={
           <div className="flex justify-end gap-2">
             <Button
+              variant="secondary"
               type="button"
               aria-label={t('common.export')}
               onClick={handleExport}

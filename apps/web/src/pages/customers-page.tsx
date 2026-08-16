@@ -319,13 +319,14 @@ export function CustomersPage() {
         action={
           <div className="flex justify-end gap-2">
             <Button
+              variant="secondary"
               type="button"
               aria-label={t('common.export')}
               onClick={handleExport}
             >
               {t('common.export')}
             </Button>
-            <Button type="button" onClick={() => setImportOpen(true)}>
+            <Button type="button" variant="secondary" onClick={() => setImportOpen(true)}>
               {t('common.import')}
             </Button>
             <Button onClick={openCreate}>{t('customers.newCustomer')}</Button>

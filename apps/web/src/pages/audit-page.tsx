@@ -157,7 +157,7 @@ export function AuditPage() {
         title={t('audit.title')}
         subtitle={t('audit.subtitle')}
         action={
-          <Button type="button" aria-label={t('common.export')} onClick={handleExport}>
+          <Button type="button" variant="secondary" aria-label={t('common.export')} onClick={handleExport}>
             {t('common.export')}
           </Button>
         }

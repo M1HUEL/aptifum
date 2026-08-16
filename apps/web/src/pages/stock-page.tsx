@@ -224,7 +224,7 @@ function StockTab({ onCreate }: { onCreate: () => void }) {
         <Button
           type="button"
          
-          aria-label={t('common.export')}
+          variant="secondary" aria-label={t('common.export')}
           onClick={handleExport}
         >
           {t('common.export')}
@@ -313,7 +313,7 @@ function MovementsTab({ warehouses }: { warehouses: Warehouse[] }) {
         <Button
           type="button"
          
-          aria-label={t('common.export')}
+          variant="secondary" aria-label={t('common.export')}
           onClick={handleExport}
         >
           {t('common.export')}
@@ -423,7 +423,7 @@ function LotsTab({ warehouses }: { warehouses: Warehouse[] }) {
         <Button
           type="button"
          
-          aria-label={t('common.export')}
+          variant="secondary" aria-label={t('common.export')}
           onClick={handleExport}
         >
           {t('common.export')}
@@ -640,7 +640,7 @@ export function StockPage() {
         subtitle={t('stock.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <Button type="button" onClick={() => setImportOpen(true)}>
+            <Button type="button" variant="secondary" onClick={() => setImportOpen(true)}>
               {t('common.import')}
             </Button>
             <Button onClick={openModal}>{t('stock.newMovement')}</Button>

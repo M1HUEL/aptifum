@@ -359,7 +359,7 @@ export function HrPage() {
           {row.status === 'draft' ? (
             <>
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={() => runPayrollAction(row.id, 'post', 'hr.payrollPosted')}
               >

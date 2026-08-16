@@ -476,7 +476,7 @@ export function UsersRolesPage() {
         subtitle={t('usersRoles.subtitle')}
         action={
           <div className="flex justify-end gap-2">
-            <Button type="button" aria-label={t('common.export')} onClick={handleExport}>
+            <Button type="button" variant="secondary" aria-label={t('common.export')} onClick={handleExport}>
               {t('common.export')}
             </Button>
             {tab === 'users' ? (
