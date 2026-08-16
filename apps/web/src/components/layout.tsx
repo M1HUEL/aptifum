@@ -261,7 +261,7 @@ export function Layout() {
           </div>
         </aside>
         <div className={`fixed inset-0 z-40 hidden bg-black/40 transition-opacity duration-200 max-[900px]:block${sidebarOpen ? ' opacity-100' : ' pointer-events-none opacity-0'}`} onClick={closeSidebar} aria-hidden={!sidebarOpen} />
-        <main className="flex-1 px-8 py-7 max-[900px]:px-4 max-[900px]:py-5 print:p-0">
+        <main className="min-w-0 flex-1 px-8 py-7 max-[900px]:px-4 max-[900px]:py-5 print:p-0">
           <Outlet />
         </main>
       </div>
