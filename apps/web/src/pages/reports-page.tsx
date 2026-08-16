@@ -82,11 +82,11 @@ function formatCell(value: unknown): string {
   return String(value);
 }
 
-function buildColumns(rows: Row[]): Column<Row>[] {
+function buildColumns(rows: Row[], t: TFunction): Column<Row>[] {
   const keys = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
   return keys.map((key) => ({
     key,
-    header: key,
+    header: t(`reports.column.${key}`, { defaultValue: key }),
     render: (row) => formatCell(row[key]),
   }));
 }
@@ -240,7 +240,7 @@ export function ReportsPage() {
           <EmptyState message={t('reports.noData')} icon={<BarChart3 className="size-6" />} />
         ) : (
           <DataTable
-            columns={buildColumns(rows)}
+            columns={buildColumns(rows, t)}
             rows={rows}
             rowKey={(row) => String(row['id'] ?? JSON.stringify(row))}
           />
