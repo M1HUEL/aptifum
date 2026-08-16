@@ -30,6 +30,7 @@ const en: Translation = {
     sortAscending: 'Sort {{column}} ascending',
     sortDescending: 'Sort {{column}} descending',
     clearFilters: 'Clear filters',
+    undo: 'Undo',
     pdf: 'PDF',
     payment: 'Payment',
     paymentTerm: 'Payment',

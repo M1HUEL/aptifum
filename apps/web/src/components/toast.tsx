@@ -12,14 +12,20 @@ import { cn } from '../lib/cn';
 
 type ToastTone = 'success' | 'error' | 'info';
 
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface Toast {
   id: number;
   message: string;
   tone: ToastTone;
+  action?: ToastAction;
 }
 
 interface ToastContextValue {
-  toast: (message: string, tone?: ToastTone) => void;
+  toast: (message: string, tone?: ToastTone, action?: ToastAction) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
@@ -73,9 +79,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((current) => current.filter((item) => item.id !== id));
   }, []);
 
-  const toast = useCallback((message: string, tone: ToastTone = 'success') => {
+  const toast = useCallback((message: string, tone: ToastTone = 'success', action?: ToastAction) => {
     const id = nextId++;
-    setToasts((current) => [...current, { id, message, tone }]);
+    setToasts((current) => [...current, { id, message, tone, action }]);
     window.setTimeout(() => {
       setToasts((current) => current.filter((item) => item.id !== id));
     }, 4000);
@@ -97,6 +103,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           >
             <ToastIcon tone={item.tone} />
             <ToastPrimitive.Title className="flex-1">{item.message}</ToastPrimitive.Title>
+            {item.action ? (
+              <button
+                type="button"
+                onClick={() => {
+                  dismiss(item.id);
+                  item.action?.onClick();
+                }}
+                className="cursor-pointer rounded p-0.5 text-[13px] font-semibold underline decoration-1 underline-offset-2 text-white transition hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              >
+                {item.action.label}
+              </button>
+            ) : null}
             <ToastPrimitive.Close
               aria-label={i18n.t('common.close')}
               onClick={() => dismiss(item.id)}

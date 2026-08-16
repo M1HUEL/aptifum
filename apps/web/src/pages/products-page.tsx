@@ -265,11 +265,22 @@ export function ProductsPage() {
 
   const confirmDelete = () => {
     if (!deleting) return;
+    const productId = deleting.id;
     deleteMutation.mutate(
       {},
       {
         onSuccess: () => {
-          toast.toast(t('products.productDeactivated'));
+          toast.toast(t('products.productDeactivated'), 'success', {
+            label: t('common.undo'),
+            onClick: () => {
+              void apiFetch(`/api/v1/inventory/products/${productId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ enabled: true }),
+              }).then(() => {
+                void invalidate(['paged', '/api/v1/inventory/products']);
+              });
+            },
+          });
           setDeleting(null);
           void invalidate(['paged', '/api/v1/inventory/products']);
         },

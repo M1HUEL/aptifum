@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as core from '@aptifum/core';
 import type { components } from '../api/schema';
 import type { Customer } from '../api/types';
+import { apiFetch } from '../api/client';
 import { customerFormSchema, type CustomerFormValues } from '../api/schemas';
 import {
   DataTable,
@@ -246,11 +247,22 @@ export function CustomersPage() {
 
   const confirmDelete = () => {
     if (!deleting) return;
+    const customerId = deleting.id;
     deleteMutation.mutate(
       {},
       {
         onSuccess: () => {
-          toast.toast(t('customers.customerDeactivated'));
+          toast.toast(t('customers.customerDeactivated'), 'success', {
+            label: t('common.undo'),
+            onClick: () => {
+              void apiFetch(`/api/v1/sales/customers/${customerId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ active: true }),
+              }).then(() => {
+                void invalidate(['paged', '/api/v1/sales/customers']);
+              });
+            },
+          });
           setDeleting(null);
           void invalidate(['paged', '/api/v1/sales/customers']);
         },

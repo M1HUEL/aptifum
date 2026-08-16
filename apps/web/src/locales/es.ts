@@ -28,6 +28,7 @@ const es = {
     sortAscending: 'Ordenar {{column}} ascendente',
     sortDescending: 'Ordenar {{column}} descendente',
     clearFilters: 'Limpiar filtros',
+    undo: 'Deshacer',
     pdf: 'PDF',
     payment: 'Pago',
     paymentTerm: 'Pago',

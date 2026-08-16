@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { components } from '../api/schema';
 import type { Supplier } from '../api/types';
+import { apiFetch } from '../api/client';
 import { supplierFormSchema, type SupplierFormValues } from '../api/schemas';
 import { useApiInvalidation, useApiMutation } from '../api/hooks';
 import {
@@ -242,11 +243,22 @@ export function SuppliersPage() {
 
   const confirmDelete = () => {
     if (!deleting) return;
+    const supplierId = deleting.id;
     deleteMutation.mutate(
       {},
       {
         onSuccess: () => {
-          toast.toast(t('suppliers.supplierDeactivated'));
+          toast.toast(t('suppliers.supplierDeactivated'), 'success', {
+            label: t('common.undo'),
+            onClick: () => {
+              void apiFetch(`/api/v1/purchasing/suppliers/${supplierId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ active: true }),
+              }).then(() => {
+                void invalidate(['paged', '/api/v1/purchasing/suppliers']);
+              });
+            },
+          });
           setDeleting(null);
           void invalidate(['paged', '/api/v1/purchasing/suppliers']);
         },
