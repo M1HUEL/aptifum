@@ -12,6 +12,7 @@ export default async function globalSetup(): Promise<void> {
   await dataSource.query(`
     DELETE FROM invoice_items;
     DELETE FROM payments;
+    DELETE FROM cfdi_documents;
     DELETE FROM invoices;
     DELETE FROM sales_order_items;
     DELETE FROM sales_orders;
@@ -31,6 +32,8 @@ export default async function globalSetup(): Promise<void> {
     DELETE FROM production_boms;
     DELETE FROM stock_movements;
     DELETE FROM product_stock;
+    DELETE FROM product_lots;
+    DELETE FROM product_variants;
     DELETE FROM products;
     DELETE FROM warehouse_locations;
     DELETE FROM warehouses;
