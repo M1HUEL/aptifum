@@ -1,6 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
+
 import { Customer } from '@aptifum/database';
+
 import { OpportunitiesService } from '../src/modules/crm/opportunities.service';
 
 const TENANT = '00000000-0000-4000-8000-000000000001';

@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, Repository } from 'typeorm';
-import { Customer, Tenant } from '@aptifum/database';
+
 import { normalizeRfc, validateEin, validateRfc } from '@aptifum/core';
+import { Customer, Tenant } from '@aptifum/database';
+
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 
@@ -117,7 +119,7 @@ export class CustomersService {
       if (!validateEin(value)) {
         throw new BadRequestException('Invalid US EIN: expected 9 digits (XX-XXXXXXX)');
       }
-      return value.replace(/[\s\-]/g, '');
+      return value.replace(/[\s-]/g, '');
     }
     return value.trim();
   }

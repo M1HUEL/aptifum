@@ -1,4 +1,5 @@
 import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, Matches, MaxLength, Min } from 'class-validator';
+
 import { PaymentMethod } from '@aptifum/core';
 
 export class CreatePaymentDto {

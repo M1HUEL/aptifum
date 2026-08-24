@@ -1,11 +1,14 @@
+import { createHmac } from 'node:crypto';
+
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { createHmac } from 'node:crypto';
+import { json, urlencoded, NextFunction, Request, Response } from 'express';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
 import { getEnv, resetEnv, setEnv } from '@aptifum/config';
 import { createDataSource, seed } from '@aptifum/database';
-import { json, urlencoded, NextFunction, Request, Response } from 'express';
+
 import { AppModule } from '../src/app.module';
 
 const ADMIN_EMAIL = 'admin@aptifum.dev';

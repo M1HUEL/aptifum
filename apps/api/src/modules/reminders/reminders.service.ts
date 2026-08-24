@@ -2,7 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, MoreThanOrEqual, Repository } from 'typeorm';
+
 import { OutboxEvent } from '@aptifum/database';
+
 import { OutboxService } from '../outbox/outbox.service';
 
 interface OverdueInvoiceRow {

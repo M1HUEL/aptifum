@@ -1,4 +1,5 @@
 import { IsBoolean, IsEnum, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+
 import { DocumentSeriesKind } from '@aptifum/core';
 
 export class CreateSeriesDto {

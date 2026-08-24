@@ -1,11 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
 import { JwtService } from '@nestjs/jwt';
 import { In } from 'typeorm';
+import { describe, expect, it, vi } from 'vitest';
+
 import { UserProfile } from '@aptifum/core';
 import { User } from '@aptifum/database';
+
+import { ConfigService } from '../src/config/config.module';
 import { AuthService } from '../src/modules/auth/auth.service';
 import { UsersService } from '../src/modules/users/users.service';
-import { ConfigService } from '../src/config/config.module';
 
 function buildAuthService(jwtOverrides: Partial<{ signAsync: unknown; verifyAsync: unknown }> = {}) {
   const usersService = {

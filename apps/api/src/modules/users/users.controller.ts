@@ -1,9 +1,12 @@
 import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { DEFAULT_TENANT_ID } from '@aptifum/database';
+
 import { ModuleName, permission } from '@aptifum/core';
+import { DEFAULT_TENANT_ID } from '@aptifum/database';
+
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';

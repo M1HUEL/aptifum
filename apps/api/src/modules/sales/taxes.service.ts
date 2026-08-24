@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
-import { Tax } from '@aptifum/database';
+
 import { TaxKind } from '@aptifum/core';
+import { Tax } from '@aptifum/database';
+
 import { CreateTaxDto } from './dto/create-tax.dto';
 
 @Injectable()

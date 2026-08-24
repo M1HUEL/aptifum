@@ -1,8 +1,10 @@
 import 'reflect-metadata';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
 import { AppModule } from '../app.module';
 
 async function exportSwagger(): Promise<void> {

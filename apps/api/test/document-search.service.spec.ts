@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
+
+import { PurchaseOrdersService } from '../src/modules/purchasing/purchase-orders.service';
 import { InvoicesService } from '../src/modules/sales/invoices.service';
 import { OrdersService } from '../src/modules/sales/orders.service';
-import { PurchaseOrdersService } from '../src/modules/purchasing/purchase-orders.service';
 
 const TENANT = '00000000-0000-4000-8000-000000000001';
 

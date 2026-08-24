@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { describe, expect, it, vi } from 'vitest';
+
 import { ReportsService } from '../src/modules/reports/reports.service';
 
 const TENANT = '00000000-0000-4000-8000-000000000001';

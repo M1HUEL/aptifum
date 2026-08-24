@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { describe, expect, it, vi } from 'vitest';
 import { Brackets } from 'typeorm';
+import { describe, expect, it, vi } from 'vitest';
+
 import { StockService } from '../src/modules/inventory/stock.service';
 
 const TENANT = '00000000-0000-4000-8000-000000000001';

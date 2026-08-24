@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Tenant } from '@aptifum/database';
+
 import { resolveUsSalesTaxRate, US_STATES, UsSalesTaxConfig } from '@aptifum/core';
+import { Tenant } from '@aptifum/database';
+
 import type { UpdateUsSalesTaxDto } from './dto/update-us-sales-tax.dto';
 
 export interface UsSalesTaxView {

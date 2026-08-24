@@ -1,8 +1,10 @@
+import { randomUUID } from 'node:crypto';
+
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
-import { randomUUID } from 'node:crypto';
 import { In, Repository } from 'typeorm';
+
 import { Role, User } from '@aptifum/database';
 
 export interface CreateUserInput {

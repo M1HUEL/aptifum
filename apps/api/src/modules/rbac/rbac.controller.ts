@@ -15,8 +15,10 @@ import { ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsArray, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Repository } from 'typeorm';
+
 import { ModuleName, permission } from '@aptifum/core';
 import { Role } from '@aptifum/database';
+
 import { RequirePermissions } from './decorators/require-permissions.decorator';
 
 export class CreateRoleDto {

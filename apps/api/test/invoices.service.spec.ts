@@ -1,5 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   applyStockMovement,
   Customer,
@@ -9,8 +10,9 @@ import {
   Tenant,
   WALK_IN_CUSTOMER,
 } from '@aptifum/database';
-import { InvoicesService } from '../src/modules/sales/invoices.service';
+
 import { nextDocumentNumber } from '../src/modules/sales/helpers';
+import { InvoicesService } from '../src/modules/sales/invoices.service';
 
 vi.mock('@aptifum/database', async (importOriginal) => {
   const original = await importOriginal<typeof import('@aptifum/database')>();

@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, ParseUUIDPipe } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+
 import { ModuleName, permission } from '@aptifum/core';
-import { ParseUUIDPipe } from '@nestjs/common';
+
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+
 import { DocumentSeriesService } from './document-series.service';
 import { CreateSeriesDto } from './dto/create-series.dto';
 

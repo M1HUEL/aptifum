@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, In, Repository } from 'typeorm';
+
 import { DocumentSeriesKind, SalesOrderKind, SalesOrderStatus } from '@aptifum/core';
 import {
   Customer,
@@ -12,10 +13,12 @@ import {
   releaseStock,
   reserveStock,
 } from '@aptifum/database';
-import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
+
 import { searchDocumentIds } from '../../common/query/document-search';
-import { CreateOrderDto } from './dto/create-order.dto';
 import { UsSalesTaxService } from '../tax/us-sales-tax.service';
+
+import { CreateOrderDto } from './dto/create-order.dto';
+import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
 
 @Injectable()
 export class OrdersService {

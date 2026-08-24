@@ -1,6 +1,8 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
-import { Employee, Payroll } from '@aptifum/database';
 import { describe, expect, it, vi } from 'vitest';
+
+import { Employee, Payroll } from '@aptifum/database';
+
 import { PeriodsService } from '../src/modules/accounting/periods.service';
 import { PayrollsService } from '../src/modules/hr/payrolls.service';
 

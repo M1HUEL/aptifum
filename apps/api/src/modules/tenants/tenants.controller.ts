@@ -2,8 +2,10 @@ import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 import { ModuleName, permission } from '@aptifum/core';
 import { Tenant } from '@aptifum/database';
+
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
 
 @ApiTags('tenants')

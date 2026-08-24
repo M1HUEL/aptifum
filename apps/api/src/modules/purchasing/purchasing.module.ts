@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import {
   GoodsReceipt,
   GoodsReceiptItem,
@@ -12,9 +13,11 @@ import {
   SupplierPayment,
   Warehouse,
 } from '@aptifum/database';
+
+import { ExchangeRatesModule } from '../exchange-rates/exchange-rates.module';
+
 import { PurchaseOrdersController } from './purchase-orders.controller';
 import { PurchaseOrdersService } from './purchase-orders.service';
-import { ExchangeRatesModule } from '../exchange-rates/exchange-rates.module';
 import { SupplierBillsController } from './supplier-bills.controller';
 import { SupplierBillsService } from './supplier-bills.service';
 import { SupplierPaymentsController } from './supplier-payments.controller';

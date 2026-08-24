@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, ParseUUIDPipe } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+
 import { ModuleName, permission } from '@aptifum/core';
-import { ParseUUIDPipe } from '@nestjs/common';
+
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+
 import { CreateTaxDto } from './dto/create-tax.dto';
 import { TaxesService } from './taxes.service';
 

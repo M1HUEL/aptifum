@@ -1,6 +1,8 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, FindOptionsWhere, Repository } from 'typeorm';
+
+import { computeTotals, DocumentSeriesKind, SupplierBillStatus, round2 } from '@aptifum/core';
 import {
   ACCOUNT_CODES,
   ChartAccountNotFoundError,
@@ -16,9 +18,10 @@ import {
   Tenant,
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
-import { OutboxService } from '../outbox/outbox.service';
+
 import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
-import { computeTotals, DocumentSeriesKind, SupplierBillStatus, round2 } from '@aptifum/core';
+import { OutboxService } from '../outbox/outbox.service';
+
 import { CreateSupplierBillDto } from './dto/create-supplier-bill.dto';
 
 @Injectable()

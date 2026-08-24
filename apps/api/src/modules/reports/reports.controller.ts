@@ -1,13 +1,16 @@
 import { Controller, Get, Query, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
+
 import { ModuleName, permission } from '@aptifum/core';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
-import { ReportsService } from './reports.service';
+
 import { sendCsv, sendPdf, sendXlsx } from '../../common/export/export.util';
 import { buildTablePdf, formatMoney, rangeText } from '../../common/pdf/pdf.util';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+
 import { DashboardQueryDto } from './dto/reports-query.dto';
+import { ReportsService } from './reports.service';
 
 @ApiTags('reports')
 @Controller('reports')

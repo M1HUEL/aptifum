@@ -1,4 +1,5 @@
 import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+
 import { TaxKind } from '@aptifum/core';
 
 export class CreateTaxDto {

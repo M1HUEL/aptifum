@@ -1,10 +1,9 @@
 import { Controller, Get, Query, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
+
 import { ModuleName, permission } from '@aptifum/core';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
-import { ReportsService } from './reports.service';
+
 import type { CsvSection } from '../../common/export/csv.util';
 import { sendCsv, sendPdf, sendSectionsCsv, sendSectionsXlsx, sendXlsx } from '../../common/export/export.util';
 import {
@@ -14,7 +13,11 @@ import {
   PdfFinancialSection,
   rangeText,
 } from '../../common/pdf/pdf.util';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+
 import { BalanceSheetQueryDto, DateRangeQueryDto, IncomeStatementQueryDto } from './dto/reports-query.dto';
+import { ReportsService } from './reports.service';
 
 @ApiTags('reports')
 @Controller('reports/financial')

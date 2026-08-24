@@ -11,6 +11,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+
 import { SalesOrderKind } from '@aptifum/core';
 
 export class CreateOrderItemDto {

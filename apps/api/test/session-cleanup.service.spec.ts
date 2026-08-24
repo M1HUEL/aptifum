@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
 import { Repository } from 'typeorm';
+import { describe, expect, it, vi } from 'vitest';
+
 import { RefreshSession } from '@aptifum/database';
+
 import { ConfigService } from '../src/config/config.module';
 import { SessionCleanupService } from '../src/modules/auth/session-cleanup.service';
 

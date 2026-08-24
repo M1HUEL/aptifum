@@ -1,9 +1,12 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+
 import { ModuleName, permission } from '@aptifum/core';
+
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
+
 import { CreateSupplierPaymentDto } from './dto/create-supplier-payment.dto';
 import { SupplierPaymentsService } from './supplier-payments.service';
 

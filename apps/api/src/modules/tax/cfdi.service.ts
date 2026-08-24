@@ -1,10 +1,12 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
+
 import { CfdiStatus } from '@aptifum/core';
 import { CfdiCertificate, CfdiDocument, Customer, Invoice, InvoiceItem, OutboxEvent, Tenant } from '@aptifum/database';
-import { buildCfdi, CfdiInvoiceInput } from './cfdi-builder.util';
+
 import { DemoCertificate, generateDemoCertificate } from './certificate.util';
+import { buildCfdi, CfdiInvoiceInput } from './cfdi-builder.util';
 import type { UpdateCfdiSettingsDto } from './dto/update-cfdi-settings.dto';
 
 export const DEMO_PAC_RFC = 'XND000000000';

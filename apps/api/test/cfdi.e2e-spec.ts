@@ -1,8 +1,10 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import * as bcrypt from 'bcryptjs';
+import { json, NextFunction, Request, Response, urlencoded } from 'express';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
 import { getEnv, resetEnv, setEnv } from '@aptifum/config';
 import { AccountingPeriodStatus, DocumentSeriesKind, RoleName } from '@aptifum/core';
 import {
@@ -17,7 +19,7 @@ import {
   Tenant,
   User,
 } from '@aptifum/database';
-import { json, NextFunction, Request, Response, urlencoded } from 'express';
+
 import { AppModule } from '../src/app.module';
 
 const MX_TENANT_ID = '00000000-0000-4000-8000-00000000000a';

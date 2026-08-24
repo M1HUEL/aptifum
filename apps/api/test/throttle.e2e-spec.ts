@@ -2,8 +2,10 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, it } from 'vitest';
+
 import { getEnv, resetEnv, setEnv } from '@aptifum/config';
 import { createDataSource } from '@aptifum/database';
+
 import { AppModule } from '../src/app.module';
 
 describe('Auth throttling (e2e)', () => {

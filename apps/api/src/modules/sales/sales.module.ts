@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import {
   Customer,
   DocumentSeries,
@@ -15,12 +16,14 @@ import {
   Tenant,
   Warehouse,
 } from '@aptifum/database';
+
+import { ExchangeRatesModule } from '../exchange-rates/exchange-rates.module';
+import { TaxModule } from '../tax/tax.module';
+
 import { CustomersController } from './customers.controller';
 import { CustomersService } from './customers.service';
 import { DocumentSeriesController } from './document-series.controller';
 import { DocumentSeriesService } from './document-series.service';
-import { ExchangeRatesModule } from '../exchange-rates/exchange-rates.module';
-import { TaxModule } from '../tax/tax.module';
 import { InvoicesController } from './invoices.controller';
 import { InvoicesService } from './invoices.service';
 import { OrdersController } from './orders.controller';

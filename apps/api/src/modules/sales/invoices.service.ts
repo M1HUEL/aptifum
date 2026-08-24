@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto';
+
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, FindOptionsWhere, In, Not, Repository } from 'typeorm';
+
 import {
   DocumentSeriesKind,
   InvoiceStatus,
@@ -32,13 +34,15 @@ import {
   Warehouse,
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
-import { OutboxService } from '../outbox/outbox.service';
-import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
-import { UsSalesTaxService } from '../tax/us-sales-tax.service';
+
 import { searchDocumentIds } from '../../common/query/document-search';
-import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
+import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
+import { OutboxService } from '../outbox/outbox.service';
+import { UsSalesTaxService } from '../tax/us-sales-tax.service';
+
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
 
 @Injectable()
 export class InvoicesService {

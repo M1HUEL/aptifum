@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { SupplierBillsService } from '../src/modules/purchasing/supplier-bills.service';
+
+import { SupplierBillStatus } from '@aptifum/core';
 import {
   ChartAccountNotFoundError,
   GoodsReceipt,
@@ -12,7 +13,8 @@ import {
   SupplierBillItem,
   Tenant,
 } from '@aptifum/database';
-import { SupplierBillStatus } from '@aptifum/core';
+
+import { SupplierBillsService } from '../src/modules/purchasing/supplier-bills.service';
 
 vi.mock('@aptifum/database', async (importOriginal) => {
   const original = await importOriginal<typeof import('@aptifum/database')>();

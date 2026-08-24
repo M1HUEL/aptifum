@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+
 import { AccountNormalBalance, MovementType, round2 } from '@aptifum/core';
 
 interface AggregatedAccountRow {

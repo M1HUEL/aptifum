@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { OutboxEventStatus } from '@aptifum/core';
 import { OutboxEvent } from '@aptifum/database';
+
 import { EmailNotificationsService } from '../src/modules/email/email-notifications.service';
 
 const TENANT = '00000000-0000-4000-8000-000000000001';

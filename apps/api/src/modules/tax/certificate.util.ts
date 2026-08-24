@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto';
-import { X509Certificate } from 'node:crypto';
+import { createHash, X509Certificate } from 'node:crypto';
+
 import selfsigned from 'selfsigned';
 
 export interface DemoCertificate {

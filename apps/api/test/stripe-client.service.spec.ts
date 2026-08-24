@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { StripeClient } from '../src/modules/payments/stripe/stripe-client.service';
 
 describe('StripeClient', () => {
