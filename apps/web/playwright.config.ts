@@ -21,7 +21,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      command: 'pnpm exec tsnd --respawn --transpile-only --files src/main.ts',
+      command: 'pnpm exec nest start',
       cwd: '../api',
       url: 'http://localhost:3000/docs',
       timeout: 120_000,

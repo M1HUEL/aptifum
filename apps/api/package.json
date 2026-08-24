@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nest build",
-    "dev": "tsnd --respawn --transpile-only --files src/main.ts",
+    "dev": "nest start --watch",
     "start": "node dist/main.js",
     "swagger:export": "nest build && node dist/scripts/swagger-export.js",
     "lint": "eslint src test --max-warnings 0",
@@ -53,7 +53,6 @@
     "@vitest/coverage-v8": "^4.1.10",
     "supertest": "^7.0.0",
     "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0",
     "vitest": "^4.1.10"
