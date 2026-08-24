@@ -146,8 +146,7 @@ export class ImportsService {
 
     const seen = new Set<string>();
 
-    for (let i = 0; i < parsed.rows.length; i++) {
-      const row = parsed.rows[i];
+    for (const [i, row] of parsed.rows.entries()) {
       const errors: string[] = [];
       const sku = (row.sku ?? '').trim();
       const name = (row.name ?? '').trim();
@@ -175,7 +174,7 @@ export class ImportsService {
       const enabled = parseBoolean(row.enabled, 'enabled', errors) ?? true;
 
       if (errors.length > 0) {
-        result.errors.push({ row: parsed.rowNumbers[i], errors });
+        result.errors.push({ row: parsed.rowNumbers[i]!, errors });
         continue;
       }
 
@@ -238,8 +237,7 @@ export class ImportsService {
 
     const seen = new Set<string>();
 
-    for (let i = 0; i < parsed.rows.length; i++) {
-      const row = parsed.rows[i];
+    for (const [i, row] of parsed.rows.entries()) {
       const errors: string[] = [];
       const code = (row.code ?? '').trim();
       const tradeName = (row.trade_name ?? '').trim();
@@ -292,7 +290,7 @@ export class ImportsService {
       }
 
       if (errors.length > 0) {
-        result.errors.push({ row: parsed.rowNumbers[i], errors });
+        result.errors.push({ row: parsed.rowNumbers[i]!, errors });
         continue;
       }
 
@@ -336,8 +334,7 @@ export class ImportsService {
 
     const seen = new Set<string>();
 
-    for (let i = 0; i < parsed.rows.length; i++) {
-      const row = parsed.rows[i];
+    for (const [i, row] of parsed.rows.entries()) {
       const errors: string[] = [];
       const code = (row.code ?? '').trim();
       const tradeName = (row.trade_name ?? '').trim();
@@ -368,7 +365,7 @@ export class ImportsService {
       }
 
       if (errors.length > 0) {
-        result.errors.push({ row: parsed.rowNumbers[i], errors });
+        result.errors.push({ row: parsed.rowNumbers[i]!, errors });
         continue;
       }
 
@@ -420,8 +417,7 @@ export class ImportsService {
       : [];
     const warehouseByCode = new Map(warehouses.map((warehouse) => [warehouse.code, warehouse.id]));
 
-    for (let i = 0; i < parsed.rows.length; i++) {
-      const row = parsed.rows[i];
+    for (const [i, row] of parsed.rows.entries()) {
       const errors: string[] = [];
       const sku = (row.sku ?? '').trim();
       const warehouseCode = (row.warehouse ?? '').trim();
@@ -444,7 +440,7 @@ export class ImportsService {
       }
 
       if (errors.length > 0 || quantity === null) {
-        result.errors.push({ row: parsed.rowNumbers[i], errors });
+        result.errors.push({ row: parsed.rowNumbers[i]!, errors });
         continue;
       }
 

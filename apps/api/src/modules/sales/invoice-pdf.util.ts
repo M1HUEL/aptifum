@@ -77,12 +77,12 @@ function drawItemRow(doc: PDFKit.PDFDocument, item: InvoiceItem, currency: strin
   const y = doc.y;
   doc.fillColor('#111827').font('Helvetica').fontSize(9);
   let x = MARGIN;
-  for (let i = 0; i < ITEM_COLUMNS.length; i++) {
+  for (const [i, column] of ITEM_COLUMNS.entries()) {
     doc.text(values[i] ?? '', x + pad, y + 4, {
-      width: ITEM_COLUMNS[i].width - pad * 2,
-      align: ITEM_COLUMNS[i].align ?? 'left',
+      width: column.width - pad * 2,
+      align: column.align ?? 'left',
     });
-    x += ITEM_COLUMNS[i].width;
+    x += column.width;
   }
   doc
     .moveTo(MARGIN, y + height + 2)

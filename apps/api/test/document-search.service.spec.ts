@@ -16,7 +16,7 @@ function qbChain(ids: string[]) {
 }
 
 function whereIdOf(repo: { findAndCount: ReturnType<typeof vi.fn> }): { _type: string; _value: string[] } {
-  const args = repo.findAndCount.mock.calls[0][0];
+  const args = repo.findAndCount.mock.calls[0]![0];
   return (args.where as { id: unknown }).id as { _type: string; _value: string[] };
 }
 
@@ -47,12 +47,12 @@ describe('document search (q) on invoices', () => {
 
     expect(result.meta.total).toBe(1);
     expect(invoicesRepo.createQueryBuilder).toHaveBeenCalledWith('d');
-    expect(qb.andWhere.mock.calls[0][0]).toContain('customers');
-    expect(qb.andWhere.mock.calls[0][0]).toContain('invoice_items');
+    expect(qb.andWhere.mock.calls[0]![0]).toContain('customers');
+    expect(qb.andWhere.mock.calls[0]![0]).toContain('invoice_items');
     const whereId = whereIdOf(invoicesRepo);
     expect(whereId._type).toBe('in');
     expect(whereId._value).toEqual(['inv-1']);
-    const args = invoicesRepo.findAndCount.mock.calls[0][0] as {
+    const args = invoicesRepo.findAndCount.mock.calls[0]![0] as {
       where: Record<string, unknown>;
     };
     expect(args.where.tenantId).toBe(TENANT);
@@ -128,9 +128,9 @@ describe('document search (q) on sales orders', () => {
     const result = await service.findAll(TENANT, 1, 20, { q: 'Espresso', kind: 'order' });
 
     expect(result.meta.total).toBe(1);
-    expect(qb.andWhere.mock.calls[0][0]).toContain('sales_order_items');
+    expect(qb.andWhere.mock.calls[0]![0]).toContain('sales_order_items');
     expect(whereIdOf(ordersRepo)._value).toEqual(['ord-1']);
-    const args = ordersRepo.findAndCount.mock.calls[0][0] as {
+    const args = ordersRepo.findAndCount.mock.calls[0]![0] as {
       where: Record<string, unknown>;
     };
     expect(args.where.kind).toBe('order');
@@ -157,7 +157,7 @@ describe('document search (q) on purchase orders', () => {
     const result = await service.findAll(TENANT, 1, 20, { q: 'Sparkle' });
 
     expect(result.meta.total).toBe(1);
-    const sql = qb.andWhere.mock.calls[0][0] as string;
+    const sql = qb.andWhere.mock.calls[0]![0] as string;
     expect(sql).toContain('suppliers');
     expect(sql).toContain('purchase_order_items');
     expect(whereIdOf(ordersRepo)._value).toEqual(['po-1']);

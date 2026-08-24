@@ -24,7 +24,6 @@ import { GeneratePayrollDto } from './dto/generate-payroll.dto';
 export class PayrollsService {
   constructor(
     @InjectRepository(Payroll) private readonly payrollsRepo: Repository<Payroll>,
-    @InjectRepository(Employee) private readonly employeesRepo: Repository<Employee>,
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly outbox: OutboxService,
   ) {}
@@ -190,8 +189,8 @@ export class PayrollsService {
   }
 
   private lastDayOfPeriod(period: string): string {
-    const [year, month] = period.split('-').map(Number);
-    const last = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    const [year, month] = period.split('-');
+    const last = new Date(Date.UTC(Number(year), Number(month), 0)).getUTCDate();
     return `${period}-${String(last).padStart(2, '0')}`;
   }
 

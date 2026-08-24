@@ -56,7 +56,7 @@ describe('OutboxService emit', () => {
       aggregateId: 'p1',
       tenantId: TENANT,
     });
-    const created = paymentRepo.create.mock.calls[0][0] as Record<string, unknown>;
+    const created = paymentRepo.create.mock.calls[0]![0] as Record<string, unknown>;
     expect(created.payload).toEqual({});
     expect(created.userId).toBeNull();
     expect(created.occurredAt).toBeInstanceOf(Date);

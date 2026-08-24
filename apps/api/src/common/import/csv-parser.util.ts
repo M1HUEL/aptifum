@@ -24,7 +24,7 @@ export function parseCsv(content: string): ParsedCsv {
   let startLine = 1;
 
   const pushRecord = () => {
-    const isBlank = record.length === 1 && record[0].trim() === '';
+    const isBlank = record.length === 1 && record[0]!.trim() === '';
     if (record.length > 0 && !isBlank) {
       records.push(record);
       recordStartLines.push(startLine);
@@ -73,7 +73,7 @@ export function parseCsv(content: string): ParsedCsv {
     return { headers: [], rows: [], rowNumbers: [] };
   }
 
-  const headers = records[0].map(normalizeHeader);
+  const headers = records[0]!.map(normalizeHeader);
   const duplicateHeaders = headers.filter((header, index) => headers.indexOf(header) !== index);
   if (duplicateHeaders.length > 0) {
     throw new CsvParseError(`Duplicate CSV columns: ${Array.from(new Set(duplicateHeaders)).join(', ')}`);
@@ -81,22 +81,24 @@ export function parseCsv(content: string): ParsedCsv {
 
   const rows: Array<Record<string, string>> = [];
   const rowNumbers: number[] = [];
-  for (let i = 1; i < records.length; i++) {
-    const cells = records[i];
+  for (const [i, cells] of records.entries()) {
+    if (i === 0) {
+      continue;
+    }
     if (cells.length !== headers.length) {
       throw new CsvParseError(
         `Row ${recordStartLines[i]} has ${cells.length} columns but the header has ${headers.length}`,
       );
     }
     const recordRow: Record<string, string> = {};
-    for (let c = 0; c < headers.length; c++) {
-      recordRow[headers[c]] = cells[c].trim();
+    for (const [c, header] of headers.entries()) {
+      recordRow[header] = cells[c]!.trim();
     }
     if (Object.values(recordRow).every((value) => value === '')) {
       continue;
     }
     rows.push(recordRow);
-    rowNumbers.push(recordStartLines[i]);
+    rowNumbers.push(recordStartLines[i]!);
   }
 
   return { headers, rows, rowNumbers };

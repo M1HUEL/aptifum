@@ -419,7 +419,7 @@ export async function seedDemo(overrides: DataSourceOverrides = {}): Promise<voi
             tenantId: tenant.id,
             sku: data.sku,
             name: data.name,
-            categoryId: categories[data.category].id,
+            categoryId: categories[data.category]!.id,
             brand: data.brand,
             unitOfMeasure: data.unitOfMeasure,
             purchasePrice: data.purchasePrice,
@@ -463,9 +463,9 @@ export async function seedDemo(overrides: DataSourceOverrides = {}): Promise<voi
           await applyStockMovement(manager, {
             tenantId: tenant.id,
             movementType: MovementType.INBOUND,
-            productId: productIds[data.productSku],
+            productId: productIds[data.productSku]!,
             variantId: variantIds[data.sku],
-            warehouseId: warehouses[0].id,
+            warehouseId: warehouses[0]!.id,
             quantity: data.stock,
             unitCost: data.purchasePrice,
             referenceType: 'seed-variant',
@@ -483,11 +483,11 @@ export async function seedDemo(overrides: DataSourceOverrides = {}): Promise<voi
     if (movementCount === 0) {
       await ds.transaction(async (manager) => {
         for (const data of PRODUCTS) {
-          const warehouse = warehouses[0];
+          const warehouse = warehouses[0]!;
           await applyStockMovement(manager, {
             tenantId: tenant.id,
             movementType: MovementType.INBOUND,
-            productId: productIds[data.sku],
+            productId: productIds[data.sku]!,
             warehouseId: warehouse.id,
             quantity: data.stock,
             unitCost: data.purchasePrice,

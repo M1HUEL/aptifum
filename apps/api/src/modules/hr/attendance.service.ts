@@ -57,7 +57,7 @@ export class AttendanceService {
     return record;
   }
 
-  async clock(tenantId: string | null, userId: string | null, dto: ClockAttendanceDto) {
+  async clock(tenantId: string | null, _userId: string | null, dto: ClockAttendanceDto) {
     this.assertTenant(tenantId);
     await this.ensureEmployee(tenantId, dto.employeeId);
     const at = dto.at ? new Date(dto.at) : new Date();

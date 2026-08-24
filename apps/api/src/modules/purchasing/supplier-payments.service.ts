@@ -25,8 +25,6 @@ export class SupplierPaymentsService {
   constructor(
     @InjectRepository(SupplierPayment)
     private readonly paymentsRepo: Repository<SupplierPayment>,
-    @InjectRepository(Supplier) private readonly suppliersRepo: Repository<Supplier>,
-    @InjectRepository(SupplierBill) private readonly billsRepo: Repository<SupplierBill>,
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly exchangeRates: ExchangeRatesService,
   ) {}

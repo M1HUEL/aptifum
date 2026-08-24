@@ -130,7 +130,7 @@ describe('ProductionOrdersService create', () => {
 
 describe('BomsService create validation', () => {
   it('rejects a component that is the finished product itself', async () => {
-    const service = new BomsService({} as never, {} as never, {} as never, {} as never);
+    const service = new BomsService({} as never, {} as never, {} as never);
     await expect(
       service.create(TENANT, {
         name: 'BOM',
@@ -142,7 +142,7 @@ describe('BomsService create validation', () => {
 
   it('rejects when a component product does not exist', async () => {
     const productsRepo = { findBy: vi.fn().mockResolvedValue([{ id: 'p1' }]) };
-    const service = new BomsService({} as never, {} as never, productsRepo as never, {} as never);
+    const service = new BomsService({} as never, productsRepo as never, {} as never);
     await expect(
       service.create(TENANT, {
         name: 'BOM',
@@ -156,7 +156,7 @@ describe('BomsService create validation', () => {
   });
 
   it('requires a tenant', async () => {
-    const service = new BomsService({} as never, {} as never, {} as never, {} as never);
+    const service = new BomsService({} as never, {} as never, {} as never);
     await expect(
       service.create(null, {
         name: 'BOM',

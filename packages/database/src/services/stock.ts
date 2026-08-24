@@ -283,7 +283,11 @@ export async function applyStockMovement(
 
   if (sign < 0 && !input.lotId) {
     const movements = await consumeLotsFefo(manager, input);
-    return movements[movements.length - 1];
+    const lastMovement = movements[movements.length - 1];
+    if (!lastMovement) {
+      throw new InsufficientStockError();
+    }
+    return lastMovement;
   }
 
   return movementsRepo.save(

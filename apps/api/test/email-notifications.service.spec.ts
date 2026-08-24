@@ -74,7 +74,7 @@ describe('EmailNotificationsService', () => {
         subject: 'Invoice INV-000001 issued',
       }),
     );
-    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as { text: string };
+    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0]![0] as { text: string };
     expect(message.text).toContain('120.50');
   });
 
@@ -122,7 +122,7 @@ describe('EmailNotificationsService', () => {
     );
     expect(invoicesRepo.findOneBy).toHaveBeenCalledWith({ id: 'inv-1', tenantId: TENANT });
     expect(customersRepo.findOneBy).toHaveBeenCalledWith({ id: 'c1', tenantId: TENANT });
-    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as { subject: string; text: string };
+    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0]![0] as { subject: string; text: string };
     expect(message.subject).toBe('Payment received for invoice INV-000001');
     expect(message.text).toContain('80.50');
     expect(message.text).toContain('Balance due: 40.00');
@@ -163,7 +163,7 @@ describe('EmailNotificationsService', () => {
     const service = buildService(email, { customers: customersRepo, invoices: invoicesRepo });
     await service.handle(event({ eventType: 'reminder.ar_overdue', payload: { invoiceId: 'inv-1', daysOverdue: 5 } }));
     expect(invoicesRepo.findOneBy).toHaveBeenCalledWith({ id: 'inv-1', tenantId: TENANT });
-    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as {
+    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0]![0] as {
       to: string;
       subject: string;
       text: string;
@@ -189,7 +189,7 @@ describe('EmailNotificationsService', () => {
     await service.handle(event({ eventType: 'reminder.ap_overdue', payload: { billId: 'sb-1', daysOverdue: 3 } }));
     expect(supplierBillsRepo.findOneBy).toHaveBeenCalledWith({ id: 'sb-1', tenantId: TENANT });
     expect(dataSource.query).toHaveBeenCalledWith(expect.any(String), [TENANT, JSON.stringify(['purchasing:read'])]);
-    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as { to: string; subject: string };
+    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0]![0] as { to: string; subject: string };
     expect(message.to).toBe('ap@example.com, boss@example.com');
     expect(message.subject).toBe('Payable reminder: bill SB-000001 is overdue');
   });
@@ -221,7 +221,7 @@ describe('EmailNotificationsService', () => {
     );
     expect(ordersRepo.findOneBy).toHaveBeenCalledWith({ id: 'po-1', tenantId: TENANT });
     expect(dataSource.query).toHaveBeenCalledWith(expect.any(String), [TENANT, JSON.stringify(['purchasing:write'])]);
-    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0][0] as {
+    const message = (email.sendMail as ReturnType<typeof vi.fn>).mock.calls[0]![0] as {
       to: string;
       subject: string;
       text: string;

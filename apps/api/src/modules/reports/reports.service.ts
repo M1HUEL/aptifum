@@ -684,7 +684,7 @@ export class ReportsService {
       from: opts.from ?? null,
       to: opts.to ?? null,
       openingBalance,
-      closingBalance: data.length ? data[data.length - 1].balance : openingBalance,
+      closingBalance: data.length ? data[data.length - 1]!.balance : openingBalance,
       data,
       totals,
     };

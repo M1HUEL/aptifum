@@ -12,7 +12,6 @@ import { UpdateLeadDto } from './dto/update-lead.dto';
 export class LeadsService {
   constructor(
     @InjectRepository(CrmLead) private readonly leadsRepo: Repository<CrmLead>,
-    @InjectRepository(Customer) private readonly customersRepo: Repository<Customer>,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 

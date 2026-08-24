@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 
 import { CfdiStatus } from '@aptifum/core';
 import { CfdiCertificate, CfdiDocument, Customer, Invoice, InvoiceItem, OutboxEvent, Tenant } from '@aptifum/database';
@@ -35,10 +35,8 @@ export class CfdiService {
     @InjectRepository(CfdiCertificate)
     private readonly certRepo: Repository<CfdiCertificate>,
     @InjectRepository(Invoice) private readonly invoicesRepo: Repository<Invoice>,
-    @InjectRepository(InvoiceItem) private readonly itemsRepo: Repository<InvoiceItem>,
     @InjectRepository(Tenant) private readonly tenantsRepo: Repository<Tenant>,
     @InjectRepository(Customer) private readonly customersRepo: Repository<Customer>,
-    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   async handle(event: OutboxEvent): Promise<void> {
@@ -195,7 +193,7 @@ export class CfdiService {
     };
   }
 
-  async cancel(tenantId: string | null, userId: string | null, id: string) {
+  async cancel(tenantId: string | null, _userId: string | null, id: string) {
     if (!tenantId) {
       throw new BadRequestException('Tenant context required');
     }

@@ -161,6 +161,6 @@ describe('StockService listPosProducts', () => {
     const result = await service.listPosProducts(TENANT, 'w1', 2, 1);
 
     expect(result.meta).toEqual({ page: 2, limit: 1, total: 2 });
-    expect(result.data[0].name).toBe('Bravo');
+    expect(result.data[0]!.name).toBe('Bravo');
   });
 });

@@ -119,7 +119,7 @@ export function buildCfdi(
 
   const certificado = certificateBase64(emisorCert.certificatePem);
 
-  const baseAttributes: Record<string, string | null> = {
+  const baseAttributes = {
     Version: '4.0',
     Serie: serie,
     Folio: folio,
@@ -217,7 +217,7 @@ function splitDocumentNumber(number: string): { serie: string | null; folio: str
   if (!match) {
     return { serie: null, folio: number ?? null };
   }
-  return { serie: match[1], folio: match[2] };
+  return { serie: match[1] ?? null, folio: match[2] ?? null };
 }
 
 function buildImpuestosNode(items: CfdiInvoiceInput['items'], taxTotal: number): string {

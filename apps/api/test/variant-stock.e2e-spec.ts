@@ -175,7 +175,7 @@ describe('Product variants in stock/POS (e2e)', () => {
       salePrice: 12.5,
       availableStock: 20,
     });
-    expect(variantRows[0].name).toContain('E2E Variant Base');
+    expect(variantRows[0]!.name).toContain('E2E Variant Base');
 
     const baseRows = await pos('E2E-V-BASE');
     expect(baseRows).toHaveLength(1);
@@ -203,10 +203,10 @@ describe('Product variants in stock/POS (e2e)', () => {
     });
 
     const variantRows = await pos('E2E-V-RED');
-    expect(variantRows[0].availableStock).toBe(17);
+    expect(variantRows[0]!.availableStock).toBe(17);
 
     const baseRows = await pos('E2E-V-BASE');
-    expect(baseRows[0].availableStock).toBe(0);
+    expect(baseRows[0]!.availableStock).toBe(0);
   });
 
   it('records the movements against the variant', async () => {

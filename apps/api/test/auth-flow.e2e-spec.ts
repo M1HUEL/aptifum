@@ -107,7 +107,7 @@ describe('Auth security (e2e)', () => {
       tokens.push(res.body.refreshToken as string);
     }
 
-    await refresh(tokens[0]).expect(401);
-    await refresh(tokens[5]).expect(200);
+    await refresh(tokens[0]!).expect(401);
+    await refresh(tokens[5]!).expect(200);
   });
 });

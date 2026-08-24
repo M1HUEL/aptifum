@@ -20,8 +20,6 @@ beforeEach(() => {
 function buildService(paymentsRepo: Record<string, unknown>, extras: Record<string, unknown> = {}) {
   return new SupplierPaymentsService(
     paymentsRepo as never,
-    (extras.suppliersRepo ?? {}) as never,
-    (extras.billsRepo ?? {}) as never,
     (extras.dataSource ?? {}) as never,
     (extras.exchangeRates ?? { resolveRate: vi.fn().mockResolvedValue(1) }) as never,
   );
@@ -112,7 +110,7 @@ describe('SupplierPaymentsService record', () => {
     const { dataSource, repos } = buildDataSource();
     const service = buildService({}, { dataSource });
     await service.record(TENANT, 'u1', dto as never);
-    const created = repos.payment.create.mock.calls[0][0] as Record<string, unknown>;
+    const created = repos.payment.create.mock.calls[0]![0] as Record<string, unknown>;
     expect(created.paidAt).toBeInstanceOf(Date);
   });
 

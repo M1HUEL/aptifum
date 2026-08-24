@@ -134,12 +134,12 @@ function drawRow(
     .font(opts?.bold ? 'Helvetica-Bold' : 'Helvetica')
     .fontSize(9);
   let x = MARGIN;
-  for (let i = 0; i < columns.length; i++) {
+  for (const [i, column] of columns.entries()) {
     doc.text(values[i] ?? '', x + pad, y + 4, {
-      width: columns[i].width - pad * 2,
-      align: columns[i].align ?? 'left',
+      width: column.width - pad * 2,
+      align: column.align ?? 'left',
     });
-    x += columns[i].width;
+    x += column.width;
   }
   doc.y = y + height + 2;
 }

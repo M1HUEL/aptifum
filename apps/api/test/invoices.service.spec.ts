@@ -140,7 +140,7 @@ describe('InvoicesService direct invoice customer resolution', () => {
       tenantId: TENANT,
     });
     expect(customerRepo.save).toHaveBeenCalled();
-    expect((repos.invoice.create as ReturnType<typeof vi.fn>).mock.calls[0][0]).toMatchObject(
+    expect((repos.invoice.create as ReturnType<typeof vi.fn>).mock.calls[0]![0]).toMatchObject(
       expect.objectContaining({
         customerId: 'walkin',
         currency: WALK_IN_CUSTOMER.currency,
@@ -169,7 +169,7 @@ describe('InvoicesService direct invoice customer resolution', () => {
 
     expect(customerRepo.save).not.toHaveBeenCalled();
     expect(customerRepo.create).not.toHaveBeenCalled();
-    expect((repos.invoice.create as ReturnType<typeof vi.fn>).mock.calls[0][0]).toMatchObject(
+    expect((repos.invoice.create as ReturnType<typeof vi.fn>).mock.calls[0]![0]).toMatchObject(
       expect.objectContaining({ customerId: 'walkin' }),
     );
   });

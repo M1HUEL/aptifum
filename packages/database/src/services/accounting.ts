@@ -93,7 +93,7 @@ function periodLabel(period: string): string {
 
 function lastDayOfMonth(period: string): string {
   const [year, month] = period.split('-').map(Number);
-  const last = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const last = new Date(Date.UTC(year ?? 1970, month ?? 1, 0)).getUTCDate();
   return `${period}-${String(last).padStart(2, '0')}`;
 }
 

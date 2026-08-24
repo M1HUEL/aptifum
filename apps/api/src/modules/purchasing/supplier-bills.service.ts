@@ -64,7 +64,7 @@ export class SupplierBillsService {
     return bill;
   }
 
-  async create(tenantId: string | null, userId: string | null, dto: CreateSupplierBillDto) {
+  async create(tenantId: string | null, _userId: string | null, dto: CreateSupplierBillDto) {
     this.assertTenant(tenantId);
     return this.dataSource.transaction(async (manager) => {
       const supplier = await manager.getRepository(Supplier).findOneBy({

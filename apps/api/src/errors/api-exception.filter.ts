@@ -91,7 +91,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
     );
     return {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
-      code: STATUS_CODES[HttpStatus.INTERNAL_SERVER_ERROR],
+      code: STATUS_CODES[HttpStatus.INTERNAL_SERVER_ERROR] ?? 'INTERNAL_SERVER_ERROR',
       message: 'Internal server error',
       requestId,
     };

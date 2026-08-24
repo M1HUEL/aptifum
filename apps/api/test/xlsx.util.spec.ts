@@ -55,22 +55,22 @@ describe('toXlsxBuffer', () => {
   it('preserves numeric cells as numbers', async () => {
     const buffer = await toXlsxBuffer([{ qty: 3, amount: 15.99 }]);
     const rows = await readRows(buffer);
-    expect(typeof rows[0].qty).toBe('number');
-    expect(rows[0].amount).toBe(15.99);
+    expect(typeof rows[0]!.qty).toBe('number');
+    expect(rows[0]!.amount).toBe(15.99);
   });
 
   it('neutralizes formula cells', async () => {
     const buffer = await toXlsxBuffer([{ formula: '=1+2' }]);
     const rows = await readRows(buffer);
-    expect(rows[0].formula).toBe("'=1+2");
+    expect(rows[0]!.formula).toBe("'=1+2");
   });
 
   it('renders null and undefined as empty cells', async () => {
     const buffer = await toXlsxBuffer([{ a: null, b: undefined, c: 5 }]);
     const rows = await readRows(buffer);
-    expect(rows[0].a).toBeUndefined();
-    expect(rows[0].b).toBeUndefined();
-    expect(rows[0].c).toBe(5);
+    expect(rows[0]!.a).toBeUndefined();
+    expect(rows[0]!.b).toBeUndefined();
+    expect(rows[0]!.c).toBe(5);
   });
 });
 

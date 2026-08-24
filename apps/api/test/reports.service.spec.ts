@@ -87,7 +87,7 @@ describe('ReportsService stockMovements mapping', () => {
     const service = buildService(query);
     const result = await service.stockMovements(TENANT, { movementType: 'inbound' });
     expect(result.meta.total).toBe(0);
-    const sql = query.mock.calls[0][0] as string;
+    const sql = query.mock.calls[0]![0] as string;
     expect(sql).toContain('sm.movement_type = $');
     expect(sql).toContain('ORDER BY sm.occurred_at DESC');
   });
@@ -123,7 +123,7 @@ describe('ReportsService inventoryValuation aggregation', () => {
     const result = await service.inventoryValuation(TENANT, {});
     expect(result.data).toHaveLength(2);
     expect(result.totals).toEqual({ quantity: 150, value: 200 });
-    expect(result.data[0].value).toBe(100);
+    expect(result.data[0]!.value).toBe(100);
   });
 });
 
@@ -145,7 +145,7 @@ describe('ReportsService cashFlow', () => {
     ]);
     expect(result.totals).toEqual({ inflows: 150, outflows: 20, net: 130 });
     expect(result.closingBalance).toBe(630);
-    const sql = query.mock.calls[0][0] as string;
+    const sql = query.mock.calls[0]![0] as string;
     expect(sql).toContain("ca.code = '1000'");
     expect(sql).toContain('GROUP BY to_char');
   });
@@ -195,7 +195,7 @@ describe('ReportsService payrollSummary aggregation', () => {
       totalDeductions: 180,
       totalNet: 3270,
     });
-    const sql = query.mock.calls[0][0] as string;
+    const sql = query.mock.calls[0]![0] as string;
     expect(sql).toContain('GROUP BY hp.period');
     expect(sql).toContain('ORDER BY hp.period');
   });

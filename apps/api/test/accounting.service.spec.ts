@@ -46,7 +46,7 @@ describe('PayrollsService cancel', () => {
       findOne: vi.fn().mockResolvedValue(payroll),
       save: vi.fn((x: unknown) => Promise.resolve(x)),
     };
-    const service = new PayrollsService(payrollsRepo as never, {} as never, {} as never, {} as never);
+    const service = new PayrollsService(payrollsRepo as never, {} as never, {} as never);
     await service.cancel(TENANT, 'p1');
     expect(payroll.status).toBe('cancelled');
   });
@@ -56,7 +56,7 @@ describe('PayrollsService cancel', () => {
       findOne: vi.fn().mockResolvedValue({ id: 'p1', status: 'posted' }),
       save: vi.fn(),
     };
-    const service = new PayrollsService(payrollsRepo as never, {} as never, {} as never, {} as never);
+    const service = new PayrollsService(payrollsRepo as never, {} as never, {} as never);
     await expect(service.cancel(TENANT, 'p1')).rejects.toThrow(BadRequestException);
     expect(payrollsRepo.save).not.toHaveBeenCalled();
   });
@@ -67,7 +67,7 @@ describe('PayrollsService post', () => {
     const payrollsRepo = {
       findOne: vi.fn().mockResolvedValue({ id: 'p1', status: 'posted' }),
     };
-    const service = new PayrollsService(payrollsRepo as never, {} as never, {} as never, {} as never);
+    const service = new PayrollsService(payrollsRepo as never, {} as never, {} as never);
     await expect(service.post(TENANT, 'u1', 'p1')).rejects.toThrow(BadRequestException);
   });
 });
@@ -77,7 +77,7 @@ describe('PayrollsService generate', () => {
     const dataSource = {
       transaction: vi.fn(async (cb: (m: unknown) => unknown) => cb(manager)),
     };
-    return new PayrollsService({} as never, {} as never, dataSource as never, {} as never);
+    return new PayrollsService({} as never, dataSource as never, {} as never);
   }
 
   it('rejects a duplicate payroll for the same period', async () => {

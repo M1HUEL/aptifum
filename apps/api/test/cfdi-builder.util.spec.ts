@@ -81,8 +81,8 @@ describe('buildCfdi', () => {
     expect(built.xml).toContain('NoCertificadoSAT="');
     const selloSatMatch = built.xml.match(/SelloSAT="([^"]+)"/);
     expect(selloSatMatch).not.toBeNull();
-    expect(selloSatMatch?.[1].length).toBeGreaterThan(50);
-    expect(selloSatMatch?.[1]).not.toBe(built.sello);
+    expect(selloSatMatch![1]!.length).toBeGreaterThan(50);
+    expect(selloSatMatch![1]).not.toBe(built.sello);
   });
 
   it('builds the cadena original in CFDI 4.0 attribute order', () => {

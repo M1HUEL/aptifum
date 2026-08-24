@@ -12,8 +12,6 @@ export class BomsService {
   constructor(
     @InjectRepository(ProductionBom)
     private readonly bomsRepo: Repository<ProductionBom>,
-    @InjectRepository(ProductionBomLine)
-    private readonly bomLinesRepo: Repository<ProductionBomLine>,
     @InjectRepository(Product)
     private readonly productsRepo: Repository<Product>,
     private readonly dataSource: DataSource,

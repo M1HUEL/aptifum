@@ -277,6 +277,6 @@ describe('Payment integrations: Stripe provider + webhook (e2e)', () => {
       [invoice.id],
     );
     await dataSource.destroy();
-    expect(rows[0].count).toBe(1);
+    expect(rows[0]!.count).toBe(1);
   });
 });

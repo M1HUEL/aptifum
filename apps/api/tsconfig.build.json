@@ -1,9 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "sourceMap": true,
-    "declaration": true
+    "rootDir": "src"
   },
   "include": ["src"],
   "exclude": ["test", "**/*.spec.ts", "**/*.e2e-spec.ts", "vitest.config.ts"]

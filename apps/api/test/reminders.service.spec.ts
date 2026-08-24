@@ -51,7 +51,7 @@ describe('RemindersService', () => {
     dataSource.query.mockResolvedValueOnce([invoiceRow]).mockResolvedValue([]);
     await service.runDaily();
     expect(outbox.emit).toHaveBeenCalledTimes(1);
-    const [, tenantId, input] = outbox.emit.mock.calls[0];
+    const [, tenantId, input] = outbox.emit.mock.calls[0]!;
     expect(tenantId).toBe(TENANT);
     expect(input.eventType).toBe('reminder.ar_overdue');
     expect(input.aggregateType).toBe('invoice');
@@ -76,7 +76,7 @@ describe('RemindersService', () => {
     await service.runDaily();
     const types = outbox.emit.mock.calls.map(([, , input]) => input.eventType);
     expect(types).toEqual(['reminder.ar_overdue', 'reminder.ap_overdue', 'reminder.pending_approval']);
-    const [, , approvalInput] = outbox.emit.mock.calls[2];
+    const [, , approvalInput] = outbox.emit.mock.calls[2]!;
     expect(approvalInput.payload.orderId).toBe('po-1');
     expect(approvalInput.payload.daysPending).toBe(3);
   });
@@ -85,7 +85,7 @@ describe('RemindersService', () => {
     const { service, dataSource, outbox } = buildService();
     dataSource.query.mockResolvedValueOnce([invoiceRow]).mockResolvedValue([]);
     await service.runDaily();
-    const [manager] = outbox.emit.mock.calls[0];
+    const [manager] = outbox.emit.mock.calls[0]!;
     expect(manager).toBe(dataSource.manager);
   });
 });
