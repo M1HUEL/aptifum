@@ -6,6 +6,7 @@ dist/
 build/
 .turbo/
 *.tsbuildinfo
+*.js.map
 
 # Environment
 .env
