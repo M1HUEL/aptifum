@@ -1,8 +1,9 @@
+import { ArrowDown, ArrowDownRight, ArrowUp, ArrowUpDown, ArrowUpRight, Inbox } from 'lucide-react';
 import { useMemo, useState, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDown, ArrowDownRight, ArrowUp, ArrowUpDown, ArrowUpRight, Inbox } from 'lucide-react';
-import { cn } from '../lib/cn';
+
 import i18n from '../i18n';
+import { cn } from '../lib/cn';
 
 const inputBase =
   'rounded-ui border border-border bg-surface px-2.5 py-2 font-normal text-text placeholder:text-muted focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15';

@@ -1,11 +1,16 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { components } from '../../api/schema';
-import type { CrmContact, Customer } from '../../api/types';
-import { contactFormSchema, type ContactFormValues } from '../../api/schemas';
+import { Contact } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+
 import { useApiMutation, useApiMutationVoid } from '../../api/hooks';
+import type { components } from '../../api/schema';
+import { contactFormSchema, type ContactFormValues } from '../../api/schemas';
+import type { CrmContact, Customer } from '../../api/types';
+import { usePagedQuery } from '../../hooks/use-paged-query';
+import { exportRowsToCsv } from '../../lib/csv';
+import { useToast } from '../toast';
 import {
   Badge,
   type Column,
@@ -19,14 +24,10 @@ import {
   Select,
   Textarea,
 } from '../ui';
-import { Contact } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 import { ConfirmDialog } from '../ui/confirm-dialog';
-import { useToast } from '../toast';
-import { usePagedQuery } from '../../hooks/use-paged-query';
-import { exportRowsToCsv } from '../../lib/csv';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
 
 type CreateContactDto = components['schemas']['CreateContactDto'];
 type UpdateContactDto = components['schemas']['UpdateContactDto'];

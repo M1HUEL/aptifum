@@ -1,12 +1,15 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ShieldCheck, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { zodResolver } from '@hookform/resolvers/zod';
+
 import { apiFetch, ApiError } from '../api/client';
-import type { components } from '../api/schema';
-import type { Paginated, Role, User } from '../api/types';
-import { roleFormSchema, userFormSchema, type RoleFormValues, type UserFormValues } from '../api/schemas';
 import { useApiMutation, useApiMutationVoid } from '../api/hooks';
+import type { components } from '../api/schema';
+import { roleFormSchema, userFormSchema, type RoleFormValues, type UserFormValues } from '../api/schemas';
+import type { Paginated, Role, User } from '../api/types';
+import { useToast } from '../components/toast';
 import {
   Badge,
   type Column,
@@ -19,12 +22,10 @@ import {
   Input,
   Textarea,
 } from '../components/ui';
-import { ShieldCheck, Users } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { ConfirmDialog } from '../components/ui/confirm-dialog';
-import { useToast } from '../components/toast';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { exportRowsToCsv } from '../lib/csv';
 
 const PERMISSION_MODULES = [

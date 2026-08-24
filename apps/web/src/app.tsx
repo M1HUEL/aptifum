@@ -1,10 +1,11 @@
 import { lazy, Suspense, type ComponentType } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+
 import { useAuth } from './auth/auth-context';
-import { permissionForRoute } from './auth/route-permissions';
 import { RequirePermission } from './auth/require-permission';
-import { Layout } from './components/layout';
+import { permissionForRoute } from './auth/route-permissions';
 import { ErrorBoundary } from './components/error-boundary';
+import { Layout } from './components/layout';
 import { LoadingBlock } from './components/ui';
 
 function lazyPage<T extends Record<string, ComponentType>>(

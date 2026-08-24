@@ -1,13 +1,19 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Users } from 'lucide-react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
+
 import * as core from '@aptifum/core';
-import type { components } from '../api/schema';
-import type { Customer } from '../api/types';
+
 import { apiFetch } from '../api/client';
+import { useApiInvalidation, useApiMutation } from '../api/hooks';
+import type { components } from '../api/schema';
 import { customerFormSchema, type CustomerFormValues } from '../api/schemas';
+import type { Customer } from '../api/types';
+import { CsvImportDialog } from '../components/csv-import-dialog';
+import { useToast } from '../components/toast';
 import {
   DataTable,
   EmptyState,
@@ -23,17 +29,13 @@ import {
   type Column,
   type DataTableSort,
 } from '../components/ui';
-import { Users } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { ConfirmDialog } from '../components/ui/confirm-dialog';
-import { CsvImportDialog } from '../components/csv-import-dialog';
-import { useApiInvalidation, useApiMutation } from '../api/hooks';
-import { useToast } from '../components/toast';
-import { usePagedQuery } from '../hooks/use-paged-query';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
+import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
 
 type CreateCustomerDto = components['schemas']['CreateCustomerDto'];

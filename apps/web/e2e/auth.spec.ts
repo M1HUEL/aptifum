@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+
 import { ADMIN_EMAIL, ADMIN_PASSWORD, login } from './helpers';
 
 test.describe('authentication', () => {

@@ -1,8 +1,10 @@
-import { forwardRef, type ComponentPropsWithoutRef, type ElementRef, type ReactNode } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
+import { forwardRef, type ComponentPropsWithoutRef, type ElementRef, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import { cn } from '../../lib/cn';
+
 import { Button } from './button';
 
 const Dialog = DialogPrimitive.Root;

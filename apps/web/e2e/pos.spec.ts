@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+
 import { addStock, createProduct, createWarehouse, seedAuth } from './helpers';
 
 test('sells a product at the point of sale and collects payment', async ({ context, page }) => {

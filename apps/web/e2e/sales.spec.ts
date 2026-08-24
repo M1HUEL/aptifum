@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+
 import {
   addStock,
   confirmSalesOrder,
@@ -22,7 +23,7 @@ test('creates a customer and a sales order in the UI, then confirms it', async (
   const customerName = `E2E Customer ${suffix}`;
 
   await page.goto('/customers');
-  await page.getByRole('button', { name: 'New customer' }).click();
+  await page.getByRole('button', { name: 'New customer' }).first().click();
   await page.locator('#customer-code').fill(customerCode);
   await page.locator('#customer-trade').fill(customerName);
   await page.getByRole('button', { name: 'Create customer' }).click();
@@ -30,7 +31,7 @@ test('creates a customer and a sales order in the UI, then confirms it', async (
   await expect(page.locator('[data-testid="data-table"] tbody tr', { hasText: customerName })).toBeVisible();
 
   await page.getByRole('link', { name: 'Sales orders' }).click();
-  await page.getByRole('button', { name: 'New sales order' }).click();
+  await page.getByRole('button', { name: 'New sales order' }).first().click();
   await page.locator('#so-kind').selectOption('order');
   await selectSearchable(page, 'so-customer', customerName);
   await page.locator('#so-warehouse').selectOption({ label: warehouse.name });
@@ -68,7 +69,7 @@ test('issues an invoice for a confirmed order, records a payment, and searches b
   await confirmSalesOrder(accessToken, order.id);
 
   await page.goto('/invoices');
-  await page.getByRole('button', { name: 'New invoice' }).click();
+  await page.getByRole('button', { name: 'New invoice' }).first().click();
   await selectSearchable(page, 'invoice-customer', customerName);
   await page.locator('#invoice-warehouse').selectOption({ label: warehouse.name });
   await selectSearchable(page, 'invoice-item-product-0', `${product.sku} · E2E Widget`);
@@ -103,7 +104,7 @@ test('creates a supplier and purchase order in the UI, then approves and receive
   const supplierName = `E2E Supplier ${suffix}`;
 
   await page.goto('/suppliers');
-  await page.getByRole('button', { name: 'New supplier' }).click();
+  await page.getByRole('button', { name: 'New supplier' }).first().click();
   await page.locator('#supplier-code').fill(supplierCode);
   await page.locator('#supplier-trade').fill(supplierName);
   await page.getByRole('button', { name: 'Create supplier' }).click();
@@ -111,7 +112,7 @@ test('creates a supplier and purchase order in the UI, then approves and receive
   await expect(page.locator('[data-testid="data-table"] tbody tr', { hasText: supplierName })).toBeVisible();
 
   await page.getByRole('link', { name: 'Purchasing' }).click();
-  await page.getByRole('button', { name: 'New purchase order' }).click();
+  await page.getByRole('button', { name: 'New purchase order' }).first().click();
   await selectSearchable(page, 'po-supplier', supplierName);
   await page.locator('#po-warehouse').selectOption({ label: warehouse.name });
   await selectSearchable(page, 'po-item-product-0', `${product.sku} · E2E Part`);

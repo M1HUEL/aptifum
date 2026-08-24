@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { MapPin, Tags, Warehouse as WarehouseIcon } from 'lucide-react';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+
 import { apiFetch, ApiError } from '../api/client';
+import { useApiInvalidation, useApiMutation, useApiMutationVoid } from '../api/hooks';
 import type { components } from '../api/schema';
-import type { Category, Warehouse, WarehouseLocation } from '../api/types';
 import {
   categoryFormSchema,
   locationFormSchema,
@@ -13,7 +15,8 @@ import {
   type LocationFormValues,
   type WarehouseFormValues,
 } from '../api/schemas';
-import { useApiInvalidation, useApiMutation, useApiMutationVoid } from '../api/hooks';
+import type { Category, Warehouse, WarehouseLocation } from '../api/types';
+import { useToast } from '../components/toast';
 import {
   Badge,
   type Column,
@@ -27,15 +30,13 @@ import {
   Input,
   Textarea,
 } from '../components/ui';
-import { MapPin, Tags, Warehouse as WarehouseIcon } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { ConfirmDialog } from '../components/ui/confirm-dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
-import { useToast } from '../components/toast';
-import { usePagedQuery } from '../hooks/use-paged-query';
 import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
+import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
 
 type CreateWarehouseDto = components['schemas']['CreateWarehouseDto'];

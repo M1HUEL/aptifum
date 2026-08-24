@@ -1,5 +1,5 @@
-import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Link, useLocation } from 'react-router-dom';
 
 export function ForbiddenPage() {
   const { t } = useTranslation();

@@ -1,6 +1,3 @@
-import { useEffect, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import {
   BarChart3,
   Boxes,
@@ -35,10 +32,15 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { NavLink, Outlet } from 'react-router-dom';
+
 import { useAuth, usePermission } from '../auth/auth-context';
 import { NAV_GROUPS, ROUTE_GUARDS } from '../auth/route-permissions';
-import { useTheme } from '../lib/theme';
 import { useLanguage } from '../lib/language';
+import { useTheme } from '../lib/theme';
+
 import { CommandPalette } from './command-palette';
 
 const ROUTE_ICONS: Record<string, LucideIcon> = {

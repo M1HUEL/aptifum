@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { cn } from '../../src/lib/cn';
 
 describe('cn', () => {

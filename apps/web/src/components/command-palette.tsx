@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { FileText, Package, Search, Users, X, type LucideIcon } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+
 import { apiFetch } from '../api/client';
 import type { Customer, Invoice, Paginated, Product } from '../api/types';
 import { usePermission } from '../auth/auth-context';
 import { ROUTE_GUARDS } from '../auth/route-permissions';
+
 import { Dialog, DialogClose, DialogContent } from './ui/dialog';
 
 interface PaletteItem {

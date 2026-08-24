@@ -1,6 +1,8 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { TriangleAlert } from 'lucide-react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
+
 import i18n from '../i18n';
+
 import { Button } from './ui/button';
 
 interface Props {

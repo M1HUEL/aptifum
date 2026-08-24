@@ -1,5 +1,6 @@
-import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
+import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from 'react';
+
 import { cn } from '../../lib/cn';
 
 const Select = SelectPrimitive.Root;

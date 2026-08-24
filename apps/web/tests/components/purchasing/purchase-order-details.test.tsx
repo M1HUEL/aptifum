@@ -1,12 +1,13 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import i18n from '../../../src/i18n';
-import type { PurchaseOrder } from '../../../src/api/types';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+
 import { apiFetch } from '../../../src/api/client';
-import { ToastProvider } from '../../../src/components/toast';
+import type { PurchaseOrder } from '../../../src/api/types';
 import { PurchaseOrderDetailsModal } from '../../../src/components/purchasing/purchase-order-details';
+import { ToastProvider } from '../../../src/components/toast';
+import i18n from '../../../src/i18n';
 
 vi.mock('../../../src/api/client', () => ({
   apiFetch: vi.fn(),

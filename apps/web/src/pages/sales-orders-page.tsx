@@ -1,12 +1,15 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ClipboardList } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { zodResolver } from '@hookform/resolvers/zod';
+
 import { apiFetch, ApiError } from '../api/client';
-import type { components } from '../api/schema';
-import type { Customer, Paginated, Product, SalesOrder, SalesOrderStatus, Warehouse } from '../api/types';
-import { salesOrderFormSchema, type SalesOrderFormValues } from '../api/schemas';
 import { useApiInvalidation, useApiMutation, useApiMutationVoid } from '../api/hooks';
+import type { components } from '../api/schema';
+import { salesOrderFormSchema, type SalesOrderFormValues } from '../api/schemas';
+import type { Customer, Paginated, Product, SalesOrder, SalesOrderStatus, Warehouse } from '../api/types';
+import { useToast } from '../components/toast';
 import {
   Badge,
   type BadgeTone,
@@ -25,14 +28,12 @@ import {
   Select,
   Textarea,
 } from '../components/ui';
-import { ClipboardList } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { DetailTable, SectionHeading } from '../components/ui/detail-table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
-import { useToast } from '../components/toast';
-import { usePagedQuery } from '../hooks/use-paged-query';
 import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
+import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
 
 type CreateOrderDto = components['schemas']['CreateOrderDto'];

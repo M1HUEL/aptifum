@@ -1,13 +1,17 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Package } from 'lucide-react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
+
 import { apiFetch, ApiError } from '../api/client';
-import type { components } from '../api/schema';
-import type { Category, Paginated, Product, ProductStock } from '../api/types';
-import { productFormSchema, type ProductFormValues } from '../api/schemas';
 import { useApiInvalidation, useApiMutation } from '../api/hooks';
+import type { components } from '../api/schema';
+import { productFormSchema, type ProductFormValues } from '../api/schemas';
+import type { Category, Paginated, Product, ProductStock } from '../api/types';
+import { CsvImportDialog } from '../components/csv-import-dialog';
+import { useToast } from '../components/toast';
 import {
   Badge,
   type Column,
@@ -25,18 +29,15 @@ import {
   Textarea,
   type DataTableSort,
 } from '../components/ui';
-import { Package } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { DetailTable, SectionHeading } from '../components/ui/detail-table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../components/ui/dialog';
-import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { SearchableSelect } from '../components/ui/searchable-select';
-import { useToast } from '../components/toast';
-import { usePagedQuery } from '../hooks/use-paged-query';
 import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
+import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
-import { CsvImportDialog } from '../components/csv-import-dialog';
 
 type CreateProductDto = components['schemas']['CreateProductDto'];
 

@@ -1,5 +1,6 @@
-import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from 'react';
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
+import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from 'react';
+
 import { cn } from '../../lib/cn';
 
 const Checkbox = forwardRef<

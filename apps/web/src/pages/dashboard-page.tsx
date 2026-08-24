@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import {
   Area,
   AreaChart,
@@ -13,9 +13,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+
 import { ApiError } from '../api/client';
-import type { AlertsReport, DashboardReport, Paginated, ProductSalesRow, SalesSummary, Warehouse } from '../api/types';
 import { useApiQuery } from '../api/hooks';
+import type { AlertsReport, DashboardReport, Paginated, ProductSalesRow, SalesSummary, Warehouse } from '../api/types';
 import {
   Badge,
   ErrorBanner,

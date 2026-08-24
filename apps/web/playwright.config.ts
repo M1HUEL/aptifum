@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+
 import { getEnv, resetEnv } from '@aptifum/config';
 
 resetEnv();

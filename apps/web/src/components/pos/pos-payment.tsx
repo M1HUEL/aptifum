@@ -1,8 +1,10 @@
 import { type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { formatMoney, Input, Select } from '../ui';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog';
+
 import { FUNCTIONAL_CURRENCY } from './pos-ticket';
 
 const paymentMethods = ['cash', 'card', 'transfer', 'other'] as const;

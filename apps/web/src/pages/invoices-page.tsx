@@ -1,8 +1,14 @@
+import { FileText } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
+
 import { apiFetch, ApiError, downloadFile } from '../api/client';
 import type { Customer, Invoice, Paginated, Product, Warehouse } from '../api/types';
+import { InvoiceDetailsModal } from '../components/invoices/invoice-details';
+import { InvoiceFormModal } from '../components/invoices/invoice-form';
+import { PaymentFormModal } from '../components/invoices/payment-form';
+import { useToast } from '../components/toast';
 import {
   Badge,
   type Column,
@@ -20,15 +26,10 @@ import {
   Input,
   Select,
 } from '../components/ui';
-import { FileText } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { useToast } from '../components/toast';
-import { usePagedQuery } from '../hooks/use-paged-query';
 import { useNewRecordShortcut } from '../hooks/use-new-record-shortcut';
+import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';
-import { InvoiceFormModal } from '../components/invoices/invoice-form';
-import { PaymentFormModal } from '../components/invoices/payment-form';
-import { InvoiceDetailsModal } from '../components/invoices/invoice-details';
 
 function parsePageNumber(raw: string | null): number {
   if (!raw) return 1;

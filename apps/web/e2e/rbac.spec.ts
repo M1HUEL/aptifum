@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+
 import { createUser, findRoleId, login, seedAuth } from './helpers';
 
-test('seller role cannot access user management', async ({ browser, context, page }) => {
+test('seller role cannot access user management', async ({ browser, context }) => {
   const { accessToken } = await seedAuth(context);
   const sellerRoleId = await findRoleId(accessToken, 'seller');
   const email = `seller-${Date.now()}@aptifum.dev`;

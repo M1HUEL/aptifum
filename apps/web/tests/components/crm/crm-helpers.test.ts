@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { activityTypes, leadStatusTone, stageTone, toLocalInput } from '../../../src/components/crm/crm-helpers';
 
 describe('leadStatusTone', () => {

@@ -1,7 +1,8 @@
-import type { Customer } from '../../api/types';
-import { useTranslation } from 'react-i18next';
-import { EmptyState, formatMoney, Input, Select } from '../ui';
 import { ShoppingCart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+import type { Customer } from '../../api/types';
+import { EmptyState, formatMoney, Input, Select } from '../ui';
 
 export interface PosLine {
   productId: string;

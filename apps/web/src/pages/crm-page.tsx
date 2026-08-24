@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+
 import { apiFetch } from '../api/client';
 import type { Customer, Paginated } from '../api/types';
+import { usePermission } from '../auth/auth-context';
+import { ActivityPanel } from '../components/crm/activity-panel';
+import { ContactPanel } from '../components/crm/contact-panel';
 import { LeadPanel } from '../components/crm/lead-panel';
 import { OpportunityPanel } from '../components/crm/opportunity-panel';
-import { ContactPanel } from '../components/crm/contact-panel';
-import { ActivityPanel } from '../components/crm/activity-panel';
-import { usePermission } from '../auth/auth-context';
 
 type CrmTab = 'leads' | 'opportunities' | 'contacts' | 'activities';
 

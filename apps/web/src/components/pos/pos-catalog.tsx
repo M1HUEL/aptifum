@@ -1,10 +1,11 @@
+import { Package } from 'lucide-react';
 import { type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import type { Paginated, PosProduct, Warehouse } from '../../api/types';
 import { Badge, EmptyState, ErrorBanner, formatMoney, LoadingBlock, Pagination, Input, Select } from '../ui';
-import { Card } from '../ui/card';
-import { Package } from 'lucide-react';
 import { Button } from '../ui/button';
+import { Card } from '../ui/card';
 
 export function PosCatalog({
   warehouses,

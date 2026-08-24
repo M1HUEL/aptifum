@@ -1,5 +1,6 @@
-import type { ApiErrorBody, AuthResult } from './types';
 import i18n from '../i18n';
+
+import type { ApiErrorBody, AuthResult } from './types';
 
 const ACCESS_KEY = 'aptifum.accessToken';
 const REFRESH_KEY = 'aptifum.refreshToken';

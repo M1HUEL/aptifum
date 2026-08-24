@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+
 import { apiFetch, ApiError } from '../api/client';
 import { Input } from '../components/ui';
 import { Button } from '../components/ui/button';

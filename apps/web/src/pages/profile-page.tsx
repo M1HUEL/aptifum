@@ -1,14 +1,15 @@
-import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+
+import { useApiMutation } from '../api/hooks';
 import type { components } from '../api/schema';
 import { profileFormSchema, type ProfileFormValues } from '../api/schemas';
-import { useApiMutation } from '../api/hooks';
 import { useAuth } from '../auth/auth-context';
+import { useToast } from '../components/toast';
 import { Badge, ErrorBanner, PageHeader, Input } from '../components/ui';
 import { Button } from '../components/ui/button';
-import { useToast } from '../components/toast';
 
 type UpdateProfileDto = components['schemas']['UpdateProfileDto'];
 

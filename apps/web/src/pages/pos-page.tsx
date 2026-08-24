@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { apiFetch, ApiError, downloadFile } from '../api/client';
 import type { Customer, Paginated, PosProduct, Warehouse } from '../api/types';
-import { PageHeader } from '../components/ui';
-import { useToast } from '../components/toast';
 import { PosCatalog } from '../components/pos/pos-catalog';
-import { FUNCTIONAL_CURRENCY, PosTicket, type PosLine, type PosTotals } from '../components/pos/pos-ticket';
 import { PosPaymentModal, type InvoiceLike, type PaymentForm } from '../components/pos/pos-payment';
 import { PosSuccess, type CompletedSale } from '../components/pos/pos-success';
+import { FUNCTIONAL_CURRENCY, PosTicket, type PosLine, type PosTotals } from '../components/pos/pos-ticket';
+import { useToast } from '../components/toast';
+import { PageHeader } from '../components/ui';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 

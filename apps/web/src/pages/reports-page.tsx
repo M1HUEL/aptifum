@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
 import type { TFunction } from 'i18next';
+import { BarChart3 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { apiFetch, ApiError, downloadFile } from '../api/client';
 import { usePermission } from '../auth/auth-context';
 import {
@@ -13,7 +15,6 @@ import {
   PageHeader,
   Select,
 } from '../components/ui';
-import { BarChart3 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
 type Shape = 'list' | 'single' | 'financial';

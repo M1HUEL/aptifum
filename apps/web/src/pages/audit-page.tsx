@@ -1,6 +1,8 @@
+import type { TFunction } from 'i18next';
+import { ScrollText } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
+
 import type { AuditAction, AuditLogEntry } from '../api/types';
 import {
   Badge,
@@ -14,7 +16,6 @@ import {
   Input,
   Select,
 } from '../components/ui';
-import { ScrollText } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { usePagedQuery } from '../hooks/use-paged-query';
 import { exportRowsToCsv } from '../lib/csv';

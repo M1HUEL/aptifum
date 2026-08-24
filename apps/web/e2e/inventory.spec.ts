@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+
 import { createWarehouse, seedAuth, selectSearchable } from './helpers';
 
 test('creates a product and records a stock movement', async ({ context, page }) => {
@@ -19,7 +20,7 @@ test('creates a product and records a stock movement', async ({ context, page })
   await expect(page.getByText(sku).first()).toBeVisible();
 
   await page.getByRole('link', { name: 'Stock' }).click();
-  await page.getByRole('button', { name: 'New movement' }).click();
+  await page.getByRole('button', { name: 'New movement' }).first().click();
   await page.locator('#movement-product').selectOption({ label: `${sku} · E2E Widget` });
   await selectSearchable(page, 'movement-warehouse', warehouse.name);
   await page.locator('#movement-quantity').fill('10');
