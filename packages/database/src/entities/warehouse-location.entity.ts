@@ -1,5 +1,7 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
+
 import { Warehouse } from './warehouse.entity';
 
 @Entity('warehouse_locations')

@@ -1,5 +1,7 @@
-import { DocumentSeriesKind, RoleName } from '@aptifum/core';
 import * as bcrypt from 'bcryptjs';
+
+import { DocumentSeriesKind, RoleName } from '@aptifum/core';
+
 import { createDataSource, DataSourceOverrides } from '../data-source';
 import { ChartAccount } from '../entities/chart-account.entity';
 import { Customer } from '../entities/customer.entity';
@@ -8,6 +10,7 @@ import { Role } from '../entities/role.entity';
 import { Tax } from '../entities/tax.entity';
 import { Tenant } from '../entities/tenant.entity';
 import { User } from '../entities/user.entity';
+
 import {
   ADMIN_EMAIL,
   ADMIN_PASSWORD,

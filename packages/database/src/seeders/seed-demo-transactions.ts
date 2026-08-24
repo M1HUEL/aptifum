@@ -1,3 +1,5 @@
+import type { EntityManager } from 'typeorm';
+
 import {
   computeTotals,
   DocumentSeriesKind,
@@ -10,28 +12,29 @@ import {
   SalesOrderKind,
   SalesOrderStatus,
 } from '@aptifum/core';
-import type { EntityManager } from 'typeorm';
+
 import { createDataSource, DataSourceOverrides } from '../data-source';
-import { ACCOUNT_CODES, postJournalEntry } from '../services/accounting';
-import type { JournalLineInput } from '../services/accounting';
-import { nextDocumentNumber } from '../services/document-numbering';
-import { applyStockMovement } from '../services/stock';
 import { Category } from '../entities/category.entity';
 import { Customer } from '../entities/customer.entity';
-import { GoodsReceipt } from '../entities/goods-receipt.entity';
 import { GoodsReceiptItem } from '../entities/goods-receipt-item.entity';
-import { Invoice } from '../entities/invoice.entity';
+import { GoodsReceipt } from '../entities/goods-receipt.entity';
 import { InvoiceItem } from '../entities/invoice-item.entity';
+import { Invoice } from '../entities/invoice.entity';
 import { Payment } from '../entities/payment.entity';
-import { Product } from '../entities/product.entity';
 import { ProductStock } from '../entities/product-stock.entity';
-import { PurchaseOrder } from '../entities/purchase-order.entity';
+import { Product } from '../entities/product.entity';
 import { PurchaseOrderItem } from '../entities/purchase-order-item.entity';
-import { SalesOrder } from '../entities/sales-order.entity';
+import { PurchaseOrder } from '../entities/purchase-order.entity';
 import { SalesOrderItem } from '../entities/sales-order-item.entity';
+import { SalesOrder } from '../entities/sales-order.entity';
 import { Supplier } from '../entities/supplier.entity';
 import { Tenant } from '../entities/tenant.entity';
 import { Warehouse } from '../entities/warehouse.entity';
+import type { JournalLineInput } from '../services/accounting';
+import { ACCOUNT_CODES, postJournalEntry } from '../services/accounting';
+import { nextDocumentNumber } from '../services/document-numbering';
+import { applyStockMovement } from '../services/stock';
+
 import { DEFAULT_TENANT_ID } from './seed-data';
 
 const dateOffset = (days: number): string => {

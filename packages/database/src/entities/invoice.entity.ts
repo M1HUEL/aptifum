@@ -1,7 +1,10 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+
 import { InvoiceStatus, InvoiceType } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
+
 import { Customer } from './customer.entity';
 import { InvoiceItem } from './invoice-item.entity';
 import { Payment } from './payment.entity';

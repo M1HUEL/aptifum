@@ -1,6 +1,9 @@
 import { Column, Entity, ManyToMany } from 'typeorm';
-import { BaseEntity } from '../base/base.entity';
+
 import { FiscalAddress } from '@aptifum/core';
+
+import { BaseEntity } from '../base/base.entity';
+
 import { User } from './user.entity';
 
 @Entity('tenants')

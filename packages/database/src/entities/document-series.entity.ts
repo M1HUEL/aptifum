@@ -1,5 +1,7 @@
 import { Column, Entity, Unique } from 'typeorm';
+
 import { DocumentSeriesKind } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
 

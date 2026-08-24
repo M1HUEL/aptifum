@@ -1,5 +1,7 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+
 import { AccountNormalBalance, AccountType } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 
 @Entity('chart_accounts')

@@ -1,6 +1,8 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
+
 import { ChartAccount } from './chart-account.entity';
 import { JournalEntry } from './journal-entry.entity';
 

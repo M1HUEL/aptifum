@@ -1,6 +1,8 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
+
 import { Product } from './product.entity';
 import { ProductionBomLine } from './production-bom-line.entity';
 

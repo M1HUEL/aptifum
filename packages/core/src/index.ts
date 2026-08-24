@@ -225,7 +225,7 @@ export const GENERIC_RFC_MORAL = 'XEXX010101000';
 export function normalizeRfc(value: string): string {
   return value
     .toUpperCase()
-    .replace(/[\s.\-]/g, '')
+    .replace(/[\s.-]/g, '')
     .trim();
 }
 
@@ -272,7 +272,7 @@ export function validateRfc(value: string): boolean {
  * Validates a US EIN: 9 digits, optionally formatted XX-XXXXXXX.
  */
 export function validateEin(value: string): boolean {
-  const ein = value.replace(/[\s\-]/g, '');
+  const ein = value.replace(/[\s-]/g, '');
   return /^\d{9}$/.test(ein);
 }
 

@@ -1,9 +1,11 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
+
 import { Invoice } from './invoice.entity';
-import { Product } from './product.entity';
 import { ProductVariant } from './product-variant.entity';
+import { Product } from './product.entity';
 
 @Entity('invoice_items')
 export class InvoiceItem extends TenantBaseEntity {

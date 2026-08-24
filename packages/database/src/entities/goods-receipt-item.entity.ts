@@ -1,6 +1,8 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
+
 import { GoodsReceipt } from './goods-receipt.entity';
 import { Product } from './product.entity';
 import { PurchaseOrderItem } from './purchase-order-item.entity';

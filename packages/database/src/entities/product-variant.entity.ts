@@ -1,9 +1,11 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
-import { Product } from './product.entity';
+
 import { ProductLot } from './product-lot.entity';
 import { ProductStock } from './product-stock.entity';
+import { Product } from './product.entity';
 import { StockMovement } from './stock-movement.entity';
 
 @Entity('product_variants')

@@ -1,9 +1,12 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+
 import { OpportunityStage } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
-import { Customer } from './customer.entity';
+
 import { CrmLead } from './crm-lead.entity';
+import { Customer } from './customer.entity';
 
 @Entity('crm_opportunities')
 export class CrmOpportunity extends TenantBaseEntity {

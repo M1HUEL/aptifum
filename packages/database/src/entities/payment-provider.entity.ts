@@ -1,5 +1,7 @@
 import { Column, Entity, Index, Unique } from 'typeorm';
+
 import { PaymentProvider, PaymentProviderEnvironment } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 
 @Entity('payment_providers')

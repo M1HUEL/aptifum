@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+
 import { AuditAction } from '@aptifum/core';
 
 @Entity('audit_logs')

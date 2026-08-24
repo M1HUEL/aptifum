@@ -1,7 +1,10 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+
 import { JournalEntryStatus } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
+
 import { AccountingPeriod } from './accounting-period.entity';
 import { JournalEntryLine } from './journal-entry-line.entity';
 

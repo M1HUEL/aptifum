@@ -9,6 +9,7 @@ import {
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { User } from './user.entity';
 
 @Entity('refresh_sessions')

@@ -1,7 +1,10 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+
 import { CfdiStatus } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
+
 import { Invoice } from './invoice.entity';
 
 @Entity('cfdi_documents')

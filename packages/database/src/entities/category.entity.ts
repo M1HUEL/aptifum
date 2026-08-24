@@ -1,5 +1,7 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
+
 import { Product } from './product.entity';
 
 @Entity('categories')

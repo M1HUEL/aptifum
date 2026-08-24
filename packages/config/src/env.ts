@@ -1,6 +1,8 @@
 import path from 'node:path';
+
 import dotenv from 'dotenv';
 import { z } from 'zod';
+
 import { resolveWorkspaceRoot } from './workspace';
 
 const EnvSchema = z.object({

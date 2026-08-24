@@ -1,7 +1,10 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+
 import { EmployeeStatus } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
+
 import { Department } from './hr-department.entity';
 
 @Entity('hr_employees')

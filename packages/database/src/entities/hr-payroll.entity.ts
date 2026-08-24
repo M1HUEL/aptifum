@@ -1,9 +1,12 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+
 import { PayrollStatus } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
-import { JournalEntry } from './journal-entry.entity';
+
 import { PayrollLine } from './hr-payroll-line.entity';
+import { JournalEntry } from './journal-entry.entity';
 
 @Entity('hr_payrolls')
 @Unique('UQ_hr_payrolls_tenant_number', ['tenantId', 'number'])

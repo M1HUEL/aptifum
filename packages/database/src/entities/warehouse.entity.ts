@@ -1,5 +1,7 @@
 import { Column, Entity, OneToMany, Unique } from 'typeorm';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
+
 import { ProductLot } from './product-lot.entity';
 import { ProductStock } from './product-stock.entity';
 import { WarehouseLocation } from './warehouse-location.entity';

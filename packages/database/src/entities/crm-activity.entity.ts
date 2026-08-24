@@ -1,5 +1,7 @@
 import { Column, Entity, Index } from 'typeorm';
+
 import { ActivityType } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 
 @Entity('crm_activities')

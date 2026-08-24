@@ -1,9 +1,12 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+
 import { SupplierBillStatus } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
-import { Supplier } from './supplier.entity';
+
 import { SupplierBillItem } from './supplier-bill-item.entity';
+import { Supplier } from './supplier.entity';
 
 @Entity('supplier_bills')
 @Unique('UQ_supplier_bills_tenant_number', ['tenantId', 'number'])

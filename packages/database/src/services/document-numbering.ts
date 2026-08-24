@@ -1,5 +1,7 @@
-import { DocumentSeriesKind } from '@aptifum/core';
 import { EntityManager } from 'typeorm';
+
+import { DocumentSeriesKind } from '@aptifum/core';
+
 import { DocumentSeries } from '../entities/document-series.entity';
 
 export class DocumentSeriesNotFoundError extends Error {

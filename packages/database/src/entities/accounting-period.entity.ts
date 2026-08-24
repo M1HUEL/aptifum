@@ -1,5 +1,7 @@
 import { Column, Entity, Index, Unique } from 'typeorm';
+
 import { AccountingPeriodStatus } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 
 @Entity('accounting_periods')

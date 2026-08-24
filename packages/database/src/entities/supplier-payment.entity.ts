@@ -1,7 +1,10 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+
 import { PaymentMethod } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
+
 import { SupplierBill } from './supplier-bill.entity';
 import { Supplier } from './supplier.entity';
 

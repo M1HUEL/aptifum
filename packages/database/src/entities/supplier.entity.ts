@@ -1,4 +1,5 @@
 import { Column, Entity, Index, Unique } from 'typeorm';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
 

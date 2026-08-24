@@ -1,17 +1,19 @@
 import { EmployeeStatus, MovementType } from '@aptifum/core';
+
 import { createDataSource, DataSourceOverrides } from '../data-source';
 import { Category } from '../entities/category.entity';
 import { Customer } from '../entities/customer.entity';
-import { Employee } from '../entities/hr-employee.entity';
-import { Department } from '../entities/hr-department.entity';
 import { ExchangeRate } from '../entities/exchange-rate.entity';
-import { Product } from '../entities/product.entity';
+import { Department } from '../entities/hr-department.entity';
+import { Employee } from '../entities/hr-employee.entity';
 import { ProductVariant } from '../entities/product-variant.entity';
+import { Product } from '../entities/product.entity';
 import { StockMovement } from '../entities/stock-movement.entity';
 import { Supplier } from '../entities/supplier.entity';
 import { Tenant } from '../entities/tenant.entity';
 import { Warehouse } from '../entities/warehouse.entity';
 import { applyStockMovement } from '../services/stock';
+
 import { DEFAULT_TENANT_ID } from './seed-data';
 
 const WAREHOUSES = [

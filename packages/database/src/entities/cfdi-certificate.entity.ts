@@ -1,4 +1,5 @@
 import { Column, Entity, Unique } from 'typeorm';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 
 @Entity('cfdi_certificates')

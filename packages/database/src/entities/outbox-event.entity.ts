@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+
 import { OutboxEventStatus } from '@aptifum/core';
 
 @Entity('outbox_events')

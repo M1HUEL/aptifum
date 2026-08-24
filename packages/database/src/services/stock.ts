@@ -1,5 +1,7 @@
 import { EntityManager, IsNull } from 'typeorm';
+
 import { MovementType } from '@aptifum/core';
+
 import { ProductLot } from '../entities/product-lot.entity';
 import { ProductStock } from '../entities/product-stock.entity';
 import { StockMovement } from '../entities/stock-movement.entity';

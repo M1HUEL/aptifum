@@ -1,5 +1,7 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
+
 import { Customer } from './customer.entity';
 
 @Entity('crm_contacts')

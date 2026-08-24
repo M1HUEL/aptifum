@@ -1,7 +1,10 @@
 import 'reflect-metadata';
 import path from 'node:path';
+
 import { DataSource, DataSourceOptions } from 'typeorm';
+
 import { loadEnv } from '@aptifum/config';
+
 import { entities } from './entities';
 
 export interface DataSourceOverrides {

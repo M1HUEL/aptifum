@@ -1,7 +1,10 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+
 import { SalesOrderKind, SalesOrderStatus } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
 import { numericTransformer } from '../base/transformers';
+
 import { Customer } from './customer.entity';
 import { SalesOrderItem } from './sales-order-item.entity';
 import { Warehouse } from './warehouse.entity';

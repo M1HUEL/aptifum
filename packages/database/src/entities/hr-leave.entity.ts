@@ -1,6 +1,9 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+
 import { LeaveStatus, LeaveType } from '@aptifum/core';
+
 import { TenantBaseEntity } from '../base/tenant-base.entity';
+
 import { Employee } from './hr-employee.entity';
 
 @Entity('hr_leaves')

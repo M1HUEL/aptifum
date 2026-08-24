@@ -1,10 +1,13 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+
 import { MovementType } from '@aptifum/core';
+
 import { BaseEntity } from '../base/base.entity';
 import { numericTransformer } from '../base/transformers';
-import { Product } from './product.entity';
+
 import { ProductLot } from './product-lot.entity';
 import { ProductVariant } from './product-variant.entity';
+import { Product } from './product.entity';
 import { Warehouse } from './warehouse.entity';
 
 @Entity('stock_movements')
