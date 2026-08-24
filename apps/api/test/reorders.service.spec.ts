@@ -72,6 +72,7 @@ describe('ReordersService', () => {
     expect(result.data).toHaveLength(3);
 
     const [first, second] = result.data;
+    if (!first || !second) throw new Error('expected two suggestions');
     expect(first.availableQuantity).toBe(1);
     expect(first.suggestedQuantity).toBe(19);
     expect(first.supplierId).toBe(SUPPLIER_A);
@@ -80,7 +81,7 @@ describe('ReordersService', () => {
     expect(second.supplierId).toBeNull();
 
     expect(query).toHaveBeenCalledTimes(1);
-    expect(query.mock.calls[0][1]).toEqual([TENANT]);
+    expect(query.mock.calls[0]?.[1]).toEqual([TENANT]);
   });
 
   it('scopes the query by warehouse when provided', async () => {
@@ -88,8 +89,8 @@ describe('ReordersService', () => {
     const { service } = buildService(query);
     await service.suggestions(null);
     await service.generate(TENANT, { warehouseId: WAREHOUSE });
-    expect(query.mock.calls[0][1]).toEqual([]);
-    expect(query.mock.calls[1][1]).toEqual([TENANT, WAREHOUSE]);
+    expect(query.mock.calls[0]?.[1]).toEqual([]);
+    expect(query.mock.calls[1]?.[1]).toEqual([TENANT, WAREHOUSE]);
   });
 
   it('groups generated orders by supplier and warns for unlinked products', async () => {

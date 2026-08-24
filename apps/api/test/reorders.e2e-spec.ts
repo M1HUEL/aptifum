@@ -29,14 +29,31 @@ describe('E2E reorders: suggestions generate draft purchase orders', () => {
     await dataSource.runMigrations();
     await dataSource.query(`
       DELETE FROM product_suppliers;
+      DELETE FROM product_lots;
+      DELETE FROM invoice_items;
+      DELETE FROM payments;
+      DELETE FROM invoices;
+      DELETE FROM sales_order_items;
+      DELETE FROM sales_orders;
+      DELETE FROM crm_activities;
+      DELETE FROM crm_opportunities;
+      DELETE FROM crm_leads;
+      DELETE FROM crm_contacts;
+      DELETE FROM customers;
       DELETE FROM goods_receipt_items;
       DELETE FROM goods_receipts;
       DELETE FROM purchase_order_items;
       DELETE FROM purchase_orders;
+      DELETE FROM supplier_payments;
+      DELETE FROM supplier_bill_items;
+      DELETE FROM supplier_bills;
       DELETE FROM suppliers;
+      DELETE FROM production_order_lines;
+      DELETE FROM production_orders;
+      DELETE FROM production_bom_lines;
+      DELETE FROM production_boms;
       DELETE FROM stock_movements;
       DELETE FROM product_stock;
-      DELETE FROM product_lots;
       DELETE FROM product_variants;
       DELETE FROM products;
       DELETE FROM warehouse_locations;
@@ -77,7 +94,7 @@ describe('E2E reorders: suggestions generate draft purchase orders', () => {
       });
     };
 
-    const [supplier, warehouse, product] = (
+    const created = (
       await Promise.all([
         api('post', '/purchasing/suppliers', {
           code: 'E2ER-S1',
@@ -95,7 +112,12 @@ describe('E2E reorders: suggestions generate draft purchase orders', () => {
           reorderQuantity: 150,
         }),
       ])
-    ).map((res) => res.body as Created & { sku?: string });
+    ).map((res) => res.body as Created);
+    const [supplier, warehouse, product] = created;
+    expect(supplier).toBeDefined();
+    expect(warehouse).toBeDefined();
+    expect(product).toBeDefined();
+    if (!supplier || !warehouse || !product) return;
     const productId = product.id;
     const supplierId = supplier.id;
 
