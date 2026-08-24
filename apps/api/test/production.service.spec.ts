@@ -1,8 +1,8 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 
-import { BomsService } from '../src/modules/production/boms.service';
-import { ProductionOrdersService } from '../src/modules/production/production-orders.service';
+import { BomsService } from '../src/modules/production/boms.service.js';
+import { ProductionOrdersService } from '../src/modules/production/production-orders.service.js';
 
 const TENANT = '00000000-0000-4000-8000-000000000001';
 

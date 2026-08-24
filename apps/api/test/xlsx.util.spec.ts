@@ -2,7 +2,7 @@ import ExcelJS from 'exceljs';
 import type { Response } from 'express';
 import { describe, expect, it, vi } from 'vitest';
 
-import { sectionsToXlsxBuffer, setXlsxHeaders, toXlsxBuffer } from '../src/common/export/xlsx.util';
+import { sectionsToXlsxBuffer, setXlsxHeaders, toXlsxBuffer } from '../src/common/export/xlsx.util.js';
 
 function loadWorkbook(data: Uint8Array): Promise<ExcelJS.Workbook> {
   const workbook = new ExcelJS.Workbook();

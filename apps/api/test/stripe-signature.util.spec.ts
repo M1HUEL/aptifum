@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
-import { parseStripeSignature, verifyStripeSignature } from '../src/modules/payments/stripe/stripe-signature.util';
+import { parseStripeSignature, verifyStripeSignature } from '../src/modules/payments/stripe/stripe-signature.util.js';
 
 const SECRET = 'whsec_test_1234567890';
 

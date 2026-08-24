@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { OutboxEventStatus } from '@aptifum/core';
 import { OutboxEvent } from '@aptifum/database';
 
-import { OutboxDispatcher } from '../src/modules/outbox/outbox.dispatcher';
+import { OutboxDispatcher } from '../src/modules/outbox/outbox.dispatcher.js';
 
 function event(overrides: Partial<OutboxEvent> = {}): OutboxEvent {
   return {

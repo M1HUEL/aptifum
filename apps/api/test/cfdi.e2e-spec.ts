@@ -20,7 +20,7 @@ import {
   User,
 } from '@aptifum/database';
 
-import { AppModule } from '../src/app.module';
+import { AppModule } from '../src/app.module.js';
 
 const MX_TENANT_ID = '00000000-0000-4000-8000-00000000000a';
 const MX_ADMIN_EMAIL = 'mx@aptifum.dev';

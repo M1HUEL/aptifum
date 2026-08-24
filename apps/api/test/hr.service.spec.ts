@@ -1,9 +1,9 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 
-import { AttendanceService } from '../src/modules/hr/attendance.service';
-import { EmployeesService } from '../src/modules/hr/employees.service';
-import { LeavesService } from '../src/modules/hr/leaves.service';
+import { AttendanceService } from '../src/modules/hr/attendance.service.js';
+import { EmployeesService } from '../src/modules/hr/employees.service.js';
+import { LeavesService } from '../src/modules/hr/leaves.service.js';
 
 const TENANT = '00000000-0000-4000-8000-000000000001';
 

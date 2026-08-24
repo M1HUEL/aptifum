@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CsvParseError, parseCsv } from '../src/common/import/csv-parser.util';
+import { CsvParseError, parseCsv } from '../src/common/import/csv-parser.util.js';
 
 describe('parseCsv', () => {
   it('returns an empty result for an empty file', () => {

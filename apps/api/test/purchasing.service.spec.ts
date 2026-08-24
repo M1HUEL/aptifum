@@ -1,8 +1,8 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 
-import { PurchaseOrdersService } from '../src/modules/purchasing/purchase-orders.service';
-import { SuppliersService } from '../src/modules/purchasing/suppliers.service';
+import { PurchaseOrdersService } from '../src/modules/purchasing/purchase-orders.service.js';
+import { SuppliersService } from '../src/modules/purchasing/suppliers.service.js';
 
 const TENANT = '00000000-0000-4000-8000-000000000001';
 

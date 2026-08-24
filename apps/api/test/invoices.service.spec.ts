@@ -11,8 +11,8 @@ import {
   WALK_IN_CUSTOMER,
 } from '@aptifum/database';
 
-import { nextDocumentNumber } from '../src/modules/sales/helpers';
-import { InvoicesService } from '../src/modules/sales/invoices.service';
+import { nextDocumentNumber } from '../src/modules/sales/helpers.js';
+import { InvoicesService } from '../src/modules/sales/invoices.service.js';
 
 vi.mock('@aptifum/database', async (importOriginal) => {
   const original = await importOriginal<typeof import('@aptifum/database')>();
@@ -24,7 +24,7 @@ vi.mock('@aptifum/database', async (importOriginal) => {
 });
 
 vi.mock('../src/modules/sales/helpers', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../src/modules/sales/helpers')>();
+  const original = await importOriginal<typeof import('../src/modules/sales/helpers.js')>();
   return {
     ...original,
     nextDocumentNumber: vi.fn(),

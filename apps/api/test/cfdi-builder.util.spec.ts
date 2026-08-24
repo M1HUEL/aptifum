@@ -2,8 +2,8 @@ import { createPublicKey, verify } from 'node:crypto';
 
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { generateDemoCertificate } from '../src/modules/tax/certificate.util';
-import { buildCfdi, CfdiInvoiceInput } from '../src/modules/tax/cfdi-builder.util';
+import { generateDemoCertificate } from '../src/modules/tax/certificate.util.js';
+import { buildCfdi, CfdiInvoiceInput } from '../src/modules/tax/cfdi-builder.util.js';
 
 const invoice: CfdiInvoiceInput = {
   number: 'INV-000001',

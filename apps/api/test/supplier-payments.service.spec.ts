@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SupplierBillStatus } from '@aptifum/core';
 import { Supplier, SupplierBill, SupplierPayment, Tenant, postJournalEntry } from '@aptifum/database';
 
-import { SupplierPaymentsService } from '../src/modules/purchasing/supplier-payments.service';
+import { SupplierPaymentsService } from '../src/modules/purchasing/supplier-payments.service.js';
 
 vi.mock('@aptifum/database', async (importOriginal) => {
   const original = await importOriginal<typeof import('@aptifum/database')>();

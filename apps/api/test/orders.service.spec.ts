@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ProductStock } from '@aptifum/database';
 
-import { OrdersService } from '../src/modules/sales/orders.service';
+import { OrdersService } from '../src/modules/sales/orders.service.js';
 
 const TENANT = '00000000-0000-4000-8000-000000000001';
 

@@ -14,7 +14,7 @@ import {
   Tenant,
 } from '@aptifum/database';
 
-import { SupplierBillsService } from '../src/modules/purchasing/supplier-bills.service';
+import { SupplierBillsService } from '../src/modules/purchasing/supplier-bills.service.js';
 
 vi.mock('@aptifum/database', async (importOriginal) => {
   const original = await importOriginal<typeof import('@aptifum/database')>();

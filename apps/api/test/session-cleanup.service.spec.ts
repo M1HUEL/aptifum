@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { RefreshSession } from '@aptifum/database';
 
-import { ConfigService } from '../src/config/config.module';
-import { SessionCleanupService } from '../src/modules/auth/session-cleanup.service';
+import { ConfigService } from '../src/config/config.module.js';
+import { SessionCleanupService } from '../src/modules/auth/session-cleanup.service.js';
 
 describe('SessionCleanupService', () => {
   it('deletes revoked/expired sessions older than the retention window', async () => {

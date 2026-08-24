@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildFinancialPdf, buildTablePdf, formatMoney } from '../src/common/pdf/pdf.util';
-import { buildInvoicePdf } from '../src/modules/sales/invoice-pdf.util';
+import { buildFinancialPdf, buildTablePdf, formatMoney } from '../src/common/pdf/pdf.util.js';
+import { buildInvoicePdf } from '../src/modules/sales/invoice-pdf.util.js';
 
 describe('pdf.util', () => {
   it('produces a valid PDF buffer for a table report', async () => {

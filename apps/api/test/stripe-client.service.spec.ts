@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { StripeClient } from '../src/modules/payments/stripe/stripe-client.service';
+import { StripeClient } from '../src/modules/payments/stripe/stripe-client.service.js';
 
 describe('StripeClient', () => {
   const config = { secretKey: 'sk_test_abcdefgh' } as never;

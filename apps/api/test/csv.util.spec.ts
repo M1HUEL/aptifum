@@ -1,7 +1,7 @@
 import type { Response } from 'express';
 import { describe, expect, it, vi } from 'vitest';
 
-import { sectionsToCsv, setCsvHeaders, toCsv } from '../src/common/export/csv.util';
+import { sectionsToCsv, setCsvHeaders, toCsv } from '../src/common/export/csv.util.js';
 
 describe('toCsv', () => {
   it('returns empty string for empty rows', () => {
