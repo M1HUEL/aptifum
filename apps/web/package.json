@@ -4,15 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "build": "vite build",
+    "dev": "vite",
+    "gen:api": "pnpm --filter @aptifum/api swagger:export && openapi-typescript ../api/swagger.json -o src/api/schema.ts",
     "lint": "eslint src tests --max-warnings 0",
-    "typecheck": "tsc --noEmit",
+    "lint:fix": "eslint src tests --fix --max-warnings 0",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "test:watch": "vitest",
-    "gen:api": "pnpm --filter @aptifum/api swagger:export && openapi-typescript ../api/swagger.json -o src/api/schema.ts",
-    "test:e2e": "playwright test"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@aptifum/core": "workspace:*",

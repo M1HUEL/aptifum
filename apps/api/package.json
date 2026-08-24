@@ -5,13 +5,14 @@
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
+    "lint": "eslint src test --max-warnings 0",
+    "lint:fix": "eslint src test --fix --max-warnings 0",
     "start": "node dist/main.js",
     "swagger:export": "nest build && node dist/scripts/swagger-export.js",
-    "lint": "eslint src test --max-warnings 0",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsc -p tsconfig.build.json && vitest run",
     "test:coverage": "tsc -p tsconfig.build.json && vitest run --coverage",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@aptifum/config": "workspace:*",

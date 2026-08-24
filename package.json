@@ -8,16 +8,17 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "typecheck": "turbo run typecheck",
-    "format": "prettier . --write",
-    "format:check": "prettier . --check",
     "db:seed": "pnpm --filter @aptifum/database seed",
     "db:seed:demo": "pnpm --filter @aptifum/database seed:demo",
     "db:seed:demo:transactions": "pnpm --filter @aptifum/database seed:demo:transactions",
-    "prepare": "husky"
+    "dev": "turbo run dev",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "prepare": "husky",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

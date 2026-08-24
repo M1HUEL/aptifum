@@ -11,13 +11,14 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "eslint src --max-warnings 0",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "migration:run": "typeorm-ts-node-esm migration:run -d src/data-source.ts",
-    "migration:revert": "typeorm-ts-node-esm migration:revert -d src/data-source.ts",
+    "lint:fix": "eslint src --fix --max-warnings 0",
     "migration:generate": "typeorm-ts-node-esm migration:generate -d src/data-source.ts src/migrations/Migration",
+    "migration:revert": "typeorm-ts-node-esm migration:revert -d src/data-source.ts",
+    "migration:run": "typeorm-ts-node-esm migration:run -d src/data-source.ts",
     "seed": "tsx src/seeders/seed.ts",
     "seed:demo": "tsx src/seeders/seed-demo.ts",
-    "seed:demo:transactions": "tsx src/seeders/seed-demo-transactions.ts"
+    "seed:demo:transactions": "tsx src/seeders/seed-demo-transactions.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@aptifum/config": "workspace:*",
