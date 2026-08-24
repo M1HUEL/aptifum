@@ -82,6 +82,15 @@ jobs:
       - name: Install Playwright browser
         run: pnpm --filter @aptifum/web exec playwright install --with-deps chromium
 
+      - name: Check e2e suite floor
+        run: |
+          COUNT=$(pnpm --filter @aptifum/web exec playwright test --list | grep -cE '^\s+\[')
+          echo "e2e tests found: $COUNT"
+          if [ "$COUNT" -lt 10 ]; then
+            echo "::error::e2e suite dropped below 10 tests ($COUNT)"
+            exit 1
+          fi
+
       - name: Test Web E2E
         run: pnpm --filter @aptifum/web test:e2e
 

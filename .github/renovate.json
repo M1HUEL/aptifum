@@ -1,0 +1,39 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommits"],
+  "rangeStrategy": "bump",
+  "timezone": "America/Mexico_City",
+  "schedule": ["before 7am on monday"],
+  "prConcurrentLimit": 5,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 7am on the 1st day of the month"]
+  },
+  "packageRules": [
+    {
+      "description": "Batch minor and patch updates together",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "deps: non-major",
+      "addLabels": ["deps"]
+    },
+    {
+      "description": "Group the TypeScript toolchain majors",
+      "matchPackageNames": [
+        "typescript",
+        "typescript-eslint",
+        "@eslint/js",
+        "eslint",
+        "eslint-config-prettier",
+        "eslint-plugin-import-x",
+        "prettier"
+      ],
+      "groupName": "deps: toolchain majors",
+      "addLabels": ["deps", "toolchain"]
+    },
+    {
+      "description": "Never touch pnpm itself via renovate (managed by packageManager field)",
+      "matchPackageNames": ["pnpm"],
+      "enabled": false
+    }
+  ]
+}
