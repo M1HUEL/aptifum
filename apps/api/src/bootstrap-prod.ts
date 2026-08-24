@@ -12,7 +12,7 @@ async function main(): Promise<void> {
   await seed();
 
   console.log('Starting API...');
-  await import('./main');
+  await import('./main.js');
 }
 
 main().catch((error) => {

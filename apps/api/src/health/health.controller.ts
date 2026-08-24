@@ -2,7 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DataSource } from 'typeorm';
 
-import { Public } from '../modules/auth/decorators/public.decorator';
+import { Public } from '../modules/auth/decorators/public.decorator.js';
 
 @ApiTags('health')
 @Controller('health')

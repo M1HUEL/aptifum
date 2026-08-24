@@ -8,8 +8,8 @@ import helmet from 'helmet';
 import { getEnv } from '@aptifum/config';
 import { createLogger, LoggerAdapter } from '@aptifum/logger';
 
-import { AppModule } from './app.module';
-import { ApiExceptionFilter } from './errors/api-exception.filter';
+import { AppModule } from './app.module.js';
+import { ApiExceptionFilter } from './errors/api-exception.filter.js';
 
 async function bootstrap(): Promise<void> {
   const env = getEnv();
