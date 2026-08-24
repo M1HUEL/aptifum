@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Between, FindOptionsWhere, ILike, Repository } from 'typeorm';
+
 import { AuditAction } from '@aptifum/core';
 import { AuditLog } from '@aptifum/database';
-import { Between, FindOptionsWhere, ILike, Repository } from 'typeorm';
+
 import { AuditQueryDto } from './dto/audit-query.dto';
 
 export interface AuditEntry {

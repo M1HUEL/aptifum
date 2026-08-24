@@ -1,5 +1,5 @@
-import PDFDocument from 'pdfkit';
 import type { Response } from 'express';
+import PDFDocument from 'pdfkit';
 
 export const PAGE_WIDTH = 612; // LETTER portrait
 export const PAGE_HEIGHT = 792;

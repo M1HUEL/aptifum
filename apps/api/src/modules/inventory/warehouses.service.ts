@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 import { Warehouse, WarehouseLocation } from '@aptifum/database';
+
 import { CreateLocationDto } from './dto/create-location.dto';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';

@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { Customer, nextDocumentNumber as dbNextDocumentNumber } from '@aptifum/database';
+
 import { DocumentSeriesKind, LeadStatus } from '@aptifum/core';
-import { CrmLead } from '@aptifum/database';
+import { Customer, nextDocumentNumber as dbNextDocumentNumber, CrmLead } from '@aptifum/database';
+
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 

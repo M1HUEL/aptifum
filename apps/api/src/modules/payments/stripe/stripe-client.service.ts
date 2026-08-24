@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+
 import type { PaymentProviderConfig } from '@aptifum/database';
 
 export interface CreateCheckoutSessionInput {

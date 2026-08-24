@@ -1,4 +1,5 @@
 import { IsBoolean, IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+
 import { AccountNormalBalance, AccountType } from '@aptifum/core';
 
 export class UpdateAccountDto {

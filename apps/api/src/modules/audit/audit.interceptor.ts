@@ -1,6 +1,8 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import { AuditAction } from '@aptifum/core';
 import { Observable, mergeMap } from 'rxjs';
+
+import { AuditAction } from '@aptifum/core';
+
 import { AuditService } from './audit.service';
 
 @Injectable()

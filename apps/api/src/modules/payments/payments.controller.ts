@@ -12,10 +12,13 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
+
 import { ModuleName, permission, PaymentProvider } from '@aptifum/core';
+
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+
 import { UpsertPaymentProviderDto } from './dto/upsert-payment-provider.dto';
 import { PaymentsService } from './payments.service';
 

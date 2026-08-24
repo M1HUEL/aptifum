@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { AttendanceRecord, Department, Employee, JournalEntry, Leave, Payroll, PayrollLine } from '@aptifum/database';
+
 import { RbacModule } from '../rbac/rbac.module';
+
 import { AttendanceController } from './attendance.controller';
 import { AttendanceService } from './attendance.service';
 import { DepartmentsController } from './departments.controller';

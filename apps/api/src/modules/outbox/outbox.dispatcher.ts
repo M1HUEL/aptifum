@@ -1,8 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+
 import { OutboxEvent } from '@aptifum/database';
+
 import { EmailNotificationsService } from '../email/email-notifications.service';
 import { CfdiService } from '../tax/cfdi.service';
+
 import { OutboxService } from './outbox.service';
 
 @Injectable()
@@ -17,7 +20,7 @@ export class OutboxDispatcher {
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async dispatchPending(): Promise<void> {
-    let batch: OutboxEvent[] = [];
+    let batch: OutboxEvent[];
     try {
       batch = await this.outbox.findPending(100);
     } catch (error) {

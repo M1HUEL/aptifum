@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { CrmLead, CrmOpportunity, Customer } from '@aptifum/database';
+
 import { OpportunityStage } from '@aptifum/core';
+import { CrmLead, CrmOpportunity, Customer } from '@aptifum/database';
+
 import { CreateOpportunityDto } from './dto/create-opportunity.dto';
 import { UpdateOpportunityDto } from './dto/update-opportunity.dto';
 

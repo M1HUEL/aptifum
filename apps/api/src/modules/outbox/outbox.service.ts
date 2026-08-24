@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
+
 import { OutboxEventInput, OutboxEventStatus } from '@aptifum/core';
 import { OutboxEvent, enqueueOutboxEvent } from '@aptifum/database';
 

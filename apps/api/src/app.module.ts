@@ -3,8 +3,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { ConfigModule, ConfigService } from './config/config.module';
-import { RequestIdMiddleware } from './request-id.middleware';
 import { HealthModule } from './health/health.module';
 import { AccountingModule } from './modules/accounting/accounting.module';
 import { AuditModule } from './modules/audit/audit.module';
@@ -17,8 +17,8 @@ import { ImportsModule } from './modules/imports/imports.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { OutboxModule } from './modules/outbox/outbox.module';
 import { PaymentsModule } from './modules/payments/payments.module';
-import { PurchasingModule } from './modules/purchasing/purchasing.module';
 import { ProductionModule } from './modules/production/production.module';
+import { PurchasingModule } from './modules/purchasing/purchasing.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { RemindersModule } from './modules/reminders/reminders.module';
 import { ReportsModule } from './modules/reports/reports.module';
@@ -26,6 +26,7 @@ import { SalesModule } from './modules/sales/sales.module';
 import { TaxModule } from './modules/tax/tax.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { UsersModule } from './modules/users/users.module';
+import { RequestIdMiddleware } from './request-id.middleware';
 
 @Module({
   imports: [

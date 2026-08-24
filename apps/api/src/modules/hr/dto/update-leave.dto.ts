@@ -1,4 +1,5 @@
 import { IsDateString, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+
 import { LeaveType } from '@aptifum/core';
 
 export class UpdateLeaveDto {

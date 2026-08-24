@@ -1,9 +1,11 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+
 import { ModuleName, permission } from '@aptifum/core';
-import { ParseUUIDPipe } from '@nestjs/common';
+
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+
 import { ReportsService } from './reports.service';
 
 @ApiTags('accounting')

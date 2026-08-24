@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+
 import { AccountNormalBalance, round2 } from '@aptifum/core';
 
 interface TrialBalanceRow {

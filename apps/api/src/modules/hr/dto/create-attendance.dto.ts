@@ -1,4 +1,5 @@
 import { IsDateString, IsEnum, IsISO8601, IsOptional, IsString, IsUUID } from 'class-validator';
+
 import { AttendanceStatus } from '@aptifum/core';
 
 export class CreateAttendanceDto {

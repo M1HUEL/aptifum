@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In } from 'typeorm';
+
 import { MovementType, US_STATES, normalizeRfc, validateEin, validateRfc } from '@aptifum/core';
 import { applyStockMovement, Category, Customer, Product, Supplier, Tenant, Warehouse } from '@aptifum/database';
+
 import { CsvParseError, parseCsv, type ParsedCsv } from '../../common/import/csv-parser.util';
 
 export type ImportType = 'products' | 'customers' | 'suppliers' | 'initial-stock';
@@ -537,7 +539,7 @@ function resolveTaxId(country: string, value: string): { ok: true; value: string
     if (!validateEin(value)) {
       return { ok: false, message: 'Invalid US EIN: expected 9 digits (XX-XXXXXXX)' };
     }
-    return { ok: true, value: value.replace(/[\s\-]/g, '') };
+    return { ok: true, value: value.replace(/[\s-]/g, '') };
   }
   return { ok: true, value: value.trim() };
 }

@@ -10,6 +10,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+
 import { OpportunityStage } from '@aptifum/core';
 
 export class UpdateOpportunityDto {

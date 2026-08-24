@@ -1,7 +1,9 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, LessThanOrEqual, Repository } from 'typeorm';
+
 import { ExchangeRate } from '@aptifum/database';
+
 import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
 
 @Injectable()

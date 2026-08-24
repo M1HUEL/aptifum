@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, FindOptionsWhere, In, Repository } from 'typeorm';
+
 import { DocumentSeriesKind, PayrollStatus, round2 } from '@aptifum/core';
 import {
   ChartAccountNotFoundError,
@@ -12,9 +13,11 @@ import {
   Payroll,
   PayrollLine,
   postJournalEntry,
+  ACCOUNT_CODES,
 } from '@aptifum/database';
-import { ACCOUNT_CODES } from '@aptifum/database';
+
 import { OutboxService } from '../outbox/outbox.service';
+
 import { GeneratePayrollDto } from './dto/generate-payroll.dto';
 
 @Injectable()

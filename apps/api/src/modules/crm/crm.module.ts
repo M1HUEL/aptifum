@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { CrmActivity, CrmContact, CrmLead, CrmOpportunity, Customer, DocumentSeries } from '@aptifum/database';
+
 import { ActivitiesController } from './activities.controller';
 import { ActivitiesService } from './activities.service';
 import { ContactsController } from './contacts.controller';

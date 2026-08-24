@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import {
   Product,
   ProductStock,
@@ -10,6 +11,7 @@ import {
   Tenant,
   Warehouse,
 } from '@aptifum/database';
+
 import { BomsController } from './boms.controller';
 import { BomsService } from './boms.service';
 import { ProductionOrdersController } from './production-orders.controller';

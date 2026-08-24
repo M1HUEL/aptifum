@@ -1,6 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsISO8601, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+
 import { AuditAction } from '@aptifum/core';
+
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 
 export class AuditQueryDto extends PaginationQueryDto {

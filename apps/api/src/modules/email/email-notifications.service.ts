@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { Customer, Invoice, OutboxEvent, PurchaseOrder, Supplier, SupplierBill } from '@aptifum/database';
+
 import { ModuleName, permission } from '@aptifum/core';
+import { Customer, Invoice, OutboxEvent, PurchaseOrder, Supplier, SupplierBill } from '@aptifum/database';
+
 import { EmailService } from './email.service';
 
 @Injectable()

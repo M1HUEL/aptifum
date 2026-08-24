@@ -10,6 +10,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+
 import { BomLineInputDto } from './create-bom.dto';
 
 export class UpdateBomDto {

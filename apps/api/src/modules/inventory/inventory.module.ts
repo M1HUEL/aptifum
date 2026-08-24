@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import {
   Category,
   Product,
@@ -10,6 +11,7 @@ import {
   Warehouse,
   WarehouseLocation,
 } from '@aptifum/database';
+
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
 import { ProductVariantsController } from './product-variants.controller';

@@ -1,9 +1,12 @@
 import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+
 import { ModuleName, permission } from '@aptifum/core';
+
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+
 import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
 import { ExchangeRatesService } from './exchange-rates.service';
 

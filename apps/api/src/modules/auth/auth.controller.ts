@@ -2,17 +2,20 @@ import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Ip, Patch, Post, 
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
+
 import { getEnv } from '@aptifum/config';
 import { AuthUser, ModuleName, permission } from '@aptifum/core';
+
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+
 import { AuthService, RequestContext } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { AcceptInviteDto } from './dto/accept-invite.dto';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
+import { InviteUserDto } from './dto/invite-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { LogoutDto } from './dto/logout.dto';
-import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
-import { AcceptInviteDto } from './dto/accept-invite.dto';
-import { InviteUserDto } from './dto/invite-user.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';

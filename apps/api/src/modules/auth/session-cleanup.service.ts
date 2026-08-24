@@ -2,7 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
+
 import { RefreshSession } from '@aptifum/database';
+
 import { ConfigService } from '../../config/config.module';
 
 @Injectable()

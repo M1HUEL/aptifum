@@ -1,4 +1,5 @@
 import { IsEnum, IsNumber, IsOptional, IsString, IsUUID, MaxLength, Min } from 'class-validator';
+
 import { LeadStatus } from '@aptifum/core';
 
 export class CreateLeadDto {

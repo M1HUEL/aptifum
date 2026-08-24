@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+
 import { AppEnv, loadEnv } from '@aptifum/config';
 
 export class ConfigService {

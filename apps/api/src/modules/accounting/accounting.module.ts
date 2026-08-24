@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { AccountingPeriod, ChartAccount, JournalEntry, JournalEntryLine } from '@aptifum/database';
+
 import { ExchangeRatesModule } from '../exchange-rates/exchange-rates.module';
+
 import { AccountsController } from './accounts.controller';
 import { AccountsService } from './accounts.service';
 import { JournalEntriesController } from './journal-entries.controller';
