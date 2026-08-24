@@ -29,6 +29,7 @@ import { PaymentProviderConfig } from './payment-provider.entity.js';
 import { Payment } from './payment.entity.js';
 import { ProductLot } from './product-lot.entity.js';
 import { ProductStock } from './product-stock.entity.js';
+import { ProductSupplier } from './product-supplier.entity.js';
 import { ProductVariant } from './product-variant.entity.js';
 import { Product } from './product.entity.js';
 import { ProductionBomLine } from './production-bom-line.entity.js';
@@ -59,6 +60,7 @@ export const entities = [
   AuditLog,
   Category,
   Product,
+  ProductSupplier,
   ProductVariant,
   Warehouse,
   WarehouseLocation,
@@ -137,6 +139,7 @@ export {
   Product,
   ProductLot,
   ProductStock,
+  ProductSupplier,
   ProductVariant,
   ProductionBom,
   ProductionBomLine,

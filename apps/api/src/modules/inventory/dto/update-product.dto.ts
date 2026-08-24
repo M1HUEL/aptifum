@@ -50,6 +50,16 @@ export class UpdateProductDto {
   salePrice?: number;
 
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  reorderPoint?: number | null;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  reorderQuantity?: number | null;
+
+  @IsOptional()
   @IsBoolean()
   enabled?: boolean;
 }

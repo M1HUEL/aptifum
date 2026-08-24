@@ -6,6 +6,7 @@ import { numericTransformer } from '../base/transformers.js';
 import { Category } from './category.entity.js';
 import { ProductLot } from './product-lot.entity.js';
 import { ProductStock } from './product-stock.entity.js';
+import { ProductSupplier } from './product-supplier.entity.js';
 import { ProductVariant } from './product-variant.entity.js';
 import { StockMovement } from './stock-movement.entity.js';
 
@@ -61,6 +62,26 @@ export class Product extends TenantBaseEntity {
   @Column({ default: true })
   enabled: boolean;
 
+  @Column({
+    name: 'reorder_point',
+    type: 'numeric',
+    precision: 18,
+    scale: 4,
+    nullable: true,
+    transformer: numericTransformer,
+  })
+  reorderPoint: number | null;
+
+  @Column({
+    name: 'reorder_quantity',
+    type: 'numeric',
+    precision: 18,
+    scale: 4,
+    nullable: true,
+    transformer: numericTransformer,
+  })
+  reorderQuantity: number | null;
+
   @Column({ type: 'int', default: 1 })
   version: number;
 
@@ -70,6 +91,9 @@ export class Product extends TenantBaseEntity {
 
   @OneToMany(() => ProductStock, (stock) => stock.product)
   stocks: Relation<ProductStock>[];
+
+  @OneToMany(() => ProductSupplier, (supplier) => supplier.product)
+  suppliers: Relation<ProductSupplier>[];
 
   @OneToMany(() => ProductVariant, (variant) => variant.product)
   variants: Relation<ProductVariant>[];

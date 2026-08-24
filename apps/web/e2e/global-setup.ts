@@ -34,6 +34,7 @@ export default async function globalSetup(): Promise<void> {
     DELETE FROM product_stock;
     DELETE FROM product_lots;
     DELETE FROM product_variants;
+    DELETE FROM product_suppliers;
     DELETE FROM products;
     DELETE FROM warehouse_locations;
     DELETE FROM warehouses;

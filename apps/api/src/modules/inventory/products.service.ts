@@ -62,6 +62,8 @@ export class ProductsService {
         imageUrl: dto.imageUrl ?? null,
         purchasePrice: dto.purchasePrice ?? 0,
         salePrice: dto.salePrice ?? 0,
+        reorderPoint: dto.reorderPoint ?? null,
+        reorderQuantity: dto.reorderQuantity ?? null,
         enabled: dto.enabled ?? true,
       }),
     );
@@ -83,6 +85,8 @@ export class ProductsService {
       imageUrl: dto.imageUrl === undefined ? product.imageUrl : dto.imageUrl,
       purchasePrice: dto.purchasePrice ?? product.purchasePrice,
       salePrice: dto.salePrice ?? product.salePrice,
+      reorderPoint: dto.reorderPoint === undefined ? product.reorderPoint : dto.reorderPoint,
+      reorderQuantity: dto.reorderQuantity === undefined ? product.reorderQuantity : dto.reorderQuantity,
       enabled: dto.enabled ?? product.enabled,
     });
     return this.productsRepo.save(product);

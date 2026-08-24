@@ -48,6 +48,16 @@ export class CreateProductDto {
   salePrice?: number;
 
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  reorderPoint?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  reorderQuantity?: number;
+
+  @IsOptional()
   @IsBoolean()
   enabled?: boolean;
 }

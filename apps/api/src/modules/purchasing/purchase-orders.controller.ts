@@ -9,12 +9,31 @@ import { RequirePermissions } from '../rbac/decorators/require-permissions.decor
 
 import { CreateGoodsReceiptDto } from './dto/create-goods-receipt.dto.js';
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto.js';
+import { GeneratePurchaseOrdersDto } from './dto/generate-purchase-orders.dto.js';
 import { PurchaseOrdersService } from './purchase-orders.service.js';
+import { ReordersService } from './reorders.service.js';
 
 @ApiTags('purchasing')
 @Controller('purchasing')
 export class PurchaseOrdersController {
-  constructor(private readonly purchaseOrdersService: PurchaseOrdersService) {}
+  constructor(
+    private readonly purchaseOrdersService: PurchaseOrdersService,
+    private readonly reordersService: ReordersService,
+  ) {}
+
+  @Get('reorders')
+  @RequirePermissions(permission(ModuleName.PURCHASING, 'read'))
+  @ApiOperation({ summary: 'List reorder suggestions' })
+  reorderSuggestions(@CurrentUser() user: { tenantId: string | null }) {
+    return this.reordersService.suggestions(user.tenantId);
+  }
+
+  @Post('reorders/generate')
+  @RequirePermissions(permission(ModuleName.PURCHASING, 'write'))
+  @ApiOperation({ summary: 'Generate draft purchase orders from reorder suggestions' })
+  generateReorders(@CurrentUser() user: { tenantId: string | null }, @Body() dto: GeneratePurchaseOrdersDto) {
+    return this.reordersService.generate(user.tenantId, dto);
+  }
 
   @Get('receipts')
   @RequirePermissions(permission(ModuleName.PURCHASING, 'read'))

@@ -31,6 +31,7 @@ const ProductsPage = lazyPage(() => import('./pages/products-page'), 'ProductsPa
 const ProductionPage = lazyPage(() => import('./pages/production-page'), 'ProductionPage');
 const ProfilePage = lazyPage(() => import('./pages/profile-page'), 'ProfilePage');
 const PurchaseOrdersPage = lazyPage(() => import('./pages/purchase-orders-page'), 'PurchaseOrdersPage');
+const ReorderPage = lazyPage(() => import('./pages/reorder-page'), 'ReorderPage');
 const PosPage = lazyPage(() => import('./pages/pos-page'), 'PosPage');
 const ReportsPage = lazyPage(() => import('./pages/reports-page'), 'ReportsPage');
 const ResetPasswordPage = lazyPage(() => import('./pages/reset-password-page'), 'ResetPasswordPage');
@@ -144,6 +145,14 @@ export default function App() {
               element={
                 <GuardedRoute>
                   <SuppliersPage />
+                </GuardedRoute>
+              }
+            />
+            <Route
+              path="/purchasing/reorder"
+              element={
+                <GuardedRoute>
+                  <ReorderPage />
                 </GuardedRoute>
               }
             />

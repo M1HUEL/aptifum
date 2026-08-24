@@ -1176,6 +1176,40 @@ export interface paths {
         patch: operations["SuppliersController_update"];
         trace?: never;
     };
+    "/purchasing/reorders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List reorder suggestions */
+        get: operations["PurchaseOrdersController_reorderSuggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/purchasing/reorders/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate draft purchase orders from reorder suggestions */
+        post: operations["PurchaseOrdersController_generateReorders"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/purchasing/receipts": {
         parameters: {
             query?: never;
@@ -2586,6 +2620,8 @@ export interface components {
             imageUrl?: string;
             purchasePrice?: number;
             salePrice?: number;
+            reorderPoint?: number;
+            reorderQuantity?: number;
             enabled?: boolean;
         };
         UpdateProductDto: {
@@ -2600,6 +2636,8 @@ export interface components {
             imageUrl?: string;
             purchasePrice?: number;
             salePrice?: number;
+            reorderPoint?: number | null;
+            reorderQuantity?: number | null;
             enabled?: boolean;
         };
         ProductVariant: Record<string, never>;
@@ -2826,6 +2864,11 @@ export interface components {
             paymentTerms?: string;
             creditLimit?: number;
             active?: boolean;
+        };
+        GeneratePurchaseOrdersDto: {
+            /** Format: uuid */
+            warehouseId: string;
+            productIds?: string[];
         };
         GoodsReceipt: Record<string, never>;
         PurchaseOrder: Record<string, never>;
@@ -5403,6 +5446,44 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Supplier"];
                 };
+            };
+        };
+    };
+    PurchaseOrdersController_reorderSuggestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PurchaseOrdersController_generateReorders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GeneratePurchaseOrdersDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

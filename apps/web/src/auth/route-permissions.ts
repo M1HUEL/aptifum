@@ -30,6 +30,7 @@ export const ROUTE_GUARDS: RouteGuard[] = [
   { to: '/customers', labelKey: 'nav.customers', permission: 'sales:read', group: 'sales' },
   { to: '/orders', labelKey: 'nav.salesOrders', permission: 'sales:read', group: 'sales' },
   { to: '/purchasing', labelKey: 'nav.purchasing', permission: 'purchasing:read', group: 'purchasing' },
+  { to: '/purchasing/reorder', labelKey: 'nav.reorder', permission: 'purchasing:read', group: 'purchasing' },
   { to: '/suppliers', labelKey: 'nav.suppliers', permission: 'purchasing:read', group: 'purchasing' },
   { to: '/products', labelKey: 'nav.products', permission: 'inventory:read', group: 'inventory' },
   { to: '/stock', labelKey: 'nav.stock', permission: 'inventory:read', group: 'inventory' },
