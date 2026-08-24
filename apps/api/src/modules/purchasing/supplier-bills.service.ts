@@ -19,10 +19,10 @@ import {
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
 
-import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
-import { OutboxService } from '../outbox/outbox.service';
+import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service.js';
+import { OutboxService } from '../outbox/outbox.service.js';
 
-import { CreateSupplierBillDto } from './dto/create-supplier-bill.dto';
+import { CreateSupplierBillDto } from './dto/create-supplier-bill.dto.js';
 
 @Injectable()
 export class SupplierBillsService {

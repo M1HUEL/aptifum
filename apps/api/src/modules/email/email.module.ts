@@ -3,8 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Customer, Invoice, PurchaseOrder, Supplier, SupplierBill } from '@aptifum/database';
 
-import { EmailNotificationsService } from './email-notifications.service';
-import { EmailService } from './email.service';
+import { EmailNotificationsService } from './email-notifications.service.js';
+import { EmailService } from './email.service.js';
 
 @Global()
 @Module({

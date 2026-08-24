@@ -14,13 +14,13 @@ import {
   USO_CFDI,
 } from '@aptifum/core';
 
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { CfdiService } from './cfdi.service';
-import { UpdateCfdiSettingsDto } from './dto/update-cfdi-settings.dto';
-import { UpdateUsSalesTaxDto } from './dto/update-us-sales-tax.dto';
-import { UsSalesTaxService } from './us-sales-tax.service';
+import { CfdiService } from './cfdi.service.js';
+import { UpdateCfdiSettingsDto } from './dto/update-cfdi-settings.dto.js';
+import { UpdateUsSalesTaxDto } from './dto/update-us-sales-tax.dto.js';
+import { UsSalesTaxService } from './us-sales-tax.service.js';
 
 @ApiTags('tax')
 @Controller('tax')

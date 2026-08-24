@@ -3,11 +3,11 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ModuleName, permission } from '@aptifum/core';
 
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { AuditService } from './audit.service';
-import { AuditQueryDto } from './dto/audit-query.dto';
+import { AuditService } from './audit.service.js';
+import { AuditQueryDto } from './dto/audit-query.dto.js';
 
 @ApiTags('audit')
 @Controller('audit')

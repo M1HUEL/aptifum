@@ -3,11 +3,11 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ModuleName, permission } from '@aptifum/core';
 
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { DocumentSeriesService } from './document-series.service';
-import { CreateSeriesDto } from './dto/create-series.dto';
+import { DocumentSeriesService } from './document-series.service.js';
+import { CreateSeriesDto } from './dto/create-series.dto.js';
 
 @ApiTags('sales')
 @Controller('sales/document-series')

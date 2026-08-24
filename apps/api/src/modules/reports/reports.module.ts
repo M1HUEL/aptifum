@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 
-import { AgingReportsController } from './aging-reports.controller';
-import { FinancialReportsController } from './financial-reports.controller';
-import { HrReportsController } from './hr-reports.controller';
-import { InventoryReportsController } from './inventory-reports.controller';
-import { ReportsController } from './reports.controller';
-import { ReportsService } from './reports.service';
-import { SalesReportsController } from './sales-reports.controller';
+import { AgingReportsController } from './aging-reports.controller.js';
+import { FinancialReportsController } from './financial-reports.controller.js';
+import { HrReportsController } from './hr-reports.controller.js';
+import { InventoryReportsController } from './inventory-reports.controller.js';
+import { ReportsController } from './reports.controller.js';
+import { ReportsService } from './reports.service.js';
+import { SalesReportsController } from './sales-reports.controller.js';
 
 @Module({
   controllers: [

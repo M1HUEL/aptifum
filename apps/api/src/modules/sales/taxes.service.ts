@@ -5,7 +5,7 @@ import { FindOptionsWhere, Repository } from 'typeorm';
 import { TaxKind } from '@aptifum/core';
 import { Tax } from '@aptifum/database';
 
-import { CreateTaxDto } from './dto/create-tax.dto';
+import { CreateTaxDto } from './dto/create-tax.dto.js';
 
 @Injectable()
 export class TaxesService {

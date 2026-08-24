@@ -4,7 +4,7 @@ import { FindOptionsWhere, LessThanOrEqual, Repository } from 'typeorm';
 
 import { ExchangeRate } from '@aptifum/database';
 
-import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
+import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto.js';
 
 @Injectable()
 export class ExchangeRatesService {

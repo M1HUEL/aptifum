@@ -4,8 +4,8 @@ import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 
 import { CrmActivity } from '@aptifum/database';
 
-import { CreateActivityDto } from './dto/create-activity.dto';
-import { UpdateActivityDto } from './dto/update-activity.dto';
+import { CreateActivityDto } from './dto/create-activity.dto.js';
+import { UpdateActivityDto } from './dto/update-activity.dto.js';
 
 @Injectable()
 export class ActivitiesService {

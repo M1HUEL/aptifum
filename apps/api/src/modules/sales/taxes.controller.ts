@@ -3,11 +3,11 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ModuleName, permission } from '@aptifum/core';
 
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { CreateTaxDto } from './dto/create-tax.dto';
-import { TaxesService } from './taxes.service';
+import { CreateTaxDto } from './dto/create-tax.dto.js';
+import { TaxesService } from './taxes.service.js';
 
 @ApiTags('sales')
 @Controller('sales/taxes')

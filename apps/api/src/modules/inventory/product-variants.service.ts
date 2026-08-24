@@ -4,8 +4,8 @@ import { Repository } from 'typeorm';
 
 import { Product, ProductVariant } from '@aptifum/database';
 
-import { CreateProductVariantDto } from './dto/create-product-variant.dto';
-import { UpdateProductVariantDto } from './dto/update-product-variant.dto';
+import { CreateProductVariantDto } from './dto/create-product-variant.dto.js';
+import { UpdateProductVariantDto } from './dto/update-product-variant.dto.js';
 
 @Injectable()
 export class ProductVariantsService {

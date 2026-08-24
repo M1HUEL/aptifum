@@ -3,11 +3,11 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ModuleName, permission } from '@aptifum/core';
 
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { PeriodsService } from './periods.service';
+import { PeriodsService } from './periods.service.js';
 
 @ApiTags('accounting')
 @Controller('accounting/periods')

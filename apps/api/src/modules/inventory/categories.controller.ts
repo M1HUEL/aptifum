@@ -3,13 +3,13 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ModuleName, permission } from '@aptifum/core';
 
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { CategoriesService } from './categories.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CategoriesService } from './categories.service.js';
+import { CreateCategoryDto } from './dto/create-category.dto.js';
+import { UpdateCategoryDto } from './dto/update-category.dto.js';
 
 @ApiTags('inventory')
 @Controller('inventory/categories')

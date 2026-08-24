@@ -16,8 +16,8 @@ import {
   WarehouseLocation,
 } from '@aptifum/database';
 
-import { CreateMovementDto } from './dto/create-movement.dto';
-import { CreateTransferDto } from './dto/create-transfer.dto';
+import { CreateMovementDto } from './dto/create-movement.dto.js';
+import { CreateTransferDto } from './dto/create-transfer.dto.js';
 
 interface ListMovementFilters {
   productId?: string;

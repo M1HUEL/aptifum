@@ -5,7 +5,7 @@ import { DataSource, EntityManager, In } from 'typeorm';
 import { MovementType, US_STATES, normalizeRfc, validateEin, validateRfc } from '@aptifum/core';
 import { applyStockMovement, Category, Customer, Product, Supplier, Tenant, Warehouse } from '@aptifum/database';
 
-import { CsvParseError, parseCsv, type ParsedCsv } from '../../common/import/csv-parser.util';
+import { CsvParseError, parseCsv, type ParsedCsv } from '../../common/import/csv-parser.util.js';
 
 export type ImportType = 'products' | 'customers' | 'suppliers' | 'initial-stock';
 

@@ -5,8 +5,8 @@ import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { DocumentSeriesKind, LeadStatus } from '@aptifum/core';
 import { Customer, nextDocumentNumber as dbNextDocumentNumber, CrmLead } from '@aptifum/database';
 
-import { CreateLeadDto } from './dto/create-lead.dto';
-import { UpdateLeadDto } from './dto/update-lead.dto';
+import { CreateLeadDto } from './dto/create-lead.dto.js';
+import { UpdateLeadDto } from './dto/update-lead.dto.js';
 
 @Injectable()
 export class LeadsService {

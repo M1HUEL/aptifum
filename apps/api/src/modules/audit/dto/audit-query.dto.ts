@@ -3,7 +3,7 @@ import { IsEnum, IsISO8601, IsOptional, IsString, IsUUID, MaxLength } from 'clas
 
 import { AuditAction } from '@aptifum/core';
 
-import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
+import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto.js';
 
 export class AuditQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional()

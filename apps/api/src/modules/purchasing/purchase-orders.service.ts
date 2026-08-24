@@ -22,11 +22,11 @@ import {
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
 
-import { searchDocumentIds } from '../../common/query/document-search';
-import { OutboxService } from '../outbox/outbox.service';
+import { searchDocumentIds } from '../../common/query/document-search.js';
+import { OutboxService } from '../outbox/outbox.service.js';
 
-import { CreateGoodsReceiptDto } from './dto/create-goods-receipt.dto';
-import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
+import { CreateGoodsReceiptDto } from './dto/create-goods-receipt.dto.js';
+import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto.js';
 
 @Injectable()
 export class PurchaseOrdersService {

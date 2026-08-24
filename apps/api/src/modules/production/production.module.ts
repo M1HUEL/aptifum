@@ -12,10 +12,10 @@ import {
   Warehouse,
 } from '@aptifum/database';
 
-import { BomsController } from './boms.controller';
-import { BomsService } from './boms.service';
-import { ProductionOrdersController } from './production-orders.controller';
-import { ProductionOrdersService } from './production-orders.service';
+import { BomsController } from './boms.controller.js';
+import { BomsService } from './boms.service.js';
+import { ProductionOrdersController } from './production-orders.controller.js';
+import { ProductionOrdersService } from './production-orders.service.js';
 
 @Module({
   imports: [

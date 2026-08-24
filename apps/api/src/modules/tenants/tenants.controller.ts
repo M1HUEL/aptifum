@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { ModuleName, permission } from '@aptifum/core';
 import { Tenant } from '@aptifum/database';
 
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
 @ApiTags('tenants')
 @Controller('tenants')

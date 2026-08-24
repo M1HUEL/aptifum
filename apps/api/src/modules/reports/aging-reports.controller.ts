@@ -4,12 +4,12 @@ import type { Response } from 'express';
 
 import { ModuleName, permission } from '@aptifum/core';
 
-import { sendCsv, sendPdf, sendXlsx } from '../../common/export/export.util';
-import { buildTablePdf, formatMoney } from '../../common/pdf/pdf.util';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { sendCsv, sendPdf, sendXlsx } from '../../common/export/export.util.js';
+import { buildTablePdf, formatMoney } from '../../common/pdf/pdf.util.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { ReportsService } from './reports.service';
+import { ReportsService } from './reports.service.js';
 
 @ApiTags('reports')
 @Controller('reports/aging')

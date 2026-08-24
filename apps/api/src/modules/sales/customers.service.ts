@@ -5,8 +5,8 @@ import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { normalizeRfc, validateEin, validateRfc } from '@aptifum/core';
 import { Customer, Tenant } from '@aptifum/database';
 
-import { CreateCustomerDto } from './dto/create-customer.dto';
-import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { CreateCustomerDto } from './dto/create-customer.dto.js';
+import { UpdateCustomerDto } from './dto/update-customer.dto.js';
 
 @Injectable()
 export class CustomersService {

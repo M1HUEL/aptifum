@@ -16,9 +16,9 @@ import {
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
 
-import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
+import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service.js';
 
-import { CreateSupplierPaymentDto } from './dto/create-supplier-payment.dto';
+import { CreateSupplierPaymentDto } from './dto/create-supplier-payment.dto.js';
 
 @Injectable()
 export class SupplierPaymentsService {

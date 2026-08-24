@@ -35,14 +35,14 @@ import {
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
 
-import { searchDocumentIds } from '../../common/query/document-search';
-import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
-import { OutboxService } from '../outbox/outbox.service';
-import { UsSalesTaxService } from '../tax/us-sales-tax.service';
+import { searchDocumentIds } from '../../common/query/document-search.js';
+import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service.js';
+import { OutboxService } from '../outbox/outbox.service.js';
+import { UsSalesTaxService } from '../tax/us-sales-tax.service.js';
 
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
+import { CreateInvoiceDto } from './dto/create-invoice.dto.js';
+import { CreatePaymentDto } from './dto/create-payment.dto.js';
+import { computeTotals, nextDocumentNumber, round2, today } from './helpers.js';
 
 @Injectable()
 export class InvoicesService {

@@ -4,10 +4,10 @@ import { Repository } from 'typeorm';
 
 import { Warehouse, WarehouseLocation } from '@aptifum/database';
 
-import { CreateLocationDto } from './dto/create-location.dto';
-import { CreateWarehouseDto } from './dto/create-warehouse.dto';
-import { UpdateLocationDto } from './dto/update-location.dto';
-import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
+import { CreateLocationDto } from './dto/create-location.dto.js';
+import { CreateWarehouseDto } from './dto/create-warehouse.dto.js';
+import { UpdateLocationDto } from './dto/update-location.dto.js';
+import { UpdateWarehouseDto } from './dto/update-warehouse.dto.js';
 
 @Injectable()
 export class WarehousesService {

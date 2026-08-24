@@ -24,10 +24,10 @@ import {
 } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
 
-import { OutboxService } from '../outbox/outbox.service';
+import { OutboxService } from '../outbox/outbox.service.js';
 
-import { CreateProductionOrderDto } from './dto/create-production-order.dto';
-import { UpdateProductionOrderDto } from './dto/update-production-order.dto';
+import { CreateProductionOrderDto } from './dto/create-production-order.dto.js';
+import { UpdateProductionOrderDto } from './dto/update-production-order.dto.js';
 
 const round4 = (n: number): number => Math.round(n * 10000) / 10000;
 

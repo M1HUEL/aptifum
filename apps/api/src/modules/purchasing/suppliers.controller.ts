@@ -3,13 +3,13 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ModuleName, permission } from '@aptifum/core';
 
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { CreateSupplierDto } from './dto/create-supplier.dto';
-import { UpdateSupplierDto } from './dto/update-supplier.dto';
-import { SuppliersService } from './suppliers.service';
+import { CreateSupplierDto } from './dto/create-supplier.dto.js';
+import { UpdateSupplierDto } from './dto/update-supplier.dto.js';
+import { SuppliersService } from './suppliers.service.js';
 
 @ApiTags('purchasing')
 @Controller('purchasing/suppliers')

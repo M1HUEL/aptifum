@@ -3,13 +3,13 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { AccountType, ModuleName, permission } from '@aptifum/core';
 
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { AccountsService } from './accounts.service';
-import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
+import { AccountsService } from './accounts.service.js';
+import { CreateAccountDto } from './dto/create-account.dto.js';
+import { UpdateAccountDto } from './dto/update-account.dto.js';
 
 @ApiTags('accounting')
 @Controller('accounting/accounts')

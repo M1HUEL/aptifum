@@ -13,7 +13,7 @@ import {
   postJournalEntry,
 } from '@aptifum/database';
 
-import { CreateJournalEntryDto } from './dto/create-journal-entry.dto';
+import { CreateJournalEntryDto } from './dto/create-journal-entry.dto.js';
 
 @Injectable()
 export class JournalEntriesService {

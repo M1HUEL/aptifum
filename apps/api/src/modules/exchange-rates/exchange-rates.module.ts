@@ -3,8 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ExchangeRate } from '@aptifum/database';
 
-import { ExchangeRatesController } from './exchange-rates.controller';
-import { ExchangeRatesService } from './exchange-rates.service';
+import { ExchangeRatesController } from './exchange-rates.controller.js';
+import { ExchangeRatesService } from './exchange-rates.service.js';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ExchangeRate])],

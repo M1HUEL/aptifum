@@ -14,11 +14,11 @@ import {
   reserveStock,
 } from '@aptifum/database';
 
-import { searchDocumentIds } from '../../common/query/document-search';
-import { UsSalesTaxService } from '../tax/us-sales-tax.service';
+import { searchDocumentIds } from '../../common/query/document-search.js';
+import { UsSalesTaxService } from '../tax/us-sales-tax.service.js';
 
-import { CreateOrderDto } from './dto/create-order.dto';
-import { computeTotals, nextDocumentNumber, round2, today } from './helpers';
+import { CreateOrderDto } from './dto/create-order.dto.js';
+import { computeTotals, nextDocumentNumber, round2, today } from './helpers.js';
 
 @Injectable()
 export class OrdersService {

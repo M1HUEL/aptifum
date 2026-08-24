@@ -16,9 +16,9 @@ import {
   ACCOUNT_CODES,
 } from '@aptifum/database';
 
-import { OutboxService } from '../outbox/outbox.service';
+import { OutboxService } from '../outbox/outbox.service.js';
 
-import { GeneratePayrollDto } from './dto/generate-payroll.dto';
+import { GeneratePayrollDto } from './dto/generate-payroll.dto.js';
 
 @Injectable()
 export class PayrollsService {

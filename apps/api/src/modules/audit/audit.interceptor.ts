@@ -3,7 +3,7 @@ import { Observable, mergeMap } from 'rxjs';
 
 import { AuditAction } from '@aptifum/core';
 
-import { AuditService } from './audit.service';
+import { AuditService } from './audit.service.js';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {

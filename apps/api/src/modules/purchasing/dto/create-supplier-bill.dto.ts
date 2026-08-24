@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { ArrayMinSize, IsDateString, IsOptional, IsString, IsUUID, MaxLength, ValidateNested } from 'class-validator';
 
-import { CreateSupplierBillItemDto } from './create-supplier-bill-item.dto';
+import { CreateSupplierBillItemDto } from './create-supplier-bill-item.dto.js';
 
 export class CreateSupplierBillDto {
   @IsUUID()

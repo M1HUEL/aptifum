@@ -3,13 +3,13 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ModuleName, MovementType, permission } from '@aptifum/core';
 
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { CreateMovementDto } from './dto/create-movement.dto';
-import { CreateTransferDto } from './dto/create-transfer.dto';
-import { StockService } from './stock.service';
+import { CreateMovementDto } from './dto/create-movement.dto.js';
+import { CreateTransferDto } from './dto/create-transfer.dto.js';
+import { StockService } from './stock.service.js';
 
 @ApiTags('inventory')
 @Controller('inventory')

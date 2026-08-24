@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { resolveUsSalesTaxRate, US_STATES, UsSalesTaxConfig } from '@aptifum/core';
 import { Tenant } from '@aptifum/database';
 
-import type { UpdateUsSalesTaxDto } from './dto/update-us-sales-tax.dto';
+import type { UpdateUsSalesTaxDto } from './dto/update-us-sales-tax.dto.js';
 
 export interface UsSalesTaxView {
   nexusStates: string[];

@@ -6,19 +6,19 @@ import type { Request } from 'express';
 import { getEnv } from '@aptifum/config';
 import { AuthUser, ModuleName, permission } from '@aptifum/core';
 
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { AuthService, RequestContext } from './auth.service';
-import { CurrentUser } from './decorators/current-user.decorator';
-import { Public } from './decorators/public.decorator';
-import { AcceptInviteDto } from './dto/accept-invite.dto';
-import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
-import { InviteUserDto } from './dto/invite-user.dto';
-import { LoginDto } from './dto/login.dto';
-import { LogoutDto } from './dto/logout.dto';
-import { RefreshDto } from './dto/refresh.dto';
-import { RegisterDto } from './dto/register.dto';
-import { UpdateProfileDto } from './dto/update-profile.dto';
+import { AuthService, RequestContext } from './auth.service.js';
+import { CurrentUser } from './decorators/current-user.decorator.js';
+import { Public } from './decorators/public.decorator.js';
+import { AcceptInviteDto } from './dto/accept-invite.dto.js';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto.js';
+import { InviteUserDto } from './dto/invite-user.dto.js';
+import { LoginDto } from './dto/login.dto.js';
+import { LogoutDto } from './dto/logout.dto.js';
+import { RefreshDto } from './dto/refresh.dto.js';
+import { RegisterDto } from './dto/register.dto.js';
+import { UpdateProfileDto } from './dto/update-profile.dto.js';
 
 const loginThrottleLimit = getEnv().LOGIN_THROTTLE_LIMIT;
 

@@ -3,11 +3,11 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ModuleName, permission } from '@aptifum/core';
 
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { CreateRevaluationDto } from './dto/create-revaluation.dto';
-import { RevaluationsService } from './revaluations.service';
+import { CreateRevaluationDto } from './dto/create-revaluation.dto.js';
+import { RevaluationsService } from './revaluations.service.js';
 
 @ApiTags('accounting')
 @Controller('accounting/revaluations')

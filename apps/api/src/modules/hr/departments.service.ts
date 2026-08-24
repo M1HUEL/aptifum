@@ -4,8 +4,8 @@ import { FindOptionsWhere, Repository } from 'typeorm';
 
 import { Department } from '@aptifum/database';
 
-import { CreateDepartmentDto } from './dto/create-department.dto';
-import { UpdateDepartmentDto } from './dto/update-department.dto';
+import { CreateDepartmentDto } from './dto/create-department.dto.js';
+import { UpdateDepartmentDto } from './dto/update-department.dto.js';
 
 @Injectable()
 export class DepartmentsService {

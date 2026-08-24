@@ -5,7 +5,7 @@ import { DataSource, MoreThanOrEqual, Repository } from 'typeorm';
 
 import { OutboxEvent } from '@aptifum/database';
 
-import { OutboxService } from '../outbox/outbox.service';
+import { OutboxService } from '../outbox/outbox.service.js';
 
 interface OverdueInvoiceRow {
   id: string;

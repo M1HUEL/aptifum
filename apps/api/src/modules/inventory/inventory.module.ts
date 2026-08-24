@@ -12,16 +12,16 @@ import {
   WarehouseLocation,
 } from '@aptifum/database';
 
-import { CategoriesController } from './categories.controller';
-import { CategoriesService } from './categories.service';
-import { ProductVariantsController } from './product-variants.controller';
-import { ProductVariantsService } from './product-variants.service';
-import { ProductsController } from './products.controller';
-import { ProductsService } from './products.service';
-import { StockController } from './stock.controller';
-import { StockService } from './stock.service';
-import { WarehousesController } from './warehouses.controller';
-import { WarehousesService } from './warehouses.service';
+import { CategoriesController } from './categories.controller.js';
+import { CategoriesService } from './categories.service.js';
+import { ProductVariantsController } from './product-variants.controller.js';
+import { ProductVariantsService } from './product-variants.service.js';
+import { ProductsController } from './products.controller.js';
+import { ProductsService } from './products.service.js';
+import { StockController } from './stock.controller.js';
+import { StockService } from './stock.service.js';
+import { WarehousesController } from './warehouses.controller.js';
+import { WarehousesService } from './warehouses.service.js';
 
 @Module({
   imports: [

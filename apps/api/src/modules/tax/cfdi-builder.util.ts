@@ -8,8 +8,8 @@ import {
   satUnitForKey,
 } from '@aptifum/core';
 
-import { certificateBase64 } from './certificate.util';
-import type { DemoCertificate } from './certificate.util';
+import { certificateBase64 } from './certificate.util.js';
+import type { DemoCertificate } from './certificate.util.js';
 
 export interface CfdiInvoiceInput {
   number: string;

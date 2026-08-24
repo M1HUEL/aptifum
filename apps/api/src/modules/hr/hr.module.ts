@@ -3,18 +3,18 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AttendanceRecord, Department, Employee, JournalEntry, Leave, Payroll, PayrollLine } from '@aptifum/database';
 
-import { RbacModule } from '../rbac/rbac.module';
+import { RbacModule } from '../rbac/rbac.module.js';
 
-import { AttendanceController } from './attendance.controller';
-import { AttendanceService } from './attendance.service';
-import { DepartmentsController } from './departments.controller';
-import { DepartmentsService } from './departments.service';
-import { EmployeesController } from './employees.controller';
-import { EmployeesService } from './employees.service';
-import { LeavesController } from './leaves.controller';
-import { LeavesService } from './leaves.service';
-import { PayrollsController } from './payrolls.controller';
-import { PayrollsService } from './payrolls.service';
+import { AttendanceController } from './attendance.controller.js';
+import { AttendanceService } from './attendance.service.js';
+import { DepartmentsController } from './departments.controller.js';
+import { DepartmentsService } from './departments.service.js';
+import { EmployeesController } from './employees.controller.js';
+import { EmployeesService } from './employees.service.js';
+import { LeavesController } from './leaves.controller.js';
+import { LeavesService } from './leaves.service.js';
+import { PayrollsController } from './payrolls.controller.js';
+import { PayrollsService } from './payrolls.service.js';
 
 @Module({
   imports: [

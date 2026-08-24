@@ -19,7 +19,7 @@ import { Repository } from 'typeorm';
 import { ModuleName, permission } from '@aptifum/core';
 import { Role } from '@aptifum/database';
 
-import { RequirePermissions } from './decorators/require-permissions.decorator';
+import { RequirePermissions } from './decorators/require-permissions.decorator.js';
 
 export class CreateRoleDto {
   @ApiProperty()

@@ -4,8 +4,8 @@ import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 
 import { Category, Product } from '@aptifum/database';
 
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateProductDto } from './dto/create-product.dto.js';
+import { UpdateProductDto } from './dto/update-product.dto.js';
 
 @Injectable()
 export class ProductsService {

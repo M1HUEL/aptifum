@@ -15,12 +15,12 @@ import type { Request } from 'express';
 
 import { ModuleName, permission, PaymentProvider } from '@aptifum/core';
 
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Public } from '../auth/decorators/public.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { Public } from '../auth/decorators/public.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { UpsertPaymentProviderDto } from './dto/upsert-payment-provider.dto';
-import { PaymentsService } from './payments.service';
+import { UpsertPaymentProviderDto } from './dto/upsert-payment-provider.dto.js';
+import { PaymentsService } from './payments.service.js';
 
 @ApiTags('payments')
 @Controller('payments')

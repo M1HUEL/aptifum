@@ -7,15 +7,15 @@ import type { Repository } from 'typeorm';
 import { ModuleName, permission } from '@aptifum/core';
 import { Tenant } from '@aptifum/database';
 
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { sendPdf } from '../../common/export/export.util';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
+import { sendPdf } from '../../common/export/export.util.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { buildInvoicePdf } from './invoice-pdf.util';
-import { InvoicesService } from './invoices.service';
+import { CreateInvoiceDto } from './dto/create-invoice.dto.js';
+import { CreatePaymentDto } from './dto/create-payment.dto.js';
+import { buildInvoicePdf } from './invoice-pdf.util.js';
+import { InvoicesService } from './invoices.service.js';
 
 @ApiTags('sales')
 @Controller('sales/invoices')

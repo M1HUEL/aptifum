@@ -3,12 +3,12 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ModuleName, permission } from '@aptifum/core';
 
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { CreateProductVariantDto } from './dto/create-product-variant.dto';
-import { UpdateProductVariantDto } from './dto/update-product-variant.dto';
-import { ProductVariantsService } from './product-variants.service';
+import { CreateProductVariantDto } from './dto/create-product-variant.dto.js';
+import { UpdateProductVariantDto } from './dto/update-product-variant.dto.js';
+import { ProductVariantsService } from './product-variants.service.js';
 
 @ApiTags('inventory')
 @Controller('inventory/products/:productId/variants')

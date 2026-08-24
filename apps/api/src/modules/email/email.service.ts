@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 
-import { ConfigService } from '../../config/config.module';
+import { ConfigService } from '../../config/config.module.js';
 
 export interface EmailMessage {
   to: string;

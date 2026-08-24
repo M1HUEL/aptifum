@@ -4,8 +4,8 @@ import { DataSource, FindOptionsWhere, In, Repository } from 'typeorm';
 
 import { Product, ProductionBom, ProductionBomLine } from '@aptifum/database';
 
-import { CreateBomDto } from './dto/create-bom.dto';
-import { UpdateBomDto } from './dto/update-bom.dto';
+import { CreateBomDto } from './dto/create-bom.dto.js';
+import { UpdateBomDto } from './dto/update-bom.dto.js';
 
 @Injectable()
 export class BomsService {

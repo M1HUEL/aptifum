@@ -4,8 +4,8 @@ import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 
 import { Employee } from '@aptifum/database';
 
-import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { CreateEmployeeDto } from './dto/create-employee.dto.js';
+import { UpdateEmployeeDto } from './dto/update-employee.dto.js';
 
 @Injectable()
 export class EmployeesService {

@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { OutboxEvent } from '@aptifum/database';
 
-import { RemindersService } from './reminders.service';
+import { RemindersService } from './reminders.service.js';
 
 @Module({
   imports: [TypeOrmModule.forFeature([OutboxEvent])],

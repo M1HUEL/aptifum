@@ -5,15 +5,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { RefreshSession } from '@aptifum/database';
 
-import { AuditModule } from '../audit/audit.module';
-import { PermissionsGuard } from '../rbac/guards/permissions.guard';
-import { RbacModule } from '../rbac/rbac.module';
-import { UsersModule } from '../users/users.module';
+import { AuditModule } from '../audit/audit.module.js';
+import { PermissionsGuard } from '../rbac/guards/permissions.guard.js';
+import { RbacModule } from '../rbac/rbac.module.js';
+import { UsersModule } from '../users/users.module.js';
 
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { SessionCleanupService } from './session-cleanup.service';
+import { AuthController } from './auth.controller.js';
+import { AuthService } from './auth.service.js';
+import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { SessionCleanupService } from './session-cleanup.service.js';
 
 @Module({
   imports: [

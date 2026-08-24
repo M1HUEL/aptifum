@@ -4,9 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuditLog } from '@aptifum/database';
 
-import { AuditController } from './audit.controller';
-import { AuditInterceptor } from './audit.interceptor';
-import { AuditService } from './audit.service';
+import { AuditController } from './audit.controller.js';
+import { AuditInterceptor } from './audit.interceptor.js';
+import { AuditService } from './audit.service.js';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AuditLog])],

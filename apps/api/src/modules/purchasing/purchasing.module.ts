@@ -14,16 +14,16 @@ import {
   Warehouse,
 } from '@aptifum/database';
 
-import { ExchangeRatesModule } from '../exchange-rates/exchange-rates.module';
+import { ExchangeRatesModule } from '../exchange-rates/exchange-rates.module.js';
 
-import { PurchaseOrdersController } from './purchase-orders.controller';
-import { PurchaseOrdersService } from './purchase-orders.service';
-import { SupplierBillsController } from './supplier-bills.controller';
-import { SupplierBillsService } from './supplier-bills.service';
-import { SupplierPaymentsController } from './supplier-payments.controller';
-import { SupplierPaymentsService } from './supplier-payments.service';
-import { SuppliersController } from './suppliers.controller';
-import { SuppliersService } from './suppliers.service';
+import { PurchaseOrdersController } from './purchase-orders.controller.js';
+import { PurchaseOrdersService } from './purchase-orders.service.js';
+import { SupplierBillsController } from './supplier-bills.controller.js';
+import { SupplierBillsService } from './supplier-bills.service.js';
+import { SupplierPaymentsController } from './supplier-payments.controller.js';
+import { SupplierPaymentsService } from './supplier-payments.service.js';
+import { SuppliersController } from './suppliers.controller.js';
+import { SuppliersService } from './suppliers.service.js';
 
 @Module({
   imports: [

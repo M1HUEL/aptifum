@@ -11,18 +11,18 @@ import { In, IsNull, LessThan, Repository } from 'typeorm';
 import { AuditAction, RoleName, UserProfile } from '@aptifum/core';
 import { DEFAULT_TENANT_ID, RefreshSession } from '@aptifum/database';
 
-import { ConfigService } from '../../config/config.module';
-import { AuditService } from '../audit/audit.service';
-import { EmailService } from '../email/email.service';
-import { UsersService } from '../users/users.service';
+import { ConfigService } from '../../config/config.module.js';
+import { AuditService } from '../audit/audit.service.js';
+import { EmailService } from '../email/email.service.js';
+import { UsersService } from '../users/users.service.js';
 
-import { AcceptInviteDto } from './dto/accept-invite.dto';
-import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
-import { LoginDto } from './dto/login.dto';
-import { LogoutDto } from './dto/logout.dto';
-import { RefreshDto } from './dto/refresh.dto';
-import { RegisterDto } from './dto/register.dto';
-import { UpdateProfileDto } from './dto/update-profile.dto';
+import { AcceptInviteDto } from './dto/accept-invite.dto.js';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto.js';
+import { LoginDto } from './dto/login.dto.js';
+import { LogoutDto } from './dto/logout.dto.js';
+import { RefreshDto } from './dto/refresh.dto.js';
+import { RegisterDto } from './dto/register.dto.js';
+import { UpdateProfileDto } from './dto/update-profile.dto.js';
 
 export interface TokenPair {
   accessToken: string;

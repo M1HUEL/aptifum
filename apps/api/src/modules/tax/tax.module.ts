@@ -3,9 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CfdiCertificate, CfdiDocument, Customer, Invoice, InvoiceItem, Tenant } from '@aptifum/database';
 
-import { CfdiService } from './cfdi.service';
-import { TaxController } from './tax.controller';
-import { UsSalesTaxService } from './us-sales-tax.service';
+import { CfdiService } from './cfdi.service.js';
+import { TaxController } from './tax.controller.js';
+import { UsSalesTaxService } from './us-sales-tax.service.js';
 
 @Module({
   imports: [TypeOrmModule.forFeature([CfdiDocument, CfdiCertificate, Invoice, InvoiceItem, Tenant, Customer])],

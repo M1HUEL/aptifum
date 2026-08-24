@@ -4,7 +4,7 @@ import { FindOptionsWhere, Repository } from 'typeorm';
 
 import { DocumentSeries } from '@aptifum/database';
 
-import { CreateSeriesDto } from './dto/create-series.dto';
+import { CreateSeriesDto } from './dto/create-series.dto.js';
 
 @Injectable()
 export class DocumentSeriesService {

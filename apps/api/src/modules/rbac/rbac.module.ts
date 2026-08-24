@@ -3,8 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Role, User } from '@aptifum/database';
 
-import { RolesController } from './rbac.controller';
-import { PermissionsService } from './rbac.service';
+import { RolesController } from './rbac.controller.js';
+import { PermissionsService } from './rbac.service.js';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Role, User])],

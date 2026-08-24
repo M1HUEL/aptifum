@@ -5,7 +5,7 @@ import { LessThan, Repository } from 'typeorm';
 
 import { RefreshSession } from '@aptifum/database';
 
-import { ConfigService } from '../../config/config.module';
+import { ConfigService } from '../../config/config.module.js';
 
 @Injectable()
 export class SessionCleanupService {

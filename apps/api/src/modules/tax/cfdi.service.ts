@@ -5,9 +5,9 @@ import { FindOptionsWhere, Repository } from 'typeorm';
 import { CfdiStatus } from '@aptifum/core';
 import { CfdiCertificate, CfdiDocument, Customer, Invoice, InvoiceItem, OutboxEvent, Tenant } from '@aptifum/database';
 
-import { DemoCertificate, generateDemoCertificate } from './certificate.util';
-import { buildCfdi, CfdiInvoiceInput } from './cfdi-builder.util';
-import type { UpdateCfdiSettingsDto } from './dto/update-cfdi-settings.dto';
+import { DemoCertificate, generateDemoCertificate } from './certificate.util.js';
+import { buildCfdi, CfdiInvoiceInput } from './cfdi-builder.util.js';
+import type { UpdateCfdiSettingsDto } from './dto/update-cfdi-settings.dto.js';
 
 export const DEMO_PAC_RFC = 'XND000000000';
 const DEMO_PAC_NAME = 'Aptifum Demo PAC';

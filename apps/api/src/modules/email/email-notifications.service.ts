@@ -5,7 +5,7 @@ import { DataSource, Repository } from 'typeorm';
 import { ModuleName, permission } from '@aptifum/core';
 import { Customer, Invoice, OutboxEvent, PurchaseOrder, Supplier, SupplierBill } from '@aptifum/database';
 
-import { EmailService } from './email.service';
+import { EmailService } from './email.service.js';
 
 @Injectable()
 export class EmailNotificationsService {

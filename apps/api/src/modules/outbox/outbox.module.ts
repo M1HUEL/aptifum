@@ -3,10 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { OutboxEvent } from '@aptifum/database';
 
-import { TaxModule } from '../tax/tax.module';
+import { TaxModule } from '../tax/tax.module.js';
 
-import { OutboxDispatcher } from './outbox.dispatcher';
-import { OutboxService } from './outbox.service';
+import { OutboxDispatcher } from './outbox.dispatcher.js';
+import { OutboxService } from './outbox.service.js';
 
 @Global()
 @Module({

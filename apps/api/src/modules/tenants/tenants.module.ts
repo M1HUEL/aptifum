@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Tenant } from '@aptifum/database';
 
-import { TenantsController } from './tenants.controller';
+import { TenantsController } from './tenants.controller.js';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Tenant])],

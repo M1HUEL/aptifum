@@ -5,7 +5,7 @@ import { Between, FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { AuditAction } from '@aptifum/core';
 import { AuditLog } from '@aptifum/database';
 
-import { AuditQueryDto } from './dto/audit-query.dto';
+import { AuditQueryDto } from './dto/audit-query.dto.js';
 
 export interface AuditEntry {
   tenantId: string | null;

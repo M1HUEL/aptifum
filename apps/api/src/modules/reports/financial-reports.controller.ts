@@ -4,20 +4,20 @@ import type { Response } from 'express';
 
 import { ModuleName, permission } from '@aptifum/core';
 
-import type { CsvSection } from '../../common/export/csv.util';
-import { sendCsv, sendPdf, sendSectionsCsv, sendSectionsXlsx, sendXlsx } from '../../common/export/export.util';
+import type { CsvSection } from '../../common/export/csv.util.js';
+import { sendCsv, sendPdf, sendSectionsCsv, sendSectionsXlsx, sendXlsx } from '../../common/export/export.util.js';
 import {
   buildFinancialPdf,
   buildTablePdf,
   formatMoney,
   PdfFinancialSection,
   rangeText,
-} from '../../common/pdf/pdf.util';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+} from '../../common/pdf/pdf.util.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { BalanceSheetQueryDto, DateRangeQueryDto, IncomeStatementQueryDto } from './dto/reports-query.dto';
-import { ReportsService } from './reports.service';
+import { BalanceSheetQueryDto, DateRangeQueryDto, IncomeStatementQueryDto } from './dto/reports-query.dto.js';
+import { ReportsService } from './reports.service.js';
 
 @ApiTags('reports')
 @Controller('reports/financial')

@@ -5,8 +5,8 @@ import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { OpportunityStage } from '@aptifum/core';
 import { CrmLead, CrmOpportunity, Customer } from '@aptifum/database';
 
-import { CreateOpportunityDto } from './dto/create-opportunity.dto';
-import { UpdateOpportunityDto } from './dto/update-opportunity.dto';
+import { CreateOpportunityDto } from './dto/create-opportunity.dto.js';
+import { UpdateOpportunityDto } from './dto/update-opportunity.dto.js';
 
 @Injectable()
 export class OpportunitiesService {

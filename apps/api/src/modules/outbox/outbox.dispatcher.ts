@@ -3,10 +3,10 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { OutboxEvent } from '@aptifum/database';
 
-import { EmailNotificationsService } from '../email/email-notifications.service';
-import { CfdiService } from '../tax/cfdi.service';
+import { EmailNotificationsService } from '../email/email-notifications.service.js';
+import { CfdiService } from '../tax/cfdi.service.js';
 
-import { OutboxService } from './outbox.service';
+import { OutboxService } from './outbox.service.js';
 
 @Injectable()
 export class OutboxDispatcher {

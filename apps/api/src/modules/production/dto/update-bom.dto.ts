@@ -11,7 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import { BomLineInputDto } from './create-bom.dto';
+import { BomLineInputDto } from './create-bom.dto.js';
 
 export class UpdateBomDto {
   @IsOptional()

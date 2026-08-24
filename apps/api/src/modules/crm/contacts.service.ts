@@ -4,8 +4,8 @@ import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 
 import { CrmContact, Customer } from '@aptifum/database';
 
-import { CreateContactDto } from './dto/create-contact.dto';
-import { UpdateContactDto } from './dto/update-contact.dto';
+import { CreateContactDto } from './dto/create-contact.dto.js';
+import { UpdateContactDto } from './dto/update-contact.dto.js';
 
 @Injectable()
 export class ContactsService {

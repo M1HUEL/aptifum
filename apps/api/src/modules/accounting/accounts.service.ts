@@ -5,8 +5,8 @@ import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { AccountType } from '@aptifum/core';
 import { ChartAccount } from '@aptifum/database';
 
-import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
+import { CreateAccountDto } from './dto/create-account.dto.js';
+import { UpdateAccountDto } from './dto/update-account.dto.js';
 
 @Injectable()
 export class AccountsService {

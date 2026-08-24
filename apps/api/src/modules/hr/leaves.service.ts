@@ -5,8 +5,8 @@ import { FindOptionsWhere, Repository } from 'typeorm';
 import { LeaveStatus } from '@aptifum/core';
 import { Employee, Leave } from '@aptifum/database';
 
-import { CreateLeaveDto } from './dto/create-leave.dto';
-import { UpdateLeaveDto } from './dto/update-leave.dto';
+import { CreateLeaveDto } from './dto/create-leave.dto.js';
+import { UpdateLeaveDto } from './dto/update-leave.dto.js';
 
 @Injectable()
 export class LeavesService {

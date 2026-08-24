@@ -3,8 +3,8 @@ import { Reflector } from '@nestjs/core';
 
 import { ALL_PERMISSIONS } from '@aptifum/core';
 
-import { PERMISSIONS_KEY } from '../decorators/require-permissions.decorator';
-import { PermissionsService } from '../rbac.service';
+import { PERMISSIONS_KEY } from '../decorators/require-permissions.decorator.js';
+import { PermissionsService } from '../rbac.service.js';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {

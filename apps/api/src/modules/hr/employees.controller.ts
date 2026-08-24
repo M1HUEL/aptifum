@@ -3,14 +3,14 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ALL_PERMISSIONS, ModuleName, permission } from '@aptifum/core';
 
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
-import { PermissionsService } from '../rbac/rbac.service';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
+import { PermissionsService } from '../rbac/rbac.service.js';
 
-import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateEmployeeDto } from './dto/update-employee.dto';
-import { EmployeesService } from './employees.service';
+import { CreateEmployeeDto } from './dto/create-employee.dto.js';
+import { UpdateEmployeeDto } from './dto/update-employee.dto.js';
+import { EmployeesService } from './employees.service.js';
 
 @ApiTags('hr')
 @Controller('hr/employees')

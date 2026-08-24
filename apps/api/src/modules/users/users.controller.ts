@@ -4,12 +4,12 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ModuleName, permission } from '@aptifum/core';
 import { DEFAULT_TENANT_ID } from '@aptifum/database';
 
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto.js';
+import { UpdateUserDto } from './dto/update-user.dto.js';
+import { UsersService } from './users.service.js';
 
 @ApiTags('users')
 @Controller('users')

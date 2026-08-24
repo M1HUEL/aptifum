@@ -3,14 +3,14 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { ModuleName, permission } from '@aptifum/core';
 
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { RequirePermissions } from '../rbac/decorators/require-permissions.decorator.js';
 
-import { AttendanceService } from './attendance.service';
-import { ClockAttendanceDto } from './dto/clock-attendance.dto';
-import { CreateAttendanceDto } from './dto/create-attendance.dto';
-import { UpdateAttendanceDto } from './dto/update-attendance.dto';
+import { AttendanceService } from './attendance.service.js';
+import { ClockAttendanceDto } from './dto/clock-attendance.dto.js';
+import { CreateAttendanceDto } from './dto/create-attendance.dto.js';
+import { UpdateAttendanceDto } from './dto/update-attendance.dto.js';
 
 @ApiTags('hr')
 @Controller('hr/attendance')

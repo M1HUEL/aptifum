@@ -5,11 +5,11 @@ import { Repository } from 'typeorm';
 import { InvoiceStatus, InvoiceType, PaymentMethod, PaymentProvider } from '@aptifum/core';
 import { Invoice, PaymentProviderConfig } from '@aptifum/database';
 
-import { InvoicesService } from '../sales/invoices.service';
+import { InvoicesService } from '../sales/invoices.service.js';
 
-import { UpsertPaymentProviderDto } from './dto/upsert-payment-provider.dto';
-import { StripeClient } from './stripe/stripe-client.service';
-import { verifyStripeSignature } from './stripe/stripe-signature.util';
+import { UpsertPaymentProviderDto } from './dto/upsert-payment-provider.dto.js';
+import { StripeClient } from './stripe/stripe-client.service.js';
+import { verifyStripeSignature } from './stripe/stripe-signature.util.js';
 
 export interface PaymentProviderView {
   id: string | null;

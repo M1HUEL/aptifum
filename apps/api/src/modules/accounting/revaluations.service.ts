@@ -6,9 +6,9 @@ import { round2, InvoiceStatus, JournalEntryStatus, SupplierBillStatus } from '@
 import { ACCOUNT_CODES, Invoice, JournalEntry, SupplierBill, Tenant, postJournalEntry } from '@aptifum/database';
 import type { JournalLineInput } from '@aptifum/database';
 
-import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service';
+import { ExchangeRatesService } from '../exchange-rates/exchange-rates.service.js';
 
-import { CreateRevaluationDto } from './dto/create-revaluation.dto';
+import { CreateRevaluationDto } from './dto/create-revaluation.dto.js';
 
 const REFERENCE_TYPE = 'fx_revaluation';
 
