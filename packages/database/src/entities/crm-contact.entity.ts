@@ -1,8 +1,8 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
-import { Customer } from './customer.entity';
+import { Customer } from './customer.entity.js';
 
 @Entity('crm_contacts')
 export class CrmContact extends TenantBaseEntity {
@@ -37,5 +37,5 @@ export class CrmContact extends TenantBaseEntity {
 
   @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })
-  customer: Customer | null;
+  customer: Relation<Customer> | null;
 }

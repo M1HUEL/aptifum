@@ -1,11 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { ProductVariant } from './product-variant.entity';
-import { Product } from './product.entity';
-import { SalesOrder } from './sales-order.entity';
+import { ProductVariant } from './product-variant.entity.js';
+import { Product } from './product.entity.js';
+import { SalesOrder } from './sales-order.entity.js';
 
 @Entity('sales_order_items')
 export class SalesOrderItem extends TenantBaseEntity {
@@ -83,13 +83,13 @@ export class SalesOrderItem extends TenantBaseEntity {
 
   @ManyToOne(() => SalesOrder, (order) => order.items)
   @JoinColumn({ name: 'order_id' })
-  order: SalesOrder;
+  order: Relation<SalesOrder>;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
-  product: Product;
+  product: Relation<Product>;
 
   @ManyToOne(() => ProductVariant)
   @JoinColumn({ name: 'variant_id' })
-  variant: ProductVariant;
+  variant: Relation<ProductVariant>;
 }

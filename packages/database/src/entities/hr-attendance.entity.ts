@@ -1,10 +1,10 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 
 import { AttendanceStatus } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
-import { Employee } from './hr-employee.entity';
+import { Employee } from './hr-employee.entity.js';
 
 @Entity('hr_attendance')
 @Unique('UQ_hr_attendance_tenant_employee_work_date', ['tenantId', 'employeeId', 'workDate'])
@@ -34,5 +34,5 @@ export class AttendanceRecord extends TenantBaseEntity {
 
   @ManyToOne(() => Employee)
   @JoinColumn({ name: 'employee_id', foreignKeyConstraintName: 'FK_hr_attendance_employee' })
-  employee: Employee | null;
+  employee: Relation<Employee> | null;
 }

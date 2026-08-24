@@ -1,15 +1,17 @@
+import { pathToFileURL } from 'node:url';
+
 import * as bcrypt from 'bcryptjs';
 
 import { DocumentSeriesKind, RoleName } from '@aptifum/core';
 
-import { createDataSource, DataSourceOverrides } from '../data-source';
-import { ChartAccount } from '../entities/chart-account.entity';
-import { Customer } from '../entities/customer.entity';
-import { DocumentSeries } from '../entities/document-series.entity';
-import { Role } from '../entities/role.entity';
-import { Tax } from '../entities/tax.entity';
-import { Tenant } from '../entities/tenant.entity';
-import { User } from '../entities/user.entity';
+import { createDataSource, DataSourceOverrides } from '../data-source.js';
+import { ChartAccount } from '../entities/chart-account.entity.js';
+import { Customer } from '../entities/customer.entity.js';
+import { DocumentSeries } from '../entities/document-series.entity.js';
+import { Role } from '../entities/role.entity.js';
+import { Tax } from '../entities/tax.entity.js';
+import { Tenant } from '../entities/tenant.entity.js';
+import { User } from '../entities/user.entity.js';
 
 import {
   ADMIN_EMAIL,
@@ -21,7 +23,7 @@ import {
   DEFAULT_TENANT_ID,
   DEFAULT_US_SALES_TAX_CONFIG,
   WALK_IN_CUSTOMER,
-} from './seed-data';
+} from './seed-data.js';
 
 export async function seed(overrides: DataSourceOverrides = {}): Promise<void> {
   const ds = createDataSource(overrides);
@@ -147,7 +149,7 @@ export async function seed(overrides: DataSourceOverrides = {}): Promise<void> {
   }
 }
 
-if (require.main === module) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   seed().catch((error) => {
     console.error(error);
     process.exit(1);

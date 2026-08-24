@@ -1,4 +1,4 @@
-import { PinoLogger } from './logger';
+import { PinoLogger } from './logger.js';
 
 export class LoggerAdapter {
   constructor(private readonly logger: PinoLogger) {}

@@ -1,11 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Invoice } from './invoice.entity';
-import { ProductVariant } from './product-variant.entity';
-import { Product } from './product.entity';
+import { Invoice } from './invoice.entity.js';
+import { ProductVariant } from './product-variant.entity.js';
+import { Product } from './product.entity.js';
 
 @Entity('invoice_items')
 export class InvoiceItem extends TenantBaseEntity {
@@ -83,13 +83,13 @@ export class InvoiceItem extends TenantBaseEntity {
 
   @ManyToOne(() => Invoice, (invoice) => invoice.items)
   @JoinColumn({ name: 'invoice_id' })
-  invoice: Invoice;
+  invoice: Relation<Invoice>;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
-  product: Product;
+  product: Relation<Product>;
 
   @ManyToOne(() => ProductVariant)
   @JoinColumn({ name: 'variant_id' })
-  variant: ProductVariant;
+  variant: Relation<ProductVariant>;
 }

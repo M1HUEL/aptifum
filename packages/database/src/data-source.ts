@@ -1,11 +1,12 @@
 import 'reflect-metadata';
-import path from 'node:path';
+
+import { fileURLToPath } from 'node:url';
 
 import { DataSource, DataSourceOptions } from 'typeorm';
 
 import { loadEnv } from '@aptifum/config';
 
-import { entities } from './entities';
+import { entities } from './entities/index.js';
 
 export interface DataSourceOverrides {
   database?: string;
@@ -21,7 +22,7 @@ export function createDataSource(overrides: DataSourceOverrides = {}): DataSourc
     password: env.DB_PASSWORD,
     database: overrides.database ?? env.DB_NAME,
     entities,
-    migrations: [path.join(__dirname, 'migrations', '*{.ts,.js}')],
+    migrations: [fileURLToPath(new URL('./migrations/*{.ts,.js}', import.meta.url))],
     synchronize: false,
     logging: env.NODE_ENV === 'development',
   };

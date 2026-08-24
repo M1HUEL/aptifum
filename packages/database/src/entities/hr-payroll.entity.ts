@@ -1,12 +1,12 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
 
 import { PayrollStatus } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { PayrollLine } from './hr-payroll-line.entity';
-import { JournalEntry } from './journal-entry.entity';
+import { PayrollLine } from './hr-payroll-line.entity.js';
+import { JournalEntry } from './journal-entry.entity.js';
 
 @Entity('hr_payrolls')
 @Unique('UQ_hr_payrolls_tenant_number', ['tenantId', 'number'])
@@ -69,9 +69,9 @@ export class Payroll extends TenantBaseEntity {
   version: number;
 
   @OneToMany(() => PayrollLine, (line) => line.payroll)
-  lines: PayrollLine[];
+  lines: Relation<PayrollLine>[];
 
   @ManyToOne(() => JournalEntry)
   @JoinColumn({ name: 'posted_entry_id', foreignKeyConstraintName: 'FK_hr_payrolls_posted_entry' })
-  postedEntry: JournalEntry | null;
+  postedEntry: Relation<JournalEntry> | null;
 }

@@ -1,11 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
-import { GoodsReceiptItem } from './goods-receipt-item.entity';
-import { PurchaseOrder } from './purchase-order.entity';
-import { Supplier } from './supplier.entity';
-import { Warehouse } from './warehouse.entity';
+import { GoodsReceiptItem } from './goods-receipt-item.entity.js';
+import { PurchaseOrder } from './purchase-order.entity.js';
+import { Supplier } from './supplier.entity.js';
+import { Warehouse } from './warehouse.entity.js';
 
 @Entity('goods_receipts')
 @Unique('UQ_goods_receipts_tenant_number', ['tenantId', 'number'])
@@ -31,16 +31,16 @@ export class GoodsReceipt extends TenantBaseEntity {
 
   @ManyToOne(() => PurchaseOrder)
   @JoinColumn({ name: 'order_id', foreignKeyConstraintName: 'FK_gr_order' })
-  order: PurchaseOrder;
+  order: Relation<PurchaseOrder>;
 
   @ManyToOne(() => Supplier)
   @JoinColumn({ name: 'supplier_id', foreignKeyConstraintName: 'FK_gr_supplier' })
-  supplier: Supplier;
+  supplier: Relation<Supplier>;
 
   @ManyToOne(() => Warehouse)
   @JoinColumn({ name: 'warehouse_id', foreignKeyConstraintName: 'FK_gr_warehouse' })
-  warehouse: Warehouse;
+  warehouse: Relation<Warehouse>;
 
   @OneToMany(() => GoodsReceiptItem, (item) => item.receipt, { cascade: true })
-  items: GoodsReceiptItem[];
+  items: Relation<GoodsReceiptItem>[];
 }

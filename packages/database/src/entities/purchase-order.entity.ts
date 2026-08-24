@@ -1,13 +1,13 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
 
 import { PurchaseOrderStatus } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { PurchaseOrderItem } from './purchase-order-item.entity';
-import { Supplier } from './supplier.entity';
-import { Warehouse } from './warehouse.entity';
+import { PurchaseOrderItem } from './purchase-order-item.entity.js';
+import { Supplier } from './supplier.entity.js';
+import { Warehouse } from './warehouse.entity.js';
 
 @Entity('purchase_orders')
 @Unique('UQ_purchase_orders_tenant_number', ['tenantId', 'number'])
@@ -79,12 +79,12 @@ export class PurchaseOrder extends TenantBaseEntity {
 
   @ManyToOne(() => Supplier)
   @JoinColumn({ name: 'supplier_id', foreignKeyConstraintName: 'FK_po_supplier' })
-  supplier: Supplier;
+  supplier: Relation<Supplier>;
 
   @ManyToOne(() => Warehouse)
   @JoinColumn({ name: 'warehouse_id', foreignKeyConstraintName: 'FK_po_warehouse' })
-  warehouse: Warehouse;
+  warehouse: Relation<Warehouse>;
 
   @OneToMany(() => PurchaseOrderItem, (item) => item.order, { cascade: true })
-  items: PurchaseOrderItem[];
+  items: Relation<PurchaseOrderItem>[];
 }

@@ -1,12 +1,12 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
 
 import { SupplierBillStatus } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { SupplierBillItem } from './supplier-bill-item.entity';
-import { Supplier } from './supplier.entity';
+import { SupplierBillItem } from './supplier-bill-item.entity.js';
+import { Supplier } from './supplier.entity.js';
 
 @Entity('supplier_bills')
 @Unique('UQ_supplier_bills_tenant_number', ['tenantId', 'number'])
@@ -104,8 +104,8 @@ export class SupplierBill extends TenantBaseEntity {
 
   @ManyToOne(() => Supplier)
   @JoinColumn({ name: 'supplier_id', foreignKeyConstraintName: 'FK_sb_supplier' })
-  supplier: Supplier;
+  supplier: Relation<Supplier>;
 
   @OneToMany(() => SupplierBillItem, (item) => item.bill, { cascade: true })
-  items: SupplierBillItem[];
+  items: Relation<SupplierBillItem>[];
 }

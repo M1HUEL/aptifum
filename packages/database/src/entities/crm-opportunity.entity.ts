@@ -1,12 +1,12 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import { OpportunityStage } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { CrmLead } from './crm-lead.entity';
-import { Customer } from './customer.entity';
+import { CrmLead } from './crm-lead.entity.js';
+import { Customer } from './customer.entity.js';
 
 @Entity('crm_opportunities')
 export class CrmOpportunity extends TenantBaseEntity {
@@ -64,9 +64,9 @@ export class CrmOpportunity extends TenantBaseEntity {
 
   @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })
-  customer: Customer | null;
+  customer: Relation<Customer> | null;
 
   @ManyToOne(() => CrmLead)
   @JoinColumn({ name: 'lead_id' })
-  lead: CrmLead | null;
+  lead: Relation<CrmLead> | null;
 }

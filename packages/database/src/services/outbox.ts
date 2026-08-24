@@ -2,7 +2,7 @@ import { EntityManager } from 'typeorm';
 
 import { OutboxEventInput, OutboxEventStatus } from '@aptifum/core';
 
-import { OutboxEvent } from '../entities/outbox-event.entity';
+import { OutboxEvent } from '../entities/outbox-event.entity.js';
 
 export async function enqueueOutboxEvent(
   manager: EntityManager,

@@ -1,13 +1,13 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
 
 import { SalesOrderKind, SalesOrderStatus } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Customer } from './customer.entity';
-import { SalesOrderItem } from './sales-order-item.entity';
-import { Warehouse } from './warehouse.entity';
+import { Customer } from './customer.entity.js';
+import { SalesOrderItem } from './sales-order-item.entity.js';
+import { Warehouse } from './warehouse.entity.js';
 
 @Entity('sales_orders')
 @Unique(['tenantId', 'number'])
@@ -82,12 +82,12 @@ export class SalesOrder extends TenantBaseEntity {
 
   @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })
-  customer: Customer;
+  customer: Relation<Customer>;
 
   @ManyToOne(() => Warehouse)
   @JoinColumn({ name: 'warehouse_id' })
-  warehouse: Warehouse;
+  warehouse: Relation<Warehouse>;
 
   @OneToMany(() => SalesOrderItem, (item) => item.order, { cascade: true })
-  items: SalesOrderItem[];
+  items: Relation<SalesOrderItem>[];
 }

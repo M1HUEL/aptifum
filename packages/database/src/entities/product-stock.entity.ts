@@ -1,11 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { ProductVariant } from './product-variant.entity';
-import { Product } from './product.entity';
-import { Warehouse } from './warehouse.entity';
+import { ProductVariant } from './product-variant.entity.js';
+import { Product } from './product.entity.js';
+import { Warehouse } from './warehouse.entity.js';
 
 @Entity('product_stock')
 @Index('UQ_product_stock_tenant_product_warehouse', ['tenantId', 'productId', 'warehouseId'], {
@@ -63,13 +63,13 @@ export class ProductStock extends TenantBaseEntity {
 
   @ManyToOne(() => Product, (product) => product.stocks)
   @JoinColumn({ name: 'product_id' })
-  product: Product;
+  product: Relation<Product>;
 
   @ManyToOne(() => ProductVariant, (variant) => variant.stocks)
   @JoinColumn({ name: 'variant_id' })
-  variant: ProductVariant;
+  variant: Relation<ProductVariant>;
 
   @ManyToOne(() => Warehouse, (warehouse) => warehouse.stocks)
   @JoinColumn({ name: 'warehouse_id' })
-  warehouse: Warehouse;
+  warehouse: Relation<Warehouse>;
 }

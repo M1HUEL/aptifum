@@ -2,8 +2,8 @@ import { Column, Entity } from 'typeorm';
 
 import { TaxKind } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
 @Entity('taxes')
 export class Tax extends TenantBaseEntity {

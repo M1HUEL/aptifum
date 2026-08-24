@@ -1,3 +1,5 @@
+import { pathToFileURL } from 'node:url';
+
 import type { EntityManager } from 'typeorm';
 
 import {
@@ -13,29 +15,29 @@ import {
   SalesOrderStatus,
 } from '@aptifum/core';
 
-import { createDataSource, DataSourceOverrides } from '../data-source';
-import { Category } from '../entities/category.entity';
-import { Customer } from '../entities/customer.entity';
-import { GoodsReceiptItem } from '../entities/goods-receipt-item.entity';
-import { GoodsReceipt } from '../entities/goods-receipt.entity';
-import { InvoiceItem } from '../entities/invoice-item.entity';
-import { Invoice } from '../entities/invoice.entity';
-import { Payment } from '../entities/payment.entity';
-import { ProductStock } from '../entities/product-stock.entity';
-import { Product } from '../entities/product.entity';
-import { PurchaseOrderItem } from '../entities/purchase-order-item.entity';
-import { PurchaseOrder } from '../entities/purchase-order.entity';
-import { SalesOrderItem } from '../entities/sales-order-item.entity';
-import { SalesOrder } from '../entities/sales-order.entity';
-import { Supplier } from '../entities/supplier.entity';
-import { Tenant } from '../entities/tenant.entity';
-import { Warehouse } from '../entities/warehouse.entity';
-import type { JournalLineInput } from '../services/accounting';
-import { ACCOUNT_CODES, postJournalEntry } from '../services/accounting';
-import { nextDocumentNumber } from '../services/document-numbering';
-import { applyStockMovement } from '../services/stock';
+import { createDataSource, DataSourceOverrides } from '../data-source.js';
+import { Category } from '../entities/category.entity.js';
+import { Customer } from '../entities/customer.entity.js';
+import { GoodsReceiptItem } from '../entities/goods-receipt-item.entity.js';
+import { GoodsReceipt } from '../entities/goods-receipt.entity.js';
+import { InvoiceItem } from '../entities/invoice-item.entity.js';
+import { Invoice } from '../entities/invoice.entity.js';
+import { Payment } from '../entities/payment.entity.js';
+import { ProductStock } from '../entities/product-stock.entity.js';
+import { Product } from '../entities/product.entity.js';
+import { PurchaseOrderItem } from '../entities/purchase-order-item.entity.js';
+import { PurchaseOrder } from '../entities/purchase-order.entity.js';
+import { SalesOrderItem } from '../entities/sales-order-item.entity.js';
+import { SalesOrder } from '../entities/sales-order.entity.js';
+import { Supplier } from '../entities/supplier.entity.js';
+import { Tenant } from '../entities/tenant.entity.js';
+import { Warehouse } from '../entities/warehouse.entity.js';
+import type { JournalLineInput } from '../services/accounting.js';
+import { ACCOUNT_CODES, postJournalEntry } from '../services/accounting.js';
+import { nextDocumentNumber } from '../services/document-numbering.js';
+import { applyStockMovement } from '../services/stock.js';
 
-import { DEFAULT_TENANT_ID } from './seed-data';
+import { DEFAULT_TENANT_ID } from './seed-data.js';
 
 const dateOffset = (days: number): string => {
   const d = new Date();
@@ -829,7 +831,7 @@ export async function seedDemoTransactions(overrides: DataSourceOverrides = {}):
   }
 }
 
-if (require.main === module) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   seedDemoTransactions().catch((error) => {
     console.error(error);
     process.exit(1);

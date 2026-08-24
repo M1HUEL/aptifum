@@ -1,10 +1,10 @@
-import { Column, Entity, OneToMany, Unique } from 'typeorm';
+import { Relation, Column, Entity, OneToMany, Unique } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
-import { ProductLot } from './product-lot.entity';
-import { ProductStock } from './product-stock.entity';
-import { WarehouseLocation } from './warehouse-location.entity';
+import { ProductLot } from './product-lot.entity.js';
+import { ProductStock } from './product-stock.entity.js';
+import { WarehouseLocation } from './warehouse-location.entity.js';
 
 @Entity('warehouses')
 @Unique(['tenantId', 'code'])
@@ -22,11 +22,11 @@ export class Warehouse extends TenantBaseEntity {
   active: boolean;
 
   @OneToMany(() => WarehouseLocation, (location) => location.warehouse)
-  locations: WarehouseLocation[];
+  locations: Relation<WarehouseLocation>[];
 
   @OneToMany(() => ProductStock, (stock) => stock.warehouse)
-  stocks: ProductStock[];
+  stocks: Relation<ProductStock>[];
 
   @OneToMany(() => ProductLot, (lot) => lot.warehouse)
-  lots: ProductLot[];
+  lots: Relation<ProductLot>[];
 }

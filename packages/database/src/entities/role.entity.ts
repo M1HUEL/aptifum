@@ -1,8 +1,8 @@
-import { Column, Entity, ManyToMany } from 'typeorm';
+import { Relation, Column, Entity, ManyToMany } from 'typeorm';
 
-import { BaseEntity } from '../base/base.entity';
+import { BaseEntity } from '../base/base.entity.js';
 
-import { User } from './user.entity';
+import { User } from './user.entity.js';
 
 @Entity('roles')
 export class Role extends BaseEntity {
@@ -19,5 +19,5 @@ export class Role extends BaseEntity {
   isSystem: boolean;
 
   @ManyToMany(() => User, (user) => user.roles)
-  users: User[];
+  users: Relation<User>[];
 }

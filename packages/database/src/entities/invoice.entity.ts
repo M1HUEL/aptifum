@@ -1,13 +1,13 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
 
 import { InvoiceStatus, InvoiceType } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Customer } from './customer.entity';
-import { InvoiceItem } from './invoice-item.entity';
-import { Payment } from './payment.entity';
+import { Customer } from './customer.entity.js';
+import { InvoiceItem } from './invoice-item.entity.js';
+import { Payment } from './payment.entity.js';
 
 @Entity('invoices')
 @Unique(['tenantId', 'number'])
@@ -118,11 +118,11 @@ export class Invoice extends TenantBaseEntity {
 
   @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })
-  customer: Customer;
+  customer: Relation<Customer>;
 
   @OneToMany(() => InvoiceItem, (item) => item.invoice, { cascade: true })
-  items: InvoiceItem[];
+  items: Relation<InvoiceItem>[];
 
   @OneToMany(() => Payment, (payment) => payment.invoice)
-  payments: Payment[];
+  payments: Relation<Payment>[];
 }

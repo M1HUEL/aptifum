@@ -1,10 +1,10 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Product } from './product.entity';
-import { PurchaseOrder } from './purchase-order.entity';
+import { Product } from './product.entity.js';
+import { PurchaseOrder } from './purchase-order.entity.js';
 
 @Entity('purchase_order_items')
 export class PurchaseOrderItem extends TenantBaseEntity {
@@ -88,9 +88,9 @@ export class PurchaseOrderItem extends TenantBaseEntity {
 
   @ManyToOne(() => PurchaseOrder, (order) => order.items)
   @JoinColumn({ name: 'order_id', foreignKeyConstraintName: 'FK_poi_order' })
-  order: PurchaseOrder;
+  order: Relation<PurchaseOrder>;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id', foreignKeyConstraintName: 'FK_poi_product' })
-  product: Product;
+  product: Relation<Product>;
 }

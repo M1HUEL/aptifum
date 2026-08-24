@@ -1,12 +1,12 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import { PaymentMethod } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { SupplierBill } from './supplier-bill.entity';
-import { Supplier } from './supplier.entity';
+import { SupplierBill } from './supplier-bill.entity.js';
+import { Supplier } from './supplier.entity.js';
 
 @Entity('supplier_payments')
 export class SupplierPayment extends TenantBaseEntity {
@@ -49,9 +49,9 @@ export class SupplierPayment extends TenantBaseEntity {
 
   @ManyToOne(() => Supplier)
   @JoinColumn({ name: 'supplier_id' })
-  supplier: Supplier;
+  supplier: Relation<Supplier>;
 
   @ManyToOne(() => SupplierBill)
   @JoinColumn({ name: 'bill_id', foreignKeyConstraintName: 'FK_sp_bill' })
-  bill: SupplierBill | null;
+  bill: Relation<SupplierBill> | null;
 }

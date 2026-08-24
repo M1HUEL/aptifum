@@ -1,10 +1,10 @@
-import { Column, Entity, ManyToMany } from 'typeorm';
+import { Relation, Column, Entity, ManyToMany } from 'typeorm';
 
 import { FiscalAddress } from '@aptifum/core';
 
-import { BaseEntity } from '../base/base.entity';
+import { BaseEntity } from '../base/base.entity.js';
 
-import { User } from './user.entity';
+import { User } from './user.entity.js';
 
 @Entity('tenants')
 export class Tenant extends BaseEntity {
@@ -30,5 +30,5 @@ export class Tenant extends BaseEntity {
   config: Record<string, unknown>;
 
   @ManyToMany(() => User, (user) => user.tenants)
-  users: User[];
+  users: Relation<User>[];
 }

@@ -1,11 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import { PaymentMethod } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Invoice } from './invoice.entity';
+import { Invoice } from './invoice.entity.js';
 
 @Entity('payments')
 export class Payment extends TenantBaseEntity {
@@ -45,5 +45,5 @@ export class Payment extends TenantBaseEntity {
 
   @ManyToOne(() => Invoice, (invoice) => invoice.payments)
   @JoinColumn({ name: 'invoice_id' })
-  invoice: Invoice;
+  invoice: Relation<Invoice>;
 }

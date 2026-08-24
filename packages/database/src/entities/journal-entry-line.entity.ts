@@ -1,10 +1,10 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { ChartAccount } from './chart-account.entity';
-import { JournalEntry } from './journal-entry.entity';
+import { ChartAccount } from './chart-account.entity.js';
+import { JournalEntry } from './journal-entry.entity.js';
 
 @Entity('journal_entry_lines')
 export class JournalEntryLine extends TenantBaseEntity {
@@ -42,9 +42,9 @@ export class JournalEntryLine extends TenantBaseEntity {
 
   @ManyToOne(() => JournalEntry, (entry) => entry.lines)
   @JoinColumn({ name: 'entry_id', foreignKeyConstraintName: 'FK_jel_entry' })
-  entry: JournalEntry | null;
+  entry: Relation<JournalEntry> | null;
 
   @ManyToOne(() => ChartAccount)
   @JoinColumn({ name: 'account_id', foreignKeyConstraintName: 'FK_jel_account' })
-  account: ChartAccount | null;
+  account: Relation<ChartAccount> | null;
 }

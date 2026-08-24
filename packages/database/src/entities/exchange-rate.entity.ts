@@ -1,7 +1,7 @@
 import { Column, Entity, Index, Unique } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
 @Entity('exchange_rates')
 @Unique('UQ_exchange_rates_tenant_pair_date', ['tenantId', 'baseCurrency', 'quoteCurrency', 'rateDate'])

@@ -2,7 +2,7 @@ import { Column, Entity, Index, Unique } from 'typeorm';
 
 import { AccountingPeriodStatus } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
 @Entity('accounting_periods')
 @Unique('UQ_accounting_periods_tenant_period', ['tenantId', 'period'])

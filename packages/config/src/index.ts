@@ -1,2 +1,2 @@
-export * from './env';
-export * from './workspace';
+export * from './env.js';
+export * from './workspace.js';

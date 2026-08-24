@@ -1,9 +1,9 @@
-import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
+import { Relation, Column, Entity, JoinTable, ManyToMany } from 'typeorm';
 
-import { BaseEntity } from '../base/base.entity';
+import { BaseEntity } from '../base/base.entity.js';
 
-import { Role } from './role.entity';
-import { Tenant } from './tenant.entity';
+import { Role } from './role.entity.js';
+import { Tenant } from './tenant.entity.js';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -28,7 +28,7 @@ export class User extends BaseEntity {
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'tenant_id', referencedColumnName: 'id' },
   })
-  tenants: Tenant[];
+  tenants: Relation<Tenant>[];
 
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({
@@ -36,5 +36,5 @@ export class User extends BaseEntity {
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
-  roles: Role[];
+  roles: Relation<Role>[];
 }

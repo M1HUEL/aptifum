@@ -1,11 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 
 import { CfdiStatus } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Invoice } from './invoice.entity';
+import { Invoice } from './invoice.entity.js';
 
 @Entity('cfdi_documents')
 @Unique('UQ_cfdi_tenant_invoice', ['tenantId', 'invoiceId'])
@@ -140,5 +140,5 @@ export class CfdiDocument extends TenantBaseEntity {
 
   @ManyToOne(() => Invoice)
   @JoinColumn({ name: 'invoice_id' })
-  invoice: Invoice;
+  invoice: Relation<Invoice>;
 }

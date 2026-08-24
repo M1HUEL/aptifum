@@ -2,12 +2,12 @@ import { EntityManager, In } from 'typeorm';
 
 import { AccountingPeriodStatus, DocumentSeriesKind, JournalEntryStatus, round2 } from '@aptifum/core';
 
-import { AccountingPeriod } from '../entities/accounting-period.entity';
-import { ChartAccount } from '../entities/chart-account.entity';
-import { JournalEntryLine } from '../entities/journal-entry-line.entity';
-import { JournalEntry } from '../entities/journal-entry.entity';
+import { AccountingPeriod } from '../entities/accounting-period.entity.js';
+import { ChartAccount } from '../entities/chart-account.entity.js';
+import { JournalEntryLine } from '../entities/journal-entry-line.entity.js';
+import { JournalEntry } from '../entities/journal-entry.entity.js';
 
-import { nextDocumentNumber } from './document-numbering';
+import { nextDocumentNumber } from './document-numbering.js';
 
 export const ACCOUNT_CODES = {
   CASH: '1000',

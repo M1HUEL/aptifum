@@ -1,8 +1,8 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
-import { Product } from './product.entity';
+import { Product } from './product.entity.js';
 
 @Entity('categories')
 export class Category extends TenantBaseEntity {
@@ -18,11 +18,11 @@ export class Category extends TenantBaseEntity {
 
   @ManyToOne(() => Category, (category) => category.children, { nullable: true })
   @JoinColumn({ name: 'parent_id' })
-  parent: Category | null;
+  parent: Relation<Category> | null;
 
   @OneToMany(() => Category, (category) => category.parent)
-  children: Category[];
+  children: Relation<Category>[];
 
   @OneToMany(() => Product, (product) => product.category)
-  products: Product[];
+  products: Relation<Product>[];
 }

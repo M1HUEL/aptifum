@@ -3,7 +3,7 @@ import path from 'node:path';
 import dotenv from 'dotenv';
 import { z } from 'zod';
 
-import { resolveWorkspaceRoot } from './workspace';
+import { resolveWorkspaceRoot } from './workspace.js';
 
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),

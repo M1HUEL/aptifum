@@ -1,6 +1,6 @@
 import { Column, Entity, Unique } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
 @Entity('cfdi_certificates')
 @Unique('UQ_cfdi_cert_tenant_kind', ['tenantId', 'kind'])

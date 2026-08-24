@@ -1,13 +1,13 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Category } from './category.entity';
-import { ProductLot } from './product-lot.entity';
-import { ProductStock } from './product-stock.entity';
-import { ProductVariant } from './product-variant.entity';
-import { StockMovement } from './stock-movement.entity';
+import { Category } from './category.entity.js';
+import { ProductLot } from './product-lot.entity.js';
+import { ProductStock } from './product-stock.entity.js';
+import { ProductVariant } from './product-variant.entity.js';
+import { StockMovement } from './stock-movement.entity.js';
 
 @Entity('products')
 @Unique(['tenantId', 'sku'])
@@ -66,17 +66,17 @@ export class Product extends TenantBaseEntity {
 
   @ManyToOne(() => Category, (category) => category.products, { nullable: true })
   @JoinColumn({ name: 'category_id' })
-  category: Category | null;
+  category: Relation<Category> | null;
 
   @OneToMany(() => ProductStock, (stock) => stock.product)
-  stocks: ProductStock[];
+  stocks: Relation<ProductStock>[];
 
   @OneToMany(() => ProductVariant, (variant) => variant.product)
-  variants: ProductVariant[];
+  variants: Relation<ProductVariant>[];
 
   @OneToMany(() => StockMovement, (movement) => movement.product)
-  movements: StockMovement[];
+  movements: Relation<StockMovement>[];
 
   @OneToMany(() => ProductLot, (lot) => lot.product)
-  lots: ProductLot[];
+  lots: Relation<ProductLot>[];
 }

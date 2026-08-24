@@ -2,9 +2,9 @@ import { EntityManager, IsNull } from 'typeorm';
 
 import { MovementType } from '@aptifum/core';
 
-import { ProductLot } from '../entities/product-lot.entity';
-import { ProductStock } from '../entities/product-stock.entity';
-import { StockMovement } from '../entities/stock-movement.entity';
+import { ProductLot } from '../entities/product-lot.entity.js';
+import { ProductStock } from '../entities/product-stock.entity.js';
+import { StockMovement } from '../entities/stock-movement.entity.js';
 
 const MOVEMENT_SIGN: Record<MovementType, 1 | -1> = {
   [MovementType.INBOUND]: 1,

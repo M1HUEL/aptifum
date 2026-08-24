@@ -1,12 +1,12 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
 
 import { JournalEntryStatus } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { AccountingPeriod } from './accounting-period.entity';
-import { JournalEntryLine } from './journal-entry-line.entity';
+import { AccountingPeriod } from './accounting-period.entity.js';
+import { JournalEntryLine } from './journal-entry-line.entity.js';
 
 @Entity('journal_entries')
 @Unique('UQ_journal_entries_tenant_number', ['tenantId', 'number'])
@@ -76,8 +76,8 @@ export class JournalEntry extends TenantBaseEntity {
 
   @ManyToOne(() => AccountingPeriod)
   @JoinColumn({ name: 'period_id', foreignKeyConstraintName: 'FK_je_period' })
-  period: AccountingPeriod | null;
+  period: Relation<AccountingPeriod> | null;
 
   @OneToMany(() => JournalEntryLine, (line) => line.entry, { cascade: true })
-  lines: JournalEntryLine[];
+  lines: Relation<JournalEntryLine>[];
 }

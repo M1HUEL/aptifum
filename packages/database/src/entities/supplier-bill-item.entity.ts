@@ -1,10 +1,10 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Product } from './product.entity';
-import { SupplierBill } from './supplier-bill.entity';
+import { Product } from './product.entity.js';
+import { SupplierBill } from './supplier-bill.entity.js';
 
 @Entity('supplier_bill_items')
 export class SupplierBillItem extends TenantBaseEntity {
@@ -56,9 +56,9 @@ export class SupplierBillItem extends TenantBaseEntity {
 
   @ManyToOne(() => SupplierBill, (bill) => bill.items)
   @JoinColumn({ name: 'bill_id', foreignKeyConstraintName: 'FK_sbi_bill' })
-  bill: SupplierBill;
+  bill: Relation<SupplierBill>;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id', foreignKeyConstraintName: 'FK_sbi_product' })
-  product: Product;
+  product: Relation<Product>;
 }

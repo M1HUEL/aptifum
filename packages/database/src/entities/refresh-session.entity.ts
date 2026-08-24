@@ -6,11 +6,12 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Relation,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
-import { User } from './user.entity';
+import { User } from './user.entity.js';
 
 @Entity('refresh_sessions')
 @Unique('UQ_refresh_sessions_token_hash', ['tokenHash'])
@@ -51,5 +52,5 @@ export class RefreshSession {
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'FK_refresh_sessions_user' })
-  user: User;
+  user: Relation<User>;
 }

@@ -2,7 +2,7 @@ import { Column, Entity, Index } from 'typeorm';
 
 import { ActivityType } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
 @Entity('crm_activities')
 export class CrmActivity extends TenantBaseEntity {

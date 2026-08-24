@@ -1,14 +1,14 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import { MovementType } from '@aptifum/core';
 
-import { BaseEntity } from '../base/base.entity';
-import { numericTransformer } from '../base/transformers';
+import { BaseEntity } from '../base/base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { ProductLot } from './product-lot.entity';
-import { ProductVariant } from './product-variant.entity';
-import { Product } from './product.entity';
-import { Warehouse } from './warehouse.entity';
+import { ProductLot } from './product-lot.entity.js';
+import { ProductVariant } from './product-variant.entity.js';
+import { Product } from './product.entity.js';
+import { Warehouse } from './warehouse.entity.js';
 
 @Entity('stock_movements')
 @Index('IDX_stock_movements_tenant_occurred_at', ['tenantId', 'occurredAt'])
@@ -74,17 +74,17 @@ export class StockMovement extends BaseEntity {
 
   @ManyToOne(() => Product, (product) => product.movements)
   @JoinColumn({ name: 'product_id' })
-  product: Product;
+  product: Relation<Product>;
 
   @ManyToOne(() => ProductVariant, (variant) => variant.movements)
   @JoinColumn({ name: 'variant_id' })
-  variant: ProductVariant;
+  variant: Relation<ProductVariant>;
 
   @ManyToOne(() => Warehouse)
   @JoinColumn({ name: 'warehouse_id' })
-  warehouse: Warehouse;
+  warehouse: Relation<Warehouse>;
 
   @ManyToOne(() => ProductLot, (lot) => lot.id, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'lot_id' })
-  lot: ProductLot | null;
+  lot: Relation<ProductLot> | null;
 }

@@ -1,10 +1,10 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Product } from './product.entity';
-import { ProductionBom } from './production-bom.entity';
+import { Product } from './product.entity.js';
+import { ProductionBom } from './production-bom.entity.js';
 
 @Entity('production_bom_lines')
 export class ProductionBomLine extends TenantBaseEntity {
@@ -36,9 +36,9 @@ export class ProductionBomLine extends TenantBaseEntity {
 
   @ManyToOne(() => ProductionBom, (bom) => bom.lines)
   @JoinColumn({ name: 'bom_id', foreignKeyConstraintName: 'FK_production_bom_lines_bom' })
-  bom: ProductionBom;
+  bom: Relation<ProductionBom>;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id', foreignKeyConstraintName: 'FK_production_bom_lines_product' })
-  product: Product;
+  product: Relation<Product>;
 }

@@ -1,11 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 
 import { LeadStatus } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Customer } from './customer.entity';
+import { Customer } from './customer.entity.js';
 
 @Entity('crm_leads')
 @Unique(['tenantId', 'number'])
@@ -64,5 +64,5 @@ export class CrmLead extends TenantBaseEntity {
 
   @ManyToOne(() => Customer)
   @JoinColumn({ name: 'converted_customer_id' })
-  convertedCustomer: Customer | null;
+  convertedCustomer: Relation<Customer> | null;
 }

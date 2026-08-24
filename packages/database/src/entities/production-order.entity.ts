@@ -1,14 +1,14 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
 
 import { ProductionOrderStatus } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Product } from './product.entity';
-import { ProductionBom } from './production-bom.entity';
-import { ProductionOrderLine } from './production-order-line.entity';
-import { Warehouse } from './warehouse.entity';
+import { Product } from './product.entity.js';
+import { ProductionBom } from './production-bom.entity.js';
+import { ProductionOrderLine } from './production-order-line.entity.js';
+import { Warehouse } from './warehouse.entity.js';
 
 @Entity('production_orders')
 @Unique('UQ_production_orders_tenant_number', ['tenantId', 'number'])
@@ -98,16 +98,16 @@ export class ProductionOrder extends TenantBaseEntity {
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id', foreignKeyConstraintName: 'FK_production_orders_product' })
-  product: Product;
+  product: Relation<Product>;
 
   @ManyToOne(() => ProductionBom, { nullable: true })
   @JoinColumn({ name: 'bom_id', foreignKeyConstraintName: 'FK_production_orders_bom' })
-  bom: ProductionBom | null;
+  bom: Relation<ProductionBom> | null;
 
   @ManyToOne(() => Warehouse)
   @JoinColumn({ name: 'warehouse_id', foreignKeyConstraintName: 'FK_production_orders_warehouse' })
-  warehouse: Warehouse;
+  warehouse: Relation<Warehouse>;
 
   @OneToMany(() => ProductionOrderLine, (line) => line.order)
-  lines: ProductionOrderLine[];
+  lines: Relation<ProductionOrderLine>[];
 }

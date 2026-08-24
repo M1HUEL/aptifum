@@ -1,10 +1,10 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Product } from './product.entity';
-import { ProductionOrder } from './production-order.entity';
+import { Product } from './product.entity.js';
+import { ProductionOrder } from './production-order.entity.js';
 
 @Entity('production_order_lines')
 @Unique('UQ_production_order_lines_tenant_order_product', ['tenantId', 'orderId', 'productId'])
@@ -58,9 +58,9 @@ export class ProductionOrderLine extends TenantBaseEntity {
 
   @ManyToOne(() => ProductionOrder, (order) => order.lines)
   @JoinColumn({ name: 'order_id', foreignKeyConstraintName: 'FK_production_order_lines_order' })
-  order: ProductionOrder;
+  order: Relation<ProductionOrder>;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id', foreignKeyConstraintName: 'FK_production_order_lines_product' })
-  product: Product;
+  product: Relation<Product>;
 }

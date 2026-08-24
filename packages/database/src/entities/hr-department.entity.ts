@@ -1,6 +1,6 @@
 import { Column, Entity, Index, Unique } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
 @Entity('hr_departments')
 @Unique('UQ_hr_departments_tenant_code', ['tenantId', 'code'])

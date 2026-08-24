@@ -1,8 +1,8 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
-import { Warehouse } from './warehouse.entity';
+import { Warehouse } from './warehouse.entity.js';
 
 @Entity('warehouse_locations')
 @Unique(['tenantId', 'warehouseId', 'code'])
@@ -22,5 +22,5 @@ export class WarehouseLocation extends TenantBaseEntity {
 
   @ManyToOne(() => Warehouse, (warehouse) => warehouse.locations)
   @JoinColumn({ name: 'warehouse_id' })
-  warehouse: Warehouse;
+  warehouse: Relation<Warehouse>;
 }

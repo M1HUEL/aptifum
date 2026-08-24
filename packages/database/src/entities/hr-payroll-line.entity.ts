@@ -1,10 +1,10 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Employee } from './hr-employee.entity';
-import { Payroll } from './hr-payroll.entity';
+import { Employee } from './hr-employee.entity.js';
+import { Payroll } from './hr-payroll.entity.js';
 
 @Entity('hr_payroll_lines')
 @Unique('UQ_hr_payroll_lines_tenant_payroll_employee', ['tenantId', 'payrollId', 'employeeId'])
@@ -34,9 +34,9 @@ export class PayrollLine extends TenantBaseEntity {
 
   @ManyToOne(() => Payroll, (payroll) => payroll.lines)
   @JoinColumn({ name: 'payroll_id', foreignKeyConstraintName: 'FK_hr_payroll_lines_payroll' })
-  payroll: Payroll | null;
+  payroll: Relation<Payroll> | null;
 
   @ManyToOne(() => Employee)
   @JoinColumn({ name: 'employee_id', foreignKeyConstraintName: 'FK_hr_payroll_lines_employee' })
-  employee: Employee | null;
+  employee: Relation<Employee> | null;
 }

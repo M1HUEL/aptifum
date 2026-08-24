@@ -1,11 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 
 import { EmployeeStatus } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
-import { numericTransformer } from '../base/transformers';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
+import { numericTransformer } from '../base/transformers.js';
 
-import { Department } from './hr-department.entity';
+import { Department } from './hr-department.entity.js';
 
 @Entity('hr_employees')
 @Unique('UQ_hr_employees_tenant_employee_no', ['tenantId', 'employeeNo'])
@@ -72,5 +72,5 @@ export class Employee extends TenantBaseEntity {
 
   @ManyToOne(() => Department)
   @JoinColumn({ name: 'department_id', foreignKeyConstraintName: 'FK_hr_employees_department' })
-  department: Department | null;
+  department: Relation<Department> | null;
 }

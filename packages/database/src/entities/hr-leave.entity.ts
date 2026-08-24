@@ -1,10 +1,10 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import { LeaveStatus, LeaveType } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
-import { Employee } from './hr-employee.entity';
+import { Employee } from './hr-employee.entity.js';
 
 @Entity('hr_leaves')
 export class Leave extends TenantBaseEntity {
@@ -40,5 +40,5 @@ export class Leave extends TenantBaseEntity {
 
   @ManyToOne(() => Employee)
   @JoinColumn({ name: 'employee_id', foreignKeyConstraintName: 'FK_hr_leaves_employee' })
-  employee: Employee | null;
+  employee: Relation<Employee> | null;
 }

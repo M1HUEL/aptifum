@@ -1,8 +1,8 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import { Relation, Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 
 import { AccountNormalBalance, AccountType } from '@aptifum/core';
 
-import { TenantBaseEntity } from '../base/tenant-base.entity';
+import { TenantBaseEntity } from '../base/tenant-base.entity.js';
 
 @Entity('chart_accounts')
 @Unique('UQ_chart_accounts_tenant_code', ['tenantId', 'code'])
@@ -38,5 +38,5 @@ export class ChartAccount extends TenantBaseEntity {
 
   @ManyToOne(() => ChartAccount)
   @JoinColumn({ name: 'parent_id', foreignKeyConstraintName: 'FK_chart_accounts_parent' })
-  parent: ChartAccount | null;
+  parent: Relation<ChartAccount> | null;
 }
