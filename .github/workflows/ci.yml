@@ -35,7 +35,7 @@ jobs:
       JWT_ACCESS_TTL: 15m
       JWT_REFRESH_TTL: 7d
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v5
         with:
